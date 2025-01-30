@@ -31,6 +31,9 @@ This project builds a small pricing stack with four parts.
 
 ## End-to-end workflow
 
+![Fourier option pricer workflow](images/workflow.svg)
+
+
 1. Implement the model characteristic function
 
 $$
@@ -249,6 +252,7 @@ That is the correct log-forward version. If you see an extra factor $e^{iu\log F
 ---
 
 ## Validation gate
+<<<<<<< HEAD
 
 Nothing should be called correct until it reproduces published reference results within a stated tolerance.
 
@@ -259,11 +263,24 @@ Suggested validation order:
 3. **COS** — replicate published Heston COS tables first.
 4. **Kou** — replicate Kou reference prices only after the Fourier engine is already stable.
 
+=======
+
+Nothing should be called correct until it reproduces published reference results within a stated tolerance.
+
+Suggested validation order:
+
+1. **Carr–Madan FFT** — replicate benchmark prices from Carr–Madan style test cases, especially Variance Gamma examples.
+2. **Heston** — compare against high-precision Heston benchmarks and include at least one branch-cut stress test.
+3. **COS** — replicate published Heston COS tables first.
+4. **Kou** — replicate Kou reference prices only after the Fourier engine is already stable.
+
+>>>>>>> Phase1-4
 This keeps the debugging order sensible. First get one method working on one model. Then widen coverage.
 
 ---
 
 ## Benchmarks to report
+<<<<<<< HEAD
 
 Only publish benchmark numbers after the validation tests are passing.
 
@@ -350,9 +367,98 @@ A few details matter enough that they should be stated explicitly.
 - **Interpolation matters.** FFT prices live on a grid, but your benchmark strikes usually do not.
 - **Convention mistakes are common.** Always check whether a paper is using log-spot or log-forward variables.
 - **Validation comes before speed claims.** A fast wrong price is still wrong.
+=======
+
+Only publish benchmark numbers after the validation tests are passing.
+
+Measure:
+
+- runtime versus number of strikes
+- runtime versus grid size
+- error versus reference prices
+- FFT versus FRFT versus COS
+- Monte Carlo baseline runtime and error
+
+Do not put placeholder speedups in the README.
 
 ---
 
+## Repository layout
+
+```text
+src/foureng/
+  char_func/        # heston / vg / kou
+  pricers/          # carr_madan / frft / cos
+  iv/               # implied-vol inversion
+  mc/               # Monte Carlo baselines
+  utils/            # grids, interpolation, cumulants, numerics
+
+tests/              # paper-table replication tests
+notebooks/          # validation and benchmark notebooks
+```
+
+---
+
+## Extensions after validation
+
+Only add these once the core pricing stack is already validated.
+
+- Fourier Greeks
+- FFT price as a control variate for Monte Carlo
+- calibration routines
+- packaged API or external-library adapter
+
+---
+
+## PyFENG integration
+
+PyFENG already has useful option-pricing components in pure Python. The goal here is not to duplicate Heston pricing for its own sake. The useful angle is:
+
+- one common characteristic-function interface
+- one validation harness
+- multiple Fourier pricers behind the same API
+
+That makes the repo cleaner and makes cross-method comparisons straightforward.
+
+---
+
+## Roadmap
+
+1. **Phase 1**
+   - Monte Carlo baseline
+   - timing versus strike count
+   - error decay checks
+2. **Phase 2**
+   - Carr–Madan FFT for Variance Gamma and Heston
+   - validation against published benchmarks
+3. **Phase 3**
+   - FRFT implementation
+   - FFT versus FRFT benchmark study
+4. **Phase 4**
+   - COS implementation
+   - validation on Heston, then extension to Kou if the truncation setup is stable
+5. **Phase 5**
+   - Kou replication tests
+6. **Phase 6**
+   - optional extensions such as Greeks or control variates
+7. **Phase 7**
+   - packaging and library integration
+
+---
+
+## Practical notes
+
+A few details matter enough that they should be stated explicitly.
+>>>>>>> Phase1-4
+
+- **Heston branch handling matters.** Use the stable logarithm formulation in code.
+- **Interpolation matters.** FFT prices live on a grid, but your benchmark strikes usually do not.
+- **Convention mistakes are common.** Always check whether a paper is using log-spot or log-forward variables.
+- **Validation comes before speed claims.** A fast wrong price is still wrong.
+
+<<<<<<< HEAD
 ## Math rendering
 
 All formulas use KaTeX/MathJax-compatible LaTeX inside `$…$` (inline) and `$$…$$` (display) delimiters. This renders correctly on GitHub, GitLab, Obsidian, and most Markdown previewers. It does **not** render on PyPI — if you publish this package, either strip the math section from the long description or link to the GitHub-hosted README.
+=======
+>>>>>>> Phase1-4
