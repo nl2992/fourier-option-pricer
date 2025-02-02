@@ -351,8 +351,3 @@ A few details matter enough that they should be stated explicitly.
 - **Convention mistakes are common.** Always check whether a paper is using log-spot or log-forward variables.
 - **Validation comes before speed claims.** A fast wrong price is still wrong.
 
----
-
-## Math rendering
-
-All formulas use KaTeX/MathJax-compatible LaTeX inside `$…$` (inline) and `$$…$$` (display) delimiters. This renders correctly on GitHub, GitLab, Obsidian, and most Markdown previewers. It does **not** render on PyPI — if you publish this package, either strip the math section from the long description or link to the GitHub-hosted README.
