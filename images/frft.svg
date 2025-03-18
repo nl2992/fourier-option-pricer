@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 160" role="img" font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+<title>FRFT pricer</title>
+<desc>Five-step pipeline: choose strike grid and frequency grid independently, evaluate characteristic function, apply FRFT kernel, read prices at exact target strikes.</desc>
+<style>
+  .box-blue { fill: #E6F1FB; stroke: #185FA5; stroke-width: 0.5; }
+  .title-blue { fill: #0C447C; font-size: 14px; font-weight: 500; }
+  .sub-blue { fill: #185FA5; font-size: 12px; }
+  .arrow { stroke: #73726c; stroke-width: 1.5; fill: none; }
+  @media (prefers-color-scheme: dark) {
+    .box-blue { fill: #0C447C; stroke: #85B7EB; }
+    .title-blue { fill: #E6F1FB; }
+    .sub-blue { fill: #B5D4F4; }
+    .arrow { stroke: #9c9a92; }
+  }
+</style>
+<defs>
+<marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker>
+</defs>
+
+<rect class="box-blue" x="18" y="50" width="116" height="56" rx="8"/>
+<text class="title-blue" x="76" y="72" text-anchor="middle" dominant-baseline="central">Strike grid</text>
+<text class="sub-blue" x="76" y="90" text-anchor="middle" dominant-baseline="central">Free choice</text>
+
+<line class="arrow" x1="134" y1="78" x2="150" y2="78" marker-end="url(#arrow)"/>
+
+<rect class="box-blue" x="150" y="50" width="116" height="56" rx="8"/>
+<text class="title-blue" x="208" y="72" text-anchor="middle" dominant-baseline="central">Freq grid</text>
+<text class="sub-blue" x="208" y="90" text-anchor="middle" dominant-baseline="central">Free choice</text>
+
+<line class="arrow" x1="266" y1="78" x2="282" y2="78" marker-end="url(#arrow)"/>
+
+<rect class="box-blue" x="282" y="50" width="116" height="56" rx="8"/>
+<text class="title-blue" x="340" y="72" text-anchor="middle" dominant-baseline="central">Evaluate φ</text>
+<text class="sub-blue" x="340" y="90" text-anchor="middle" dominant-baseline="central">On freq grid</text>
+
+<line class="arrow" x1="398" y1="78" x2="414" y2="78" marker-end="url(#arrow)"/>
+
+<rect class="box-blue" x="414" y="50" width="116" height="56" rx="8"/>
+<text class="title-blue" x="472" y="72" text-anchor="middle" dominant-baseline="central">FRFT</text>
+<text class="sub-blue" x="472" y="90" text-anchor="middle" dominant-baseline="central">Chirp kernel</text>
+
+<line class="arrow" x1="530" y1="78" x2="546" y2="78" marker-end="url(#arrow)"/>
+
+<rect class="box-blue" x="546" y="50" width="116" height="56" rx="8"/>
+<text class="title-blue" x="604" y="72" text-anchor="middle" dominant-baseline="central">Prices</text>
+<text class="sub-blue" x="604" y="90" text-anchor="middle" dominant-baseline="central">At target K</text>
+</svg>
