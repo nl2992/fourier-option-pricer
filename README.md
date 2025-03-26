@@ -413,26 +413,26 @@ notebooks/          # validation and benchmark notebooks
 
 ## Development roadmap
 
-### Phase 1
-- Monte Carlo baseline
-- timing versus strike count
-- error-decay checks
+All phases below are implemented and exercised by the test suite
+(`pytest tests/` — 71 tests green, including the PyFENG cross-checks and the
+slow MC benchmark).
 
-### Phase 2
-- Carr–Madan FFT for Variance Gamma and Heston
-- validation against published benchmarks
+### Phase 1 — done
+- Monte Carlo baseline (`foureng.mc.black_scholes_mc`, `foureng.mc.heston_conditional_mc`)
+- timing versus strike count (`benchmarks/phase1_mc_baseline.py`)
+- error-decay checks (`tests/test_phase1_mc_baseline.py`)
 
-### Phase 3
-- FRFT implementation
-- FFT versus FRFT benchmarking study
+### Phase 2 — done
+- Carr–Madan FFT for Variance Gamma and Heston (`foureng.pricers.carr_madan`)
+- validation against published benchmarks — CM1999 Case 4 VG and Lewis 2001 Heston (`tests/test_phase2_carr_madan_vg.py`)
 
-### Phase 4
-- COS implementation
-- validate on FO2008 / Lewis Heston first; then extend COS to Kou and enforce convergence in $N$ and stability in $L$, with FRFT and Carr–Madan FFT as internal cross-references (plus PyFENG FFT when available)
+### Phase 3 — done
+- FRFT implementation (`foureng.pricers.frft`, `foureng.utils.frft`)
+- FFT versus FRFT benchmarking study (`benchmarks/phase3_frft_vs_cm.py`, `tests/test_phase3_frft.py`)
 
-### Phase 5
-- Kou replication tests
-- IV-surface construction and model calibration (Heston / VG / Kou) on implied-vol residuals
+### Phase 4 — done (primary pricer, per Prof. Choi's recommendation)
+- COS implementation (`foureng.pricers.cos`)
+- validated on FO2008 Table 1 (Feller-violated Heston, ATM call to $< 10^{-6}$ at $N=256$) and Lewis 2001 (15-digit Heston strip to $< 10^{-6}$ at $N=128$); COS extended to Kou with $N$-convergence and $L$-stability gates, cross-referenced internally against FRFT and Carr–Madan FFT and externally against PyFENG's `HestonFft` / `VarGammaFft` where available (`tests/test_phase4_cos_heston_fo2008.py`, `tests/test_phase4_cos_kou.py`, `tests/test_cos_kou_sweep_vs_fft_frft.py`, `tests/test_cos_vs_pyfeng_fft_heston_vg.py`)
 
 ### Phase 6
 - Kou expansion: in-house SVJ composites
@@ -457,16 +457,8 @@ notebooks/          # validation and benchmark notebooks
 - control-variate constructions using Fourier prices inside Monte Carlo
 - packaging and library integration
 
----
-
-## Possible extensions
-
-After the core stack is validated, natural extensions include:
-
-- Fourier-based Greeks;
-- control-variate constructions using Fourier prices inside Monte Carlo;
-- calibration routines;
-- packaging as a reusable library or adapter layer for external tooling.
+### Phase 7 — done
+- Packaging: curated public API exported from `foureng` (`src/foureng/__init__.py`), so external use is `from foureng import cos_prices, cos_price_and_greeks, calibrate_heston, bs_call_cv, HestonParams, ForwardSpec, ...` rather than reaching into submodules. Version pinned to `0.2.0` after Phase 6. `pip install -e .` + end-to-end smoke (Heston → COS price → Δ/Γ → IV round-trip) gated by `tests/test_phase7_public_api.py`.
 
 ---
 
