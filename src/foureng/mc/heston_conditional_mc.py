@@ -1,7 +1,9 @@
 from __future__ import annotations
 import numpy as np
 from dataclasses import dataclass
+from typing import Any, Optional
 from scipy.stats import norm
+from ..char_func.base import ForwardSpec
 from ..char_func.heston import HestonParams
 
 
@@ -85,3 +87,109 @@ def heston_conditional_mc_calls(
     call_paths = F0 * np.exp(mu[:, None] + 0.5 * sigma[:, None] ** 2) * norm.cdf(d1) \
                  - K[None, :] * norm.cdf(d2)
     return np.exp(-r * T) * call_paths.mean(axis=0)
+
+
+# ---------------------------------------------------------------------------
+# PyFENG-backed Heston MC baseline.
+#
+# We keep the in-house conditional MC above as the project's MC *story*
+# (exact chi-squared variance + analytic BS conditional on (v_T, V_T)), and
+# expose the PyFENG MC engines here as a parallel baseline so the scoreboard
+# can quote an externally maintained reference MC without us shipping extra
+# scheme implementations.
+# ---------------------------------------------------------------------------
+
+#: Short engine name → PyFENG class attribute. The default is Andersen2008
+#: (the classic Heston QE scheme), which is accurate and fast.
+_PYFENG_HESTON_MC_ENGINES: dict[str, str] = {
+    "Andersen2008":       "HestonMcAndersen2008",
+    "GlassermanKim2011":  "HestonMcGlassermanKim2011",
+    "TseWan2013":         "HestonMcTseWan2013",
+    "ChoiKwok2023PoisGe": "HestonMcChoiKwok2023PoisGe",
+    "ChoiKwok2023PoisTd": "HestonMcChoiKwok2023PoisTd",
+}
+
+_PYFENG_MC_CACHE: dict[tuple, Any] = {}
+
+
+def _get_pyfeng_mc_model(engine: str, fwd: ForwardSpec, p: HestonParams):
+    if engine not in _PYFENG_HESTON_MC_ENGINES:
+        raise ValueError(
+            f"unknown engine {engine!r}; choose one of "
+            f"{sorted(_PYFENG_HESTON_MC_ENGINES)}"
+        )
+    key = (engine, p, fwd)
+    m = _PYFENG_MC_CACHE.get(key)
+    if m is not None:
+        return m
+    try:
+        import pyfeng as pf  # type: ignore
+    except Exception as exc:  # pragma: no cover
+        raise ImportError(
+            "heston_mc_pyfeng_price_strip requires pyfeng; install with "
+            "`pip install pyfeng`."
+        ) from exc
+    cls = getattr(pf, _PYFENG_HESTON_MC_ENGINES[engine])
+    m = cls(
+        sigma=p.v0,     # PyFENG: sigma = v0 (variance)
+        vov=p.nu,
+        rho=p.rho,
+        mr=p.kappa,
+        theta=p.theta,
+        intr=fwd.r,
+        divr=fwd.q,
+    )
+    _PYFENG_MC_CACHE[key] = m
+    return m
+
+
+def heston_mc_pyfeng_price_strip(
+    strikes,
+    fwd: ForwardSpec,
+    p: HestonParams,
+    n_paths: int,
+    *,
+    engine: str = "Andersen2008",
+    seed: int = 7,
+    dt: Optional[float] = None,
+    antithetic: bool = True,
+    cp: int = 1,
+) -> np.ndarray:
+    """Price a strike strip with a PyFENG Heston MC engine.
+
+    Parameters
+    ----------
+    strikes :
+        1-D iterable of strikes.
+    fwd, p :
+        Forward spec and :class:`HestonParams` (translated internally to
+        PyFENG's ``sigma=v0, vov=nu, mr=kappa, theta=theta, rho=rho``
+        keyword layout).
+    n_paths :
+        Number of MC paths.
+    engine :
+        One of :data:`_PYFENG_HESTON_MC_ENGINES` keys. Default
+        ``"Andersen2008"`` (Heston QE).
+    seed :
+        Integer RNG seed passed through to PyFENG (``rn_seed``).
+    dt :
+        Simulation time step. ``None`` → ``T/100``, matching
+        :func:`heston_conditional_mc_calls`'s 100-step discretisation so
+        the two baselines are comparable.
+    antithetic :
+        Forwarded to PyFENG's ``set_num_params``. Default ``True``.
+    cp :
+        ``+1`` calls, ``-1`` puts.
+
+    Returns
+    -------
+    np.ndarray
+        Strip prices, one per strike.
+    """
+    K = np.ascontiguousarray(np.asarray(strikes, dtype=np.float64))
+    m = _get_pyfeng_mc_model(engine, fwd, p)
+    step = float(fwd.T) / 100.0 if dt is None else float(dt)
+    m.set_num_params(n_path=int(n_paths), dt=step,
+                     rn_seed=int(seed), antithetic=antithetic)
+    return np.asarray(m.price(K, spot=fwd.S0, texp=fwd.T, cp=cp),
+                      dtype=np.float64)
