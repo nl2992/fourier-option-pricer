@@ -52,6 +52,10 @@ import numpy as np
 
 from .base import BasePricer
 
+# NumPy 2.0 renamed ``np.trapz`` -> ``np.trapezoid``. Keep both paths working
+# so the module runs under NumPy 1.x (CI had 1.26 historically) and 2.x.
+_trapz = getattr(np, "trapezoid", None) or np.trapz  # type: ignore[attr-defined]
+
 ArrayLike = np.ndarray | list[float] | tuple[float, ...]
 ComplexOrArray = complex | np.ndarray
 CF = Callable[[ComplexOrArray], ComplexOrArray]
@@ -144,7 +148,7 @@ def _lewis_integral_trapz(
         k_log_moneyness[:, None],
         cf_shifted[None, :],
     )
-    return np.trapz(integrand, u, axis=1)
+    return _trapz(integrand, u, axis=1)
 
 
 def _lewis_integral_quad(
