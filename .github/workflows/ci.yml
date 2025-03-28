@@ -96,7 +96,7 @@ jobs:
         run: |
           python - <<'PY'
           import foureng
-          from foureng.char_func import (
+          from foureng.models import (
               BsmParams, bsm_cf, bsm_cumulants,
               HestonParams, heston_cf, heston_cumulants,
               OusvParams, ousv_cf, ousv_cumulants,
