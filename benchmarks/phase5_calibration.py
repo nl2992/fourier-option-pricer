@@ -15,7 +15,7 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from foureng.char_func.heston import HestonParams, heston_cf_form2, heston_cumulants
+from foureng.models.heston import HestonParams, heston_cf_form2, heston_cumulants
 from foureng.surface import SurfaceSpec, model_iv_surface, calibrate_heston
 
 

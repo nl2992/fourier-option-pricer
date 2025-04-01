@@ -21,8 +21,8 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from foureng.char_func.base import ForwardSpec
-from foureng.char_func.kou import KouParams, kou_cf, kou_cumulants
+from foureng.models.base import ForwardSpec
+from foureng.models.kou import KouParams, kou_cf, kou_cumulants
 from foureng.pricers.cos import cos_prices, cos_auto_grid
 from foureng.pricers.carr_madan import carr_madan_price_at_strikes
 from foureng.pricers.frft import frft_price_at_strikes

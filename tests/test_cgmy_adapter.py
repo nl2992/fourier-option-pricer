@@ -19,8 +19,8 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from foureng.char_func.base import ForwardSpec
-from foureng.char_func.cgmy import CgmyParams, cgmy_cf, cgmy_cumulants
+from foureng.models.base import ForwardSpec
+from foureng.models.cgmy import CgmyParams, cgmy_cf, cgmy_cumulants
 from foureng.pipeline import price_strip
 from foureng.utils.cumulants import cumulants_from_cf
 from foureng.utils.grids import FFTGrid, FRFTGrid
@@ -35,7 +35,7 @@ _PARAMS = CgmyParams(C=0.5, G=5.0, M=5.0, Y=0.7)
 
 
 def test_cgmy_cf_matches_pyfeng_charfunc_logprice():
-    """Bit-identity wrapper check — see char_func/cgmy.py for the translation."""
+    """Bit-identity wrapper check — see models/cgmy.py for the translation."""
     u = np.linspace(-10.0, 10.0, 41)
     phi_ours = cgmy_cf(u, _FWD, _PARAMS)
 

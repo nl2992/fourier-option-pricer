@@ -23,7 +23,7 @@ import numpy as np
 from scipy.optimize import brentq
 from scipy.stats import norm
 
-from ..char_func.base import ForwardSpec
+from ..models.base import ForwardSpec
 
 
 def _bs_call(F: float, K: float, T: float, sigma: float, disc: float) -> float:

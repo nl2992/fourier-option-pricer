@@ -10,10 +10,10 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from foureng.char_func.base import ForwardSpec
-from foureng.char_func.kou import KouParams, kou_cf
-from foureng.char_func.variance_gamma import VGParams, vg_cf
-from foureng.char_func.heston import HestonParams, heston_cf_form2
+from foureng.models.base import ForwardSpec
+from foureng.models.kou import KouParams, kou_cf
+from foureng.models.variance_gamma import VGParams, vg_cf
+from foureng.models.heston import HestonParams, heston_cf_form2
 from foureng.utils.validity import (
     check_alpha,
     kou_alpha_max,
