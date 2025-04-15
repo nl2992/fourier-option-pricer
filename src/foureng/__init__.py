@@ -6,9 +6,9 @@ Public API (stable surface for external use):
         ForwardSpec, HestonParams, VGParams, KouParams,
         heston_cf_form2, vg_cf, kou_cf,
         heston_cumulants, vg_cumulants, kou_cumulants,
-        cos_prices, cos_auto_grid,
+        cos_prices, cos_auto_grid, cos_improved_grid,
         carr_madan_price_at_strikes, frft_price_at_strikes,
-        COSGrid, FFTGrid, FRFTGrid,
+        COSGrid, COSGridPolicy, FFTGrid, FRFTGrid,
         implied_vol_newton_safeguarded, BSInputs, bs_price_from_fwd,
         SurfaceSpec, model_iv_surface, model_price_surface,
         calibrate_heston, calibrate_vg, calibrate_kou,
@@ -16,22 +16,32 @@ Public API (stable surface for external use):
         bs_call_cv, heston_call_bs_control,
     )
 
-Submodules (``foureng.pricers``, ``foureng.char_func``, ``foureng.mc``,
+Submodules (``foureng.pricers``, ``foureng.models``, ``foureng.mc``,
 ``foureng.iv``, ``foureng.surface``, ``foureng.greeks``, ``foureng.utils``)
-remain importable for finer-grained access.
+remain importable for finer-grained access. ``foureng.models`` is the
+canonical location of the characteristic-function layer — this used to
+live at ``foureng.char_func`` before the Pass-1 PyFENG-compat rename.
 """
 from __future__ import annotations
 
 __version__ = "0.2.0"
 
-from .char_func.base import ForwardSpec, CharFunc, ModelSpec
-from .char_func.heston import HestonParams, heston_cf_form2, heston_cumulants
-from .char_func.variance_gamma import VGParams, vg_cf, vg_cumulants
-from .char_func.kou import KouParams, kou_cf, kou_cumulants
+from .models.base import ForwardSpec, CharFunc, ModelSpec
+from .models.heston import HestonParams, heston_cf_form2, heston_cumulants
+from .models.variance_gamma import VGParams, vg_cf, vg_cumulants
+from .models.kou import KouParams, kou_cf, kou_cumulants
 
-from .utils.grids import COSGrid, FFTGrid, FRFTGrid
+from .utils.grids import COSGrid, COSGridPolicy, FFTGrid, FRFTGrid
 
-from .pricers.cos import cos_prices, cos_auto_grid, COSResult
+from .pricers.cos import (
+    COSPolicyDecision,
+    COSResult,
+    cos_adaptive_decision,
+    cos_auto_grid,
+    cos_improved_grid,
+    cos_prices,
+    recommended_cos_policy,
+)
 from .pricers.carr_madan import carr_madan_price_at_strikes, carr_madan_fft_prices
 from .pricers.frft import frft_price_at_strikes, frft_prices
 
@@ -71,9 +81,11 @@ __all__ = [
     "VGParams", "vg_cf", "vg_cumulants",
     "KouParams", "kou_cf", "kou_cumulants",
     # grids
-    "COSGrid", "FFTGrid", "FRFTGrid",
+    "COSGrid", "COSGridPolicy", "FFTGrid", "FRFTGrid",
     # pricers
-    "cos_prices", "cos_auto_grid", "COSResult",
+    "cos_prices", "cos_auto_grid", "cos_improved_grid",
+    "recommended_cos_policy", "cos_adaptive_decision",
+    "COSResult", "COSPolicyDecision",
     "carr_madan_price_at_strikes", "carr_madan_fft_prices",
     "frft_price_at_strikes", "frft_prices",
     # iv

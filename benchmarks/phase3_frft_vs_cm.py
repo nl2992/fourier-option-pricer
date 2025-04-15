@@ -15,8 +15,8 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from foureng.char_func.base import ForwardSpec
-from foureng.char_func.heston import HestonParams, heston_cf_form2
+from foureng.models.base import ForwardSpec
+from foureng.models.heston import HestonParams, heston_cf_form2
 from foureng.pricers.carr_madan import carr_madan_price_at_strikes
 from foureng.pricers.frft import frft_price_at_strikes
 from foureng.utils.grids import FFTGrid, FRFTGrid

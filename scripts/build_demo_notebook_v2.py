@@ -100,10 +100,10 @@ except Exception:
     HAVE_PYFENG = False
 
 # Tasks: one (forward, params, dense strip) triple per model
-from foureng.char_func.base import ForwardSpec
-from foureng.char_func.heston import HestonParams, heston_cf_form2, heston_cumulants
-from foureng.char_func.variance_gamma import VGParams, vg_cf, vg_cumulants
-from foureng.char_func.kou import KouParams, kou_cf, kou_cumulants
+from foureng.models.base import ForwardSpec
+from foureng.models.heston import HestonParams, heston_cf_form2, heston_cumulants
+from foureng.models.variance_gamma import VGParams, vg_cf, vg_cumulants
+from foureng.models.kou import KouParams, kou_cf, kou_cumulants
 
 fwd_H = ForwardSpec(S0=100.0, r=0.01, q=0.02, T=1.0)
 p_H   = HestonParams(kappa=4.0, theta=0.25, nu=1.0, rho=-0.5, v0=0.04)
