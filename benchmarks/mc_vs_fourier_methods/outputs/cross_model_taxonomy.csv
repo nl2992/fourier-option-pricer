@@ -1,0 +1,10 @@
+model,family,jump structure,strip points,reference source
+BSM,Diffusion,No,41,Closed form
+Heston,Stochastic vol,No,41,CM FFT N=32768
+VG,Pure jump,Infinite activity,41,CM FFT N=32768
+OUSV,Stochastic vol,No,41,CM FFT N=32768 eta=0.10 alpha=1.5 (cross-verified vs FRFT N=16384 and COS N=4096 to ~1e-10)
+CGMY,Pure jump,Infinite activity,41,CM FFT N=32768 eta=0.10 alpha=1.5 (cross-verified vs FRFT N=16384 and COS N=4096 to ~1e-10)
+NIG,Pure jump,Infinite activity,41,CM FFT N=32768 eta=0.10 alpha=1.5 (cross-verified vs FRFT N=16384 and COS N=4096 to ~1e-10)
+Bates,SV + jumps,Finite activity,41,CM FFT N=32768 eta=0.10 alpha=1.5 (cross-verified vs FRFT N=16384 and COS N=4096 to ~1e-10)
+Heston-Kou,SV + jumps,Finite activity (double-exp),41,CM FFT N=32768 eta=0.10 alpha=1.5 (cross-verified vs FRFT N=16384 and COS N=4096 to ~1e-10)
+Heston-CGMY,SV + jumps,Infinite activity,41,CM FFT N=32768 eta=0.10 alpha=1.5 (cross-verified vs FRFT N=16384 and COS N=4096 to ~1e-10)
