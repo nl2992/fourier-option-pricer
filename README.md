@@ -76,7 +76,7 @@ All models can be priced through the same pricer layer:
 
 ## End-to-end workflow
 
-![Fourier option pricer workflow](images/fourier_option_pricer_workflow.svg)
+![Fourier option pricer workflow](images/fourier_option_pricer_workflow-ii.png)
 
 
 ---
