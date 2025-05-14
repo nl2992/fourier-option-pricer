@@ -13,9 +13,9 @@ with :func:`test_phase2_carr_madan_vg.test_heston_carr_madan_lewis`.
 from __future__ import annotations
 import numpy as np
 
-from foureng.char_func.base import ForwardSpec
-from foureng.char_func.heston import HestonParams, heston_cf
-from foureng.char_func.bates import BatesParams, bates_cf
+from foureng.models.base import ForwardSpec
+from foureng.models.heston import HestonParams, heston_cf
+from foureng.models.bates import BatesParams, bates_cf
 from foureng.pipeline import price_strip
 from foureng.utils.grids import FFTGrid, FRFTGrid
 

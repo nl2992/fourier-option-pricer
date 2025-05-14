@@ -49,10 +49,80 @@ class FRFTGrid:
 
 @dataclass(frozen=True)
 class COSGrid:
-    """COS truncation interval [a,b] and number of cosine terms N."""
+    """COS truncation interval [a,b] and number of cosine terms N.
+
+    ``center`` is an optional shift of the integration variable. With
+    ``center = m`` the COS expansion variable is
+
+        z = log(S_T / F_0) - m,
+
+    while the payoff is still evaluated on the true asset level
+    ``S_T = F_0 * exp(m) * exp(z)``. This lets us keep a symmetric interval
+    around zero for the centered state variable without changing the public
+    pricing API.
+    """
     N: int
     a: float
     b: float
+    center: float = 0.0
+    label: str = "manual"
 
     def u(self) -> np.ndarray:
         return np.arange(self.N) * np.pi / (self.b - self.a)
+
+    @property
+    def width(self) -> float:
+        return float(self.b - self.a)
+
+    @property
+    def dx(self) -> float:
+        return self.width / float(self.N)
+
+
+@dataclass(frozen=True)
+class COSGridPolicy:
+    """Adaptive COS grid-selection policy.
+
+    Parameters
+    ----------
+    mode
+        High-level preset. ``"benchmark"`` targets tighter spatial resolution
+        while ``"surface"`` trades some accuracy for speed.
+    truncation
+        One of:
+        - ``"heuristic"``  : classic Fang-Oosterlee style rule with a fixed L,
+        - ``"tolerance"``  : increase L until a tail proxy drops below
+          ``eps_trunc``,
+        - ``"paper"``      : reproduce a paper-specified L exactly.
+    centered
+        If True, the interval is built for the centered variable
+        ``X_T - E[X_T]`` and made symmetric around zero.
+    dx_target
+        Target effective spatial resolution ``(b-a)/N``. If omitted, a
+        model-dependent default is chosen.
+    fixed_N
+        Optional hard override. When omitted, N is chosen adaptively from the
+        interval width and ``dx_target``.
+    L, paper_L
+        Heuristic or paper truncation multipliers.
+    eps_trunc
+        Target tail proxy for ``truncation="tolerance"``.
+    width_fallback, fallback_method
+        If the chosen COS interval is too wide, the improved pipeline can route
+        the request to another Fourier engine rather than forcing COS into an
+        unfavorable geometry.
+    """
+
+    mode: str = "benchmark"
+    truncation: str = "tolerance"
+    centered: bool = True
+    dx_target: float | None = None
+    fixed_N: int | None = None
+    L: float | None = None
+    paper_L: float | None = None
+    eps_trunc: float = 1e-10
+    eps_series: float = 1e-10
+    min_N: int = 32
+    max_N: int = 16384
+    width_fallback: float = 40.0
+    fallback_method: str | None = None
