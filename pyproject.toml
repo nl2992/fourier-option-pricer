@@ -47,8 +47,9 @@ Repository = "https://github.com/nl2992/fourier-option-pricer"
 Issues = "https://github.com/nl2992/fourier-option-pricer/issues"
 
 [tool.setuptools.packages.find]
-where = ["src"]
+where = ["."]
 include = ["foureng*"]
+exclude = ["tests*", "benchmarks*", "scripts*", "notebooks*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

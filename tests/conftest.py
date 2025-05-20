@@ -16,9 +16,9 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-# Make `src/foureng` importable without needing `pip install -e .`
+# Make `foureng` importable without needing `pip install -e .`
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "src"))
+sys.path.insert(0, str(ROOT))
 
 from foureng.refs.paper_refs import (  # noqa: E402  — after sys.path mutation
     CM1999_VG_CASE4 as _CM1999,
