@@ -395,8 +395,6 @@ src/foureng/
 tests/              # replication tests + CF-wrapper bit-identity gates +
                     # model-reduction gates + frozen regression strips.
                     # 129 tests at last count.
-scripts/            # benchmark_pyfeng.py (price + IV parity across the
-                    # six PyFENG-backed models) + demo-notebook builders
 notebooks/          # validation and benchmark notebooks
 .github/workflows/  # CI: pytest matrix (ubuntu+macos × py3.10/3.11/3.12)
                     # + byte-compile + import-smoke that asserts the
@@ -415,7 +413,7 @@ The value of this repository, given that policy, is in:
 - a unified validation harness — CF-level bit-identity gates against PyFENG for every adapter, model-reduction gates for every composite, and frozen regression strips for every model whose paper does not ship a clean table at our parameterisation;
 - a consistent interface across the three Fourier pricers (`method="cos" | "frft" | "carr_madan"`), plus a fourth `method="pyfeng_fft"` that delegates to PyFENG's own FFT pricer as an independent oracle for the six PyFENG-backed models.
 
-The scoreboard (`scripts/benchmark_pyfeng.py`) prints a per-model table comparing our three Fourier engines against `pyfeng.*Fft.price(...)` for both prices and BSM-implied vols on a 21-strike strip; the default-grid floor sits at ~2e-7 for FRFT and CM and ~1e-12 for COS on smooth densities.
+The benchmark scoreboard prints a per-model table comparing our three Fourier engines against `pyfeng.*Fft.price(...)` for both prices and BSM-implied vols on a 21-strike strip; the default-grid floor sits at ~2e-7 for FRFT and CM and ~1e-12 for COS on smooth densities.
 
 One caveat: we route implied-vol inversion through `scipy.optimize.brentq` directly rather than `pyfeng.*Fft.impvol_brentq`. PyFENG's wrapper has a normalisation bug with non-zero rates (input is divided by the discount factor before being passed to an internal pricer that also discounts, so with $r \ne q$ it returns vols off by a $\log(F/S)$-sized amount). The bug is documented in the module docstring of `utils/implied_vol.py`.
 
