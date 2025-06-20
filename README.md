@@ -188,6 +188,28 @@ Returns a `COSGrid`.
 
 Returns implied volatility as `float`.
 
+## Extended methodology and results
+
+Detailed numerical experiments, replication notes, runtime benchmarks, and implementation commentary are kept outside the README to keep this page concise.
+
+See:
+
+```text
+docs/methodology_and_results.md
+```
+
+This document records:
+
+- the Fang-Oosterlee COS replication workflow;
+- the Carr-Madan benchmark setup;
+- the Monte Carlo comparison setup;
+- COS truncation-interval behaviour;
+- improved COS grid logic;
+- runtime and error reporting rules;
+- model-by-model observations;
+- known numerical limitations.
+
 ## License
 
 MIT. See [LICENSE](LICENSE).
+
