@@ -1,10 +1,10 @@
 model,benchmark source,best by error,best error,fastest,fastest runtime_ms
-BSM,PyFENG FFT benchmark,COS classic,8.886225089099753e-13,COS improved,0.13616698561236262
-Bates,Frozen hi-res Fourier oracle: CM FFT N=32768 eta=0.10 alpha=1.5 (cross-verified vs FRFT N=16384 and COS N=4096 to ~1e-10),COS classic,3.133990844617074e-10,COS classic,0.26974998763762414
-CGMY,PyFENG FFT benchmark,COS classic,2.752464922650688e-12,COS classic,0.19474999862723053
-Heston,PyFENG FFT benchmark,COS improved,9.672262990534364e-13,COS improved,0.15075001283548772
-Heston-CGMY,Frozen hi-res Fourier oracle: CM FFT N=32768 eta=0.10 alpha=1.5 (cross-verified vs FRFT N=16384 and COS N=4096 to ~1e-10),COS improved,3.368683110238635e-11,COS classic,0.2905000001192093
-Heston-Kou,Frozen hi-res Fourier oracle: CM FFT N=32768 eta=0.10 alpha=1.5 (cross-verified vs FRFT N=16384 and COS N=4096 to ~1e-10),COS classic,9.416853963273297e-10,COS classic,0.25887502124533057
-NIG,PyFENG FFT benchmark,COS classic,2.8403226437490048e-09,COS improved,0.13466700329445302
-OUSV,PyFENG FFT benchmark,COS classic,1.6036993955026446e-10,COS improved,0.17770897829905152
-VG,PyFENG FFT benchmark,COS classic,1.48903112062726e-11,COS classic,0.18695800099521875
+BSM,PyFENG FFT benchmark,COS classic,8.886225089099753e-13,COS improved,0.12966699432581663
+Bates,Frozen hi-res Fourier oracle: CM FFT N=32768 eta=0.10 alpha=1.5 (cross-verified vs FRFT N=16384 and COS N=4096 to ~1e-10),COS classic,3.133990844617074e-10,COS classic,0.215750013012439
+CGMY,PyFENG FFT benchmark,COS classic,2.752464922650688e-12,COS classic,0.19537500338628888
+Heston,PyFENG FFT benchmark,COS improved,9.672262990534364e-13,COS improved,0.20291598048061132
+Heston-CGMY,Frozen hi-res Fourier oracle: CM FFT N=32768 eta=0.10 alpha=1.5 (cross-verified vs FRFT N=16384 and COS N=4096 to ~1e-10),COS improved,3.368683110238635e-11,COS improved,0.2709580003283918
+Heston-Kou,Frozen hi-res Fourier oracle: CM FFT N=32768 eta=0.10 alpha=1.5 (cross-verified vs FRFT N=16384 and COS N=4096 to ~1e-10),COS classic,9.416853963273297e-10,COS classic,0.2209999947808683
+NIG,PyFENG FFT benchmark,COS classic,2.8403226437490048e-09,COS improved,0.11749999248422682
+OUSV,PyFENG FFT benchmark,COS classic,1.6036993955026446e-10,COS improved,0.16812499961815774
+VG,PyFENG FFT benchmark,COS classic,1.48903112062726e-11,COS classic,0.18433399964123964
