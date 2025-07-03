@@ -22,6 +22,18 @@ Fast European option pricing via Fourier transform methods under **characteristi
 > *Applied Mathematics and Computation*, 421, 126935.
 > https://doi.org/10.1016/j.amc.2022.126935
 
+> Extension/novelty inspiration:
+> Ruijter, M. J., Versteegh, M., & Oosterlee, C. W. (2015). On the application of
+> spectral filters in a Fourier option pricing technique.
+> *Journal of Computational Finance*, 19(1), 75–106.
+> https://doi.org/10.21314/JCF.2015.306
+> *(Used as inspiration for the spectral-filtering layer in the adaptive
+> filtered-COS extension. The project adapts this idea into a tolerance-driven
+> selector over no-filter and filtered COS policies, rather than forcing a single
+> fixed filter.)*
+
+
+
 ## Core concept
 
 Fourier pricing exploits the fact that, for most asset models, the **characteristic function**
@@ -38,13 +50,30 @@ The three methods implemented here differ in how they discretise that integral:
 | Lewis single-integral | Parseval identity; avoids the dampening parameter entirely |
 | COS (Fang–Oosterlee) | Expand the risk-neutral density in a cosine series on $[a, b]$ |
 
-## Truncation
+## Truncation and filtering
 
-The COS method requires choosing a truncation interval $[a, b]$ for the log-price density.
-Two strategies are implemented:
+The COS method requires choosing a truncation interval $[a,b]$ for the log-price
+density. Two truncation strategies are implemented:
 
-- **Cumulant rule** (Fang & Oosterlee 2008) — sets $[a,b]$ from the first four cumulants of $\ln S_T$.
-- **Tolerance rule** (Junike & Pankrashkin 2022) — widens $[a,b]$ iteratively until the tail-mass proxy falls below a user-specified tolerance. Handles stress cases (e.g. CGMY with $Y \to 2$) where the cumulant rule diverges.
+- **Cumulant rule** (Fang & Oosterlee 2008) — sets $[a,b]$ from the first four
+  cumulants of $\ln S_T$.
+- **Tolerance rule** (Junike & Pankrashkin 2022) — widens $[a,b]$ iteratively
+  until the tail-mass proxy falls below a user-specified tolerance. This is used
+  for stress cases where the cumulant rule can become unreliable or overly wide.
+
+In addition, the project implements an **adaptive filtered-COS extension**
+**"extension"** inspired by Ruijter, Versteegh and Oosterlee (2015), as the  Rather than applying one
+fixed spectral filter, we adapt the idea into a tolerance-driven selector around
+COS pricing.
+
+- **Why filtering is added:** truncation fixes the interval, but COS can still
+  show finite-series ringing near payoff kinks, short maturities, or jump-heavy
+  densities.
+- **Candidate filters:** the selector keeps plain Junike-COS in the pool and
+  also tests Fejér, Lanczos, raised-cosine, and exponential filters.
+- **Selection rule:** use the cheapest candidate that meets the tolerance. If a
+  filter does not help, the method falls back to the no-filter Junike choice.
+
 
 ## Models
 
@@ -114,6 +143,81 @@ print(atm_iv)
 grid = fe.cos_improved_grid(cumulants, model="heston", params=params)
 result = fe.cos_prices(phi, fwd, strikes, grid)
 ```
+
+### Extension: adaptive filtered-COS policy layer
+
+The Junike-style COS policy improves truncation-range selection, but COS accuracy
+is controlled by both the truncation interval and the finite cosine expansion.
+As an extension, this repo adds an **adaptive filtered-COS overlay** inspired by
+Ruijter, Versteegh and Oosterlee's spectral-filtering work for Fourier option
+pricing.
+
+The filter is applied to the COS expansion coefficients and is tested as one
+candidate inside a **deterministic numerical-policy search**.  The adaptive
+selector compares vanilla COS, Junike-COS, and filtered Junike-COS, then selects
+the fastest candidate satisfying a target error tolerance.
+
+> **This extension does not claim filtered-COS universally dominates Junike-COS.**
+> The intended object is the adaptive selector, which can choose no filter where
+> filtering is unnecessary.
+
+**Usage:**
+
+```python
+from foureng.pipeline import price_strip
+from foureng.utils.spectral_filters import COSFilterSpec
+from foureng.utils.grids import COSGridPolicy
+
+policy = COSGridPolicy(
+    mode="benchmark",
+    truncation="tolerance",
+    centered=True,
+    dx_target=0.01,
+    L=10.0,
+    eps_trunc=1e-10,
+    max_N=8192,
+    width_fallback=0.0,
+)
+
+prices = price_strip(
+    "vg",
+    "cos_filtered",
+    strikes,
+    fwd,
+    params,
+    grid=(policy, COSFilterSpec("exponential", order=8)),
+)
+```
+
+For the full adaptive grid-search selector (comparing vanilla, Junike, and
+filtered candidates):
+
+```python
+from foureng.experiments.cos_filter_grid_search import (
+    default_filtered_cos_candidates,
+    run_filtered_cos_grid_search,
+    select_fastest_under_tolerance,
+)
+
+df = run_filtered_cos_grid_search(
+    model="vg", strikes=strikes, fwd=fwd, params=params,
+    reference=reference_prices, tol=1e-6,
+)
+best = select_fastest_under_tolerance(df, tol=1e-6)
+```
+
+**References:**
+- Junike, G. and Pankrashkin, K. (2022), "Precise option pricing by the COS
+  method — How to choose the truncation range," *Applied Mathematics and
+  Computation*, 421, 126935.
+- Ruijter, M. J., Versteegh, M. and Oosterlee, C. W. (2015), "On the application
+  of spectral filters in a Fourier option pricing technique," *Journal of
+  Computational Finance*.
+- Junike, G. (2024), "On the number of terms in the COS method for European
+  option pricing," *Numerische Mathematik*.
+
+**Available spectral filters:** `"none"` (identity), `"fejer"`, `"lanczos"`,
+`"raised_cosine"`, `"exponential"` (order-*p* tunable).
 
 ## Demo notebook
 
@@ -207,7 +311,8 @@ This document records:
 - improved COS grid logic;
 - runtime and error reporting rules;
 - model-by-model observations;
-- known numerical limitations.
+- known numerical limitations;
+- adaptive filtered-COS extension (spectral filters + policy grid-search selector).
 
 ## License
 
