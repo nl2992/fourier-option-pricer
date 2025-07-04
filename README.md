@@ -22,7 +22,6 @@ Fast European option pricing via Fourier transform methods under **characteristi
 > *Applied Mathematics and Computation*, 421, 126935.
 > https://doi.org/10.1016/j.amc.2022.126935
 
-> Extension/novelty inspiration:
 > Ruijter, M. J., Versteegh, M., & Oosterlee, C. W. (2015). On the application of
 > spectral filters in a Fourier option pricing technique.
 > *Journal of Computational Finance*, 19(1), 75–106.
