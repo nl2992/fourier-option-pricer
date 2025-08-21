@@ -106,11 +106,6 @@ def heston_kou_cf(u: np.ndarray, fwd: ForwardSpec, p: HestonKouParams) -> np.nda
     the martingale of the discounted price — the same convention used
     by every CF in this project.
     """
-    if p.eta1 <= 1.0:
-        raise ValueError(f"Heston-Kou requires eta1 > 1; got {p.eta1}")
-    if p.eta2 <= 0.0:
-        raise ValueError(f"Heston-Kou requires eta2 > 0; got {p.eta2}")
-
     T = fwd.T
     u_c = np.asarray(u, dtype=np.complex128)
 

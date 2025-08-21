@@ -188,6 +188,7 @@ def heston_mc_pyfeng_price_strip(
     """
     K = np.ascontiguousarray(np.asarray(strikes, dtype=np.float64))
     m = _get_pyfeng_mc_model(engine, fwd, p)
+    # 100 substeps: matches the default n_steps in heston_conditional_mc_calls
     step = float(fwd.T) / 100.0 if dt is None else float(dt)
     m.set_num_params(n_path=int(n_paths), dt=step,
                      rn_seed=int(seed), antithetic=antithetic)

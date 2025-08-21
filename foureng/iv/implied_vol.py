@@ -16,9 +16,19 @@ class BSInputs:
 
 
 def bs_price_from_fwd(vol: float, inp: BSInputs) -> float:
-    """Black-76 call/put price from forward and discount (vol >= 0).
+    """Black-Scholes call/put price given a ForwardSpec and vol.
 
-    Handles degenerate cases: vol -> 0 returns intrinsic; T -> 0 returns intrinsic.
+    Parameters
+    ----------
+    vol : float
+        Annualised Black-Scholes implied volatility (lognormal, not percent).
+    inp : BSInputs
+        Market inputs (forward F0, strike K, maturity T, rate r, yield q, flag is_call).
+
+    Returns
+    -------
+    float
+        Discounted call (or put) price.
     """
     F, K, T, r = inp.F0, inp.K, inp.T, inp.r
     disc = np.exp(-r * T)
@@ -43,7 +53,23 @@ def _bs_vega_from_fwd(vol: float, inp: BSInputs) -> float:
 
 
 def implied_vol_brent(price: float, inp: BSInputs, lo: float = 1e-6, hi: float = 5.0) -> float:
-    """Brent IV baseline; returns NaN if bracket fails."""
+    """Recover implied volatility using Brent's root-finding method.
+
+    Slower than Newton but guaranteed to converge when a root exists in (ε, 5.0).
+    Prefer :func:`implied_vol_newton_safeguarded` for speed.
+
+    Parameters
+    ----------
+    price : float
+        Observed option price.
+    inputs : BSInputs
+        Market inputs.
+
+    Returns
+    -------
+    float
+        Implied volatility, or NaN on failure.
+    """
     def f(sig: float) -> float:
         return bs_price_from_fwd(sig, inp) - price
     try:
@@ -61,8 +87,23 @@ def implied_vol_newton_safeguarded(
     lo: float = 1e-6,
     hi: float = 5.0,
 ) -> float:
-    """Safeguarded Newton: Newton step if it stays inside [lo,hi] and reduces |f|,
-    otherwise fall back to bisection on the current bracket.
+    """Recover implied volatility from a market price via Newton–Raphson with Brent fallback.
+
+    Uses a Newton step initialised at σ=0.3 with automatic safeguarding: if the
+    Newton iterate leaves (ε, 5.0) or vega is tiny, falls back to Brent's method.
+    Returns NaN if no root is found in (ε, 5.0).
+
+    Parameters
+    ----------
+    price : float
+        Observed call (or put) price.
+    inputs : BSInputs
+        Market inputs — see :class:`BSInputs`.
+
+    Returns
+    -------
+    float
+        Implied volatility, or NaN on failure.
     """
     def f(sig: float) -> float:
         return bs_price_from_fwd(sig, inp) - price
