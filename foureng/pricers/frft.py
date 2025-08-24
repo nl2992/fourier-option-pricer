@@ -3,7 +3,7 @@ import numpy as np
 from dataclasses import dataclass
 from ..models.base import CharFunc, ForwardSpec
 from ..utils.grids import FRFTGrid
-from ..utils.numerics import cm_simpson_weights
+from ..utils.numerics import cm_simpson_weights, phi_logprice
 from ..utils.frft import frft
 from ..utils.interp import interp_cubic
 
@@ -13,10 +13,6 @@ class FRFTResult:
     k: np.ndarray            # log-strike grid
     call_prices: np.ndarray
     K: np.ndarray
-
-
-def _phi_logprice(phi: CharFunc, fwd: ForwardSpec, v: np.ndarray) -> np.ndarray:
-    return np.exp(1j * v * np.log(fwd.F0)) * phi(v)
 
 
 def frft_prices(
@@ -42,7 +38,7 @@ def frft_prices(
     b = 0.5 * N * lam
 
     v = np.arange(N) * eta
-    psi_logS = _phi_logprice(phi, fwd, v - 1j * (alpha + 1.0))
+    psi_logS = phi_logprice(phi, fwd, v - 1j * (alpha + 1.0))
     denom = alpha * alpha + alpha - v * v + 1j * (2.0 * alpha + 1.0) * v
     psi = fwd.disc * psi_logS / denom
 

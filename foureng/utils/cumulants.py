@@ -1,6 +1,7 @@
 from __future__ import annotations
 import math
 import numpy as np
+import scipy.special
 from dataclasses import dataclass
 from typing import Callable
 
@@ -108,9 +109,8 @@ def cumulants_from_cf(
     u = radius * np.exp(1j * theta)
     K = np.log(phi(u))
     bhat = np.fft.fft(K) / M
-    out: list[float] = []
-    for n in range(1, order + 1):
-        b_n = bhat[n] / radius ** n
-        c_n = math.factorial(n) * b_n / (1j) ** n
-        out.append(float(np.real(c_n)))
-    return out
+    ns = np.arange(1, order + 1)
+    b_raw = bhat[ns] / radius ** ns
+    factorial_vals = np.array([math.factorial(int(n)) for n in ns])
+    cumulants = list(np.real(b_raw / (1j ** ns)) * factorial_vals)
+    return cumulants

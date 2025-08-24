@@ -39,6 +39,9 @@ def model_price_surface(
     cf_factory(fwd)       -> phi (a CharFunc) for that maturity
     cumulant_factory(fwd) -> (c1, c2, c4) for COS truncation
     """
+    mats = np.asarray(spec.maturities, dtype=float)
+    if np.any(mats <= 0.0):
+        raise ValueError(f"All maturities must be > 0; got {mats[mats <= 0].tolist()}")
     nT = len(spec.maturities)
     nK = len(spec.strikes)
     out = np.empty((nT, nK), dtype=float)
@@ -63,6 +66,9 @@ def model_iv_surface(
     Prices come from ``model_price_surface``; IVs via safeguarded Newton.
     Cells that fail to invert return NaN (likely a degenerate / deep-OTM price).
     """
+    mats = np.asarray(spec.maturities, dtype=float)
+    if np.any(mats <= 0.0):
+        raise ValueError(f"All maturities must be > 0; got {mats[mats <= 0].tolist()}")
     prices = model_price_surface(spec, cf_factory, cumulant_factory, N=N, L=L)
     ivs = np.full_like(prices, np.nan)
     for i, T in enumerate(spec.maturities):

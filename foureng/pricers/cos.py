@@ -166,7 +166,7 @@ def cos_adaptive_decision(
             else _default_L_seed(model, params, mode=policy.mode)
         )
 
-    max_L = 96.0
+    max_L = 96.0  # 4× the 24.0 "wide interval" fallback threshold; beyond this COS is never efficient
     if policy.truncation == "tolerance":
         while True:
             if policy.centered:
@@ -387,6 +387,8 @@ def cos_prices(
     When ``filter_spec`` is ``None`` or ``COSFilterSpec("none")``, the output
     is **exactly identical** to the unfiltered implementation.
     """
+    if grid.N < 1:
+        raise ValueError(f"COSGrid.N must be >= 1; got {grid.N}")
     a, b, N = grid.a, grid.b, grid.N
     strikes = np.atleast_1d(np.asarray(strikes, dtype=float))
     center = float(getattr(grid, "center", 0.0))
