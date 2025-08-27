@@ -278,7 +278,7 @@ Under independence of the Heston diffusion block and the jump block, the log-for
 \varphi_{SVJ}(u) = \varphi_H(u)\varphi_J(u).
 ```
 
-For a pure-jump block with Levy exponent `psi(u)`, use
+For a pure-jump block with Lévy exponent $\psi(u)$, use
 
 ```math
 \varphi_J(u) = \exp\left(T\psi(u) - iuT\psi(-i)\right),
@@ -318,7 +318,7 @@ Heston--Kou uses the same Heston block and Kou double-exponential jump block. Th
 
 #### Heston--CGMY
 
-Heston--CGMY uses the CGMY tempered-stable Levy exponent
+Heston--CGMY uses the CGMY tempered-stable Lévy exponent
 
 ```math
 \psi(u)
@@ -386,11 +386,11 @@ c_1 + L\sqrt{c_2+\sqrt{|c_4|}}
 
 Here:
 
-- `c1` is the first cumulant;
-- `c2` is the second cumulant;
-- `c4` is the fourth cumulant;
-- `L` is a truncation-width multiplier;
-- `N` is the number of cosine terms.
+- $c_1$ is the first cumulant;
+- $c_2$ is the second cumulant;
+- $c_4$ is the fourth cumulant;
+- $L$ is a truncation-width multiplier;
+- $N$ is the number of cosine terms.
 
 The absolute value around `c4` is a numerical safeguard in the standard heuristic. It prevents the square-root expression from becoming ill-conditioned when a numerical cumulant estimator returns a negative value.
 
@@ -407,12 +407,14 @@ This is only an implementation choice. It does not change the pricing model.
 ## 9. Repository structure
 
 ```text
-src/foureng/
+foureng/
   models/           # PyFENG-backed and in-house characteristic functions
   pricers/          # carr_madan / frft / cos
-  refs/             # paper anchors and frozen regression strips
+  greeks/           # COS delta, gamma, parameter sensitivity
+  surface/          # IV surface construction and calibration
   utils/            # grids, cumulants, implied volatility, numerics
   mc/               # Monte Carlo baselines
+  viz/              # plotting helpers
   pipeline.py       # unified price_strip dispatcher
 
 tests/              # replication tests, PyFENG identity gates,
@@ -665,7 +667,7 @@ The baseline COS implementation follows Fang--Oosterlee's cumulant interval rule
 
 A fixed cumulant interval is a rule of thumb. If `[a,b]` is too narrow, the method discards tail mass before the cosine expansion starts. Increasing `N` then improves the approximation only on the truncated interval; it cannot recover the missing mass. If `[a,b]` is too wide, the series requires more terms to resolve the interval, and payoff coefficients can become harder to evaluate stably.
 
-The Junike--Pankrashkin idea is to choose the interval from a target tail tolerance rather than from a fixed multiplier. Let `m` be a center and `M` a half-width. For any `n >= 1`, Markov's inequality gives
+The Junike--Pankrashkin idea is to choose the interval from a target tail tolerance rather than from a fixed multiplier. Let $m$ be a centre and $M$ a half-width. For any $n \geq 1$, Markov's inequality gives
 
 ```math
 P(|X-m|\ge M)
@@ -673,7 +675,7 @@ P(|X-m|\ge M)
 \frac{E[|X-m|^n]}{M^n}.
 ```
 
-To make the tail probability at most `epsilon`, it is sufficient to choose
+To make the tail probability at most $\varepsilon$, it is sufficient to choose
 
 ```math
 M
@@ -689,7 +691,7 @@ Then set
 [a,b] = [m-M,\;m+M].
 ```
 
-Junike's number-of-terms result reinforces the same message: COS has two numerical knobs, not one. The interval and `N` should be chosen jointly.
+Junike's number-of-terms result reinforces the same message: COS has two numerical knobs, not one. The interval and $N$ should be chosen jointly.
 
 The practical policy is:
 
@@ -782,20 +784,20 @@ hard-coding a specific filter.
 ### 17.2 Spectral filter implementations
 
 All filters are implemented in `foureng/utils/spectral_filters.py`.
-Weight vector `σ` has length `N`; it is applied as `A[k] ← σ[k] · A[k]` to
-the characteristic-function samples before the payoff sum.  `σ[0] = 1` always.
+Weight vector $\sigma$ has length $N$; it is applied as $A_k \leftarrow \sigma_k \cdot A_k$
+to the characteristic-function samples before the payoff sum. $\sigma_0 = 1$ always.
 
-| Filter | `σ_k` formula | Notes |
-|--------|--------------|-------|
-| `"none"` | `1` | Identity; default (no-op) |
-| `"fejer"` | `1 - k/(N-1)` | First-order Cesàro summation |
-| `"lanczos"` | `sinc(k/(N-1))` | `sinc` in the `np.sinc` sense |
-| `"raised_cosine"` | `½(1 + cos(πk/(N-1)))` | Hann window |
-| `"exponential"` | `exp(−α·(k/(N-1))^p)` | Order-`p`; default `α = −ln(ε_mach)` |
+| Filter | $\sigma_k$ formula | Notes |
+|--------|-------------------|-------|
+| `"none"` | $1$ | Identity; default (no-op) |
+| `"fejer"` | $1 - \dfrac{k}{N-1}$ | First-order Cesàro summation |
+| `"lanczos"` | $\text{sinc}\!\left(\dfrac{k}{N-1}\right)$ | `sinc` in the `np.sinc` sense |
+| `"raised_cosine"` | $\tfrac{1}{2}\!\left(1 + \cos\!\left(\dfrac{\pi k}{N-1}\right)\right)$ | Hann window |
+| `"exponential"` | $\exp\!\left(-\alpha \left(\dfrac{k}{N-1}\right)^{\!p}\right)$ | Order $p$; default $\alpha = -\ln(\varepsilon_{\text{mach}})$ |
 
-The exponential filter with `p = 8` is the default in `cos_filtered`.  It
+The exponential filter with $p = 8$ is the default in `cos_filtered`. It
 keeps the low-frequency terms effectively unchanged while sending the
-highest-frequency weight to machine-ε.
+highest-frequency weight to machine epsilon.
 
 ### 17.3 Adaptive COS policy grid-search selector
 
