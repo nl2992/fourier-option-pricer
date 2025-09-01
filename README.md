@@ -37,7 +37,7 @@ Fast European option pricing via Fourier transform methods under **characteristi
 
 Fourier pricing exploits the fact that, for most asset models, the **characteristic function**
 
-$$\phi(u) = \mathbb{E}\!\left[e^{iu \ln S_T}\right]$$
+$$\phi(u) = \mathbb{E}\\left[e^{iu \ln S_T}\right]$$
 
 is known in closed form even when the option price integral has no analytic solution.
 Given $\phi$, a European call can be priced by a single numerical integral.
