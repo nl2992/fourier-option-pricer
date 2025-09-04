@@ -25,6 +25,10 @@ env/
 .vscode/
 *.swp
 
+# ── AI assistant local state ───────────────────────────────────
+# settings.local.json can contain auto-approved commands and API tokens
+.local-agent/
+
 # ── Local / personal files not needed for submission ─────────────────────────
 _local_backup/
 Papers/
