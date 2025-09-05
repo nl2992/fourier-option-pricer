@@ -63,7 +63,7 @@ $$
 C(K)
 = \frac{e^{-\alpha k}}{\pi}
 \int_0^\infty
-\operatorname{Re}\left(e^{-iuk}\psi(u)\right)\,du,
+\mathrm{Re}\left(e^{-iuk}\psi(u)\right)\,du,
 \qquad k = \log K.
 $$
 
@@ -71,15 +71,26 @@ For the COS method, the price is approximated by
 
 $$
 V_0 \approx e^{-rT}
-\sum_{j=0}^{N-1}{}'
-\operatorname{Re}\left[
+\sum_{j=0}^{N-1}
+w_j\,
+\mathrm{Re}\left[
 \phi_X\left(\frac{j\pi}{b-a}\right)
 \exp\left(-ij\pi\frac{a}{b-a}\right)
 \right]
-V_j,
+U_j,
 $$
 
-where the prime means the first summand is taken with weight $1/2$, and $V_j$ are the payoff cosine coefficients on $[a,b]$.
+with $w_0=1/2$ and $w_j=1$ for $j\ge 1$. Under this convention, the payoff cosine coefficients are
+
+$$
+U_j
+=
+\frac{2}{b-a}
+\int_a^b
+g(x)\cos\left(j\pi\frac{x-a}{b-a}\right)\,dx,
+$$
+
+where $g(x)$ is the payoff written as a function of the chosen log variable.
 
 ## Truncation and filtering
 
