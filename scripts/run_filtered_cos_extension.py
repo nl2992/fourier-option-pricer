@@ -45,9 +45,8 @@ from foureng.models.kou import KouParams
 from foureng.pipeline import price_strip
 from foureng.pricers.cos import recommended_cos_policy
 from foureng.utils.grids import COSGridPolicy
-from foureng.utils.spectral_filters import COSFilterSpec
 from foureng.experiments.cos_filter_grid_search import (
-    FilterGridCandidate,
+    policy_filter_candidates,
     run_filtered_cos_grid_search,
     select_fastest_under_tolerance,
 )
@@ -124,16 +123,8 @@ def _oracle_policy(model: str, params) -> COSGridPolicy:
     )
 
 
-def _candidate_set(policy: COSGridPolicy) -> list[FilterGridCandidate]:
-    return [
-        FilterGridCandidate("junike_no_filter",    policy, None),
-        FilterGridCandidate("junike_fejer",         policy, COSFilterSpec("fejer")),
-        FilterGridCandidate("junike_lanczos",       policy, COSFilterSpec("lanczos")),
-        FilterGridCandidate("junike_raised_cosine", policy, COSFilterSpec("raised_cosine")),
-        FilterGridCandidate("junike_exp_p4",        policy, COSFilterSpec("exponential", order=4)),
-        FilterGridCandidate("junike_exp_p8",        policy, COSFilterSpec("exponential", order=8)),
-        FilterGridCandidate("junike_exp_p12",       policy, COSFilterSpec("exponential", order=12)),
-    ]
+def _candidate_set(policy: COSGridPolicy):
+    return policy_filter_candidates(policy, label_prefix="junike")
 
 
 # ── Showcase table ─────────────────────────────────────────────────────────────

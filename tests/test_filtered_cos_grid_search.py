@@ -22,6 +22,9 @@ from foureng.utils.grids import COSGridPolicy
 from foureng.utils.spectral_filters import COSFilterSpec
 from foureng.experiments.cos_filter_grid_search import (
     FilterGridCandidate,
+    describe_filter_result,
+    filter_spec_from_result,
+    policy_filter_candidates,
     run_filtered_cos_grid_search,
     select_fastest_under_tolerance,
 )
@@ -136,6 +139,33 @@ def test_grid_search_filter_column_values(vg_setup, small_policy):
     )
 
     assert set(df["filter"]) == {"none", "exponential"}
+
+
+def test_policy_filter_candidates_builds_expected_labels(small_policy):
+    """Compact notebook candidate helper should build the standard 7 labels."""
+    candidates = policy_filter_candidates(small_policy, label_prefix="junike")
+    labels = [cand.method_label for cand in candidates]
+    assert labels == [
+        "junike_no_filter",
+        "junike_fejer",
+        "junike_lanczos",
+        "junike_raised_cosine",
+        "junike_exp_p4",
+        "junike_exp_p8",
+        "junike_exp_p12",
+    ]
+
+
+def test_filter_helpers_round_trip_result_rows():
+    """Notebook display helpers should reconstruct and describe the winning filter."""
+    row = pd.Series({"filter": "exponential", "filter_order": 8.0})
+    spec = filter_spec_from_result(row)
+    assert spec == COSFilterSpec("exponential", order=8)
+    assert describe_filter_result(row) == "exponential p=8"
+
+    none_row = pd.Series({"filter": "none", "filter_order": np.nan})
+    assert filter_spec_from_result(none_row) is None
+    assert describe_filter_result(none_row) == "no filter"
 
 
 # ---------------------------------------------------------------------------
