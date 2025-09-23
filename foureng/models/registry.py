@@ -11,12 +11,12 @@ share a single source of truth.
 Populated in Pass 4; empty on purpose today.
 """
 from __future__ import annotations
-from typing import Dict, Type
+from typing import Type
 
 from .base import FourierModelBase
 
 
-MODEL_BACKENDS: Dict[str, Type[FourierModelBase]] = {}
+MODEL_BACKENDS: dict[str, Type[FourierModelBase]] = {}
 """Name -> backend model class. Populated by ``models/__init__.py`` in Pass 4."""
 
 
