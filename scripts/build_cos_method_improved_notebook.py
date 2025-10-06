@@ -616,10 +616,7 @@ ax.legend(handles=[
 fig.suptitle("COS Method Improved · Heston $T{=}10$ microscope + cross-case scatter",
              color=CU_BLUE, fontsize=14, fontweight="bold", y=1.02)
 fig.tight_layout()
-fig.savefig(OUTDIR / "cos_method_improved_diagnostics.png", dpi=180,
-            bbox_inches="tight", facecolor="white")
 plt.show()
-print("wrote", OUTDIR / "cos_method_improved_diagnostics.png")
 """
 
 
@@ -632,8 +629,8 @@ FIGURE_EXPORT_MD = r"""
 > (b) Series-side error vs $N$ — put + parity decays to machine precision while the direct-call recurrence diverges as $e^b$ floods the answer.
 > (c) Default vs improved error per case — points below the $y{=}x$ line are wins for the adaptive path.
 
-The figure is exported to `benchmarks/cos_method_improved/outputs/cos_method_improved_diagnostics.png`
-so README references keep working.
+The figure is shown inline so the notebook stays self-contained and does not
+write image files back into the repo.
 """
 
 
