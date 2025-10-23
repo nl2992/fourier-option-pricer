@@ -180,9 +180,8 @@ VG_ERR_CLASSIC = np.abs(VG_DENSE_CLASSIC - VG_DENSE_REF)
 VG_ERR_IMPROVED = np.abs(VG_DENSE_IMPROVED - VG_DENSE_REF)
 VG_ERR_ADAPTIVE = np.abs(VG_DENSE_ADAPTIVE - VG_DENSE_REF)
 
-VG_RES_CLASSIC = 1e4 * (VG_DENSE_CLASSIC - VG_DENSE_REF)
-VG_RES_IMPROVED = 1e4 * (VG_DENSE_IMPROVED - VG_DENSE_REF)
-VG_RES_ADAPTIVE = 1e4 * (VG_DENSE_ADAPTIVE - VG_DENSE_REF)
+VG_GAP_IMPROVED = 1e5 * (VG_ERR_IMPROVED - VG_ERR_CLASSIC)
+VG_GAP_ADAPTIVE = 1e5 * (VG_ERR_ADAPTIVE - VG_ERR_CLASSIC)
 
 err_all = np.concatenate([VG_ERR_CLASSIC, VG_ERR_IMPROVED, VG_ERR_ADAPTIVE])
 err_lo = float(err_all.min())
@@ -196,44 +195,70 @@ fig, axes = plt.subplots(
 
 axes[0].plot(VG_DENSE_K, VG_DENSE_REF, color=DARK, linewidth=2.5, label='PyFENG FFT ref')
 axes[0].plot(VG_DENSE_K, VG_DENSE_CLASSIC, color=CB_STEEL, linestyle='--', linewidth=1.8,
+             marker='o', markevery=5, ms=3.5,
              label='COS classic')
 axes[0].plot(VG_DENSE_K, VG_DENSE_IMPROVED, color=NAVY, linestyle='-.', linewidth=1.8,
+             marker='s', markevery=5, ms=3.5,
              label='COS improved')
 axes[0].plot(VG_DENSE_K, VG_DENSE_ADAPTIVE, color=COLUMBIA_BLUE, linewidth=1.8,
+             marker='^', markevery=5, ms=3.5,
              label=adaptive_label)
 axes[0].set_title('Short-maturity VG strip: price level')
 axes[0].set_xlabel('strike K')
 axes[0].set_ylabel('call price')
 axes[0].legend(frameon=False, fontsize=8, loc='upper right')
+axes[0].grid(True, alpha=0.18, axis='y')
 
-axes[1].axhline(0.0, color='#94a3b8', linestyle=':', linewidth=1.2)
-axes[1].plot(VG_DENSE_K, VG_RES_CLASSIC, color=CB_STEEL, linestyle='--', linewidth=1.8,
+axes[1].plot(VG_DENSE_K, VG_ERR_CLASSIC, color=CB_STEEL, linestyle='--', linewidth=1.8,
+             marker='o', markevery=5, ms=3.5,
              label='COS classic')
-axes[1].plot(VG_DENSE_K, VG_RES_IMPROVED, color=NAVY, linestyle='-.', linewidth=1.8,
+axes[1].plot(VG_DENSE_K, VG_ERR_IMPROVED, color=NAVY, linestyle='-.', linewidth=1.8,
+             marker='s', markevery=5, ms=3.5,
              label='COS improved')
-axes[1].plot(VG_DENSE_K, VG_RES_ADAPTIVE, color=COLUMBIA_BLUE, linewidth=1.8,
+axes[1].plot(VG_DENSE_K, VG_ERR_ADAPTIVE, color=COLUMBIA_BLUE, linewidth=1.8,
+             marker='^', markevery=5, ms=3.5,
              label=adaptive_label)
-axes[1].set_title('Residual vs PyFENG FFT')
+axes[1].set_title('Absolute error (tight linear zoom)')
 axes[1].set_xlabel('strike K')
-axes[1].set_ylabel('price residual × 1e4')
+axes[1].set_ylabel('abs error')
+axes[1].set_ylim(max(0.0, err_lo - err_pad), err_hi + err_pad)
 axes[1].legend(frameon=False, fontsize=8, loc='upper left')
+axes[1].grid(True, alpha=0.22)
 
-axes[2].plot(VG_DENSE_K, VG_ERR_CLASSIC, color=CB_STEEL, linestyle='--', linewidth=1.8,
-             label='COS classic')
-axes[2].plot(VG_DENSE_K, VG_ERR_IMPROVED, color=NAVY, linestyle='-.', linewidth=1.8,
-             label='COS improved')
-axes[2].plot(VG_DENSE_K, VG_ERR_ADAPTIVE, color=COLUMBIA_BLUE, linewidth=1.8,
-             label=adaptive_label)
-axes[2].set_title('Absolute error (zoomed)')
+axes[2].axhline(0.0, color='#94a3b8', linestyle=':', linewidth=1.2)
+axes[2].plot(VG_DENSE_K, VG_GAP_IMPROVED, color=NAVY, linestyle='-.', linewidth=1.8,
+             marker='s', markevery=5, ms=3.5,
+             label='improved - classic')
+axes[2].plot(VG_DENSE_K, VG_GAP_ADAPTIVE, color=COLUMBIA_BLUE, linewidth=1.8,
+             marker='^', markevery=5, ms=3.5,
+             label='adaptive - classic')
+axes[2].fill_between(
+    VG_DENSE_K,
+    VG_GAP_ADAPTIVE,
+    0.0,
+    where=VG_GAP_ADAPTIVE < 0.0,
+    color=COLUMBIA_BLUE,
+    alpha=0.10,
+)
+axes[2].fill_between(
+    VG_DENSE_K,
+    VG_GAP_IMPROVED,
+    0.0,
+    where=VG_GAP_IMPROVED < 0.0,
+    color=NAVY,
+    alpha=0.08,
+)
+axes[2].set_title('Error gap vs COS classic')
 axes[2].set_xlabel('strike K')
-axes[2].set_ylabel('abs error')
-axes[2].set_ylim(max(0.0, err_lo - err_pad), err_hi + err_pad)
+axes[2].set_ylabel('delta abs error x 1e5')
 axes[2].legend(frameon=False, fontsize=8, loc='upper left')
+axes[2].grid(True, alpha=0.22)
 
 stats_text = (
     f"classic  max={VG_ERR_CLASSIC.max():.3e}\\n"
     f"improved max={VG_ERR_IMPROVED.max():.3e}\\n"
-    f"adaptive max={VG_ERR_ADAPTIVE.max():.3e}"
+    f"adaptive max={VG_ERR_ADAPTIVE.max():.3e}\\n"
+    f"best filter: {dense_best['filter']}"
 )
 axes[2].text(
     0.03, 0.03, stats_text,
