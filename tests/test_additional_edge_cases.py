@@ -6,6 +6,7 @@ import pytest
 
 from foureng.models.base import ForwardSpec
 from foureng.models.bsm import BsmParams
+from foureng.mc.black_scholes_mc import MCSpec, european_call_mc
 from foureng.pipeline import price_strip
 from foureng.utils.grids import FFTGrid
 
@@ -36,3 +37,13 @@ def test_bsm_cos_prices_are_monotone_and_above_intrinsic_value():
     assert np.all(np.isfinite(prices))
     assert np.all(prices >= lower_bound - 1e-9)
     assert np.all(np.diff(prices) <= 1e-9)
+
+
+def test_bsm_monte_carlo_is_reproducible_with_fixed_seed():
+    strikes = np.array([90.0, 100.0, 110.0])
+    spec = MCSpec(n_paths=25_000, seed=1234)
+
+    first = european_call_mc(100.0, strikes, 1.0, 0.03, 0.01, 0.2, spec)
+    second = european_call_mc(100.0, strikes, 1.0, 0.03, 0.01, 0.2, spec)
+
+    assert np.array_equal(first, second)
