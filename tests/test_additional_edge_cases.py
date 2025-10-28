@@ -6,6 +6,7 @@ import pytest
 
 from foureng.models.base import ForwardSpec
 from foureng.models.bsm import BsmParams
+from foureng.iv.implied_vol import BSInputs, implied_vol_newton_safeguarded
 from foureng.mc.black_scholes_mc import MCSpec, european_call_mc
 from foureng.pipeline import price_strip
 from foureng.utils.grids import FFTGrid
@@ -47,3 +48,24 @@ def test_bsm_monte_carlo_is_reproducible_with_fixed_seed():
     second = european_call_mc(100.0, strikes, 1.0, 0.03, 0.01, 0.2, spec)
 
     assert np.array_equal(first, second)
+
+
+def test_bsm_implied_vol_round_trip_across_small_surface():
+    sigma = 0.28
+    params = BsmParams(sigma=sigma)
+    strikes = np.array([90.0, 100.0, 110.0])
+
+    for T in [0.5, 1.0, 2.0]:
+        fwd = ForwardSpec(S0=100.0, r=0.025, q=0.01, T=T)
+        prices = price_strip("bsm", "cos", strikes, fwd, params)
+        ivs = np.array(
+            [
+                implied_vol_newton_safeguarded(
+                    float(price),
+                    BSInputs(F0=fwd.F0, K=float(K), T=T, r=fwd.r, q=fwd.q),
+                )
+                for price, K in zip(prices, strikes)
+            ]
+        )
+
+        assert np.max(np.abs(ivs - sigma)) < 1e-8
