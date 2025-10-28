@@ -9,7 +9,59 @@ from foureng.models.bsm import BsmParams
 from foureng.iv.implied_vol import BSInputs, implied_vol_newton_safeguarded
 from foureng.mc.black_scholes_mc import MCSpec, european_call_mc
 from foureng.pipeline import price_strip
-from foureng.utils.grids import FFTGrid
+from foureng.models.bates import BatesParams, bates_cf, bates_cumulants
+from foureng.models.heston import HestonParams, heston_cf, heston_cumulants
+from foureng.models.heston_cgmy import HestonCGMYParams, heston_cgmy_cf
+from foureng.models.heston_kou import HestonKouParams, heston_kou_cf, heston_kou_cumulants
+from foureng.utils.grids import FFTGrid, FRFTGrid
+
+
+def _heston_base_case():
+    fwd = ForwardSpec(S0=100.0, r=0.03, q=0.01, T=1.0)
+    params = HestonParams(kappa=2.5, theta=0.05, nu=0.35, rho=-0.45, v0=0.04)
+    strikes = np.array([85.0, 95.0, 100.0, 105.0, 115.0])
+    return fwd, params, strikes
+
+
+def _bates_no_jump_params(heston: HestonParams):
+    return BatesParams(
+        kappa=heston.kappa,
+        theta=heston.theta,
+        nu=heston.nu,
+        rho=heston.rho,
+        v0=heston.v0,
+        lam_j=0.0,
+        mu_j=-0.08,
+        sigma_j=0.22,
+    )
+
+
+def _heston_kou_no_jump_params(heston: HestonParams):
+    return HestonKouParams(
+        kappa=heston.kappa,
+        theta=heston.theta,
+        nu=heston.nu,
+        rho=heston.rho,
+        v0=heston.v0,
+        lam_j=0.0,
+        p_j=0.35,
+        eta1=12.0,
+        eta2=8.0,
+    )
+
+
+def _heston_cgmy_no_jump_params(heston: HestonParams):
+    return HestonCGMYParams(
+        kappa=heston.kappa,
+        theta=heston.theta,
+        nu=heston.nu,
+        rho=heston.rho,
+        v0=heston.v0,
+        C=0.0,
+        G=5.0,
+        M=9.0,
+        Y=0.6,
+    )
 
 
 def test_carr_madan_rejects_nonpositive_strikes():
@@ -69,3 +121,11 @@ def test_bsm_implied_vol_round_trip_across_small_surface():
         )
 
         assert np.max(np.abs(ivs - sigma)) < 1e-8
+
+
+def test_bates_zero_jump_intensity_cf_reduces_to_heston():
+    fwd, heston, _ = _heston_base_case()
+    bates = _bates_no_jump_params(heston)
+    u = np.array([-3.0, -1.0, 0.0, 0.75, 2.5], dtype=float)
+
+    assert np.allclose(bates_cf(u, fwd, bates), heston_cf(u, fwd, heston), atol=1e-13, rtol=1e-13)
