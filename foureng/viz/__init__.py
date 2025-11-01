@@ -16,6 +16,17 @@ from .columbia import (
     plot_L_sensitivity,
     plot_error_vs_runtime,
 )
+from .notebook_runtime import (
+    ensure_repo_root_on_path,
+    error_zoom_bounds,
+    locate_repo_root,
+    night_style,
+    sci,
+    style_table,
+    timed_call,
+    timed_median_ms,
+    timeit_strip,
+)
 
 __all__ = [
     "apply_columbia_style",
@@ -33,4 +44,13 @@ __all__ = [
     "plot_convergence",
     "plot_L_sensitivity",
     "plot_error_vs_runtime",
+    "ensure_repo_root_on_path",
+    "error_zoom_bounds",
+    "locate_repo_root",
+    "night_style",
+    "sci",
+    "style_table",
+    "timed_call",
+    "timed_median_ms",
+    "timeit_strip",
 ]

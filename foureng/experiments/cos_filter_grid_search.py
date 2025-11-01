@@ -68,6 +68,55 @@ class FilterGridCandidate:
     filter_spec: COSFilterSpec | None
 
 
+def policy_filter_candidates(
+    policy: COSGridPolicy,
+    *,
+    label_prefix: str = "",
+    no_filter_label: str | None = None,
+) -> list[FilterGridCandidate]:
+    """Build the compact candidate set used in the notebooks and demos."""
+    prefix = f"{label_prefix}_" if label_prefix else ""
+    none_label = no_filter_label or f"{prefix}no_filter"
+
+    candidates = [FilterGridCandidate(none_label, policy, None)]
+    specs = [
+        ("fejer", COSFilterSpec("fejer")),
+        ("lanczos", COSFilterSpec("lanczos")),
+        ("raised_cosine", COSFilterSpec("raised_cosine")),
+        ("exp_p4", COSFilterSpec("exponential", order=4)),
+        ("exp_p8", COSFilterSpec("exponential", order=8)),
+        ("exp_p12", COSFilterSpec("exponential", order=12)),
+    ]
+    for label, spec in specs:
+        candidates.append(FilterGridCandidate(f"{prefix}{label}", policy, spec))
+    return candidates
+
+
+def filter_spec_from_result(row: pd.Series | dict[str, Any]) -> COSFilterSpec | None:
+    """Recover a ``COSFilterSpec`` from a grid-search result row."""
+    filter_name = str(row["filter"])
+    if filter_name == "none":
+        return None
+    if filter_name == "exponential":
+        order = int(row["filter_order"])
+        return COSFilterSpec("exponential", order=order)
+    return COSFilterSpec(filter_name)
+
+
+def describe_filter_result(
+    row: pd.Series | dict[str, Any],
+    *,
+    none_label: str = "no filter",
+) -> str:
+    """Human-readable filter label for notebook captions and legends."""
+    spec = filter_spec_from_result(row)
+    if spec is None:
+        return none_label
+    if spec.name == "exponential":
+        return f"exponential p={int(spec.order)}"
+    return spec.name.replace("_", " ")
+
+
 # ---------------------------------------------------------------------------
 # Internal timing helper
 # ---------------------------------------------------------------------------
@@ -139,16 +188,6 @@ def default_filtered_cos_candidates() -> list[FilterGridCandidate]:
         for eps in [1e-8, 1e-10, 1e-12]
     ]
 
-    filters: list[COSFilterSpec | None] = [
-        None,
-        COSFilterSpec("fejer"),
-        COSFilterSpec("lanczos"),
-        COSFilterSpec("raised_cosine"),
-        COSFilterSpec("exponential", order=4),
-        COSFilterSpec("exponential", order=8),
-        COSFilterSpec("exponential", order=12),
-    ]
-
     out: list[FilterGridCandidate] = []
 
     # Classic policies — no filter (Junike is not applied here)
@@ -157,16 +196,13 @@ def default_filtered_cos_candidates() -> list[FilterGridCandidate]:
 
     # Improved (Junike) policies — no filter + each filter variant
     for policy in improved_policies:
-        out.append(FilterGridCandidate("junike_policy", policy, None))
-        for fs in filters[1:]:  # skip None (already added above)
-            assert fs is not None
-            out.append(
-                FilterGridCandidate(
-                    f"junike_filtered_{fs.name}_{fs.order}",
-                    policy,
-                    fs,
-                )
+        out.extend(
+            policy_filter_candidates(
+                policy,
+                label_prefix="junike",
+                no_filter_label="junike_policy",
             )
+        )
 
     return out
 
