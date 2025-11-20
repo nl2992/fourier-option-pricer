@@ -95,26 +95,42 @@ from matplotlib.patches import FancyBboxPatch, Patch
 from IPython.display import display
 warnings.filterwarnings("ignore")
 
-from foureng.iv.implied_vol import BSInputs, bs_price_from_fwd
-from foureng.mc.black_scholes_mc import MCSpec, european_call_mc
-from foureng.mc.heston_conditional_mc import HestonMCScheme, heston_conditional_mc_calls
-from foureng.models.base import ForwardSpec
-from foureng.models.bsm import BsmParams
-from foureng.models.heston import HestonParams, heston_cf, heston_cumulants
-from foureng.models.variance_gamma import VGParams
-from foureng.pipeline import price_strip
-from foureng.pricers.cos import cos_adaptive_decision, cos_auto_grid, recommended_cos_policy
-from foureng.refs.paper_refs import (
-    HESTON_PUBLISHED_STRIP,
-    OUSV_REGRESSION_STRIP_V1,
-    CGMY_REGRESSION_STRIP_V1,
-    NIG_REGRESSION_STRIP_V1,
-    BATES_REGRESSION_STRIP_V1,
-    HESTON_KOU_REGRESSION_STRIP_V1,
-    HESTON_CGMY_REGRESSION_STRIP_V1,
-)
-from foureng.utils.grids import COSGridPolicy, FFTGrid
-from foureng.viz.columbia import apply_columbia_style, NAVY, COLUMBIA_BLUE, DARK
+import foureng as fe
+import foureng.models as fe_models
+import foureng.pipeline as fe_pipe
+import foureng.refs.paper_refs as fe_papers
+import foureng.viz.columbia as fe_col
+
+BSInputs = fe.BSInputs
+bs_price_from_fwd = fe.bs_price_from_fwd
+MCSpec = fe.MCSpec
+european_call_mc = fe.european_call_mc
+HestonMCScheme = fe.HestonMCScheme
+heston_conditional_mc_calls = fe.heston_conditional_mc_calls
+ForwardSpec = fe.ForwardSpec
+BsmParams = fe_models.BsmParams
+HestonParams = fe_models.HestonParams
+VGParams = fe_models.VGParams
+heston_cf = fe_models.heston_cf
+heston_cumulants = fe_models.heston_cumulants
+price_strip = fe_pipe.price_strip
+cos_adaptive_decision = fe.cos_adaptive_decision
+cos_auto_grid = fe.cos_auto_grid
+recommended_cos_policy = fe.recommended_cos_policy
+COSGridPolicy = fe.COSGridPolicy
+FFTGrid = fe.FFTGrid
+HESTON_PUBLISHED_STRIP = fe_papers.HESTON_PUBLISHED_STRIP
+OUSV_REGRESSION_STRIP_V1 = fe_papers.OUSV_REGRESSION_STRIP_V1
+CGMY_REGRESSION_STRIP_V1 = fe_papers.CGMY_REGRESSION_STRIP_V1
+NIG_REGRESSION_STRIP_V1 = fe_papers.NIG_REGRESSION_STRIP_V1
+BATES_REGRESSION_STRIP_V1 = fe_papers.BATES_REGRESSION_STRIP_V1
+HESTON_KOU_REGRESSION_STRIP_V1 = fe_papers.HESTON_KOU_REGRESSION_STRIP_V1
+HESTON_CGMY_REGRESSION_STRIP_V1 = fe_papers.HESTON_CGMY_REGRESSION_STRIP_V1
+apply_columbia_style = fe_col.apply_columbia_style
+NAVY = fe_col.NAVY
+COLUMBIA_BLUE = fe_col.COLUMBIA_BLUE
+DARK = fe_col.DARK
+
 apply_columbia_style()
 pd.options.display.float_format = lambda x: f'{x:,.6g}'
 
