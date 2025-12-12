@@ -136,3 +136,13 @@ def test_bates_zero_jump_intensity_cumulants_reduce_to_heston():
     bates = _bates_no_jump_params(heston)
 
     assert np.allclose(bates_cumulants(fwd, bates), heston_cumulants(fwd, heston), atol=1e-12, rtol=1e-12)
+
+
+def test_bates_zero_jump_intensity_cos_prices_match_heston():
+    fwd, heston, strikes = _heston_base_case()
+    bates = _bates_no_jump_params(heston)
+
+    bates_prices = price_strip("bates", "cos", strikes, fwd, bates)
+    heston_prices = price_strip("heston", "cos", strikes, fwd, heston)
+
+    assert np.allclose(bates_prices, heston_prices, atol=1e-10, rtol=1e-10)
