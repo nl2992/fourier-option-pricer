@@ -168,3 +168,11 @@ def test_bates_zero_jump_intensity_frft_prices_match_heston():
     heston_prices = price_strip("heston", "frft", strikes, fwd, heston, grid=grid)
 
     assert np.allclose(bates_prices, heston_prices, atol=1e-12, rtol=1e-12)
+
+
+def test_heston_kou_zero_jump_intensity_cf_reduces_to_heston():
+    fwd, heston, _ = _heston_base_case()
+    heston_kou = _heston_kou_no_jump_params(heston)
+    u = np.array([-4.0, -1.5, 0.0, 1.25, 3.0], dtype=float)
+
+    assert np.allclose(heston_kou_cf(u, fwd, heston_kou), heston_cf(u, fwd, heston), atol=1e-13, rtol=1e-13)
