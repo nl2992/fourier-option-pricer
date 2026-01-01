@@ -183,3 +183,13 @@ def test_heston_kou_zero_jump_intensity_cumulants_reduce_to_heston():
     heston_kou = _heston_kou_no_jump_params(heston)
 
     assert np.allclose(heston_kou_cumulants(fwd, heston_kou), heston_cumulants(fwd, heston), atol=1e-12, rtol=1e-12)
+
+
+def test_heston_kou_zero_jump_intensity_cos_prices_match_heston():
+    fwd, heston, strikes = _heston_base_case()
+    heston_kou = _heston_kou_no_jump_params(heston)
+
+    heston_kou_prices = price_strip("heston_kou", "cos", strikes, fwd, heston_kou)
+    heston_prices = price_strip("heston", "cos", strikes, fwd, heston)
+
+    assert np.allclose(heston_kou_prices, heston_prices, atol=1e-10, rtol=1e-10)
