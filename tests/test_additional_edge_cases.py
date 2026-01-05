@@ -201,3 +201,14 @@ def test_heston_cgmy_zero_activity_cf_reduces_to_heston():
     u = np.array([-2.5, -0.5, 0.0, 1.0, 3.5], dtype=float)
 
     assert np.allclose(heston_cgmy_cf(u, fwd, heston_cgmy), heston_cf(u, fwd, heston), atol=1e-13, rtol=1e-13)
+
+
+def test_heston_cgmy_zero_activity_carr_madan_prices_match_heston():
+    fwd, heston, strikes = _heston_base_case()
+    heston_cgmy = _heston_cgmy_no_jump_params(heston)
+    grid = FFTGrid(N=4096, eta=0.25, alpha=1.5)
+
+    heston_cgmy_prices = price_strip("heston_cgmy", "carr_madan", strikes, fwd, heston_cgmy, grid=grid)
+    heston_prices = price_strip("heston", "carr_madan", strikes, fwd, heston, grid=grid)
+
+    assert np.allclose(heston_cgmy_prices, heston_prices, atol=1e-12, rtol=1e-12)
