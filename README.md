@@ -4,6 +4,13 @@ European option pricing with Fourier-transform methods under models specified by
 
 This package focuses on pricing vanilla European calls across several model families where the transition density may be unavailable in closed form, but the characteristic function is known or easy to evaluate.
 
+The current repo includes:
+
+- Fourier pricing engines: Carr–Madan FFT, FRFT, Lewis, COS, improved COS, filtered COS, and PyFENG FFT benchmarks.
+- Characteristic-function models: BSM, Heston, OU-SV, VG, NIG, CGMY, Kou, Bates, Heston–Kou, and Heston–CGMY.
+- Robust validation tests against paper anchors, cross-method consistency, no-arbitrage checks, Monte Carlo baselines, jump-to-Heston reduction limits, implied-volatility round trips, Greeks, calibration, and public API workflows.
+- A reproducible Conda environment file: [`req.yml`](req.yml).
+
 ## References
 
 > Carr, P., & Madan, D. (1999). Option valuation using the fast Fourier transform.  
@@ -39,13 +46,17 @@ $$
 
 Many option models have a tractable characteristic function even when the transition density of $S_T$ is not available in closed form. Fourier pricing methods use $\phi_X$ to recover option values through numerical inversion or through a Fourier-series approximation of the risk-neutral density.
 
-The package implements three related approaches:
+The package implements several related pricing engines:
 
-| Method | Role in the package |
-| --- | --- |
-| Carr–Madan FFT | Uses a damped call-price transform and the FFT to compute prices on a strike grid. |
-| Lewis single-integral | Prices options through a shifted Fourier integral, without the Carr–Madan damping parameter. |
-| COS method | Approximates the risk-neutral density by a Fourier-cosine expansion on a finite interval $[a,b]$. |
+| Method | Main idea | Best use |
+| --- | --- | --- |
+| Carr–Madan FFT | Damped call transform plus FFT. | Many strikes quickly on a regular log-strike grid. |
+| FRFT | Carr–Madan transform with flexible strike spacing. | Many strikes when FFT grid coupling is too restrictive. |
+| Lewis single-integral | Shifted Fourier integral without a damping parameter. | Few strikes or robust fallback pricing. |
+| COS method | Cosine expansion of the density on $[a,b]$. | High accuracy when the truncation interval is good. |
+| Improved COS | Adaptive interval and $N$ selection. | Safer COS automation across model families. |
+| Filtered COS | COS with high-frequency damping. | Jump-heavy, short-maturity, or oscillatory cases. |
+| PyFENG FFT | External PyFENG pricer. | Benchmarking and support for known model classes. |
 
 For Carr–Madan, the damped call transform has the standard form
 
@@ -93,6 +104,28 @@ where $g(x)$ is the payoff written as a function of the chosen log variable.
 
 ## Truncation and filtering
 
+The overall COS workflow is:
+
+```text
+model parameters
+      ↓
+build characteristic function φ(u)
+      ↓
+compute cumulants c1, c2, c4
+      ↓
+choose truncation interval [a,b]
+      ↓
+choose number of COS terms N
+      ↓
+evaluate φ at u_j = jπ/(b-a)
+      ↓
+compute model-side and payoff-side coefficients
+      ↓
+optionally apply spectral filter weights
+      ↓
+discounted dot product gives the option price
+```
+
 The COS method requires a finite interval $[a,b]$ for the log-price or log-return density. The project supports two truncation policies.
 
 The standard cumulant rule uses the Fang–Oosterlee interval
@@ -121,6 +154,24 @@ The current candidate set is:
 
 The selector returns the fastest candidate whose error is below the requested tolerance. If no filtered candidate improves the trade-off, the plain Junike-COS candidate remains available.
 
+## Validation and tests
+
+The test suite is part of the project outcome, not only a development aid. It checks:
+
+- paper/reference replication for Carr–Madan, Lewis, and Fang–Oosterlee-style cases;
+- cross-method agreement between COS, improved COS, filtered COS, Carr–Madan, FRFT, Lewis, and PyFENG where applicable;
+- no-arbitrage shape checks such as finite prices, nonnegative calls, monotonicity in strike, and intrinsic-value bounds;
+- Monte Carlo sanity checks, including seeded reproducibility and BSM/Heston limiting cases;
+- jump-model reductions such as Bates `lam_j=0`, Heston–Kou `lam_j=0`, and Heston–CGMY `C=0` reducing back to Heston;
+- public API workflows for pricing, implied volatility, Greeks, surfaces, calibration, and control variates.
+
+Typical local checks:
+
+```bash
+pytest -q -m "not slow"
+pytest -q
+```
+
 ## Models
 
 | Family | Models |
@@ -144,6 +195,14 @@ git clone https://github.com/nl2992/fourier-option-pricer.git
 cd fourier-option-pricer
 pip install -e ".[test]"
 pytest
+```
+
+For a reproducible Conda environment:
+
+```bash
+conda env create -f req.yml
+conda activate fourier-option-pricer
+pytest -q
 ```
 
 The PyPI package is installed as `fourier-option-pricer`; the Python import used in the examples is `foureng`.
@@ -183,6 +242,20 @@ atm_iv = fe.implied_vol_newton_safeguarded(
     inputs=fe.BSInputs(F0=fwd.F0, K=100.0, T=fwd.T, r=fwd.r, q=fwd.q, is_call=True),
 )
 print(atm_iv)
+```
+
+For the unified high-level pipeline:
+
+```python
+from foureng.pipeline import price_strip
+
+prices = price_strip(
+    model="heston",
+    method="cos_improved",
+    strikes=strikes,
+    fwd=fwd,
+    params=params,
+)
 ```
 
 ### Improved COS truncation
@@ -371,14 +444,16 @@ Detailed numerical experiments, replication notes, benchmark tables, and impleme
 See [`methodology_and_results.md`](methodology_and_results.md) for:
 
 - Fang–Oosterlee COS replication notes;
+- pricing-layer design and method comparisons;
 - Carr–Madan benchmark setup;
 - Monte Carlo comparison setup;
 - truncation-interval diagnostics;
 - improved COS grid logic;
+- spectral-filter design and adaptive filtered-COS selection;
 - runtime and error reporting rules;
 - model-by-model observations;
 - known numerical limitations;
-- adaptive filtered-COS experiments.
+- validation philosophy and reduction-limit tests.
 
 ## License
 
