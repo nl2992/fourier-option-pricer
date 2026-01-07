@@ -1,48 +1,69 @@
 # fourier-option-pricer
 
-Course project and research repo for Fourier-based European option pricing under characteristic-function models.
+Fourier pricing toolkit for European options using Carr-Madan FFT, FRFT, and COS under characteristic-function models.
 
-This repository compares Carr-Madan FFT, PyFENG-backed FFT references, COS, and an adaptive filtered-COS extension across diffusion, stochastic-volatility, Levy, and stochastic-volatility-with-jumps settings. It contains the package source, the replication notebooks, and the benchmark artifacts used in the project write-up.
+This package solves a practical numerical-finance problem: pricing vanilla European options, computing implied volatilities, and building price or volatility surfaces without relying on slow Monte Carlo as the main engine. It wraps several characteristic-function models behind a common interface so the same workflow can be reused across Heston, Variance Gamma, Kou, and related models.
 
-## Repository guide
+## Installation
 
-- `foureng/`: packaged pricing library and public API
-- `notebooks/demo.ipynb`: Colab-friendly walkthrough of the main pricing workflow
-- `notebooks/presentation_fourier_methods.ipynb`: presentation notebook version
-- `notebooks/cos_method_improved.ipynb`: COS truncation and policy notebook
-- `benchmarks/`: generated tables and figures used by the notebooks
-- `tests/`: regression and public API tests
+```bash
+pip install fourier-option-pricer
+```
 
-For the PyPI-facing package README, see [README-II.md](README-II.md).
+## Quick start
 
-## Methods in scope
+```python
+import numpy as np
+import foureng as fe
 
-| Method | Role in the repo |
-|--------|-------------------|
-| Carr-Madan FFT | Baseline transform method for pricing a strike strip on a fixed frequency grid |
-| PyFENG FFT reference | External oracle for supported models in benchmarking and notebook comparisons |
-| COS | Main Fourier-cosine pricing method |
-| Improved COS | COS with model-aware truncation and adaptive grid selection |
-| Adaptive filtered-COS | Extension that searches across no-filter and filtered COS policies under a tolerance target |
+fwd = fe.ForwardSpec(S0=100.0, r=0.01, q=0.02, T=1.0)
+params = fe.HestonParams(kappa=4.0, theta=0.25, nu=1.0, rho=-0.5, v0=0.04)
 
-## Model families
+phi = lambda u: fe.heston_cf_form2(u, fwd, params)
+strikes = np.array([80.0, 90.0, 100.0, 110.0, 120.0])
+grid = fe.cos_auto_grid(fe.heston_cumulants(fwd, params), N=256, L=10.0)
+result = fe.cos_prices(phi, fwd, strikes, grid)
 
-| Family | Models |
-|--------|--------|
-| Pure diffusion | Black-Scholes-Merton |
-| Stochastic volatility | Heston, OU-SV |
-| Pure jump / Levy | Variance Gamma, NIG, CGMY |
-| Jump diffusion | Kou |
-| SV + jumps | Bates, Heston-Kou, Heston-CGMY |
+print(result.call_prices)
+```
 
-## Project note
+## API reference
 
-The main extension in this repo is the adaptive filtered-COS layer. Junike-style truncation improves interval selection, but short maturities and jump-heavy models can still show finite-series ringing. The extension keeps plain improved COS in the candidate set, then tests a small family of spectral filters and selects the cheapest candidate that still meets the target tolerance.
+`ForwardSpec(S0, r, q, T)`
+Market inputs for spot, rates, and maturity. Provides derived forward and discount-factor fields.
 
-## References
+`HestonParams`, `VGParams`, `KouParams`
+Model parameter dataclasses for the main supported examples.
 
-- Carr, P., and Madan, D. (1999), *Option valuation using the fast Fourier transform*, Journal of Computational Finance.
-- Lewis, A. L. (2001), *A simple option formula for general jump-diffusion and other exponential Levy processes*.
-- Fang, F., and Oosterlee, C. W. (2008), *A novel pricing method for European options based on Fourier-cosine series expansions*.
-- Junike, G., and Pankrashkin, K. (2022), *Precise option pricing by the COS method*.
-- Ruijter, M. J., Versteegh, M., and Oosterlee, C. W. (2015), *On the application of spectral filters in a Fourier option pricing technique*.
+`heston_cf_form2(u, fwd, params)`, `vg_cf(u, fwd, params)`, `kou_cf(u, fwd, params)`
+Characteristic functions. Input: frequency array. Return: complex-valued NumPy array.
+
+`heston_cumulants(fwd, params)`, `vg_cumulants(fwd, params)`, `kou_cumulants(fwd, params)`
+Cumulant helpers used to construct COS truncation grids.
+
+`cos_auto_grid(cumulants, N, L)` and `cos_improved_grid(cumulants, model=..., params=...)`
+Construct COS grids. Return type: `COSGrid`.
+
+`cos_prices(phi, fwd, strikes, grid)`
+Prices a European call strip with COS. Return type: `COSResult` with `strikes` and `call_prices`.
+
+`carr_madan_price_at_strikes(phi, fwd, grid, strikes)` and `frft_price_at_strikes(phi, fwd, grid, strikes)`
+FFT-based strip pricers. Return type: NumPy array of call prices.
+
+`implied_vol_newton_safeguarded(price, BSInputs(...))`
+Inverts an option price to Black-Scholes implied volatility. Return type: `float`.
+
+`model_price_surface(...)`, `model_iv_surface(...)`, `calibrate_heston(...)`, `calibrate_vg(...)`, `calibrate_kou(...)`
+Higher-level helpers for strip generation, implied-volatility surfaces, and calibration.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
+
+## Demo notebook
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/nl2992/fourier-option-pricer/blob/main/notebooks/demo.ipynb)
+
+The Colab-ready demo notebook lives at [notebooks/demo.ipynb](notebooks/demo.ipynb).
+
+Extra project notes and methodology live in [APPENDIX.md](APPENDIX.md).
