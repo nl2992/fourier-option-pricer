@@ -11,6 +11,55 @@ This appendix collects the extra project material that does not belong in the pa
 - `benchmarks/`: generated tables and figures used by the notebooks
 - `tests/`: regression and public API tests
 
+## Methods at a glance
+
+The project compares several ways to price European options once the model's characteristic function is available.
+
+| Method | Core idea | Typical role in this repo |
+|--------|-----------|----------------------------|
+| Monte Carlo | Simulate paths and average discounted payoffs | Baseline only; useful to show the sampling-cost benchmark |
+| Carr-Madan FFT | Dampen the payoff and invert the transform on a uniform frequency grid | Classical strip pricer and validation reference |
+| FRFT | Carr-Madan-style transform with more flexible strike-frequency coupling | Alternative transform method when grid tuning matters |
+| COS classic | Expand the density in a cosine series on a truncated interval | Main spectral pricer for smooth, well-behaved cases |
+| COS improved | Keep COS, but choose the truncation interval and grid more carefully | Better default COS variant for serious use |
+| Adaptive filtered-COS | Search across no-filter and filtered COS policies under a tolerance target | Extension for short-maturity or jump-heavy cases where plain COS can ring |
+| PyFENG FFT reference | External FFT implementation from PyFENG | Benchmark oracle for supported models, not the main in-house production path |
+
+## Which pricer is good for what
+
+| Pricer | Best use cases | Why it helps | Main tradeoff |
+|--------|----------------|--------------|---------------|
+| Monte Carlo | Sanity checks, payoff generality, non-Fourier extensions | Minimal model-specific numerical tuning | Slow convergence for dense vanilla strips |
+| Carr-Madan FFT | Dense strike strips under models with a stable characteristic function | Prices many strikes at once and is easy to benchmark | Sensitive to `alpha`, `eta`, and interpolation choices |
+| FRFT | Cases where the Carr-Madan strike lattice is too rigid | Decouples frequency and strike resolution more flexibly | More setup complexity than standard FFT |
+| COS classic | Smooth models, moderate maturities, well-behaved cumulants | Very fast and often spectrally accurate | Static truncation can break down in stress cases |
+| COS improved | General-purpose default for vanilla pricing in this repo | Better interval selection and grid policy than plain COS | Still a finite series, so ringing can remain |
+| Adaptive filtered-COS | Short maturities, jump-heavy models, kink-driven oscillation | Adds a second control knob when interval selection alone is not enough | More machinery and more candidate evaluations |
+| PyFENG FFT reference | Benchmarking Heston, VG, CGMY, OUSV, and other supported models | Independent external check against the in-house layer | Coverage depends on what PyFENG implements |
+
+## Spectral filters in the adaptive COS layer
+
+Junike-style truncation fixes the interval-selection problem, but it does not automatically remove finite-series oscillation. The filtered-COS extension damps the highest cosine modes before the final sum, which acts like a low-pass filter on the truncated expansion.
+
+If the unfiltered COS series is
+
+`price = disc * sum_k A_k V_k`
+
+then the filtered version is
+
+`price = disc * sum_k sigma_k A_k V_k`
+
+where `sigma_k` is near one for the low modes and smaller for the tail modes.
+
+| Filter | Shape | Practical effect |
+|--------|-------|------------------|
+| Fejer | Linear taper | Simple, robust damping of the tail modes |
+| Lanczos | Sinc taper | Usually preserves mid-frequency detail better than Fejer |
+| Raised cosine | Smooth cosine cutoff | Cleaner tail suppression with a softer transition |
+| Exponential | `exp(-alpha (k/N)^p)` | Most flexible family; strongest control through the order `p` |
+
+In the project extension, filtering is never forced. The selector keeps the no-filter improved COS candidate in the pool, then checks filtered alternatives and picks the cheapest candidate that still meets the target tolerance. The full implementation details and formulas appear later in [Section 17](#17-adaptive-filtered-cos-extension).
+
 ## 1. Project objective
 
 This project implements deterministic Fourier pricing methods for European options under models with tractable characteristic functions. The implemented pricers are:
