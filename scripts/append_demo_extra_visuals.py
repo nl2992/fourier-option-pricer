@@ -39,8 +39,7 @@ This is the same short-maturity VG setting used in the stress tests, plotted mor
 """
 
 
-SURFACE_CODE = """from mpl_toolkits import mplot3d
-import foureng.surface as fe_surface
+SURFACE_CODE = """import foureng.surface as fe_surface
 
 SURF_MATS = np.array([0.25, 0.50, 1.00, 1.50, 2.00])
 SURF_STRIKES = np.linspace(80.0, 120.0, 25)

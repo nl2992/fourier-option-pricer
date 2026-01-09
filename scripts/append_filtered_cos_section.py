@@ -47,14 +47,74 @@ candidate set, so the filter is never forced.
   in a Fourier option pricing technique*, Journal of Computational Finance.
 """
 
+S6_ISSUE_MD = """\
+### Why add filtering at all
+
+After the truncation interval `[a, b]` is chosen, COS still works with a finite
+number of cosine terms. That finite series can oscillate near payoff kinks, and
+the effect is usually more visible when the density is sharply peaked or
+jump-heavy.
+
+The next figure is a quick schematic. It is not one of the benchmark outputs;
+it is just a compact way to show the numerical issue the adaptive filtered-COS
+layer is trying to control.
+"""
+
+S6_ISSUE_PLOT_CODE = """\
+_x = np.linspace(-1.6, 1.6, 600)
+_target = np.maximum(_x, 0.0)
+_plain = _target + 0.11 * np.sin(18.0 * _x) * np.exp(-(_x / 0.55) ** 2)
+_filtered = _target + 0.03 * np.sin(18.0 * _x) * np.exp(-(_x / 0.55) ** 2)
+
+_k = np.arange(64)
+_plain_modes = np.exp(-0.045 * _k) + 0.22 * np.exp(-0.5 * ((_k - 54.0) / 6.5) ** 2)
+_sigma = cos_filter_weights(64, COSFilterSpec("exponential", order=8))
+_filtered_modes = _plain_modes * _sigma
+
+fig, axes = plt.subplots(1, 2, figsize=(11.2, 3.8))
+
+axes[0].plot(_x, _target, color=DARK, linewidth=2.4, label="Target payoff shape")
+axes[0].plot(_x, _plain, color=CB_STEEL, linestyle="--", linewidth=2.0, label="Plain COS (ringing)")
+axes[0].plot(_x, _filtered, color=COLUMBIA_BLUE, linewidth=2.0, label="Filtered COS")
+axes[0].axvline(0.0, color="#94a3b8", linestyle=":", linewidth=1.1)
+axes[0].set_title("Schematic kink region")
+axes[0].set_xlabel("local log-moneyness")
+axes[0].set_ylabel("series contribution")
+axes[0].legend(frameon=False, fontsize=8, loc="upper left")
+axes[0].grid(True, alpha=0.18)
+
+axes[1].plot(_k, _plain_modes, color=CB_STEEL, linestyle="--", linewidth=2.0, label="Unfiltered mode weight")
+axes[1].plot(_k, _filtered_modes, color=COLUMBIA_BLUE, linewidth=2.0, label="After spectral damping")
+axes[1].fill_between(_k, _filtered_modes, _plain_modes, color=COLUMBIA_BLUE, alpha=0.12)
+axes[1].set_title("High-frequency COS modes are damped")
+axes[1].set_xlabel("COS mode k")
+axes[1].set_ylabel("relative contribution")
+axes[1].legend(frameon=False, fontsize=8, loc="upper right")
+axes[1].grid(True, alpha=0.18)
+
+fig.suptitle("Why adaptive filtering helps after the interval is already fixed", fontsize=12, y=1.02)
+fig.tight_layout()
+plt.show()
+"""
+
 S6_FILTER_MD = """\
 ### What coefficient filtering changes
 
 Filtered COS keeps the same model characteristic function, the same truncation
 interval, and the same payoff coefficients. The only change is that the
-high-frequency COS modes are damped before the final series sum:
+high-frequency COS modes are damped before the final series sum.
 
-`price = disc * sum_k sigma_k A_k V_k`
+**Plain COS**
+
+$$
+V \\approx \\sum_{k=0}^{N-1} A_k U_k
+$$
+
+**Filtered COS**
+
+$$
+V \\approx \\sum_{k=0}^{N-1} \\sigma_k A_k U_k
+$$
 
 Here `A_k` are the CF-side COS coefficients, `V_k` are the payoff coefficients,
 and `sigma_k` are filter weights in `[0, 1]`. Low modes stay close to one; tail
@@ -92,25 +152,8 @@ plt.show()
 # ── Section 6 imports / helpers ───────────────────────────────────────────────
 
 S6_SETUP_CODE = """\
-import time, pathlib
+import pathlib
 from dataclasses import dataclass
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-
-import foureng as fe
-import foureng.models as fe_models
-import foureng.pipeline as fe_pipe
-
-BsmParams = fe_models.BsmParams
-HestonParams = fe_models.HestonParams
-VGParams = fe_models.VGParams
-CgmyParams = fe_models.CgmyParams
-KouParams = fe_models.KouParams
-ForwardSpec = fe.ForwardSpec
-price_strip = fe_pipe.price_strip
-recommended_cos_policy = fe.recommended_cos_policy
-COSGridPolicy = fe.COSGridPolicy
 
 try:
     import foureng.utils.spectral_filters as fe_filters
@@ -272,11 +315,11 @@ STRESS_CASES = [
          strikes=np.linspace(80, 120, 13)),
     dict(case_name="CGMY_T025",    model="cgmy",
          fwd=ForwardSpec(S0=100, r=0.04, q=0.0, T=0.25),
-         params=CgmyParams(C=1.0, G=5.0, M=10.0, Y=0.5),
+         params=fe_models.CgmyParams(C=1.0, G=5.0, M=10.0, Y=0.5),
          strikes=np.linspace(80, 120, 13)),
     dict(case_name="Kou_T05",      model="kou",
          fwd=ForwardSpec(S0=100, r=0.04, q=0.0, T=0.5),
-         params=KouParams(sigma=0.16, lam=0.30, p=0.40, eta1=10.0, eta2=6.0),
+         params=fe_models.KouParams(sigma=0.16, lam=0.30, p=0.40, eta1=10.0, eta2=6.0),
          strikes=np.linspace(80, 120, 13)),
 ]
 
@@ -683,6 +726,8 @@ def main():
     new_cells = [
         md(S6_MD),
         code(S6_SETUP_CODE),
+        md(S6_ISSUE_MD),
+        code(S6_ISSUE_PLOT_CODE),
         md(S6_FILTER_MD),
         code(S6_FILTER_PLOT_CODE),
         md(S61_MD),

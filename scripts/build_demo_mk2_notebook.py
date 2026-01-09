@@ -62,10 +62,22 @@ INSTALL_CODE = r"""%pip install -q -U fourier-option-pricer
 # Cell 2 — Imports + inline data + colours + helpers
 # ---------------------------------------------------------------------------
 
-SETUP_CODE = r"""import sys, importlib, importlib.util
+SETUP_CODE = r"""import importlib
+import importlib.util
+import pathlib
+import subprocess
+import sys
+import time
+import types
+import warnings
+
+import matplotlib.patches as mpatches
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from IPython.display import display
 
 if importlib.util.find_spec("foureng") is None:
-    import subprocess
     subprocess.run(
         [sys.executable, "-m", "pip", "install", "-q", "fourier-option-pricer"],
         check=True,
@@ -87,49 +99,95 @@ if importlib.util.find_spec("foureng") is None:
         "→ Restart the kernel (Kernel ▸ Restart) and run all cells from the top."
     )
 
-import time, types, warnings
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-from matplotlib.patches import FancyBboxPatch, Patch
-from IPython.display import display
+def _iter_repo_candidates():
+    seen = set()
+
+    def _expand(pathlike):
+        if not pathlike:
+            return []
+        p = pathlib.Path(pathlike).expanduser()
+        try:
+            p = p.resolve()
+        except Exception:
+            pass
+        return [p, *p.parents]
+
+    candidates = []
+    try:
+        candidates.extend(_expand(pathlib.Path.cwd()))
+    except FileNotFoundError:
+        pass
+    for raw in sys.path:
+        if raw:
+            candidates.extend(_expand(raw))
+    spec = importlib.util.find_spec("foureng")
+    if spec is not None and spec.origin:
+        candidates.extend(_expand(spec.origin))
+
+    for candidate in candidates:
+        key = str(candidate)
+        if key in seen:
+            continue
+        seen.add(key)
+        yield candidate
+
+
+REPO_ROOT = None
+for candidate in _iter_repo_candidates():
+    if (candidate / "foureng").exists() and (candidate / "pyproject.toml").exists():
+        REPO_ROOT = candidate
+        break
+if REPO_ROOT is None:
+    clone_root = pathlib.Path.cwd() / "fourier-option-pricer"
+    repo_url = os.environ.get(
+        "FOURENG_REPO_URL",
+        "https://github.com/nl2992/fourier-option-pricer.git",
+    )
+    if not clone_root.exists():
+        subprocess.run(
+            [
+                "git",
+                "clone",
+                "--depth",
+                "1",
+                "--quiet",
+                repo_url,
+                str(clone_root),
+            ],
+            check=True,
+        )
+    REPO_ROOT = clone_root.resolve()
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+importlib.invalidate_caches()
+
 warnings.filterwarnings("ignore")
 
 import foureng as fe
 import foureng.models as fe_models
 import foureng.pipeline as fe_pipe
-import foureng.refs.paper_refs as fe_papers
+import foureng.refs.paper_refs as fe_refs
 import foureng.viz.columbia as fe_col
 
-BSInputs = fe.BSInputs
-bs_price_from_fwd = fe.bs_price_from_fwd
-MCSpec = fe.MCSpec
-european_call_mc = fe.european_call_mc
-HestonMCScheme = fe.HestonMCScheme
+BSInputs, MCSpec, HestonMCScheme = fe.BSInputs, fe.MCSpec, fe.HestonMCScheme
+ForwardSpec, COSGridPolicy, FFTGrid = fe.ForwardSpec, fe.COSGridPolicy, fe.FFTGrid
+bs_price_from_fwd, european_call_mc = fe.bs_price_from_fwd, fe.european_call_mc
 heston_conditional_mc_calls = fe.heston_conditional_mc_calls
-ForwardSpec = fe.ForwardSpec
-BsmParams = fe_models.BsmParams
-HestonParams = fe_models.HestonParams
-VGParams = fe_models.VGParams
-heston_cf = fe_models.heston_cf
-heston_cumulants = fe_models.heston_cumulants
-price_strip = fe_pipe.price_strip
-cos_adaptive_decision = fe.cos_adaptive_decision
-cos_auto_grid = fe.cos_auto_grid
-recommended_cos_policy = fe.recommended_cos_policy
-COSGridPolicy = fe.COSGridPolicy
-FFTGrid = fe.FFTGrid
-HESTON_PUBLISHED_STRIP = fe_papers.HESTON_PUBLISHED_STRIP
-OUSV_REGRESSION_STRIP_V1 = fe_papers.OUSV_REGRESSION_STRIP_V1
-CGMY_REGRESSION_STRIP_V1 = fe_papers.CGMY_REGRESSION_STRIP_V1
-NIG_REGRESSION_STRIP_V1 = fe_papers.NIG_REGRESSION_STRIP_V1
-BATES_REGRESSION_STRIP_V1 = fe_papers.BATES_REGRESSION_STRIP_V1
-HESTON_KOU_REGRESSION_STRIP_V1 = fe_papers.HESTON_KOU_REGRESSION_STRIP_V1
-HESTON_CGMY_REGRESSION_STRIP_V1 = fe_papers.HESTON_CGMY_REGRESSION_STRIP_V1
-apply_columbia_style = fe_col.apply_columbia_style
-NAVY = fe_col.NAVY
-COLUMBIA_BLUE = fe_col.COLUMBIA_BLUE
-DARK = fe_col.DARK
+cos_adaptive_decision, cos_auto_grid = fe.cos_adaptive_decision, fe.cos_auto_grid
+recommended_cos_policy, price_strip = fe.recommended_cos_policy, fe_pipe.price_strip
+BsmParams, HestonParams, VGParams = (
+    fe_models.BsmParams,
+    fe_models.HestonParams,
+    fe_models.VGParams,
+)
+heston_cf, heston_cumulants = fe_models.heston_cf, fe_models.heston_cumulants
+FancyBboxPatch, Patch = mpatches.FancyBboxPatch, mpatches.Patch
+apply_columbia_style, NAVY, COLUMBIA_BLUE, DARK = (
+    fe_col.apply_columbia_style,
+    fe_col.NAVY,
+    fe_col.COLUMBIA_BLUE,
+    fe_col.DARK,
+)
 
 apply_columbia_style()
 pd.options.display.float_format = lambda x: f'{x:,.6g}'
@@ -502,10 +560,10 @@ From here on the contract and benchmark stay fixed: the published five-strike He
 # Cell 9 — §2 CM sweep + PyFENG + summary table
 # ---------------------------------------------------------------------------
 
-S2_CODE = r"""HESTON_FWD = HESTON_PUBLISHED_STRIP.fwd
-HESTON_PARAMS = HESTON_PUBLISHED_STRIP.params
-HESTON_K = HESTON_PUBLISHED_STRIP.strikes
-HESTON_REF = HESTON_PUBLISHED_STRIP.prices
+S2_CODE = r"""HESTON_FWD = fe_refs.HESTON_PUBLISHED_STRIP.fwd
+HESTON_PARAMS = fe_refs.HESTON_PUBLISHED_STRIP.params
+HESTON_K = fe_refs.HESTON_PUBLISHED_STRIP.strikes
+HESTON_REF = fe_refs.HESTON_PUBLISHED_STRIP.prices
 
 cm_sweep_rows = []
 for N in [512, 1024, 2048, 4096]:
@@ -894,12 +952,12 @@ cross_cases.append({
 })
 
 for anchor, name, family, jumps in [
-    (OUSV_REGRESSION_STRIP_V1,       'OUSV',        'Stochastic vol',  'No'),
-    (CGMY_REGRESSION_STRIP_V1,       'CGMY',        'Pure jump',       'Infinite activity'),
-    (NIG_REGRESSION_STRIP_V1,        'NIG',         'Pure jump',       'Infinite activity'),
-    (BATES_REGRESSION_STRIP_V1,      'Bates',       'SV + jumps',      'Finite activity'),
-    (HESTON_KOU_REGRESSION_STRIP_V1, 'Heston-Kou',  'SV + jumps',      'Finite activity (double-exp)'),
-    (HESTON_CGMY_REGRESSION_STRIP_V1,'Heston-CGMY', 'SV + jumps',      'Infinite activity'),
+    (fe_refs.OUSV_REGRESSION_STRIP_V1,        'OUSV',        'Stochastic vol',  'No'),
+    (fe_refs.CGMY_REGRESSION_STRIP_V1,        'CGMY',        'Pure jump',       'Infinite activity'),
+    (fe_refs.NIG_REGRESSION_STRIP_V1,         'NIG',         'Pure jump',       'Infinite activity'),
+    (fe_refs.BATES_REGRESSION_STRIP_V1,       'Bates',       'SV + jumps',      'Finite activity'),
+    (fe_refs.HESTON_KOU_REGRESSION_STRIP_V1,  'Heston-Kou',  'SV + jumps',      'Finite activity (double-exp)'),
+    (fe_refs.HESTON_CGMY_REGRESSION_STRIP_V1, 'Heston-CGMY', 'SV + jumps',      'Infinite activity'),
 ]:
     ref, bt, bs = benchmark_for_case(
         anchor.model,
