@@ -36,9 +36,9 @@ so reducing the error by a factor of 10 usually needs about 100 times as many pa
 All three pricing families in this package start from the same object:
 
 $$
-\varphi_T(u) = \mathbb{E}^{\mathbb{Q}}\!\left[e^{iuX_T}\right],
+\varphi_T(u) = \mathbb{E}^{\mathbb{Q}}\\left[e^{iuX_T}\right],
 \qquad
-X_T = \log\!\left(\frac{S_T}{F_0}\right).
+X_T = \log\\left(\frac{S_T}{F_0}\right).
 $$
 
 Here `i = sqrt(-1)`, `u` is the Fourier frequency, and `X_T` is the terminal log-forward return. Carr-Madan FFT and FRFT recover prices through Fourier inversion of this characteristic function, while COS uses the same object to build cosine-series coefficients on a truncated interval. For PyFENG-backed models, `foureng` translates its dataclasses into the corresponding `pyfeng.*Fft` model and evaluates `charfunc_logprice`; for the in-house models, the characteristic functions are implemented directly in `foureng.models`.
