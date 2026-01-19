@@ -79,7 +79,7 @@ The reporting rules are simple:
 # Imports + theme + helpers
 # ─────────────────────────────────────────────────────────────────────────
 
-INSTALL_CODE = "%pip install -q -U fourier-option-pricer numpy scipy matplotlib pandas pyfeng statsmodels"
+INSTALL_CODE = "# Leave Colab's numpy/scipy/matplotlib stack alone; install notebook extras explicitly.\n%pip install -q fourier-option-pricer pandas pyfeng statsmodels"
 
 SETUP_CODE = """# ── Run configuration ──────────────────────────────────────────────────
 # Change these and re-run from here; every section reads them.
@@ -98,19 +98,16 @@ import sys
 import warnings
 import time
 
-_NOTEBOOK_PIP_PACKAGES = [
-    "fourier-option-pricer",
-    "numpy",
-    "scipy",
-    "matplotlib",
-    "pandas",
-    "pyfeng",
-    "statsmodels",
-]
+_NOTEBOOK_PIP_PACKAGES = []
+if importlib.util.find_spec("foureng") is None:
+    _NOTEBOOK_PIP_PACKAGES.append("fourier-option-pricer")
+for _pkg in ("numpy", "scipy", "matplotlib", "pandas", "pyfeng", "statsmodels"):
+    if importlib.util.find_spec(_pkg) is None:
+        _NOTEBOOK_PIP_PACKAGES.append(_pkg)
 
-if any(importlib.util.find_spec(name) is None for name in ("foureng", "numpy", "pandas", "matplotlib")):
+if _NOTEBOOK_PIP_PACKAGES:
     subprocess.run(
-        [sys.executable, "-m", "pip", "install", "-q", "-U", *_NOTEBOOK_PIP_PACKAGES],
+        [sys.executable, "-m", "pip", "install", "-q", *_NOTEBOOK_PIP_PACKAGES],
         check=True,
     )
     importlib.invalidate_caches()
