@@ -11,7 +11,7 @@ from nbformat.v4 import new_code_cell
 ROOT = Path(__file__).resolve().parents[1]
 NB_DIR = ROOT / "notebooks"
 
-INSTALL_SOURCE = "%pip install -q -U fourier-option-pricer\n"
+INSTALL_SOURCE = "%pip install -q -U fourier-option-pricer numpy scipy matplotlib pandas pyfeng statsmodels\n"
 
 
 def bootstrap_source(outdir_rel: str) -> str:
@@ -26,18 +26,28 @@ import sys
 import time
 import warnings
 
+_NOTEBOOK_PIP_PACKAGES = [
+    'fourier-option-pricer',
+    'numpy',
+    'scipy',
+    'matplotlib',
+    'pandas',
+    'pyfeng',
+    'statsmodels',
+]
+
+if any(importlib.util.find_spec(name) is None for name in ('foureng', 'numpy', 'pandas', 'matplotlib')):
+    subprocess.run(
+        [sys.executable, '-m', 'pip', 'install', '-q', '-U', *_NOTEBOOK_PIP_PACKAGES],
+        check=True,
+    )
+    importlib.invalidate_caches()
+
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from IPython.display import display
-
-if importlib.util.find_spec('foureng') is None:
-    subprocess.run(
-        [sys.executable, '-m', 'pip', 'install', '-q', '-U', 'fourier-option-pricer'],
-        check=True,
-    )
-    importlib.invalidate_caches()
 
 
 def _iter_repo_candidates():
