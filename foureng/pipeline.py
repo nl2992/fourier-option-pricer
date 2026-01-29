@@ -27,6 +27,7 @@ from .models.rough_heston import RoughHestonParams, rough_heston_cf, rough_hesto
 from .models.merton_jd import MertonJDParams, merton_jd_cf, merton_jd_cumulants
 from .models.meixner import MeixnerParams, meixner_cf, meixner_cumulants
 from .models.bilateral_gamma import BilateralGammaParams, bilateral_gamma_cf, bilateral_gamma_cumulants
+from .models.generalized_hyperbolic import GHParams, gh_cf, gh_cumulants
 from .utils.grids import FFTGrid, FRFTGrid, COSGrid, COSGridPolicy
 from .pricers.carr_madan import carr_madan_price_at_strikes
 from .pricers.frft import frft_price_at_strikes
@@ -93,6 +94,7 @@ _MODELS: dict[str, tuple[type, Any, Any]] = {
     "merton_jd":     (MertonJDParams,     merton_jd_cf,     merton_jd_cumulants),
     "meixner":       (MeixnerParams,      meixner_cf,       meixner_cumulants),
     "bilateral_gamma": (BilateralGammaParams, bilateral_gamma_cf, bilateral_gamma_cumulants),
+    "generalized_hyperbolic": (GHParams, gh_cf, gh_cumulants),
 }
 
 # Models whose CF has no PyFENG FFT counterpart — ``method='pyfeng_fft'``
@@ -100,7 +102,7 @@ _MODELS: dict[str, tuple[type, Any, Any]] = {
 # no FFT pricer for any of them. BSM, Heston, OUSV, VG, CGMY, NIG, sv32 all
 # have native PyFENG FFT pricers (BsmFft / HestonFft / OusvFft /
 # VarGammaFft / CgmyFft / ExpNigFft / Sv32Fft).
-_NO_PYFENG_FFT = {"kou", "bates", "heston_kou", "heston_cgmy", "garch_wmw2012", "merton_jd", "meixner", "bilateral_gamma"}
+_NO_PYFENG_FFT = {"kou", "bates", "heston_kou", "heston_cgmy", "garch_wmw2012", "merton_jd", "meixner", "bilateral_gamma", "generalized_hyperbolic"}
 _DIRECT_CALL_FRIENDLY_MODELS = {"heston", "ousv", "nig"}
 
 
