@@ -6,20 +6,28 @@ This package solves a practical numerical-finance problem: pricing vanilla Europ
 
 ### Supported model layer
 
-The pricing layer supports ten characteristic-function models. Some are thin adapters over [PyFENG](https://github.com/PyFE/PyFENG), while others are implemented in-house inside `foureng.models`.
+The pricing layer supports eighteen characteristic-function models. Some are thin adapters over [PyFENG](https://github.com/PyFE/PyFENG), while others are implemented in-house inside `foureng.models`.
 
 | Model | Public dataclass | Characteristic-function source | Notes |
 |--------|------------------|-------------------------------|-------|
 | Black-Scholes-Merton | `BsmParams` | PyFENG-backed adapter | Diffusion baseline and sanity-check model. |
 | Heston | `HestonParams` | PyFENG-backed adapter | Main stochastic-volatility benchmark. |
 | OUSV / Schobel-Zhu | `OusvParams` | PyFENG-backed adapter | Stochastic-volatility alternative to Heston. |
-| Variance Gamma | `VGParams` | PyFENG-backed adapter | Pure-jump Levy model used in the repo benchmarks. |
+| Variance Gamma | `VGParams` | PyFENG-backed adapter | Pure-jump Lévy model used in the repo benchmarks. |
 | CGMY | `CgmyParams` | PyFENG-backed adapter | Infinite-activity tempered-stable jump model. |
-| Normal Inverse Gaussian | `NigParams` | PyFENG-backed adapter | Levy model with heavier tails than Gaussian diffusion. |
-| Kou | `KouParams` | In-house implementation | Double-exponential jump-diffusion CF and cumulants are coded directly in this repo. |
-| Bates | `BatesParams` | In-house composite | Heston diffusion block plus in-house Merton jump block. |
-| Heston-Kou | `HestonKouParams` | In-house composite | Heston block combined with the in-house Kou jump CF. |
-| Heston-CGMY | `HestonCGMYParams` | In-house composite | Heston block combined with an in-house CGMY jump factor. |
+| Normal Inverse Gaussian | `NigParams` | PyFENG-backed adapter | Lévy model with heavier tails than Gaussian diffusion. |
+| Kou | `KouParams` | In-house implementation | Double-exponential jump-diffusion CF and cumulants. |
+| Bates | `BatesParams` | In-house composite | Heston diffusion block plus Merton jump block. |
+| Heston-Kou | `HestonKouParams` | In-house composite | Heston block combined with the Kou jump CF. |
+| Heston-CGMY | `HestonCGMYParams` | In-house composite | Heston block combined with a CGMY jump factor. |
+| 3/2 Stochastic Volatility | `Sv32Params` | In-house implementation | Mean-reverting variance process with 3/2 diffusion coefficient. |
+| GARCH (WMW 2012) | `GarchWMW2012Params` | In-house implementation | Discrete-time GARCH model with analytic CF from Wendland-Maller-Weron (2012). |
+| Rough Heston | `RoughHestonParams` | In-house implementation | Fractional Brownian motion variance driver (Hurst index H < 1/2). |
+| Merton Jump-Diffusion | `MertonJDParams` | In-house implementation | Geometric Brownian motion plus compound Poisson jumps with log-normal sizes. |
+| Meixner | `MeixnerParams` | In-house implementation | Lévy process with CF based on the hyperbolic cosine; fits S&P500 smile. |
+| Bilateral Gamma | `BilateralGammaParams` | In-house implementation | Separate Gamma processes for upward and downward moves (Küchler & Tappe 2008). |
+| Generalized Hyperbolic | `GHParams` | In-house implementation | Normal variance-mean mixture via GIG; includes NIG (λ=−½) and Hyperbolic (λ=1) as special cases. |
+| Finite Moment Log Stable (FMLS) | `FMLSParams` | In-house implementation | Maximally negatively-skewed α-stable Lévy process; all positive moments of S_T are finite (Carr & Wu 2003). |
 
 ### Why use Fourier methods here instead of plain Monte Carlo?
 
@@ -68,13 +76,13 @@ print(result.call_prices)
 
 ## Testing and validation layout
 
-The repository currently collects 282 pytest cases. They are grouped by
+The repository currently collects 487 pytest cases. They are grouped by
 validation purpose rather than by implementation phase:
 
 | Folder | Contents |
 |--------|----------|
 | `tests/papers/` | Published-paper and benchmark replications: Carr-Madan, Lewis, FRFT, Fang-Oosterlee COS, and Kou/COS checks. |
-| `tests/models/` | Model adapter, regression-strip, and reduction-limit tests for BSM, OU-SV, CGMY, NIG, Bates, Heston-Kou, and Heston-CGMY. |
+| `tests/models/` | Model adapter, regression-strip, and reduction-limit tests for all 18 models, including paper-backed 3-layer suites (analytic benchmarks, cross-engine agreement, structural properties) for each in-house model. |
 | `tests/methods/` | Pricing-method behavior: COS policies, filters, alpha validity, cross-method agreement, and robustness sweeps. |
 | `tests/features/` | End-to-end package features: Monte Carlo, control variates, implied volatility, calibration, Greeks, public API, and integration workflows. |
 
@@ -121,6 +129,14 @@ from foureng.pipeline import price_strip
 | `BatesParams(kappa, theta, nu, rho, v0, lam_j, mu_j, sigma_j)` | Heston block plus Merton jump parameters | Bates stochastic-volatility jump-diffusion dataclass. |
 | `HestonKouParams(kappa, theta, nu, rho, v0, lam_j, p_j, eta1, eta2)` | Heston block plus Kou jump parameters | Heston-Kou composite model dataclass. |
 | `HestonCGMYParams(kappa, theta, nu, rho, v0, C, G, M, Y)` | Heston block plus CGMY jump parameters | Heston-CGMY composite model dataclass. |
+| `Sv32Params(v0, kappa, theta, nu, rho)` | 3/2 model parameters | 3/2 stochastic-volatility parameter dataclass. |
+| `GarchWMW2012Params(omega, beta, alpha, gamma)` | GARCH model parameters | Discrete-time GARCH option pricing dataclass. |
+| `RoughHestonParams(v0, kappa, theta, nu, rho, H)` | Rough Heston parameters (H is Hurst index) | Rough Heston parameter dataclass; requires `H` in `(0, 0.5)`. |
+| `MertonJDParams(sigma, lam, mu_j, sigma_j)` | Diffusion volatility plus jump parameters | Merton jump-diffusion parameter dataclass. |
+| `MeixnerParams(a, b, delta)` | Meixner Lévy parameters | Meixner process parameter dataclass. |
+| `BilateralGammaParams(alpha_p, lambda_p, alpha_m, lambda_m)` | Bilateral Gamma parameters | Bilateral Gamma parameter dataclass (separate up/down Gamma processes). |
+| `GHParams(lam, alpha, beta, delta)` | Generalized Hyperbolic parameters | GH Lévy model dataclass; `lam=-0.5` gives NIG, `lam=1` gives Hyperbolic. |
+| `FMLSParams(alpha, sigma)` | Stability index and scale | FMLS parameter dataclass; `alpha` in `(1, 2]`, recovers BSM at `alpha=2`. |
 
 ### Characteristic functions and cumulants
 
@@ -136,6 +152,14 @@ from foureng.pipeline import price_strip
 | `bates_cf(u, fwd, params)` | `u: np.ndarray`, `fwd: ForwardSpec`, `params: BatesParams` | Complex-valued Bates characteristic function. |
 | `heston_kou_cf(u, fwd, params)` | `u: np.ndarray`, `fwd: ForwardSpec`, `params: HestonKouParams` | Complex-valued Heston-Kou characteristic function. |
 | `heston_cgmy_cf(u, fwd, params)` | `u: np.ndarray`, `fwd: ForwardSpec`, `params: HestonCGMYParams` | Complex-valued Heston-CGMY characteristic function. |
+| `sv32_cf(u, fwd, params)` | `u: np.ndarray`, `fwd: ForwardSpec`, `params: Sv32Params` | Complex-valued 3/2 stochastic-volatility characteristic function. |
+| `garch_wmw2012_cf(u, fwd, params)` | `u: np.ndarray`, `fwd: ForwardSpec`, `params: GarchWMW2012Params` | Complex-valued GARCH characteristic function (Wendland-Maller-Weron). |
+| `rough_heston_cf(u, fwd, params)` | `u: np.ndarray`, `fwd: ForwardSpec`, `params: RoughHestonParams` | Complex-valued Rough Heston characteristic function via Adams scheme. |
+| `merton_jd_cf(u, fwd, params)` | `u: np.ndarray`, `fwd: ForwardSpec`, `params: MertonJDParams` | Complex-valued Merton jump-diffusion characteristic function. |
+| `meixner_cf(u, fwd, params)` | `u: np.ndarray`, `fwd: ForwardSpec`, `params: MeixnerParams` | Complex-valued Meixner characteristic function. |
+| `bilateral_gamma_cf(u, fwd, params)` | `u: np.ndarray`, `fwd: ForwardSpec`, `params: BilateralGammaParams` | Complex-valued Bilateral Gamma characteristic function. |
+| `gh_cf(u, fwd, params)` | `u: np.ndarray`, `fwd: ForwardSpec`, `params: GHParams` | Complex-valued Generalized Hyperbolic characteristic function (uses Bessel K). |
+| `fmls_cf(u, fwd, params)` | `u: np.ndarray`, `fwd: ForwardSpec`, `params: FMLSParams` | Complex-valued FMLS characteristic function via principal branch of `(iu)^alpha`. |
 | `bsm_cumulants(fwd, params)` | `ForwardSpec`, `BsmParams` | Black-Scholes cumulants used in COS grid construction. |
 | `heston_cumulants(fwd, params)` | `ForwardSpec`, `HestonParams` | Heston cumulants used to build COS truncation intervals. |
 | `ousv_cumulants(fwd, params)` | `ForwardSpec`, `OusvParams` | OUSV cumulants for COS grid construction. |
@@ -146,6 +170,14 @@ from foureng.pipeline import price_strip
 | `bates_cumulants(fwd, params)` | `ForwardSpec`, `BatesParams` | Bates cumulants for COS grid construction. |
 | `heston_kou_cumulants(fwd, params)` | `ForwardSpec`, `HestonKouParams` | Heston-Kou cumulants for COS grid construction. |
 | `heston_cgmy_cumulants(fwd, params)` | `ForwardSpec`, `HestonCGMYParams` | Heston-CGMY cumulants for COS grid construction. |
+| `sv32_cumulants(fwd, params)` | `ForwardSpec`, `Sv32Params` | 3/2 model cumulants for COS grid construction. |
+| `garch_wmw2012_cumulants(fwd, params)` | `ForwardSpec`, `GarchWMW2012Params` | GARCH cumulants for COS grid construction. |
+| `rough_heston_cumulants(fwd, params)` | `ForwardSpec`, `RoughHestonParams` | Rough Heston cumulants for COS grid construction. |
+| `merton_jd_cumulants(fwd, params)` | `ForwardSpec`, `MertonJDParams` | Merton jump-diffusion cumulants for COS grid construction. |
+| `meixner_cumulants(fwd, params)` | `ForwardSpec`, `MeixnerParams` | Meixner cumulants for COS grid construction. |
+| `bilateral_gamma_cumulants(fwd, params)` | `ForwardSpec`, `BilateralGammaParams` | Bilateral Gamma cumulants for COS grid construction (closed form). |
+| `gh_cumulants(fwd, params)` | `ForwardSpec`, `GHParams` | Generalized Hyperbolic cumulants for COS grid construction. |
+| `fmls_cumulants(fwd, params)` | `ForwardSpec`, `FMLSParams` | FMLS cumulants via numerical Cauchy integration. Note: COS is not recommended for α<2 (power-law tails); prefer Carr-Madan or FRFT. |
 
 ### Grid objects and grid builders
 
@@ -225,3 +257,8 @@ These are the main papers the package and notebook workflow are built around.
 | Improved COS truncation range | Junike, G. and Pankrashkin, K. (2022), *Precise Option Pricing by the COS Method: How to Choose the Truncation Range*. |
 | Improved COS term-count policy | Junike, G. (2024), *On the Number of Terms in the COS Method for European Option Pricing*. |
 | Spectral filtering for Fourier/COS pricing | Ruijter, M.J., Versteegh, M. and Oosterlee, C.W. (2015), *On the Application of Spectral Filters in a Fourier Option Pricing Technique*. |
+| Merton jump-diffusion | Merton, R.C. (1976), *Option Pricing when Underlying Stock Returns are Discontinuous*, Journal of Financial Economics. |
+| Meixner process | Schoutens, W. (2002), *The Meixner Process: Theory and Applications in Finance*, EURANDOM Report. |
+| Bilateral Gamma | Küchler, U. and Tappe, S. (2008), *Bilateral Gamma Distributions and Processes in Financial Mathematics*, Stochastic Processes and their Applications. |
+| Generalized Hyperbolic | Barndorff-Nielsen, O.E. (1977), *Exponentially Decreasing Distributions for the Logarithm of Particle Size*, Proc. Royal Society London. Eberlein, E. and Keller, U. (1995), *Hyperbolic Distributions in Finance*, Bernoulli. |
+| Finite Moment Log Stable | Carr, P. and Wu, L. (2003), *The Finite Moment Log Stable Process and Option Pricing*, Journal of Finance, 58(2), 753–777. |
