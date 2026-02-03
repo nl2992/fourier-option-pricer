@@ -65,6 +65,14 @@ class MertonJDParams(ModelSpec):
     sigj: float
 
     def __init__(self, sigma: float, lam: float, muj: float, sigj: float):
+        if not (np.isfinite(sigma) and sigma >= 0):
+            raise ValueError(f"sigma must be finite and >= 0; got {sigma}")
+        if not (np.isfinite(lam) and lam >= 0):
+            raise ValueError(f"lam must be finite and >= 0; got {lam}")
+        if not np.isfinite(muj):
+            raise ValueError(f"muj must be finite; got {muj}")
+        if not (np.isfinite(sigj) and sigj >= 0):
+            raise ValueError(f"sigj must be finite and >= 0; got {sigj}")
         object.__setattr__(self, "name", "merton_jd")
         object.__setattr__(self, "sigma", sigma)
         object.__setattr__(self, "lam", lam)

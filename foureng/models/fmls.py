@@ -62,6 +62,11 @@ class FMLSParams(ModelSpec):
     sigma: float
 
     def __init__(self, alpha: float, sigma: float):
+        import numpy as _np
+        if not (_np.isfinite(alpha) and 1.0 < alpha <= 2.0):
+            raise ValueError(f"alpha must be in (1, 2]; got {alpha}")
+        if not (_np.isfinite(sigma) and sigma > 0):
+            raise ValueError(f"sigma must be finite and > 0; got {sigma}")
         object.__setattr__(self, "name", "fmls")
         object.__setattr__(self, "alpha", alpha)
         object.__setattr__(self, "sigma", sigma)
