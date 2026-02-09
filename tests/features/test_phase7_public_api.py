@@ -17,6 +17,27 @@ def test_public_symbols_importable():
         assert hasattr(foureng, name), f"public API missing: {name}"
 
 
+def test_public_api_exports_all_documented_models():
+    """Every model dataclass listed in the README is importable from foureng."""
+    import foureng as fe
+
+    expected = [
+        "BsmParams", "HestonParams", "OusvParams", "VGParams", "CgmyParams",
+        "NigParams", "KouParams", "BatesParams", "HestonKouParams",
+        "HestonCGMYParams", "Sv32Params", "GarchWMW2012Params",
+        "RoughHestonParams", "MertonJDParams", "MeixnerParams",
+        "BilateralGammaParams", "GHParams", "FMLSParams",
+    ]
+    missing = [name for name in expected if not hasattr(fe, name)]
+    assert not missing, f"foureng missing model exports: {missing}"
+
+
+def test_price_strip_importable():
+    """price_strip must be importable from the top-level package."""
+    import foureng as fe
+    assert callable(fe.price_strip)
+
+
 def test_version_string():
     import foureng
     assert isinstance(foureng.__version__, str)
