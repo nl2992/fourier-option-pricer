@@ -20,9 +20,9 @@ The pricing layer supports eighteen characteristic-function models. Some are thi
 | Bates | `BatesParams` | In-house composite | Heston diffusion block plus Merton jump block. |
 | Heston-Kou | `HestonKouParams` | In-house composite | Heston block combined with the Kou jump CF. |
 | Heston-CGMY | `HestonCGMYParams` | In-house composite | Heston block combined with a CGMY jump factor. |
-| 3/2 Stochastic Volatility | `Sv32Params` | In-house implementation | Mean-reverting variance process with 3/2 diffusion coefficient. |
+| 3/2 Stochastic Volatility | `Sv32Params` | PyFENG-backed adapter | Mean-reverting variance process with 3/2 diffusion coefficient. |
 | GARCH (WMW 2012) | `GarchWMW2012Params` | In-house implementation | Discrete-time GARCH model with analytic CF from Wendland-Maller-Weron (2012). |
-| Rough Heston | `RoughHestonParams` | In-house implementation | Fractional Brownian motion variance driver (Hurst index H < 1/2). |
+| Rough Heston | `RoughHestonParams` | PyFENG-backed adapter | Fractional Brownian motion variance driver (Hurst index H < 1/2). |
 | Merton Jump-Diffusion | `MertonJDParams` | In-house implementation | Geometric Brownian motion plus compound Poisson jumps with log-normal sizes. |
 | Meixner | `MeixnerParams` | In-house implementation | Lévy process with CF based on the hyperbolic cosine; fits S&P500 smile. |
 | Bilateral Gamma | `BilateralGammaParams` | In-house implementation | Separate Gamma processes for upward and downward moves (Küchler & Tappe 2008). |
