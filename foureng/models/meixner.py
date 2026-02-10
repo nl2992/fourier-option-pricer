@@ -6,12 +6,7 @@ hyperbolic functions.  The Meixner process (a Lévy process with Meixner-
 distributed marginals) is used in quantitative finance as an alternative
 to variance-gamma for fitting the implied-vol smile.
 
-The CF of X_T = log(S_T/F_0) under the Meixner model is:
-
-    φ(u) = exp(T · [i·u·(r−q+ω) + δ·(log(cos(b/2))² − log(cosh((a·u−i·b)/2))²)])
-
-Wait — the standard form is simpler.  Under the risk-neutral measure the
-log-stock return has CF:
+Under the risk-neutral measure the log-forward return X_T = log(S_T/F_0) has CF:
 
     φ(u) = exp(T · [i·u·ω + δ · log( (cos(b/2))² / (cosh((a·u−i·b)/2))² )])
 
@@ -84,6 +79,13 @@ class MeixnerParams(ModelSpec):
     delta: float
 
     def __init__(self, a: float, b: float, delta: float):
+        import numpy as _np
+        if not (_np.isfinite(a) and a > 0):
+            raise ValueError(f"a must be finite and > 0; got {a}")
+        if not (_np.isfinite(b) and abs(b) < _np.pi):
+            raise ValueError(f"b must be finite and in (-π, π); got {b}")
+        if not (_np.isfinite(delta) and delta > 0):
+            raise ValueError(f"delta must be finite and > 0; got {delta}")
         object.__setattr__(self, "name", "meixner")
         object.__setattr__(self, "a", a)
         object.__setattr__(self, "b", b)

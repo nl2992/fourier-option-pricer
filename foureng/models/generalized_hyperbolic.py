@@ -23,20 +23,10 @@ where ψ(u) is the Lévy exponent of the GH Lévy process:
     ψ(u) = i·u·ω + λ·[log(α² − β²) − log(α² − (β + i·u)²)] / 2
             + log(K_λ(δ · sqrt(α² − (β + i·u)²)) / K_λ(δ · sqrt(α² − β²)))
 
-Wait — the GH *distribution* is not infinitely divisible in general.  Only
-the Normal Inverse Gaussian (λ = −1/2) and the Variance Gamma (δ → 0 limit)
-are Lévy processes.  For the Lévy process (CF raised to power T), we need
-to work with the GH Lévy process, which has the CF:
-
-    φ(u; T) = [φ_GH(u; 1)]^T
-
-Since K_λ(z) appears, this is equivalent to:
-
-    φ(u; T) = ( (α² − β²)^{λ/2} · K_λ(δ·sqrt(α² − β²)) )^{−T}
-              · ( (α² − (β+iu)²)^{λ/2} · K_λ(δ·sqrt(α² − (β+iu)²)) )^{−T}
-              · ... [combined]
-
-More cleanly, using the log of the Lévy exponent directly:
+The GH *distribution* is not infinitely divisible in general, but the
+GH *Lévy process* (defined by raising the one-period CF to the power T)
+is well-posed and extensively used in finance.  Working with the Lévy
+exponent directly:
 
     log φ(u; T) = T · [i·u·ω
                         + λ · log( (α²−β²) / (α²−(β+i·u)²) ) / 2
@@ -101,6 +91,22 @@ class GHParams(ModelSpec):
     delta: float
 
     def __init__(self, lam: float, alpha: float, beta: float, delta: float):
+        import numpy as _np
+        if not _np.isfinite(lam):
+            raise ValueError(f"lam must be finite; got {lam}")
+        if not (_np.isfinite(alpha) and alpha > 0):
+            raise ValueError(f"alpha must be finite and > 0; got {alpha}")
+        if not _np.isfinite(beta):
+            raise ValueError(f"beta must be finite; got {beta}")
+        if not (abs(beta) < alpha):
+            raise ValueError(f"alpha must be > |beta|; got alpha={alpha}, beta={beta}")
+        if not (_np.isfinite(delta) and delta > 0):
+            raise ValueError(f"delta must be finite and > 0; got {delta}")
+        if not (alpha - abs(beta) > 1):
+            raise ValueError(
+                f"martingale condition requires alpha - |beta| > 1; "
+                f"got alpha={alpha}, |beta|={abs(beta)}, diff={alpha - abs(beta):.4f}"
+            )
         object.__setattr__(self, "name", "generalized_hyperbolic")
         object.__setattr__(self, "lam", lam)
         object.__setattr__(self, "alpha", alpha)
