@@ -64,6 +64,14 @@ class CgmyParams(ModelSpec):
     Y: float
 
     def __init__(self, C: float, G: float, M: float, Y: float):
+        if not (np.isfinite(C) and C >= 0):
+            raise ValueError(f"CgmyParams: C must be >= 0; got {C}")
+        if not (np.isfinite(G) and G > 0):
+            raise ValueError(f"CgmyParams: G must be > 0; got {G}")
+        if not (np.isfinite(M) and M > 1):
+            raise ValueError(f"CgmyParams: M must be > 1 (martingale condition); got {M}")
+        if not (np.isfinite(Y) and Y < 2):
+            raise ValueError(f"CgmyParams: Y must be < 2; got {Y}")
         object.__setattr__(self, "name", "cgmy")
         object.__setattr__(self, "C", C)
         object.__setattr__(self, "G", G)

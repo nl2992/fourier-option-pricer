@@ -97,6 +97,18 @@ class RoughHestonParams(ModelSpec):
         theta: float,
         alpha: float = 0.62,
     ):
+        if not (np.isfinite(sigma) and sigma > 0):
+            raise ValueError(f"RoughHestonParams: sigma (initial variance) must be > 0; got {sigma}")
+        if not np.isfinite(vov):
+            raise ValueError(f"RoughHestonParams: vov must be finite; got {vov}")
+        if not (np.isfinite(mr) and mr > 0):
+            raise ValueError(f"RoughHestonParams: mr must be > 0; got {mr}")
+        if not (np.isfinite(rho) and -1.0 < rho < 1.0):
+            raise ValueError(f"RoughHestonParams: rho must be in (-1, 1); got {rho}")
+        if not (np.isfinite(theta) and theta > 0):
+            raise ValueError(f"RoughHestonParams: theta must be > 0; got {theta}")
+        if not (np.isfinite(alpha) and 0.0 < alpha < 1.0):
+            raise ValueError(f"RoughHestonParams: alpha must be in (0, 1); got {alpha}")
         object.__setattr__(self, "name", "rough_heston")
         object.__setattr__(self, "sigma", sigma)
         object.__setattr__(self, "vov", vov)

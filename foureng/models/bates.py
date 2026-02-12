@@ -71,6 +71,22 @@ class BatesParams(ModelSpec):
         mu_j: float,
         sigma_j: float,
     ):
+        if not (np.isfinite(kappa) and kappa > 0):
+            raise ValueError(f"BatesParams: kappa must be > 0; got {kappa}")
+        if not (np.isfinite(theta) and theta > 0):
+            raise ValueError(f"BatesParams: theta must be > 0; got {theta}")
+        if not (np.isfinite(nu) and nu >= 0):
+            raise ValueError(f"BatesParams: nu must be >= 0; got {nu}")
+        if not (np.isfinite(rho) and -1.0 < rho < 1.0):
+            raise ValueError(f"BatesParams: rho must be in (-1, 1); got {rho}")
+        if not (np.isfinite(v0) and v0 > 0):
+            raise ValueError(f"BatesParams: v0 must be > 0; got {v0}")
+        if not (np.isfinite(lam_j) and lam_j >= 0):
+            raise ValueError(f"BatesParams: lam_j must be >= 0; got {lam_j}")
+        if not np.isfinite(mu_j):
+            raise ValueError(f"BatesParams: mu_j must be finite; got {mu_j}")
+        if not (np.isfinite(sigma_j) and sigma_j >= 0):
+            raise ValueError(f"BatesParams: sigma_j must be >= 0; got {sigma_j}")
         object.__setattr__(self, "name", "bates")
         object.__setattr__(self, "kappa", kappa)
         object.__setattr__(self, "theta", theta)

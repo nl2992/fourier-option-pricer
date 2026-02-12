@@ -99,6 +99,24 @@ class HestonCGMYParams(ModelSpec):
         M: float,
         Y: float,
     ):
+        if not (np.isfinite(kappa) and kappa > 0):
+            raise ValueError(f"HestonCGMYParams: kappa must be > 0; got {kappa}")
+        if not (np.isfinite(theta) and theta > 0):
+            raise ValueError(f"HestonCGMYParams: theta must be > 0; got {theta}")
+        if not (np.isfinite(nu) and nu >= 0):
+            raise ValueError(f"HestonCGMYParams: nu must be >= 0; got {nu}")
+        if not (np.isfinite(rho) and -1.0 < rho < 1.0):
+            raise ValueError(f"HestonCGMYParams: rho must be in (-1, 1); got {rho}")
+        if not (np.isfinite(v0) and v0 > 0):
+            raise ValueError(f"HestonCGMYParams: v0 must be > 0; got {v0}")
+        if not (np.isfinite(C) and C >= 0):
+            raise ValueError(f"HestonCGMYParams: C must be >= 0; got {C}")
+        if not (np.isfinite(G) and G > 0):
+            raise ValueError(f"HestonCGMYParams: G must be > 0; got {G}")
+        if not (np.isfinite(M) and M > 1):
+            raise ValueError(f"HestonCGMYParams: M must be > 1 (martingale condition); got {M}")
+        if not (np.isfinite(Y) and Y < 2 and abs(Y - 1.0) > 1e-12):
+            raise ValueError(f"HestonCGMYParams: Y must be < 2 and != 1; got {Y}")
         object.__setattr__(self, "name", "heston_cgmy")
         object.__setattr__(self, "kappa", kappa)
         object.__setattr__(self, "theta", theta)

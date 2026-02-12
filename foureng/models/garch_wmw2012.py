@@ -86,6 +86,16 @@ class GarchWMW2012Params(ModelSpec):
         nu: float,
         rho: float,
     ):
+        if not (np.isfinite(v0) and v0 > 0):
+            raise ValueError(f"GarchWMW2012Params: v0 must be > 0; got {v0}")
+        if not (np.isfinite(kappa) and kappa > 0):
+            raise ValueError(f"GarchWMW2012Params: kappa must be > 0; got {kappa}")
+        if not (np.isfinite(theta) and theta > 0):
+            raise ValueError(f"GarchWMW2012Params: theta must be > 0; got {theta}")
+        if not (np.isfinite(nu) and nu > 0):
+            raise ValueError(f"GarchWMW2012Params: nu must be > 0; got {nu}")
+        if not (np.isfinite(rho) and -1.0 < rho < 1.0):
+            raise ValueError(f"GarchWMW2012Params: rho must be in (-1, 1); got {rho}")
         object.__setattr__(self, "name", "garch_wmw2012")
         object.__setattr__(self, "v0", v0)
         object.__setattr__(self, "kappa", kappa)
