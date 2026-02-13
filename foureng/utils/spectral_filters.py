@@ -33,9 +33,10 @@ Available filters
                          σ_k = exp(−α·(k/(N−1))^p).  Default α damps to
                          machine-ε at k = N−1.
 """
+
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Literal
 
 import numpy as np
@@ -125,13 +126,9 @@ def cos_filter_weights(N: int, spec: COSFilterSpec | None = None) -> np.ndarray:
     elif spec.name == "exponential":
         order = int(spec.order)
         if order <= 0:
-            raise ValueError(
-                f"exponential filter order must be a positive integer (got {order})"
-            )
+            raise ValueError(f"exponential filter order must be a positive integer (got {order})")
         alpha = float(
-            spec.alpha
-            if spec.alpha is not None
-            else -np.log(np.finfo(float).eps)   # ≈ 36.04
+            spec.alpha if spec.alpha is not None else -np.log(np.finfo(float).eps)  # ≈ 36.04
         )
         w = np.exp(-alpha * x**order)
 

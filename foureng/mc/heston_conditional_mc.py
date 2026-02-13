@@ -1,8 +1,11 @@
 from __future__ import annotations
-import numpy as np
+
 from dataclasses import dataclass
 from typing import Any, Optional
+
+import numpy as np
 from scipy.stats import norm
+
 from ..models.base import ForwardSpec
 from ..models.heston import HestonParams
 
@@ -12,7 +15,7 @@ class HestonMCScheme:
     n_paths: int
     n_steps: int
     seed: int | None = None
-    scheme: str = "exact"   # "exact" or "milstein"
+    scheme: str = "exact"  # "exact" or "milstein"
 
 
 def _sim_var_exact(v0, kappa, theta, nu, T, n_paths, n_steps, rng):
@@ -42,8 +45,12 @@ def _sim_var_milstein(v0, kappa, theta, nu, T, n_paths, n_steps, rng):
     for s in range(1, n_steps + 1):
         Z = rng.standard_normal(n_paths)
         sv = np.sqrt(np.maximum(v, 0.0))
-        v = v + kappa * (theta - v) * h + nu * sv * Z * np.sqrt(h) \
-              + 0.25 * nu * nu * (Z * Z * h - h)
+        v = (
+            v
+            + kappa * (theta - v) * h
+            + nu * sv * Z * np.sqrt(h)
+            + 0.25 * nu * nu * (Z * Z * h - h)
+        )
         v = np.maximum(v, 0.0)
         VT += v * (h / 2.0 if s == n_steps else h)
     return v, VT
@@ -96,12 +103,13 @@ def heston_conditional_mc_calls(
     sigma = np.sqrt(np.maximum(sigma2, 1e-16))
 
     # conditional BS call per path, per strike
-    logFK = np.log(F0 / K)                       # (nK,)
+    logFK = np.log(F0 / K)  # (nK,)
     # per path (nPaths,), per strike: d1 = (log(F0/K) + mu + sigma^2) / sigma
     d1 = (logFK[None, :] + mu[:, None] + sigma[:, None] ** 2) / sigma[:, None]
     d2 = d1 - sigma[:, None]
-    call_paths = F0 * np.exp(mu[:, None] + 0.5 * sigma[:, None] ** 2) * norm.cdf(d1) \
-                 - K[None, :] * norm.cdf(d2)
+    call_paths = F0 * np.exp(mu[:, None] + 0.5 * sigma[:, None] ** 2) * norm.cdf(d1) - K[
+        None, :
+    ] * norm.cdf(d2)
     return np.exp(-r * T) * call_paths.mean(axis=0)
 
 
@@ -118,9 +126,9 @@ def heston_conditional_mc_calls(
 #: Short engine name → PyFENG class attribute. The default is Andersen2008
 #: (the classic Heston QE scheme), which is accurate and fast.
 _PYFENG_HESTON_MC_ENGINES: dict[str, str] = {
-    "Andersen2008":       "HestonMcAndersen2008",
-    "GlassermanKim2011":  "HestonMcGlassermanKim2011",
-    "TseWan2013":         "HestonMcTseWan2013",
+    "Andersen2008": "HestonMcAndersen2008",
+    "GlassermanKim2011": "HestonMcGlassermanKim2011",
+    "TseWan2013": "HestonMcTseWan2013",
     "ChoiKwok2023PoisGe": "HestonMcChoiKwok2023PoisGe",
     "ChoiKwok2023PoisTd": "HestonMcChoiKwok2023PoisTd",
 }
@@ -131,8 +139,7 @@ _PYFENG_MC_CACHE: dict[tuple, Any] = {}
 def _get_pyfeng_mc_model(engine: str, fwd: ForwardSpec, p: HestonParams):
     if engine not in _PYFENG_HESTON_MC_ENGINES:
         raise ValueError(
-            f"unknown engine {engine!r}; choose one of "
-            f"{sorted(_PYFENG_HESTON_MC_ENGINES)}"
+            f"unknown engine {engine!r}; choose one of {sorted(_PYFENG_HESTON_MC_ENGINES)}"
         )
     key = (engine, p, fwd)
     m = _PYFENG_MC_CACHE.get(key)
@@ -142,12 +149,11 @@ def _get_pyfeng_mc_model(engine: str, fwd: ForwardSpec, p: HestonParams):
         import pyfeng as pf  # type: ignore
     except Exception as exc:  # pragma: no cover
         raise ImportError(
-            "heston_mc_pyfeng_price_strip requires pyfeng; install with "
-            "`pip install pyfeng`."
+            "heston_mc_pyfeng_price_strip requires pyfeng; install with `pip install pyfeng`."
         ) from exc
     cls = getattr(pf, _PYFENG_HESTON_MC_ENGINES[engine])
     m = cls(
-        sigma=p.v0,     # PyFENG: sigma = v0 (variance)
+        sigma=p.v0,  # PyFENG: sigma = v0 (variance)
         vov=p.nu,
         rho=p.rho,
         mr=p.kappa,
@@ -206,7 +212,5 @@ def heston_mc_pyfeng_price_strip(
     m = _get_pyfeng_mc_model(engine, fwd, p)
     # 100 substeps: matches the default n_steps in heston_conditional_mc_calls
     step = float(fwd.T) / 100.0 if dt is None else float(dt)
-    m.set_num_params(n_path=int(n_paths), dt=step,
-                     rn_seed=int(seed), antithetic=antithetic)
-    return np.asarray(m.price(K, spot=fwd.S0, texp=fwd.T, cp=cp),
-                      dtype=np.float64)
+    m.set_num_params(n_path=int(n_paths), dt=step, rn_seed=int(seed), antithetic=antithetic)
+    return np.asarray(m.price(K, spot=fwd.S0, texp=fwd.T, cp=cp), dtype=np.float64)
