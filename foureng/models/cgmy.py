@@ -25,13 +25,15 @@ References
   CGMY Process and Option Pricing", J. Futures Markets — the exact
   MGF PyFENG uses.
 """
+
 from __future__ import annotations
+
 from dataclasses import dataclass
 
 import numpy as np
 
-from .base import ForwardSpec, ModelSpec
 from ._pyfeng_backend import build_cached, import_pyfeng
+from .base import ForwardSpec, ModelSpec
 
 
 @dataclass(frozen=True)
@@ -88,10 +90,11 @@ _CGMY_MODEL_CACHE: dict[tuple, object] = {}
 
 def _pyfeng_cgmy_model(fwd: ForwardSpec, p: CgmyParams):
     """Build-and-cache a :class:`pyfeng.CgmyFft` for ``(fwd, p)``."""
+
     def _factory():
         pf = import_pyfeng()
-        return pf.CgmyFft(C=p.C, G=p.G, M=p.M, Y=p.Y,
-                           intr=fwd.r, divr=fwd.q)
+        return pf.CgmyFft(C=p.C, G=p.G, M=p.M, Y=p.Y, intr=fwd.r, divr=fwd.q)
+
     return build_cached(_CGMY_MODEL_CACHE, (p, fwd), _factory)
 
 
@@ -99,13 +102,13 @@ def cgmy_cf(u: np.ndarray, fwd: ForwardSpec, p: CgmyParams) -> np.ndarray:
     """CF of ``X_T = log(S_T / F_0)`` under CGMY — via PyFENG's ``CgmyFft``."""
     m = _pyfeng_cgmy_model(fwd, p)
     u_arr = np.asarray(u)
-    return np.asarray(m.charfunc_logprice(u_arr, texp=fwd.T),
-                      dtype=np.complex128)
+    return np.asarray(m.charfunc_logprice(u_arr, texp=fwd.T), dtype=np.complex128)
 
 
 # ---------------------------------------------------------------------------
 # Cumulants — closed form from the Lévy exponent
 # ---------------------------------------------------------------------------
+
 
 def cgmy_cumulants(fwd: ForwardSpec, p: CgmyParams) -> tuple[float, float, float]:
     """Cumulants ``(c1, c2, c4)`` of ``X_T`` under CGMY (analytic).
@@ -140,11 +143,12 @@ def cgmy_cumulants(fwd: ForwardSpec, p: CgmyParams) -> tuple[float, float, float
     # interest is Y in (0, 2) \ {1}. We don't guard here — PyFENG's CF
     # will itself surface a NaN if the caller picks a degenerate Y.
     gY = _gamma(-Y)
+
     # Falling factorial Y*(Y-1)*...*(Y-n+1).
     def _ff(n: int) -> float:
         v = 1.0
         for k in range(n):
-            v *= (Y - k)
+            v *= Y - k
         return v
 
     # Drift from the martingale correction: E[X_T] = T * (psi(-i)/i),
@@ -154,7 +158,7 @@ def cgmy_cumulants(fwd: ForwardSpec, p: CgmyParams) -> tuple[float, float, float
     # psi(-i)/i (the compensator) = C * Gamma(-Y) * [(M-1)^Y - M^Y
     #                                                 + (G+1)^Y - G^Y].
     psi_no = C * gY * Y * (M ** (Y - 1) - G ** (Y - 1))
-    psi_comp = C * gY * ((M - 1) ** Y - M ** Y + (G + 1) ** Y - G ** Y)
+    psi_comp = C * gY * ((M - 1) ** Y - M**Y + (G + 1) ** Y - G**Y)
     c1 = T * (psi_no - psi_comp)
     # Higher cumulants are insensitive to the drift shift.
     c2 = T * C * gY * _ff(2) * (M ** (Y - 2) + G ** (Y - 2))

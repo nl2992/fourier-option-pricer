@@ -36,7 +36,9 @@ References
 * Cont, R. & Tankov, P. (2004), *Financial Modelling with Jump Processes*,
   CRC Press, §4.5.
 """
+
 from __future__ import annotations
+
 from dataclasses import dataclass
 
 import numpy as np
@@ -63,6 +65,7 @@ class FMLSParams(ModelSpec):
 
     def __init__(self, alpha: float, sigma: float):
         import numpy as _np
+
         if not (_np.isfinite(alpha) and 1.0 < alpha <= 2.0):
             raise ValueError(f"alpha must be in (1, 2]; got {alpha}")
         if not (_np.isfinite(sigma) and sigma > 0):
@@ -75,6 +78,7 @@ class FMLSParams(ModelSpec):
 # ---------------------------------------------------------------------------
 # Characteristic function
 # ---------------------------------------------------------------------------
+
 
 def fmls_cf(u: np.ndarray, fwd: ForwardSpec, p: FMLSParams) -> np.ndarray:
     """CF of X_T = log(S_T/F_0) under the FMLS model.
@@ -105,13 +109,14 @@ def fmls_cf(u: np.ndarray, fwd: ForwardSpec, p: FMLSParams) -> np.ndarray:
         iu_alpha = np.exp(p.alpha * np.log(iu))
     iu_alpha = np.where(u_c == 0, 0.0 + 0j, iu_alpha)
 
-    exponent = T * (p.sigma ** p.alpha / 2.0) * (iu_alpha - iu)
+    exponent = T * (p.sigma**p.alpha / 2.0) * (iu_alpha - iu)
     return np.exp(exponent)
 
 
 # ---------------------------------------------------------------------------
 # Cumulants — numerical Cauchy integral
 # ---------------------------------------------------------------------------
+
 
 def fmls_cumulants(fwd: ForwardSpec, p: FMLSParams) -> tuple[float, float, float]:
     """Cumulants ``(c1, c2, c4)`` of X_T under the FMLS model.
@@ -120,6 +125,8 @@ def fmls_cumulants(fwd: ForwardSpec, p: FMLSParams) -> tuple[float, float, float
     """
     from ..utils.cumulants import cumulants_from_cf
 
-    phi = lambda u: fmls_cf(u, fwd, p)
-    c = cumulants_from_cf(phi, order=4, radius=0.25, M=64)
+    def _phi(u):
+        return fmls_cf(u, fwd, p)
+
+    c = cumulants_from_cf(_phi, order=4, radius=0.25, M=64)
     return float(c[0]), float(c[1]), float(c[3])

@@ -18,7 +18,9 @@ References
 * Fang & Oosterlee (2008) — COS truncation rule consumes the cumulants
   returned here.
 """
+
 from __future__ import annotations
+
 from dataclasses import dataclass
 
 import numpy as np
@@ -84,7 +86,9 @@ class HestonKouParams(ModelSpec):
         if not (np.isfinite(p_j) and 0.0 < p_j < 1.0):
             raise ValueError(f"HestonKouParams: p_j must be in (0, 1); got {p_j}")
         if not (np.isfinite(eta1) and eta1 > 1.0):
-            raise ValueError(f"HestonKouParams: eta1 must be > 1 (martingale condition); got {eta1}")
+            raise ValueError(
+                f"HestonKouParams: eta1 must be > 1 (martingale condition); got {eta1}"
+            )
         if not (np.isfinite(eta2) and eta2 > 0):
             raise ValueError(f"HestonKouParams: eta2 must be > 0; got {eta2}")
         object.__setattr__(self, "name", "heston_kou")
@@ -140,9 +144,7 @@ def heston_kou_cf(u: np.ndarray, fwd: ForwardSpec, p: HestonKouParams) -> np.nda
     return phi_H * phi_jump
 
 
-def heston_kou_cumulants(
-    fwd: ForwardSpec, p: HestonKouParams
-) -> tuple[float, float, float]:
+def heston_kou_cumulants(fwd: ForwardSpec, p: HestonKouParams) -> tuple[float, float, float]:
     """Cumulants (c1, c2, c4) of X_T under Heston-Kou.
 
     Independent components → cumulants add. Double-exponential raw
@@ -168,8 +170,8 @@ def heston_kou_cumulants(
 
     zeta = pp * eta1 / (eta1 - 1.0) + (1.0 - pp) * eta2 / (eta2 + 1.0) - 1.0
     EY = pp / eta1 - (1.0 - pp) / eta2
-    EY2 = 2.0 * pp / eta1 ** 2 + 2.0 * (1.0 - pp) / eta2 ** 2
-    EY4 = 24.0 * pp / eta1 ** 4 + 24.0 * (1.0 - pp) / eta2 ** 4
+    EY2 = 2.0 * pp / eta1**2 + 2.0 * (1.0 - pp) / eta2**2
+    EY4 = 24.0 * pp / eta1**4 + 24.0 * (1.0 - pp) / eta2**4
 
     c1_j = lam * T * (EY - zeta)
     c2_j = lam * T * EY2

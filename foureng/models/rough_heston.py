@@ -49,13 +49,15 @@ PyFENG benchmark (first docstring example, verified numerically)::
     strikes=[60, 70, 100, 140], spot=100, texp=1.0, r=q=0
     → prices ≈ [40.407, 31.356, 11.473, 1.888]
 """
+
 from __future__ import annotations
+
 from dataclasses import dataclass
 
 import numpy as np
 
-from .base import ForwardSpec, ModelSpec
 from ._pyfeng_backend import build_cached, import_pyfeng
+from .base import ForwardSpec, ModelSpec
 
 
 @dataclass(frozen=True)
@@ -98,7 +100,9 @@ class RoughHestonParams(ModelSpec):
         alpha: float = 0.62,
     ):
         if not (np.isfinite(sigma) and sigma > 0):
-            raise ValueError(f"RoughHestonParams: sigma (initial variance) must be > 0; got {sigma}")
+            raise ValueError(
+                f"RoughHestonParams: sigma (initial variance) must be > 0; got {sigma}"
+            )
         if not np.isfinite(vov):
             raise ValueError(f"RoughHestonParams: vov must be finite; got {vov}")
         if not (np.isfinite(mr) and mr > 0):
@@ -140,10 +144,12 @@ def _pyfeng_rough_heston_model(fwd: ForwardSpec, p: RoughHestonParams):
         theta  <->  p.theta    (long-term variance)
         alpha  <->  p.alpha    (fractional exponent)
     """
+
     def _factory():
-        pf = import_pyfeng()
+        import_pyfeng()
         # Import directly from sv_fft — pyfeng.ex is broken under newer SciPy
         from pyfeng.sv_fft import RoughHestonFft  # type: ignore
+
         return RoughHestonFft(
             sigma=p.sigma,
             vov=p.vov,
@@ -154,6 +160,7 @@ def _pyfeng_rough_heston_model(fwd: ForwardSpec, p: RoughHestonParams):
             intr=fwd.r,
             divr=fwd.q,
         )
+
     return build_cached(_ROUGH_HESTON_MODEL_CACHE, (p, fwd), _factory)
 
 
@@ -184,6 +191,7 @@ def rough_heston_cf(u: np.ndarray, fwd: ForwardSpec, p: RoughHestonParams) -> np
 # Cumulants — numerical Cauchy integral
 # ---------------------------------------------------------------------------
 
+
 def rough_heston_cumulants(fwd: ForwardSpec, p: RoughHestonParams) -> tuple[float, float, float]:
     """Cumulants ``(c1, c2, c4)`` of X_T under the rough Heston model.
 
@@ -193,6 +201,8 @@ def rough_heston_cumulants(fwd: ForwardSpec, p: RoughHestonParams) -> tuple[floa
     """
     from ..utils.cumulants import cumulants_from_cf
 
-    phi = lambda u: rough_heston_cf(u, fwd, p)
-    c = cumulants_from_cf(phi, order=4, radius=0.25, M=64)
+    def _phi(u):
+        return rough_heston_cf(u, fwd, p)
+
+    c = cumulants_from_cf(_phi, order=4, radius=0.25, M=64)
     return float(c[0]), float(c[1]), float(c[3])

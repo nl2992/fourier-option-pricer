@@ -57,7 +57,9 @@ References
 * Cont, R. & Tankov, P. (2004), *Financial Modelling with Jump Processes*,
   CRC Press, Chapter 4.
 """
+
 from __future__ import annotations
+
 from dataclasses import dataclass
 
 import numpy as np
@@ -92,6 +94,7 @@ class GHParams(ModelSpec):
 
     def __init__(self, lam: float, alpha: float, beta: float, delta: float):
         import numpy as _np
+
         if not _np.isfinite(lam):
             raise ValueError(f"lam must be finite; got {lam}")
         if not (_np.isfinite(alpha) and alpha > 0):
@@ -118,6 +121,7 @@ class GHParams(ModelSpec):
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _log_kv_ratio(lam: float, z1: np.ndarray, z0: float) -> np.ndarray:
     """log K_λ(z1) − log K_λ(z0), element-wise over z1.
 
@@ -135,9 +139,9 @@ def _levy_exponent(u_c: np.ndarray, p: GHParams, z0: float) -> np.ndarray:
     ψ_raw(u) = λ/2 · log((α²−β²)/(α²−(β+iu)²))
                + log K_λ(δ·sqrt(α²−(β+iu)²)) − log K_λ(δ·sqrt(α²−β²))
     """
-    alpha2_m_beta2 = p.alpha ** 2 - p.beta ** 2
+    alpha2_m_beta2 = p.alpha**2 - p.beta**2
     beta_iu = p.beta + 1j * u_c
-    alpha2_m_betaiu2 = p.alpha ** 2 - beta_iu ** 2
+    alpha2_m_betaiu2 = p.alpha**2 - beta_iu**2
 
     # sqrt with principal branch (positive real part)
     sqrt_arg = np.sqrt(alpha2_m_betaiu2)
@@ -156,7 +160,7 @@ def _gh_omega(p: GHParams) -> complex:
 
     Requires α² − (β+1)² > 0 and α² − (β−1)² > 0 for finiteness.
     """
-    z0 = p.delta * np.sqrt(p.alpha ** 2 - p.beta ** 2)
+    z0 = p.delta * np.sqrt(p.alpha**2 - p.beta**2)
     psi_raw_neg_i = _levy_exponent(np.array([-1j]), p, float(z0))
     return -float(np.real(psi_raw_neg_i[0]))
 
@@ -164,6 +168,7 @@ def _gh_omega(p: GHParams) -> complex:
 # ---------------------------------------------------------------------------
 # Characteristic function
 # ---------------------------------------------------------------------------
+
 
 def gh_cf(u: np.ndarray, fwd: ForwardSpec, p: GHParams) -> np.ndarray:
     """CF of X_T = log(S_T/F_0) under the GH Lévy model.
@@ -184,7 +189,7 @@ def gh_cf(u: np.ndarray, fwd: ForwardSpec, p: GHParams) -> np.ndarray:
     u_c = np.asarray(u, dtype=np.complex128)
     T = fwd.T
 
-    z0 = float(p.delta * np.sqrt(p.alpha ** 2 - p.beta ** 2))
+    z0 = float(p.delta * np.sqrt(p.alpha**2 - p.beta**2))
     omega = _gh_omega(p)
 
     psi_raw = _levy_exponent(u_c, p, z0)
@@ -196,6 +201,7 @@ def gh_cf(u: np.ndarray, fwd: ForwardSpec, p: GHParams) -> np.ndarray:
 # Cumulants — numerical Cauchy integral
 # ---------------------------------------------------------------------------
 
+
 def gh_cumulants(fwd: ForwardSpec, p: GHParams) -> tuple[float, float, float]:
     """Cumulants ``(c1, c2, c4)`` of X_T under the GH Lévy model.
 
@@ -205,6 +211,8 @@ def gh_cumulants(fwd: ForwardSpec, p: GHParams) -> tuple[float, float, float]:
     """
     from ..utils.cumulants import cumulants_from_cf
 
-    phi = lambda u: gh_cf(u, fwd, p)
-    c = cumulants_from_cf(phi, order=4, radius=0.25, M=64)
+    def _phi(u):
+        return gh_cf(u, fwd, p)
+
+    c = cumulants_from_cf(_phi, order=4, radius=0.25, M=64)
     return float(c[0]), float(c[1]), float(c[3])

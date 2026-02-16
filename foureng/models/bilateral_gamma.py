@@ -47,7 +47,9 @@ References
 * Cont, R. & Tankov, P. (2004), *Financial Modelling with Jump Processes*,
   CRC Press, Chapter 4 (Generalized hyperbolic and related).
 """
+
 from __future__ import annotations
+
 from dataclasses import dataclass
 
 import numpy as np
@@ -79,17 +81,21 @@ class BilateralGammaParams(ModelSpec):
     alpha_m: float
     lambda_m: float
 
-    def __init__(self, alpha_p: float, lambda_p: float,
-                 alpha_m: float, lambda_m: float):
+    def __init__(self, alpha_p: float, lambda_p: float, alpha_m: float, lambda_m: float):
         import numpy as _np
+
         if not (_np.isfinite(alpha_p) and alpha_p > 0):
             raise ValueError(f"alpha_p must be finite and > 0; got {alpha_p}")
         if not (_np.isfinite(lambda_p) and lambda_p > 1):
-            raise ValueError(f"lambda_p must be finite and > 1 (martingale condition); got {lambda_p}")
+            raise ValueError(
+                f"lambda_p must be finite and > 1 (martingale condition); got {lambda_p}"
+            )
         if not (_np.isfinite(alpha_m) and alpha_m > 0):
             raise ValueError(f"alpha_m must be finite and > 0; got {alpha_m}")
         if not (_np.isfinite(lambda_m) and lambda_m > 1):
-            raise ValueError(f"lambda_m must be finite and > 1 (martingale condition); got {lambda_m}")
+            raise ValueError(
+                f"lambda_m must be finite and > 1 (martingale condition); got {lambda_m}"
+            )
         object.__setattr__(self, "name", "bilateral_gamma")
         object.__setattr__(self, "alpha_p", alpha_p)
         object.__setattr__(self, "lambda_p", lambda_p)
@@ -100,6 +106,7 @@ class BilateralGammaParams(ModelSpec):
 # ---------------------------------------------------------------------------
 # Drift correction
 # ---------------------------------------------------------------------------
+
 
 def _bg_omega(p: BilateralGammaParams) -> float:
     """Drift correction ω so E[exp(X_T)] = 1.
@@ -117,9 +124,8 @@ def _bg_omega(p: BilateralGammaParams) -> float:
 # Characteristic function
 # ---------------------------------------------------------------------------
 
-def bilateral_gamma_cf(
-    u: np.ndarray, fwd: ForwardSpec, p: BilateralGammaParams
-) -> np.ndarray:
+
+def bilateral_gamma_cf(u: np.ndarray, fwd: ForwardSpec, p: BilateralGammaParams) -> np.ndarray:
     """CF of X_T = log(S_T/F_0) under the Bilateral Gamma model.
 
     φ(u) = exp(T · [i·u·ω + α⁺·log(λ⁺/(λ⁺ − i·u))
@@ -153,6 +159,7 @@ def bilateral_gamma_cf(
 # Cumulants (closed form)
 # ---------------------------------------------------------------------------
 
+
 def bilateral_gamma_cumulants(
     fwd: ForwardSpec, p: BilateralGammaParams
 ) -> tuple[float, float, float]:
@@ -169,6 +176,6 @@ def bilateral_gamma_cumulants(
     omega = _bg_omega(p)
 
     c1 = T * (omega + a_p / l_p - a_m / l_m)
-    c2 = T * (a_p / l_p ** 2 + a_m / l_m ** 2)
-    c4 = T * 2.0 * (a_p / l_p ** 4 + a_m / l_m ** 4)
+    c2 = T * (a_p / l_p**2 + a_m / l_m**2)
+    c4 = T * 2.0 * (a_p / l_p**4 + a_m / l_m**4)
     return float(c1), float(c2), float(c4)

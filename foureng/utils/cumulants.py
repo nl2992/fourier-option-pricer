@@ -1,9 +1,10 @@
 from __future__ import annotations
+
 import math
-import numpy as np
-import scipy.special
 from dataclasses import dataclass
 from typing import Callable
+
+import numpy as np
 
 
 @dataclass(frozen=True)
@@ -110,7 +111,7 @@ def cumulants_from_cf(
     K = np.log(phi(u))
     bhat = np.fft.fft(K) / M
     ns = np.arange(1, order + 1)
-    b_raw = bhat[ns] / radius ** ns
+    b_raw = bhat[ns] / radius**ns
     factorial_vals = np.array([math.factorial(int(n)) for n in ns])
-    cumulants = list(np.real(b_raw / (1j ** ns)) * factorial_vals)
+    cumulants = list(np.real(b_raw / (1j**ns)) * factorial_vals)
     return cumulants
