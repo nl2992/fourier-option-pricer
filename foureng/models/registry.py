@@ -22,6 +22,7 @@ from .bates import BatesParams, bates_cf, bates_cumulants
 from .bilateral_gamma import BilateralGammaParams, bilateral_gamma_cf, bilateral_gamma_cumulants
 from .bsm import BsmParams, bsm_cf, bsm_cumulants
 from .cgmy import CgmyParams, cgmy_cf, cgmy_cumulants
+from .double_heston import DoubleHestonParams, double_heston_cf, double_heston_cumulants
 from .fmls import FMLSParams, fmls_cf, fmls_cumulants
 from .garch_wmw2012 import GarchWMW2012Params, garch_wmw2012_cf, garch_wmw2012_cumulants
 from .generalized_hyperbolic import GHParams, gh_cf, gh_cumulants
@@ -36,6 +37,7 @@ from .ousv import OusvParams, ousv_cf, ousv_cumulants
 from .rough_heston import RoughHestonParams, rough_heston_cf, rough_heston_cumulants
 from .sv32 import Sv32Params, sv32_cf, sv32_cumulants
 from .variance_gamma import VGParams, vg_cf, vg_cumulants
+from .vgsa import VGSAParams, vgsa_cf, vgsa_cumulants
 
 
 @dataclass(frozen=True)
@@ -105,6 +107,15 @@ MODEL_REGISTRY: dict[str, ModelEntry] = {
     ),
     "generalized_hyperbolic": _e("generalized_hyperbolic", GHParams, gh_cf, gh_cumulants, False),
     "fmls": _e("fmls", FMLSParams, fmls_cf, fmls_cumulants, False),
+    # ── New in-house models (20-model portfolio) ──────────────────────────────
+    "double_heston": _e(
+        "double_heston",
+        DoubleHestonParams,
+        double_heston_cf,
+        double_heston_cumulants,
+        False,
+    ),
+    "vgsa": _e("vgsa", VGSAParams, vgsa_cf, vgsa_cumulants, False),
 }
 
 __all__ = ["ModelEntry", "MODEL_REGISTRY"]

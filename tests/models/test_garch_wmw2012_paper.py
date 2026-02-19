@@ -95,6 +95,8 @@ class TestGarchMGFFormula:
     def _pyfeng_old_model(self):
         pf = pytest.importorskip("pyfeng",
             reason="pyfeng not installed — GARCH MGF cross-check requires it")
+        if not hasattr(pf, "GarchFftWuMaWang2012"):
+            pytest.skip("pyfeng.GarchFftWuMaWang2012 not available in this pyfeng version")
         self._pf_model = pf.GarchFftWuMaWang2012(
             sigma=0.06, vov=3.20, mr=20.48, rho=-0.99, theta=0.218,
         )
