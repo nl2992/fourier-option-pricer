@@ -1,0 +1,2 @@
+case_id,table,model,method,option_type,S0,r,q,T,alpha_p,lambda_p,alpha_m,lambda_m,K,expected_price,tolerance_abs,reference_type
+bilateral_gamma_structural,Structural benchmark,bilateral_gamma,carr_madan,call,,,,,,,,,,1.0e-4,derived_reference

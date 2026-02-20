@@ -1,0 +1,2 @@
+case_id,table,model,method,option_type,S0,r,q,T,lambda,alpha,beta,delta,K,expected_price,tolerance_abs,reference_type
+gh_special_cases,GH special cases,generalized_hyperbolic,carr_madan,call,,,,,,,,,,1.0e-4,derived_reference

@@ -1,0 +1,9 @@
+paper_key: double_heston_kelly2025
+citation: "Kelly (2025), Two-factor Heston vanilla option benchmark"
+doi: ""
+reference_type: paper_table
+model: double_heston
+method: cos
+table: "Vanilla call and put price table"
+tolerance_abs: 5.0e-4
+notes: "Prices are quoted to four decimals in the test source."

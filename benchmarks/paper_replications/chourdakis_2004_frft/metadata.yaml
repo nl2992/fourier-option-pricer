@@ -1,0 +1,9 @@
+paper_key: chourdakis_2004_frft
+citation: "Chourdakis, K. (2004), Option Pricing Using the Fractional FFT"
+doi: "10.21314/JCF.2004.137"
+reference_type: derived_reference
+model: heston
+method: frft
+table: "FFT-compatible and non-FFT grid checks"
+tolerance_abs: 1.0e-4
+notes: "No exact Chourdakis table values are currently copied; tests validate FRFT against Lewis/Heston and FFT-compatible grids."

@@ -1,0 +1,9 @@
+paper_key: meixner_2002
+citation: "Schoutens, W. (2002), The Meixner Process: Theory and Applications in Finance"
+doi: ""
+reference_type: derived_reference
+model: meixner
+method: carr_madan
+table: "Meixner martingale and structural checks"
+tolerance_abs: 1.0e-4
+notes: "Exact EURANDOM report price values are not yet copied; tests validate CF, martingale correction, cumulants, and cross-engine agreement."

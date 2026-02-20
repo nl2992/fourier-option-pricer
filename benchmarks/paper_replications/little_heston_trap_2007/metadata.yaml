@@ -1,0 +1,9 @@
+paper_key: little_heston_trap_2007
+citation: "Albrecher, H., Mayer, P., Schoutens, W. and Tistaert, J. (2007), The Little Heston Trap"
+doi: ""
+reference_type: numerical_stability
+model: heston
+method: heston_cf_form2
+table: "Stable CF branch stress checks"
+tolerance_abs: 1.0e-8
+notes: "Current tests stress branch/alpha validity; exact paper table values are not copied."

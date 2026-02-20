@@ -1,0 +1,9 @@
+paper_key: carr_madan_1999
+citation: "Carr, P. and Madan, D.B. (1999), Option Valuation Using the Fast Fourier Transform"
+doi: "10.21314/JCF.1999.043"
+reference_type: paper_table
+model: variance_gamma
+method: carr_madan
+table: "VG Case 4"
+tolerance_abs: 1.0e-3
+notes: "Published put prices rounded to four decimals."

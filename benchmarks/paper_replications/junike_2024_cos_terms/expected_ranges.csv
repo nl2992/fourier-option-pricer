@@ -1,0 +1,2 @@
+case_id,table,model,method,N_values,tolerance_abs,reference_type,notes
+junike_terms_policy,Derived term-count policy,cos_improved,recommended_cos_policy,"128;256;512;1024",1.0e-4,derived_reference,"See tests/test_paper_junike_2022_2024.py"

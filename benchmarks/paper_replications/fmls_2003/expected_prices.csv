@@ -1,0 +1,2 @@
+case_id,table,model,method,option_type,S0,r,q,T,alpha,sigma,K,expected_price,tolerance_abs,reference_type
+fmls_alpha2_bsm,Alpha=2 BSM limit,fmls,lewis,call,100.0,0.0,0.0,1.0,2.0,0.3,100.0,,1.0e-8,derived_reference
