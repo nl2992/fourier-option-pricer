@@ -3,32 +3,7 @@ import numpy as np
 from dataclasses import dataclass
 from typing import Any
 from .models.base import ForwardSpec, CharFunc
-from .models.bsm import BsmParams, bsm_cf, bsm_cumulants
-from .models.heston import HestonParams, heston_cf, heston_cumulants
-from .models.ousv import OusvParams, ousv_cf, ousv_cumulants
-from .models.variance_gamma import VGParams, vg_cf, vg_cumulants
-from .models.cgmy import CgmyParams, cgmy_cf, cgmy_cumulants
-from .models.nig import NigParams, nig_cf, nig_cumulants
-from .models.kou import KouParams, kou_cf, kou_cumulants
-from .models.bates import BatesParams, bates_cf, bates_cumulants
-from .models.heston_kou import (
-    HestonKouParams,
-    heston_kou_cf,
-    heston_kou_cumulants,
-)
-from .models.heston_cgmy import (
-    HestonCGMYParams,
-    heston_cgmy_cf,
-    heston_cgmy_cumulants,
-)
-from .models.sv32 import Sv32Params, sv32_cf, sv32_cumulants
-from .models.garch_wmw2012 import GarchWMW2012Params, garch_wmw2012_cf, garch_wmw2012_cumulants
-from .models.rough_heston import RoughHestonParams, rough_heston_cf, rough_heston_cumulants
-from .models.merton_jd import MertonJDParams, merton_jd_cf, merton_jd_cumulants
-from .models.meixner import MeixnerParams, meixner_cf, meixner_cumulants
-from .models.bilateral_gamma import BilateralGammaParams, bilateral_gamma_cf, bilateral_gamma_cumulants
-from .models.generalized_hyperbolic import GHParams, gh_cf, gh_cumulants
-from .models.fmls import FMLSParams, fmls_cf, fmls_cumulants
+from .models.registry import MODEL_REGISTRY
 from .utils.grids import FFTGrid, FRFTGrid, COSGrid, COSGridPolicy
 from .pricers.carr_madan import carr_madan_price_at_strikes
 from .pricers.frft import frft_price_at_strikes
@@ -77,40 +52,13 @@ def phase4_cos(
 # that delegates to PyFENG's own pricer entirely.
 # ---------------------------------------------------------------------------
 
-_MODELS: dict[str, tuple[type, Any, Any]] = {
-    # model_name : (ParamsClass, cf_callable(u, fwd, p), cumulants_fn(fwd, p))
-    "bsm":         (BsmParams,         bsm_cf,          bsm_cumulants),
-    "heston":      (HestonParams,      heston_cf,       heston_cumulants),
-    "ousv":        (OusvParams,        ousv_cf,         ousv_cumulants),
-    "vg":          (VGParams,          vg_cf,           vg_cumulants),
-    "cgmy":        (CgmyParams,        cgmy_cf,         cgmy_cumulants),
-    "nig":         (NigParams,         nig_cf,          nig_cumulants),
-    "kou":         (KouParams,         kou_cf,          kou_cumulants),
-    "bates":       (BatesParams,       bates_cf,        bates_cumulants),
-    "heston_kou":  (HestonKouParams,   heston_kou_cf,   heston_kou_cumulants),
-    "heston_cgmy": (HestonCGMYParams,  heston_cgmy_cf,  heston_cgmy_cumulants),
-    "sv32":        (Sv32Params,        sv32_cf,         sv32_cumulants),
-    "garch_wmw2012": (GarchWMW2012Params, garch_wmw2012_cf, garch_wmw2012_cumulants),
-    "rough_heston":  (RoughHestonParams,  rough_heston_cf,  rough_heston_cumulants),
-    "merton_jd":     (MertonJDParams,     merton_jd_cf,     merton_jd_cumulants),
-    "meixner":       (MeixnerParams,      meixner_cf,       meixner_cumulants),
-    "bilateral_gamma": (BilateralGammaParams, bilateral_gamma_cf, bilateral_gamma_cumulants),
-    "generalized_hyperbolic": (GHParams, gh_cf, gh_cumulants),
-    "fmls":                   (FMLSParams, fmls_cf, fmls_cumulants),
-}
-
-# Models with no PyFENG FFT pricer — ``method='pyfeng_fft'`` raises for these.
-# PyFENG ships native *Fft classes for: bsm, heston, ousv, vg, cgmy, nig,
-# sv32 (Sv32Fft), rough_heston (RoughHestonFft in pyfeng.sv_fft).
-_NO_PYFENG_FFT = {"kou", "bates", "heston_kou", "heston_cgmy", "garch_wmw2012", "merton_jd", "meixner", "bilateral_gamma", "generalized_hyperbolic", "fmls"}
 _DIRECT_CALL_FRIENDLY_MODELS = {"heston", "ousv", "nig"}
 
 
 def _cf_for(model: str, fwd: ForwardSpec, params):
-    if model not in _MODELS:
-        raise ValueError(f"unknown model {model!r}; choose from {sorted(_MODELS)}")
-    _, cf_fn, _ = _MODELS[model]
-    return lambda u: cf_fn(u, fwd, params)
+    if model not in MODEL_REGISTRY:
+        raise ValueError(f"unknown model {model!r}; choose from {sorted(MODEL_REGISTRY)}")
+    return lambda u: MODEL_REGISTRY[model].cf(u, fwd, params)
 
 
 def _improved_cos_payoff_mode(model: str, grid: COSGrid) -> str:
@@ -133,12 +81,12 @@ def _pyfeng_fft_price(model: str, strikes, fwd: ForwardSpec, params, cp: int):
     ``bsm``, ``heston``, ``ousv``, ``vg``, ``cgmy``, ``nig``,
     ``sv32``, ``rough_heston``.
 
-    Raises :class:`ValueError` for any model in :data:`_NO_PYFENG_FFT`
-    (``kou``, ``bates``, ``heston_kou``, ``heston_cgmy``, ``garch_wmw2012``,
-    ``merton_jd``, ``meixner``, ``bilateral_gamma``, ``generalized_hyperbolic``,
-    ``fmls``).
+    Raises :class:`ValueError` for models where ``MODEL_REGISTRY[model].pyfeng_fft``
+    is ``False``: ``kou``, ``bates``, ``heston_kou``, ``heston_cgmy``,
+    ``garch_wmw2012``, ``merton_jd``, ``meixner``, ``bilateral_gamma``,
+    ``generalized_hyperbolic``, ``fmls``.
     """
-    if model in _NO_PYFENG_FFT:
+    if model not in MODEL_REGISTRY or not MODEL_REGISTRY[model].pyfeng_fft:
         raise ValueError(
             f"method='pyfeng_fft' is not supported for model={model!r} "
             "— PyFENG has no FFT pricer for this model. Use "
@@ -252,7 +200,7 @@ def price_strip(
     if method == "cos":
         if isinstance(grid, COSGridPolicy):
             decision = cos_adaptive_decision(
-                _MODELS[model][2](fwd, params),
+                MODEL_REGISTRY[model].cumulants(fwd, params),
                 model=model,
                 params=params,
                 policy=grid,
@@ -282,13 +230,12 @@ def price_strip(
             res = cos_prices(phi, fwd, K, decision.grid, payoff_mode=payoff_mode)
             return np.asarray(res.call_prices, dtype=np.float64)
         if grid is None:
-            _, _, cums_fn = _MODELS[model]
-            grid = cos_auto_grid(cums_fn(fwd, params), N=256, L=10.0)
+            grid = cos_auto_grid(MODEL_REGISTRY[model].cumulants(fwd, params), N=256, L=10.0)
         res = cos_prices(phi, fwd, K, grid)
         return np.asarray(res.call_prices, dtype=np.float64)
 
     if method == "cos_improved":
-        _, _, cums_fn = _MODELS[model]
+        cums_fn = MODEL_REGISTRY[model].cumulants
         policy = (
             grid
             if isinstance(grid, COSGridPolicy)
@@ -350,7 +297,7 @@ def price_strip(
         # After resolving the grid the path mirrors cos_improved but calls
         # filtered_cos_prices (which passes filter_spec to cos_prices).
         # ------------------------------------------------------------------
-        _, _, cums_fn = _MODELS[model]
+        cums_fn = MODEL_REGISTRY[model].cumulants
 
         # --- unpack grid argument ------------------------------------------
         if isinstance(grid, tuple) and len(grid) == 2:
