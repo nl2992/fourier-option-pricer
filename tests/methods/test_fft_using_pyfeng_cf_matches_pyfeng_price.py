@@ -30,6 +30,8 @@ pyfeng = pytest.importorskip(
     reason="pyfeng not installed; engine-vs-PyFENG-price check skipped",
 )
 
+pytestmark = [pytest.mark.adapter]
+
 
 def _heston_bundle(lewis_heston):
     d = lewis_heston

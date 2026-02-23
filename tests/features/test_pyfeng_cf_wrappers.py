@@ -27,6 +27,8 @@ pyfeng = pytest.importorskip(
     reason="pyfeng not installed; cross-library CF check skipped",
 )
 
+pytestmark = [pytest.mark.adapter]
+
 
 def test_heston_cf_matches_pyfeng_charfunc_logprice(lewis_heston):
     """Our ``heston_cf`` is exactly ``pf.HestonFft.charfunc_logprice``."""

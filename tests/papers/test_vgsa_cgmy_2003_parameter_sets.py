@@ -41,6 +41,8 @@ from foureng.models.vgsa import VGSAParams
 from foureng.pipeline import price_strip
 from foureng.utils.grids import FFTGrid, FRFTGrid
 
+pytestmark = [pytest.mark.paper, pytest.mark.derived_reference]
+
 # ---------------------------------------------------------------------------
 # Reference data
 # ---------------------------------------------------------------------------

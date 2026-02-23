@@ -21,6 +21,8 @@ from foureng.utils.validity import (
     assert_alpha_valid,
 )
 
+pytestmark = [pytest.mark.numerical_stability]
+
 
 def test_kou_alpha_max_analytic():
     """Kou: alpha_max = eta1 - 1, a hard analytic bound on E[S^{alpha+1}].

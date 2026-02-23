@@ -54,6 +54,9 @@ from foureng.pricers.carr_madan import carr_madan_price_at_strikes
 from foureng.utils.grids import FFTGrid
 
 
+pytestmark = [pytest.mark.paper, pytest.mark.derived_reference]
+
+
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
