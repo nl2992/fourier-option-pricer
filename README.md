@@ -6,7 +6,7 @@ This package solves a practical numerical-finance problem: pricing vanilla Europ
 
 ### Supported model layer
 
-The pricing layer supports eighteen characteristic-function models. Some are thin adapters over [PyFENG](https://github.com/PyFE/PyFENG), while others are implemented in-house inside `foureng.models`.
+The pricing layer supports twenty characteristic-function models. Some are thin adapters over [PyFENG](https://github.com/PyFE/PyFENG), while others are implemented in-house inside `foureng.models`.
 
 | Model | Public dataclass | Characteristic-function source | Notes |
 |--------|------------------|-------------------------------|-------|
@@ -28,10 +28,12 @@ The pricing layer supports eighteen characteristic-function models. Some are thi
 | Bilateral Gamma | `BilateralGammaParams` | In-house implementation | Separate Gamma processes for upward and downward moves (Küchler & Tappe 2008). |
 | Generalized Hyperbolic | `GHParams` | In-house implementation | Normal variance-mean mixture via GIG; includes NIG (λ=−½) and Hyperbolic (λ=1) as special cases. |
 | Finite Moment Log Stable (FMLS) | `FMLSParams` | In-house implementation | Maximally negatively-skewed α-stable Lévy process; all positive moments of S_T are finite (Carr & Wu 2003). |
+| Double Heston | `DoubleHestonParams` | In-house implementation | Two independent Heston variance factors; CF factorises as a product of two single-Heston CFs (Christoffersen, Heston & Jacobs 2009). |
+| VGSA | `VGSAParams` | In-house implementation | Variance Gamma on a stochastic CIR activity clock; captures term-structure of skew and vol-of-vol clustering (Carr, Geman, Madan & Yor 2003). |
 
-> **PyFENG dependency note.** The eight PyFENG-backed models rely on `pyfeng>=0.3.0`. Rough Heston imports directly from `pyfeng.sv_fft` (not `pyfeng.ex`) to avoid a broken path that calls the removed `scipy.misc.derivative` in newer SciPy. The `method="pyfeng_fft"` option in `price_strip` is supported only for these eight models; the remaining ten use the in-house COS / Carr-Madan / FRFT pricers.
+> **PyFENG dependency note.** The eight PyFENG-backed models rely on `pyfeng>=0.3.0`. Rough Heston imports directly from `pyfeng.sv_fft` (not `pyfeng.ex`) to avoid a broken path that calls the removed `scipy.misc.derivative` in newer SciPy. The `method="pyfeng_fft"` option in `price_strip` is supported only for these eight models; the remaining twelve use the in-house COS / Carr-Madan / FRFT pricers.
 
-All 18 models are **first-class public API objects** importable directly from the top-level package. Their parameter dataclasses, characteristic functions, and cumulant functions are all in `foureng.__all__` and importable as `fe.HestonParams`, `fe.vg_cf`, `fe.fmls_cumulants`, etc. The `MODEL_REGISTRY` in `foureng.models.registry` is the single source of truth for which models are supported and which have a native PyFENG FFT pricer; `price_strip` dispatches through it.
+All 20 models are **first-class public API objects** importable directly from the top-level package. Their parameter dataclasses, characteristic functions, and cumulant functions are all in `foureng.__all__` and importable as `fe.HestonParams`, `fe.vg_cf`, `fe.fmls_cumulants`, etc. The `MODEL_REGISTRY` in `foureng.models.registry` is the single source of truth for which models are supported and which have a native PyFENG FFT pricer; `price_strip` dispatches through it.
 
 ### Why use Fourier methods here instead of plain Monte Carlo?
 
@@ -86,7 +88,7 @@ validation purpose rather than by implementation phase:
 | Folder | Contents |
 |--------|----------|
 | `tests/papers/` | Published-paper and benchmark replications: Carr-Madan, Lewis, FRFT, Fang-Oosterlee COS, and Kou/COS checks. |
-| `tests/models/` | Model adapter, regression-strip, and reduction-limit tests for all 18 models, including paper-backed 3-layer suites (analytic benchmarks, cross-engine agreement, structural properties) for each in-house model. |
+| `tests/models/` | Model adapter, regression-strip, and reduction-limit tests for all 20 models, including paper-backed 3-layer suites (analytic benchmarks, cross-engine agreement, structural properties) for each in-house model. |
 | `tests/methods/` | Pricing-method behavior: COS policies, filters, alpha validity, cross-method agreement, and robustness sweeps. |
 | `tests/features/` | End-to-end package features: Monte Carlo, control variates, implied volatility, calibration, Greeks, public API, and integration workflows. |
 
@@ -141,6 +143,8 @@ from foureng.pipeline import price_strip
 | `BilateralGammaParams(alpha_p, lambda_p, alpha_m, lambda_m)` | Bilateral Gamma parameters | Bilateral Gamma parameter dataclass (separate up/down Gamma processes). |
 | `GHParams(lam, alpha, beta, delta)` | Generalized Hyperbolic parameters | GH Lévy model dataclass; `lam=-0.5` gives NIG, `lam=1` gives Hyperbolic. |
 | `FMLSParams(alpha, sigma)` | Stability index and scale | FMLS parameter dataclass; `alpha` in `(1, 2]`, recovers BSM at `alpha=2`. |
+| `DoubleHestonParams(kappa1, theta1, nu1, rho1, v01, kappa2, theta2, nu2, rho2, v02)` | Two independent Heston variance-factor parameter sets | Double Heston dataclass; CF factorises as product of two single-Heston CFs. |
+| `VGSAParams(C, G, M, kappa, eta, lam)` | VG tempering rates plus CIR activity-clock parameters | VGSA dataclass; `C` is initial activity, `G`/`M` are left/right tempering rates, `kappa`/`eta`/`lam` are CIR parameters. `lam=0` reduces to standard VG. |
 
 ### Characteristic functions and cumulants
 
@@ -164,6 +168,8 @@ from foureng.pipeline import price_strip
 | `bilateral_gamma_cf(u, fwd, params)` | `u: np.ndarray`, `fwd: ForwardSpec`, `params: BilateralGammaParams` | Complex-valued Bilateral Gamma characteristic function. |
 | `gh_cf(u, fwd, params)` | `u: np.ndarray`, `fwd: ForwardSpec`, `params: GHParams` | Complex-valued Generalized Hyperbolic characteristic function (uses Bessel K). |
 | `fmls_cf(u, fwd, params)` | `u: np.ndarray`, `fwd: ForwardSpec`, `params: FMLSParams` | Complex-valued FMLS characteristic function via principal branch of `(iu)^alpha`. |
+| `double_heston_cf(u, fwd, params)` | `u: np.ndarray`, `fwd: ForwardSpec`, `params: DoubleHestonParams` | Complex-valued Double Heston CF; product of two single-Heston CFs. |
+| `vgsa_cf(u, fwd, params)` | `u: np.ndarray`, `fwd: ForwardSpec`, `params: VGSAParams` | Complex-valued VGSA CF via CIR Laplace transform of the VG Lévy exponent. |
 | `bsm_cumulants(fwd, params)` | `ForwardSpec`, `BsmParams` | Black-Scholes cumulants used in COS grid construction. |
 | `heston_cumulants(fwd, params)` | `ForwardSpec`, `HestonParams` | Heston cumulants used to build COS truncation intervals. |
 | `ousv_cumulants(fwd, params)` | `ForwardSpec`, `OusvParams` | OUSV cumulants for COS grid construction. |
@@ -182,6 +188,8 @@ from foureng.pipeline import price_strip
 | `bilateral_gamma_cumulants(fwd, params)` | `ForwardSpec`, `BilateralGammaParams` | Bilateral Gamma cumulants for COS grid construction (closed form). |
 | `gh_cumulants(fwd, params)` | `ForwardSpec`, `GHParams` | Generalized Hyperbolic cumulants for COS grid construction. |
 | `fmls_cumulants(fwd, params)` | `ForwardSpec`, `FMLSParams` | FMLS cumulants via numerical Cauchy integration. Note: COS is not recommended for α<2 (power-law tails); prefer Carr-Madan or FRFT. |
+| `double_heston_cumulants(fwd, params)` | `ForwardSpec`, `DoubleHestonParams` | Double Heston cumulants (sum of the two single-factor Heston cumulants). |
+| `vgsa_cumulants(fwd, params)` | `ForwardSpec`, `VGSAParams` | VGSA cumulants via CIR moment formulas for the integrated activity. |
 
 ### Grid objects and grid builders
 
@@ -266,3 +274,5 @@ These are the main papers the package and notebook workflow are built around.
 | Bilateral Gamma | Küchler, U. and Tappe, S. (2008), *Bilateral Gamma Distributions and Processes in Financial Mathematics*, Stochastic Processes and their Applications. |
 | Generalized Hyperbolic | Barndorff-Nielsen, O.E. (1977), *Exponentially Decreasing Distributions for the Logarithm of Particle Size*, Proc. Royal Society London. Eberlein, E. and Keller, U. (1995), *Hyperbolic Distributions in Finance*, Bernoulli. |
 | Finite Moment Log Stable | Carr, P. and Wu, L. (2003), *The Finite Moment Log Stable Process and Option Pricing*, Journal of Finance, 58(2), 753–777. |
+| Double Heston (two-factor SV) | Christoffersen, P., Heston, S. and Jacobs, K. (2009), *The Shape and Term Structure of the Index Option Smirk: Why Multifactor Stochastic Volatility Models Work So Well*, Management Science, 55(12), 1914–1932. |
+| VGSA (VG with stochastic arrival) | Carr, P., Geman, H., Madan, D.B. and Yor, M. (2003), *Stochastic Volatility for Lévy Processes*, Mathematical Finance, 13(3), 345–382. |
