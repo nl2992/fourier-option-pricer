@@ -5,7 +5,8 @@ This appendix collects the extra project material that does not belong in the pa
 ## Repository guide
 
 - `foureng/`: packaged pricing library and public API
-- `notebooks/demo.ipynb`: Colab-friendly walkthrough of the main pricing workflow
+- `notebooks/demo.ipynb`: Colab-friendly quick-start walkthrough
+- `notebooks/demo_advanced.ipynb`: full-feature showcase — all 20 models, 6 pricers, Greeks, IV surface, calibration, MC, new models, validation highlights (v0.4.0)
 - `notebooks/presentation_fourier_methods.ipynb`: presentation notebook version
 - `notebooks/cos_method_improved.ipynb`: COS truncation and policy notebook
 - `notebooks/paper_replications/bates_mathworks_replication.ipynb`: Bates all-engine scoreboard vs MathWorks frozen reference

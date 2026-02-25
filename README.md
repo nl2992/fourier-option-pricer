@@ -60,7 +60,8 @@ Here `i = sqrt(-1)`, `u` is the Fourier frequency, and `X_T` is the terminal log
 ## Installation
 
 ```bash
-pip install fourier-option-pricer
+pip install fourier-option-pricer          # latest (v0.4.0)
+pip install "fourier-option-pricer==0.4.0" # pin to this release
 ```
 
 ## Quick start
@@ -251,7 +252,9 @@ MIT. See [LICENSE](LICENSE).
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/nl2992/fourier-option-pricer/blob/main/notebooks/demo.ipynb)
 
-The Colab-ready demo notebook lives at [notebooks/demo.ipynb](notebooks/demo.ipynb).
+The Colab-ready quick-start demo lives at [notebooks/demo.ipynb](notebooks/demo.ipynb).
+
+The full-feature advanced demo (v0.4.0) is at [notebooks/demo_advanced.ipynb](notebooks/demo_advanced.ipynb) and covers all 20 models, 6 pricers, Greeks, IV surface, calibration, and Monte Carlo in one notebook.
 
 Paper-replication notebooks live at [notebooks/paper_replications/](notebooks/paper_replications/):
 
@@ -259,6 +262,20 @@ Paper-replication notebooks live at [notebooks/paper_replications/](notebooks/pa
 |----------|--------------|
 | `bates_mathworks_replication.ipynb` | Bates model priced against the frozen MathWorks reference case using COS, improved COS, filtered COS, Carr-Madan, FRFT, and Lewis. Includes a scoreboard table, error plots, an assertion gate, and a CSV saved to `benchmarks/`. |
 | `three_halves_replication.ipynb` | 3/2 SV model: PyFENG regression case cross-checked against COS-improved and Lewis; Baldeaux-Badran figure parameters used for qualitative IV smile and no-arbitrage shape checks. |
+
+The advanced demo notebook covers all package capabilities in sequence:
+
+| Section | Topics |
+|---------|--------|
+| 1. All 20 models | ATM call quick-reference table for every model |
+| 2. Multi-method scoreboard | COS / COS-improved / filtered / Carr-Madan / FRFT / Lewis on one Heston strip |
+| 3. Greeks | COS delta and gamma (Heston + Kou); spot-Greek formulas |
+| 4. Implied volatility | IV smiles inverted from model prices for 4 models |
+| 5. Volatility surface | Heston IV surface heatmap and smile-overlay by maturity |
+| 6. Calibration | Heston fitted to synthetic market IVs via Nelder-Mead |
+| 7. Monte Carlo | BSM MC and Heston conditional MC vs COS-improved |
+| 8. New models | Double Heston and VGSA smile comparisons |
+| 9. Validation highlights | Bates MathWorks reference and 3/2 SV PyFENG regression error tables |
 
 ## Papers used
 
