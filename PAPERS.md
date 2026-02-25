@@ -150,6 +150,29 @@ DOI: [10.1098/rspa.1977.0041](https://doi.org/10.1098/rspa.1977.0041)
 DOI: [10.2307/3318481](https://doi.org/10.2307/3318481)
 *(Hyperbolic Lévy motion as a special case of GH; referenced in `models/generalized_hyperbolic.py`.)*
 
+**Carr, P., Geman, H., Madan, D. B. & Yor, M. (2003).** Stochastic volatility for Lévy processes.
+*Mathematical Finance*, 13(3), 345–382.
+DOI: [10.1111/1467-9965.00020](https://doi.org/10.1111/1467-9965.00020)
+*(VGSA CF via CIR Laplace transform of the VG Lévy exponent; `models/vgsa.py`.)*
+
+---
+
+## Multi-Factor and Two-Factor SV Models
+
+**Christoffersen, P., Heston, S. & Jacobs, K. (2009).** The shape and term structure of the index option smirk: Why multifactor stochastic volatility models work so well.
+*Management Science*, 55(12), 1914–1932.
+DOI: [10.1287/mnsc.1090.1065](https://doi.org/10.1287/mnsc.1090.1065)
+*(Two independent Heston variance factors; `models/double_heston.py`. CF factorises as a product of two single-Heston CFs.)*
+
+---
+
+## Validation References
+
+**Baldeaux, J. & Badran, A. (2012).** Consistent modelling of VIX and equity derivatives using a 3/2 plus jumps model.
+*Applied Mathematical Finance*, 21(4), 299–312.
+DOI: [10.1080/1350486X.2013.868631](https://doi.org/10.1080/1350486X.2013.868631)
+*(3/2 SV parameter set used for qualitative figure replication and no-arbitrage smoke tests; `tests/refs/sv32_baldeaux_badran_figure_params.json` and `tests/papers/test_phase6_sv32_baldeaux_badran_smoke.py`.)*
+
 ---
 
 ## Monte Carlo Methods
