@@ -27,7 +27,7 @@ try:
 
     __version__: str = _pkg_version("fourier-option-pricer")
 except _PNF:  # editable install without metadata yet
-    __version__ = "0.3.1"
+    __version__ = "0.4.0"
 
 from .greeks import (
     COSGreeks,
