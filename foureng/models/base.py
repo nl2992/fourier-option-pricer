@@ -5,10 +5,6 @@ This module defines the three primitives shared by every model in the package:
 * :class:`ForwardSpec` — market inputs (spot, rates, maturity).
 * :class:`ModelSpec` — base dataclass for all model parameter classes.
 * :class:`CharFunc` — callable protocol for characteristic functions.
-
-:class:`FourierModelBase` is a reserved base class for future class-based
-model backends; the current API uses free functions (e.g. ``heston_cf``,
-``vg_cf``) and is not affected by it.
 """
 from __future__ import annotations
 from dataclasses import dataclass
@@ -23,13 +19,13 @@ class ForwardSpec:
     Attributes
     ----------
     S0 : float
-        Current spot price.
+        Current spot price. Must be strictly positive.
     r : float
-        Continuously compounded risk-free rate.
+        Continuously compounded risk-free rate. Must be finite.
     q : float
-        Continuous dividend yield (or foreign risk-free rate for FX).
+        Continuous dividend yield (or foreign risk-free rate for FX). Must be finite.
     T : float
-        Time to maturity in years.
+        Time to maturity in years. Must be non-negative.
     F0 : float
         Forward price S0 * exp((r - q) * T), computed automatically.
     disc : float
@@ -39,6 +35,16 @@ class ForwardSpec:
     r: float
     q: float
     T: float
+
+    def __post_init__(self) -> None:
+        if not (np.isfinite(self.S0) and self.S0 > 0):
+            raise ValueError(f"ForwardSpec: S0 must be finite and > 0; got {self.S0}")
+        if not np.isfinite(self.r):
+            raise ValueError(f"ForwardSpec: r must be finite; got {self.r}")
+        if not np.isfinite(self.q):
+            raise ValueError(f"ForwardSpec: q must be finite; got {self.q}")
+        if not (np.isfinite(self.T) and self.T >= 0):
+            raise ValueError(f"ForwardSpec: T must be finite and >= 0; got {self.T}")
 
     @property
     def F0(self) -> float:
@@ -61,15 +67,3 @@ class CharFunc(Protocol):
     """
 
     def __call__(self, u: np.ndarray) -> np.ndarray: ...
-
-
-class FourierModelBase:
-    """Reserved base class for future class-based model backends.
-
-    The current public API uses free functions (``bsm_cf``, ``heston_cf``,
-    etc.) and does not require this class.  It is retained as an import
-    anchor for ``foureng.models.registry`` and may be fleshed out in a
-    future release.
-    """
-
-    model_name: str = ""
