@@ -42,7 +42,7 @@ def test_heston_cf_matches_pyfeng_charfunc_logprice(lewis_heston):
 
     m = pyfeng.HestonFft(sigma=p.v0, vov=p.nu, rho=p.rho, mr=p.kappa,
                          theta=p.theta, intr=fwd.r, divr=fwd.q)
-    phi_pyfeng = np.asarray(m.charfunc_logprice(u, texp=fwd.T),
+    phi_pyfeng = np.asarray(m.logp_cf(u, texp=fwd.T),
                             dtype=np.complex128)
 
     err = float(np.max(np.abs(phi_ours - phi_pyfeng)))
@@ -59,9 +59,9 @@ def test_vg_cf_matches_pyfeng_charfunc_logprice(cm1999_vg):
     u = np.linspace(-10.0, 10.0, 41)
     phi_ours = vg_cf(u, fwd, p)
 
-    m = pyfeng.VarGammaFft(sigma=p.sigma, vov=p.nu, theta=p.theta,
+    m = pyfeng.VarGammaFft(sigma=p.sigma, nu=p.nu, theta=p.theta,
                             intr=fwd.r, divr=fwd.q)
-    phi_pyfeng = np.asarray(m.charfunc_logprice(u, texp=fwd.T),
+    phi_pyfeng = np.asarray(m.logp_cf(u, texp=fwd.T),
                             dtype=np.complex128)
 
     err = float(np.max(np.abs(phi_ours - phi_pyfeng)))

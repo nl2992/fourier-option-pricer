@@ -130,13 +130,13 @@ def _pyfeng_fft_price(model: str, strikes, fwd: ForwardSpec, params, cp: int):
         )
     elif model == "vg":
         m = pf.VarGammaFft(
-            sigma=params.sigma, vov=params.nu, theta=params.theta, intr=fwd.r, divr=fwd.q
+            sigma=params.sigma, nu=params.nu, theta=params.theta, intr=fwd.r, divr=fwd.q
         )
     elif model == "cgmy":
         m = pf.CgmyFft(C=params.C, G=params.G, M=params.M, Y=params.Y, intr=fwd.r, divr=fwd.q)
     elif model == "nig":
         m = pf.ExpNigFft(
-            sigma=params.sigma, vov=params.nu, theta=params.theta, intr=fwd.r, divr=fwd.q
+            sigma=params.sigma, nu=params.nu, theta=params.theta, intr=fwd.r, divr=fwd.q
         )
     elif model == "sv32":
         m = pf.Sv32Fft(

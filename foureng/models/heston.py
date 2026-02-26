@@ -109,8 +109,8 @@ def heston_cf(u: np.ndarray, fwd: ForwardSpec, p: HestonParams) -> np.ndarray:
     """
     m = _pyfeng_heston_model(fwd, p)
     u_arr = np.asarray(u)
-    phi = np.asarray(m.charfunc_logprice(u_arr, texp=fwd.T), dtype=np.complex128)
-    # Convention-shift hook (currently a no-op — PyFENG's charfunc_logprice
+    phi = np.asarray(m.logp_cf(u_arr, texp=fwd.T), dtype=np.complex128)
+    # Convention-shift hook (currently a no-op — PyFENG's logp_cf
     # is already in log-forward convention for this class, verified). If
     # this ever changes upstream: phi *= np.exp(-1j * u_arr * np.log(fwd.F0))
     return phi

@@ -41,7 +41,7 @@ def _heston_bundle(lewis_heston):
     m = pyfeng.HestonFft(sigma=p.v0, vov=p.nu, rho=p.rho, mr=p.kappa,
                           theta=p.theta, intr=fwd.r, divr=fwd.q)
     # PyFENG CF as ``phi(u)`` — independent of our own heston_cf wrapper.
-    phi = lambda u: np.asarray(m.charfunc_logprice(np.asarray(u), texp=fwd.T),
+    phi = lambda u: np.asarray(m.logp_cf(np.asarray(u), texp=fwd.T),
                                dtype=np.complex128)
     return fwd, p, m, phi, np.asarray(d["strikes"], dtype=float)
 
@@ -50,9 +50,9 @@ def _vg_bundle(cm1999_vg):
     d = cm1999_vg
     fwd = ForwardSpec(S0=d["S0"], r=d["r"], q=d["q"], T=d["T"])
     p = VGParams(sigma=d["sigma"], nu=d["nu"], theta=d["theta"])
-    m = pyfeng.VarGammaFft(sigma=p.sigma, vov=p.nu, theta=p.theta,
+    m = pyfeng.VarGammaFft(sigma=p.sigma, nu=p.nu, theta=p.theta,
                             intr=fwd.r, divr=fwd.q)
-    phi = lambda u: np.asarray(m.charfunc_logprice(np.asarray(u), texp=fwd.T),
+    phi = lambda u: np.asarray(m.logp_cf(np.asarray(u), texp=fwd.T),
                                dtype=np.complex128)
     return fwd, p, m, phi, np.asarray(d["strikes"], dtype=float)
 

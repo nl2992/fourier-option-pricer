@@ -103,6 +103,8 @@ class TestGarchMGFFormula:
         self._pf_model = pf.GarchFftWuMaWang2012(
             sigma=0.06, vov=3.20, mr=20.48, rho=-0.99, theta=0.218,
         )
+        if not hasattr(self._pf_model, "mgf_logprice_old"):
+            pytest.skip("pyfeng.GarchFftWuMaWang2012.mgf_logprice_old removed in pyfeng>=0.4.0")
 
     @pytest.mark.parametrize("uu_real", [0.0, 0.25, 0.5, 1.0, 2.0])
     def test_mgf_real_arg_matches_pyfeng_old(self, uu_real):

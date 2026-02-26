@@ -66,7 +66,7 @@ def bsm_cf(u: np.ndarray, fwd: ForwardSpec, p: BsmParams) -> np.ndarray:
     """CF of ``X_T = log(S_T / F_0)`` under BSM — via PyFENG's ``BsmFft``."""
     m = _pyfeng_bsm_model(fwd, p)
     u_arr = np.asarray(u)
-    return np.asarray(m.charfunc_logprice(u_arr, texp=fwd.T), dtype=np.complex128)
+    return np.asarray(m.logp_cf(u_arr, texp=fwd.T), dtype=np.complex128)
 
 
 # ---------------------------------------------------------------------------
