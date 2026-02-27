@@ -42,6 +42,16 @@ class HestonParams(ModelSpec):
     v0: float
 
     def __init__(self, kappa: float, theta: float, nu: float, rho: float, v0: float):
+        if not (np.isfinite(kappa) and kappa > 0):
+            raise ValueError(f"HestonParams: kappa must be > 0; got {kappa}")
+        if not (np.isfinite(theta) and theta > 0):
+            raise ValueError(f"HestonParams: theta must be > 0; got {theta}")
+        if not (np.isfinite(nu) and nu >= 0):
+            raise ValueError(f"HestonParams: nu must be >= 0; got {nu}")
+        if not (np.isfinite(rho) and -1.0 < rho < 1.0):
+            raise ValueError(f"HestonParams: rho must be in (-1, 1); got {rho}")
+        if not (np.isfinite(v0) and v0 > 0):
+            raise ValueError(f"HestonParams: v0 must be > 0; got {v0}")
         object.__setattr__(self, "name", "heston")
         object.__setattr__(self, "kappa", kappa)
         object.__setattr__(self, "theta", theta)

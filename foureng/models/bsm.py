@@ -37,6 +37,8 @@ class BsmParams(ModelSpec):
     sigma: float
 
     def __init__(self, sigma: float):
+        if not (np.isfinite(sigma) and sigma > 0):
+            raise ValueError(f"BsmParams: sigma must be finite and > 0; got {sigma}")
         object.__setattr__(self, "name", "bsm")
         object.__setattr__(self, "sigma", sigma)
 

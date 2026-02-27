@@ -28,6 +28,12 @@ class VGParams(ModelSpec):
     theta: float
 
     def __init__(self, sigma: float, nu: float, theta: float):
+        if not (np.isfinite(sigma) and sigma > 0):
+            raise ValueError(f"VGParams: sigma must be > 0; got {sigma}")
+        if not (np.isfinite(nu) and nu > 0):
+            raise ValueError(f"VGParams: nu must be > 0; got {nu}")
+        if not np.isfinite(theta):
+            raise ValueError(f"VGParams: theta must be finite; got {theta}")
         object.__setattr__(self, "name", "variance_gamma")
         object.__setattr__(self, "sigma", sigma)
         object.__setattr__(self, "nu", nu)
