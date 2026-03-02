@@ -18,7 +18,7 @@ MGF derivation
 Wu, Ma & Wang (2012) derive a closed-form (approximate) MGF via the Lemma
 2.1 formula. The CF of X_T = log(S_T/F_0) is obtained as phi(u) = MGF(iu).
 PyFENG ships this as :class:`pyfeng.GarchFftWuMaWang2012`, but the
-``charfunc_logprice`` / ``price`` methods are broken under NumPy ≥ 1.25
+``logp_cf`` / ``price`` methods were broken under NumPy ≥ 1.25 in pyfeng < 0.4.0
 because :func:`pyfeng.util.avg_exp` pre-allocates a float64 output array
 before dividing by a complex argument (``UFuncTypeError``). We implement
 the MGF formula directly from Lemma 2.1, bypassing PyFENG entirely.
@@ -107,7 +107,7 @@ class GarchWMW2012Params(ModelSpec):
 
 
 # ---------------------------------------------------------------------------
-# Native MGF / CF — bypasses the broken PyFENG charfunc_logprice
+# Native MGF / CF — independent of PyFENG's pyfeng.GarchFftWuMaWang2012
 # ---------------------------------------------------------------------------
 
 

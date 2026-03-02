@@ -6,7 +6,7 @@ This appendix collects the extra project material that does not belong in the pa
 
 - `foureng/`: packaged pricing library and public API
 - `notebooks/demo.ipynb`: Colab-friendly quick-start walkthrough
-- `notebooks/demo_advanced.ipynb`: full-feature showcase — all 20 models, 6 pricers, Greeks, IV surface, calibration, MC, new models, validation highlights (v0.4.0)
+- `notebooks/demo_advanced.ipynb`: full-feature showcase — all 20 models, 6 pricers, Greeks, IV surface, calibration, MC, new models, validation highlights (v0.4.1)
 - `notebooks/presentation_fourier_methods.ipynb`: presentation notebook version
 - `notebooks/cos_method_improved.ipynb`: COS truncation and policy notebook
 - `notebooks/paper_replications/bates_mathworks_replication.ipynb`: Bates all-engine scoreboard vs MathWorks frozen reference
@@ -158,7 +158,7 @@ The ten supported models split into two groups.
 
 ### 6.1 PyFENG-backed characteristic functions
 
-For models where PyFENG already provides a production-quality FFT model, the repository uses PyFENG as the characteristic-function backend rather than re-implementing it. These adapters route through `pyfeng.*Fft.charfunc_logprice`:
+For models where PyFENG already provides a production-quality FFT model, the repository uses PyFENG as the characteristic-function backend rather than re-implementing it. These adapters call `pyfeng.*Fft.logp_cf` (renamed from `charfunc_logprice` in pyfeng 0.4.0):
 
 - Black--Scholes--Merton (`pyfeng.BsmFft`);
 - Heston (`pyfeng.HestonFft`);
@@ -511,7 +511,7 @@ A sensible validation sequence is:
 2. validate Heston prices against high-precision references, including at least one branch-cut stress case;
 3. validate COS on Fang--Oosterlee Heston tables;
 4. validate Kou by cross-checking Carr--Madan FFT, FRFT, and COS using the same Kou characteristic function;
-5. for PyFENG-backed models, require characteristic-function identity against `pyfeng.*Fft.charfunc_logprice`;
+5. for PyFENG-backed models, require characteristic-function identity against `pyfeng.*Fft.logp_cf`;
 6. for SVJ composites, require model-reduction gates and high-resolution cross-method agreement.
 
 This ordering reduces debugging ambiguity. First establish a reliable method--model pair, then widen the supported model/method matrix.

@@ -167,7 +167,7 @@ def _pyfeng_rough_heston_model(fwd: ForwardSpec, p: RoughHestonParams):
 def rough_heston_cf(u: np.ndarray, fwd: ForwardSpec, p: RoughHestonParams) -> np.ndarray:
     """CF of X_T = log(S_T/F_0) under the rough Heston model.
 
-    Evaluates via PyFENG's :class:`RoughHestonFft.charfunc_logprice`, which
+    Evaluates via PyFENG's :class:`RoughHestonFft.logp_cf`, which
     solves the fractional Riccati equation numerically (Adam's method by
     default) and is already in the log-forward convention.
 

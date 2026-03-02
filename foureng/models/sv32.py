@@ -134,7 +134,7 @@ def _pyfeng_sv32_model(fwd: ForwardSpec, p: Sv32Params):
 def sv32_cf(u: np.ndarray, fwd: ForwardSpec, p: Sv32Params) -> np.ndarray:
     """CF of ``X_T = log(S_T / F_0)`` under the 3/2 SV model.
 
-    Evaluates via PyFENG's :class:`Sv32Fft.charfunc_logprice`, which is
+    Evaluates via PyFENG's :class:`Sv32Fft.logp_cf`, which is
     already in the log-forward convention consistent with this project's
     martingale condition ``φ(-i) = 1``.
 

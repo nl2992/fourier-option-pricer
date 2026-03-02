@@ -15,7 +15,7 @@ log-price diffusion — so sign-flipping has no effect on European
 payoffs. That's the reason OUSV doesn't need a Feller-type condition.
 
 PyFENG ships :class:`pyfeng.OusvFft` with the same public surface as
-:class:`pyfeng.HestonFft`: ``charfunc_logprice``, ``price``, and
+:class:`pyfeng.HestonFft`: ``logp_cf``, ``price``, and
 ``impvol_brentq``. Adapter conventions mirror :mod:`.heston` exactly —
 our param dataclass uses the academic names ``(sigma0, kappa, theta,
 nu, rho)`` and we translate to PyFENG's ``(sigma, mr, theta, vov, rho)``

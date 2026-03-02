@@ -1,6 +1,6 @@
 """Characteristic functions and parameter dataclasses for all 20 models.
 
-PyFENG-backed (thin adapters around ``pyfeng.*Fft.charfunc_logprice``):
+PyFENG-backed (thin adapters around ``pyfeng.*Fft.logp_cf``, requires pyfeng>=0.4.0):
 
     bsm          BsmParams      — Black-Scholes-Merton
     heston       HestonParams   — Heston (1993) stochastic volatility

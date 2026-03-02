@@ -82,6 +82,7 @@ from .pricers.cos import (
 )
 from .pricers.filtered_cos import FilteredCOSDecision, filtered_cos_prices
 from .pricers.frft import frft_price_at_strikes, frft_prices
+from .pricers.lewis import lewis_call_prices, lewis_prices
 from .surface import (
     CalibrationResult,
     SurfaceSpec,
@@ -181,6 +182,8 @@ __all__ = [
     "carr_madan_fft_prices",
     "frft_price_at_strikes",
     "frft_prices",
+    "lewis_call_prices",
+    "lewis_prices",
     # filtered COS extension
     "COSFilterSpec",
     "cos_filter_weights",
