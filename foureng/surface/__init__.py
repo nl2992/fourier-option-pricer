@@ -1,4 +1,11 @@
-"""Implied-vol surface construction and model calibration."""
+"""Implied-vol surface construction and model calibration.
+
+model_price_surface and model_iv_surface compute (nT, nK) grids over a
+SurfaceSpec using the COS pricer plus safeguarded Newton IV inversion.
+calibrate_heston, calibrate_vg, and calibrate_kou fit model parameters
+to a grid of market implied vols via Nelder-Mead minimisation on a
+sum-of-squared-IV-residuals objective.
+"""
 
 from .calibration import (
     CalibrationResult,

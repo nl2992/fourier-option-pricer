@@ -57,6 +57,25 @@ from ..models.heston import HestonParams
 
 @dataclass(frozen=True)
 class CVResult:
+    """Output of a control-variate Monte Carlo pricing run.
+
+    Attributes
+    ----------
+    price_plain : float
+        Raw MC price (no control variate applied).
+    price_cv : float
+        Control-variate-adjusted price.
+    se_plain : float
+        Standard error of the raw MC estimate.
+    se_cv : float
+        Standard error of the CV-adjusted estimate.
+    var_reduction : float
+        Variance reduction ratio (se_plain / se_cv)^2. Values above 1
+        indicate the control variate helped; 1 means no reduction.
+    n_paths : int
+        Number of sample paths used.
+    """
+
     price_plain: float
     price_cv: float
     se_plain: float

@@ -1,3 +1,17 @@
+"""Unified pricing pipeline that dispatches a (model, method, strikes) request to the right engine.
+
+The main entry point is :func:`price_strip`, which accepts a model name string
+and a method string and routes to the appropriate in-house pricer (COS, FRFT,
+Carr-Madan) or, for models where PyFENG ships a native FFT class, the
+``pyfeng_fft`` path. The internal phase helpers (phase2_carr_madan, phase3_frft,
+phase4_cos) are thin wrappers used by the demo notebooks; end users will rarely
+call them directly.
+
+The improved COS path (``method="cos_improved"``) builds the truncation interval
+and cosine-term count adaptively from model cumulants, then routes wide-interval
+cases to Lewis or Carr-Madan rather than forcing COS into an unfavorable geometry.
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

@@ -1,3 +1,16 @@
+"""Chourdakis (2004) fractional FFT pricer for European calls.
+
+The FRFT decouples the frequency step eta from the log-strike step lam by
+introducing the fraction zeta = eta*lam / (2*pi). A standard FFT is the
+special case zeta = 1/N; here both can be chosen freely to tune frequency
+resolution and strike coverage independently.
+
+The pricing formula mirrors Carr-Madan exactly; only the final convolution
+changes from an FFT to an FRFT. Main interface functions:
+    frft_prices            -- full log-strike grid as FRFTResult
+    frft_price_at_strikes  -- ATM-centered grid + cubic-spline lookup at target strikes
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -13,7 +26,19 @@ from ..utils.numerics import cm_simpson_weights, phi_logprice
 
 @dataclass(frozen=True)
 class FRFTResult:
-    k: np.ndarray  # log-strike grid
+    """Output of frft_prices.
+
+    Attributes
+    ----------
+    k : np.ndarray
+        Log-strike grid, uniform with spacing lam.
+    call_prices : np.ndarray
+        Damped call prices on the log-strike grid.
+    K : np.ndarray
+        Strikes, equal to exp(k).
+    """
+
+    k: np.ndarray
     call_prices: np.ndarray
     K: np.ndarray
 

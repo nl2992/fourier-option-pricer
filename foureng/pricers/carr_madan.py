@@ -1,3 +1,18 @@
+"""Carr-Madan (1999) FFT pricer for European calls.
+
+Implements the damped log-return transform
+
+    psi(v) = exp(-rT) * phi_logS(v - (alpha+1)*i)
+             / (alpha^2 + alpha - v^2 + i*(2*alpha+1)*v)
+
+via the standard FFT on a uniform frequency grid. The output is a log-strike
+grid of call prices via C(k) = (exp(-alpha*k) / pi) * Re{ FFT[...] }.
+
+The main interface functions:
+    carr_madan_fft_prices        -- full log-strike grid as CarrMadanResult
+    carr_madan_price_at_strikes  -- ATM-centered grid + cubic-spline lookup at target strikes
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -12,9 +27,21 @@ from ..utils.numerics import cm_simpson_weights, phi_logprice
 
 @dataclass(frozen=True)
 class CarrMadanResult:
-    k: np.ndarray  # log-strike grid (log K)
-    call_prices: np.ndarray  # call prices on that grid
-    K: np.ndarray  # strikes = exp(k)
+    """Output of carr_madan_fft_prices.
+
+    Attributes
+    ----------
+    k : np.ndarray
+        Log-strike grid (log K), uniform with spacing lam = 2*pi / (N*eta).
+    call_prices : np.ndarray
+        Damped call prices on the log-strike grid.
+    K : np.ndarray
+        Strikes, equal to exp(k).
+    """
+
+    k: np.ndarray
+    call_prices: np.ndarray
+    K: np.ndarray
 
 
 def carr_madan_fft_prices(

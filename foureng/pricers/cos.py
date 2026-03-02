@@ -1,3 +1,17 @@
+"""Fang-Oosterlee (2008) COS pricer for European options.
+
+Expands the risk-neutral density in a truncated Fourier-cosine series on [a, b]
+and evaluates call or put prices as a dot product of Fourier-cosine coefficients
+with payoff coefficients. The truncation interval is set from model cumulants.
+
+By default, pricing goes through the put payoff (bounded payoff coefficients)
+and recovers the call via put-call parity. This avoids the exp(b) overflow that
+arises in a direct COS-on-call sum for wide truncation intervals at long maturities.
+
+This module also contains the adaptive grid policy machinery used by the improved
+COS pipeline: recommended_cos_policy, cos_adaptive_decision, and cos_improved_grid.
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -19,6 +33,16 @@ from ..utils.spectral_filters import COSFilterSpec, cos_filter_weights
 
 @dataclass(frozen=True)
 class COSResult:
+    """Output of cos_prices.
+
+    Attributes
+    ----------
+    strikes : np.ndarray
+        Requested strikes, echoed back.
+    call_prices : np.ndarray
+        COS call prices, one per strike.
+    """
+
     strikes: np.ndarray
     call_prices: np.ndarray
 
