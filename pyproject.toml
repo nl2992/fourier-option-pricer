@@ -35,8 +35,8 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
-test = ["pytest>=7.4"]
-dev  = ["pytest>=7.4", "jupyter>=1.0", "nbformat>=5.10", "build", "twine", "ruff"]
+test = ["pytest>=7.4", "pytest-cov>=4.0"]
+dev  = ["pytest>=7.4", "pytest-cov>=4.0", "jupyter>=1.0", "nbformat>=5.10", "build", "twine", "ruff"]
 
 [project.urls]
 Homepage   = "https://github.com/nl2992/fourier-option-pricer"
@@ -53,3 +53,22 @@ testpaths = ["tests"]
 markers = [
     "slow: tests that take more than a second (deselect with -m 'not slow')",
 ]
+
+[tool.coverage.run]
+source = ["foureng"]
+omit = ["foureng/experiments/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = ["E501"]
