@@ -1,0 +1,22 @@
+{
+  "source": "MathWorks optSensByBatesNI documentation",
+  "reference_type": "software_reference",
+  "model": "bates",
+  "option_type": "call",
+  "spot": 80.0,
+  "risk_free_rate": 0.03,
+  "dividend_yield": 0.02,
+  "maturity": 0.5,
+  "v0": 0.04,
+  "theta": 0.05,
+  "kappa": 1.0,
+  "sigma_v": 0.2,
+  "rho": -0.7,
+  "jump_frequency": 2.0,
+  "mean_jump_percentage": 0.02,
+  "jump_vol": 0.08,
+  "converted_log_jump_mean": 0.01660262729617973,
+  "strikes": [76.0, 78.0, 80.0, 82.0, 84.0],
+  "delta": [0.6807, 0.6234, 0.5630, 0.5011, 0.4392],
+  "absolute_tolerance": 0.005
+}
