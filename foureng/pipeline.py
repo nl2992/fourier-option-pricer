@@ -1,20 +1,23 @@
 from __future__ import annotations
-import numpy as np
+
 from dataclasses import dataclass
 from typing import Any
-from .models.base import ForwardSpec, CharFunc
+
+import numpy as np
+
+from .models.base import CharFunc, ForwardSpec
 from .models.registry import MODEL_REGISTRY
-from .utils.grids import FFTGrid, FRFTGrid, COSGrid, COSGridPolicy
 from .pricers.carr_madan import carr_madan_price_at_strikes
-from .pricers.frft import frft_price_at_strikes
 from .pricers.cos import (
     cos_adaptive_decision,
     cos_auto_grid,
     cos_prices,
     recommended_cos_policy,
 )
-from .pricers.filtered_cos import FilteredCOSDecision, filtered_cos_prices
+from .pricers.filtered_cos import filtered_cos_prices
+from .pricers.frft import frft_price_at_strikes
 from .pricers.lewis import lewis_call_prices
+from .utils.grids import COSGrid, COSGridPolicy, FFTGrid, FRFTGrid
 from .utils.spectral_filters import COSFilterSpec
 
 
@@ -38,9 +41,7 @@ def phase3_frft(
     return PhaseOutputs(strikes=np.asarray(strikes, float), prices=prices)
 
 
-def phase4_cos(
-    phi: CharFunc, fwd: ForwardSpec, strikes: np.ndarray, grid: COSGrid
-) -> PhaseOutputs:
+def phase4_cos(phi: CharFunc, fwd: ForwardSpec, strikes: np.ndarray, grid: COSGrid) -> PhaseOutputs:
     res = cos_prices(phi, fwd, strikes, grid)
     return PhaseOutputs(strikes=res.strikes, prices=res.call_prices)
 
@@ -105,37 +106,62 @@ def _pyfeng_fft_price(model: str, strikes, fwd: ForwardSpec, params, cp: int):
     elif model == "heston":
         # PyFENG's ``sigma`` kwarg is the *instantaneous variance* (v0),
         # not its square root. Verified in tests/test_pyfeng_cf_wrappers.py.
-        m = pf.HestonFft(sigma=params.v0, vov=params.nu, rho=params.rho,
-                          mr=params.kappa, theta=params.theta,
-                          intr=fwd.r, divr=fwd.q)
+        m = pf.HestonFft(
+            sigma=params.v0,
+            vov=params.nu,
+            rho=params.rho,
+            mr=params.kappa,
+            theta=params.theta,
+            intr=fwd.r,
+            divr=fwd.q,
+        )
     elif model == "ousv":
         # Mirror the OUSV CF wrapper's kwarg translation (see
         # ``models/ousv.py``): our ``sigma0`` is PyFENG's ``sigma``,
         # our ``kappa`` is PyFENG's ``mr``, our ``nu`` is PyFENG's ``vov``.
-        m = pf.OusvFft(sigma=params.sigma0, mr=params.kappa,
-                        theta=params.theta, vov=params.nu, rho=params.rho,
-                        intr=fwd.r, divr=fwd.q)
+        m = pf.OusvFft(
+            sigma=params.sigma0,
+            mr=params.kappa,
+            theta=params.theta,
+            vov=params.nu,
+            rho=params.rho,
+            intr=fwd.r,
+            divr=fwd.q,
+        )
     elif model == "vg":
-        m = pf.VarGammaFft(sigma=params.sigma, vov=params.nu, theta=params.theta,
-                            intr=fwd.r, divr=fwd.q)
+        m = pf.VarGammaFft(
+            sigma=params.sigma, vov=params.nu, theta=params.theta, intr=fwd.r, divr=fwd.q
+        )
     elif model == "cgmy":
-        m = pf.CgmyFft(C=params.C, G=params.G, M=params.M, Y=params.Y,
-                        intr=fwd.r, divr=fwd.q)
+        m = pf.CgmyFft(C=params.C, G=params.G, M=params.M, Y=params.Y, intr=fwd.r, divr=fwd.q)
     elif model == "nig":
-        m = pf.ExpNigFft(sigma=params.sigma, vov=params.nu, theta=params.theta,
-                          intr=fwd.r, divr=fwd.q)
+        m = pf.ExpNigFft(
+            sigma=params.sigma, vov=params.nu, theta=params.theta, intr=fwd.r, divr=fwd.q
+        )
     elif model == "sv32":
-        m = pf.Sv32Fft(sigma=params.v0, vov=params.nu, mr=params.kappa,
-                        rho=params.rho, theta=params.theta,
-                        intr=fwd.r, divr=fwd.q)
+        m = pf.Sv32Fft(
+            sigma=params.v0,
+            vov=params.nu,
+            mr=params.kappa,
+            rho=params.rho,
+            theta=params.theta,
+            intr=fwd.r,
+            divr=fwd.q,
+        )
     elif model == "rough_heston":
         # RoughHestonFft lives in pyfeng.sv_fft; pyfeng.ex is broken under
         # newer SciPy (scipy.misc.derivative was removed).
         from pyfeng.sv_fft import RoughHestonFft as _RoughHestonFft  # type: ignore
+
         m = _RoughHestonFft(
-            sigma=params.sigma, vov=params.vov, mr=params.mr,
-            rho=params.rho, theta=params.theta, alpha=params.alpha,
-            intr=fwd.r, divr=fwd.q,
+            sigma=params.sigma,
+            vov=params.vov,
+            mr=params.mr,
+            rho=params.rho,
+            theta=params.theta,
+            alpha=params.alpha,
+            intr=fwd.r,
+            divr=fwd.q,
         )
     else:
         raise ValueError(f"unknown model {model!r}")
@@ -225,7 +251,9 @@ def price_strip(
                 if decision.method == "carr_madan":
                     eta = 0.10 if decision.grid.width > 48.0 else 0.25
                     cm_grid = FFTGrid(N=max(4096, decision.grid.N), eta=eta, alpha=1.5)
-                    return np.asarray(carr_madan_price_at_strikes(phi, fwd, cm_grid, K), dtype=np.float64)
+                    return np.asarray(
+                        carr_madan_price_at_strikes(phi, fwd, cm_grid, K), dtype=np.float64
+                    )
             payoff_mode = _improved_cos_payoff_mode(model, decision.grid)
             res = cos_prices(phi, fwd, K, decision.grid, payoff_mode=payoff_mode)
             return np.asarray(res.call_prices, dtype=np.float64)
@@ -318,7 +346,10 @@ def price_strip(
             cos_grid = policy_or_grid
             payoff_mode = _improved_cos_payoff_mode(model, cos_grid)
             res = filtered_cos_prices(
-                phi, fwd, K, cos_grid,
+                phi,
+                fwd,
+                K,
+                cos_grid,
                 filter_spec=filter_spec,
                 payoff_mode=payoff_mode,
             )
@@ -343,9 +374,14 @@ def price_strip(
         if decision.method == "lewis":
             return np.asarray(
                 lewis_call_prices(
-                    phi, K,
-                    spot=fwd.S0, texp=fwd.T, intr=fwd.r, divr=fwd.q,
-                    method="trapz", u_max=200.0,
+                    phi,
+                    K,
+                    spot=fwd.S0,
+                    texp=fwd.T,
+                    intr=fwd.r,
+                    divr=fwd.q,
+                    method="trapz",
+                    u_max=200.0,
                     n_u=max(4096, decision.grid.N),
                 ),
                 dtype=np.float64,
@@ -361,7 +397,10 @@ def price_strip(
         # Normal COS path with spectral filter applied.
         payoff_mode = _improved_cos_payoff_mode(model, decision.grid)
         res = filtered_cos_prices(
-            phi, fwd, K, decision.grid,
+            phi,
+            fwd,
+            K,
+            decision.grid,
             filter_spec=filter_spec,
             payoff_mode=payoff_mode,
         )

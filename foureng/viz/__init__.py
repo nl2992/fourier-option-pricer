@@ -1,20 +1,21 @@
 """Visualisation helpers for demo notebooks and saved figures."""
+
 from .columbia import (
-    apply_columbia_style,
-    COLUMBIA_BLUE,
-    NAVY,
-    DARK,
-    WHITE,
-    SLATE,
-    ORANGE,
-    GREEN,
-    PANEL,
     CLOUD,
-    plot_price_strip,
-    plot_error_bar,
+    COLUMBIA_BLUE,
+    DARK,
+    GREEN,
+    NAVY,
+    ORANGE,
+    PANEL,
+    SLATE,
+    WHITE,
+    apply_columbia_style,
     plot_convergence,
-    plot_L_sensitivity,
+    plot_error_bar,
     plot_error_vs_runtime,
+    plot_L_sensitivity,
+    plot_price_strip,
 )
 from .notebook_runtime import (
     ensure_repo_root_on_path,

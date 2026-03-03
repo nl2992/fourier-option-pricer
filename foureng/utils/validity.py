@@ -11,10 +11,12 @@ Different models have different constraints. A few are clean (and cheap to
 compute analytically); for the rest we fall back to a generic runtime
 finiteness probe of phi at u = -i*(alpha+1).
 """
+
 from __future__ import annotations
-import numpy as np
+
 from dataclasses import dataclass
-from typing import Callable
+
+import numpy as np
 
 from ..models.base import CharFunc
 from ..models.kou import KouParams
@@ -45,24 +47,33 @@ def check_alpha(phi: CharFunc, alpha: float) -> AlphaCheck:
     probes = np.array([u0 - 0.5, u0, u0 + 0.5], dtype=np.complex128)
     try:
         vals = phi(probes)
-    except (ValueError, TypeError, FloatingPointError, OverflowError, ZeroDivisionError) as exc:  # pragma: no cover
+    except (
+        ValueError,
+        TypeError,
+        FloatingPointError,
+        OverflowError,
+        ZeroDivisionError,
+    ) as exc:  # pragma: no cover
         return AlphaCheck(False, f"phi raised at u=-i(alpha+1): {exc!r}")
 
     if not np.all(np.isfinite(vals.real)) or not np.all(np.isfinite(vals.imag)):
         bad = vals[np.logical_or(~np.isfinite(vals.real), ~np.isfinite(vals.imag))]
-        return AlphaCheck(False, f"phi non-finite near damping line: {bad}",
-                          phi_at_damping=complex(vals[1]))
+        return AlphaCheck(
+            False, f"phi non-finite near damping line: {bad}", phi_at_damping=complex(vals[1])
+        )
 
     # If phi(-i*(alpha+1)) has huge magnitude, we're probably near a pole.
     mag = float(np.abs(vals[1]))
     if mag > 1e12:
-        return AlphaCheck(False, f"|phi(-i(alpha+1))| = {mag:.3e} — pole nearby",
-                          phi_at_damping=complex(vals[1]))
+        return AlphaCheck(
+            False, f"|phi(-i(alpha+1))| = {mag:.3e} — pole nearby", phi_at_damping=complex(vals[1])
+        )
 
     return AlphaCheck(True, "phi finite at damping line", phi_at_damping=complex(vals[1]))
 
 
 # --- Model-specific analytic bounds ------------------------------------------
+
 
 def kou_alpha_max(p: KouParams) -> float:
     """Largest valid alpha for Kou: needs eta1 > alpha + 1, so alpha < eta1 - 1.
@@ -106,15 +117,12 @@ def assert_alpha_valid(
     if isinstance(model_params, KouParams):
         amax = kou_alpha_max(model_params)
         if alpha >= amax:
-            raise ValueError(
-                f"Kou: alpha={alpha} >= eta1-1={amax}; damped call integrand diverges"
-            )
+            raise ValueError(f"Kou: alpha={alpha} >= eta1-1={amax}; damped call integrand diverges")
     elif isinstance(model_params, VGParams):
         amax = vg_alpha_max(model_params)
         if alpha >= amax:
             raise ValueError(
-                f"VG: alpha={alpha} >= alpha_max={amax:.4f}; "
-                "E[S^{alpha+1}] is infinite"
+                f"VG: alpha={alpha} >= alpha_max={amax:.4f}; E[S^{{alpha+1}}] is infinite"
             )
 
     chk = check_alpha(phi, alpha)

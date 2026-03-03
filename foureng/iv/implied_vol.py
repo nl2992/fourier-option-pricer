@@ -1,5 +1,7 @@
 from __future__ import annotations
+
 from dataclasses import dataclass
+
 import numpy as np
 from scipy.optimize import brentq
 from scipy.stats import norm
@@ -70,8 +72,10 @@ def implied_vol_brent(price: float, inp: BSInputs, lo: float = 1e-6, hi: float =
     float
         Implied volatility, or NaN on failure.
     """
+
     def f(sig: float) -> float:
         return bs_price_from_fwd(sig, inp) - price
+
     try:
         return float(brentq(f, lo, hi, maxiter=200))
     except Exception:
@@ -105,6 +109,7 @@ def implied_vol_newton_safeguarded(
     float
         Implied volatility, or NaN on failure.
     """
+
     def f(sig: float) -> float:
         return bs_price_from_fwd(sig, inp) - price
 

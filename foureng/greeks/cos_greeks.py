@@ -47,9 +47,12 @@ since the grid and payoff coefficients do not depend on theta, we just
 replace phi by dphi/dtheta in the same COS sum. Useful for Vega-style
 Greeks when the caller can produce dphi/dtheta in closed form.
 """
+
 from __future__ import annotations
-import numpy as np
+
 from dataclasses import dataclass
+
+import numpy as np
 
 from ..models.base import CharFunc, ForwardSpec
 from ..utils.grids import COSGrid
@@ -72,26 +75,27 @@ def _chi_psi_put(a: float, b: float, N: int, K: np.ndarray, F0: float):
     for the Gamma formula.
     """
     K = np.atleast_1d(np.asarray(K, dtype=float))
-    y_star = np.log(K / F0)                          # (nK,)
+    y_star = np.log(K / F0)  # (nK,)
     in_interval = (y_star > a) & (y_star < b)
-    deep_itm = y_star <= a                           # put worthless on [a,b]
-    deep_otm = y_star >= b                           # d clamped to b, F0-independent
+    deep_itm = y_star <= a  # put worthless on [a,b]
+    deep_otm = y_star >= b  # d clamped to b, F0-independent
 
-    d = np.minimum(y_star, b)                        # (nK,) upper integration limit
+    d = np.minimum(y_star, b)  # (nK,) upper integration limit
 
     k = np.arange(N)
-    omega = k * np.pi / (b - a)                       # (N,)
+    omega = k * np.pi / (b - a)  # (N,)
 
-    da = d[None, :] - a                               # (1, nK)
+    da = d[None, :] - a  # (1, nK)
     # ca = 0 since c = a; cos(0)=1, sin(0)=0.
-    cos_cd = np.cos(omega[:, None] * da)              # (N, nK)
+    cos_cd = np.cos(omega[:, None] * da)  # (N, nK)
     sin_cd = np.sin(omega[:, None] * da)
 
-    ed = np.exp(d)                                    # (nK,); bounded by K/F0
-    ec = np.exp(a)                                    # scalar
+    ed = np.exp(d)  # (nK,); bounded by K/F0
+    ec = np.exp(a)  # scalar
 
-    chi = (cos_cd * ed[None, :] - ec
-           + omega[:, None] * sin_cd * ed[None, :]) / (1.0 + omega[:, None] ** 2)
+    chi = (cos_cd * ed[None, :] - ec + omega[:, None] * sin_cd * ed[None, :]) / (
+        1.0 + omega[:, None] ** 2
+    )
 
     psi = np.empty_like(chi)
     psi[0, :] = d - a
@@ -133,10 +137,10 @@ def cos_price_and_greeks(
 
     phi_vals = phi(omega)
     A = np.real(phi_vals * np.exp(-1j * omega * a))
-    A[0] *= 0.5                                       # first-term prime
+    A[0] *= 0.5  # first-term prime
 
     # dV_k^put / dF_0 = -(2/(b-a)) * chi_k(a, d); deep-ITM has chi=0 already.
-    dV_put_dF0 = -(2.0 / (b - a)) * chi               # (N, nK)
+    dV_put_dF0 = -(2.0 / (b - a)) * chi  # (N, nK)
 
     # d^2 V_k^put / dF_0^2: only in-interval contributes, same form as
     # the direct-call derivation because parity is linear in F_0.
@@ -204,5 +208,6 @@ def cos_parameter_sensitivity(
 
     # Reuse the standard COS payoff coefficients V_k (strike-dependent).
     from ..pricers.cos import _call_payoff_coeffs
+
     V = _call_payoff_coeffs(a, b, N, strikes, fwd.F0)
     return fwd.disc * (A[:, None] * V).sum(axis=0)

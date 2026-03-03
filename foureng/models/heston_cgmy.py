@@ -43,7 +43,9 @@ References
   An Empirical Investigation", Journal of Business 75(2).
 * Fang & Oosterlee (2008) — COS truncation rule.
 """
+
 from __future__ import annotations
+
 from dataclasses import dataclass
 
 import numpy as np
@@ -144,6 +146,7 @@ class HestonCGMYParams(ModelSpec):
 # CGMY Lévy exponent
 # ---------------------------------------------------------------------------
 
+
 def _validate_cgmy(p: HestonCGMYParams) -> None:
     # C == 0 is the degenerate "no CGMY jumps" edge case — the Lévy exponent
     # becomes identically zero and Heston-CGMY collapses to pure Heston.
@@ -154,8 +157,7 @@ def _validate_cgmy(p: HestonCGMYParams) -> None:
         raise ValueError(f"CGMY requires G > 0; got G={p.G}")
     if p.M <= 1.0:
         raise ValueError(
-            f"CGMY martingale correction requires M > 1 (so E[exp(J_T)] is "
-            f"finite); got M={p.M}"
+            f"CGMY martingale correction requires M > 1 (so E[exp(J_T)] is finite); got M={p.M}"
         )
     if not (0.0 < p.Y < 2.0) or abs(p.Y - 1.0) < 1e-12:
         raise ValueError(
@@ -176,8 +178,8 @@ def cgmy_levy_exponent(u: np.ndarray, p: HestonCGMYParams) -> np.ndarray:
     u_c = np.asarray(u, dtype=np.complex128)
     Y = p.Y
     gY = _gamma_fn(-Y)  # Γ(-Y) is a real scalar for Y in (0,2)\{1}
-    term_plus = (p.M - 1j * u_c) ** Y - p.M ** Y
-    term_minus = (p.G + 1j * u_c) ** Y - p.G ** Y
+    term_plus = (p.M - 1j * u_c) ** Y - p.M**Y
+    term_minus = (p.G + 1j * u_c) ** Y - p.G**Y
     return p.C * gY * (term_plus + term_minus)
 
 
@@ -185,9 +187,8 @@ def cgmy_levy_exponent(u: np.ndarray, p: HestonCGMYParams) -> np.ndarray:
 # Full Heston-CGMY CF
 # ---------------------------------------------------------------------------
 
-def heston_cgmy_cf(
-    u: np.ndarray, fwd: ForwardSpec, p: HestonCGMYParams
-) -> np.ndarray:
+
+def heston_cgmy_cf(u: np.ndarray, fwd: ForwardSpec, p: HestonCGMYParams) -> np.ndarray:
     """CF of X_T = log(S_T/F_0) under Heston-CGMY SVJ.
 
     Independent factorisation:
@@ -215,9 +216,8 @@ def heston_cgmy_cf(
 # Cumulants for COS (numerical via Cauchy integral on the CF)
 # ---------------------------------------------------------------------------
 
-def heston_cgmy_cumulants(
-    fwd: ForwardSpec, p: HestonCGMYParams
-) -> tuple[float, float, float]:
+
+def heston_cgmy_cumulants(fwd: ForwardSpec, p: HestonCGMYParams) -> tuple[float, float, float]:
     """Cumulants (c1, c2, c4) of X_T under Heston-CGMY.
 
     Computed numerically from the CF via
@@ -229,6 +229,8 @@ def heston_cgmy_cumulants(
     """
     from ..utils.cumulants import cumulants_from_cf
 
-    phi = lambda u: heston_cgmy_cf(u, fwd, p)
-    c = cumulants_from_cf(phi, order=4, radius=0.25, M=64)
+    def _phi(u):
+        return heston_cgmy_cf(u, fwd, p)
+
+    c = cumulants_from_cf(_phi, order=4, radius=0.25, M=64)
     return float(c[0]), float(c[1]), float(c[3])
