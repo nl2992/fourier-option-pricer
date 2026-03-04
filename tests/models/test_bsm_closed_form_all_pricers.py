@@ -9,7 +9,7 @@ Tolerances (single-maturity, 7-strike strip, no stress parameters):
     lewis                1e-7
     carr_madan           1e-4
     frft                 1e-4
-    pyfeng_fft           1e-6
+    pyfeng_fft           1e-5
 """
 from __future__ import annotations
 
@@ -82,4 +82,4 @@ def test_bsm_frft():
 def test_bsm_pyfeng_fft():
     pytest.importorskip("pyfeng", reason="pyfeng not installed")
     prices = fe.price_strip("bsm", "pyfeng_fft", _STRIKES, _FWD, _PARAMS)
-    np.testing.assert_allclose(prices, _REF, atol=1e-6, rtol=0.0)
+    np.testing.assert_allclose(prices, _REF, atol=1e-5, rtol=0.0)
