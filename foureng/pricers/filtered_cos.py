@@ -13,6 +13,7 @@ that the grid-search comparator can store and display them in a uniform table.
 All pricing logic lives in :func:`~foureng.pricers.cos.cos_prices`; no
 numerical code is duplicated here.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass

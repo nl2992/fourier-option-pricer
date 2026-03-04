@@ -1,17 +1,20 @@
 from __future__ import annotations
-import numpy as np
+
 from dataclasses import dataclass
+
+import numpy as np
+
 from ..models.base import CharFunc, ForwardSpec
 from ..utils.grids import FFTGrid
-from ..utils.numerics import cm_simpson_weights, phi_logprice
 from ..utils.interp import interp_cubic
+from ..utils.numerics import cm_simpson_weights, phi_logprice
 
 
 @dataclass(frozen=True)
 class CarrMadanResult:
-    k: np.ndarray            # log-strike grid (log K)
+    k: np.ndarray  # log-strike grid (log K)
     call_prices: np.ndarray  # call prices on that grid
-    K: np.ndarray            # strikes = exp(k)
+    K: np.ndarray  # strikes = exp(k)
 
 
 def carr_madan_fft_prices(
@@ -68,7 +71,7 @@ def carr_madan_price_at_strikes(
     """
     strikes = np.asarray(strikes, dtype=float)
     if np.any(strikes <= 0.0):
-        raise ValueError(f"All strikes must be > 0 for Carr-Madan; got non-positive values.")
+        raise ValueError("All strikes must be > 0 for Carr-Madan; got non-positive values.")
     k0 = float(np.log(fwd.F0))
     res = carr_madan_fft_prices(phi, fwd, grid, k0=k0)
 

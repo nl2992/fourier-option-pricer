@@ -6,9 +6,12 @@ This module defines the three primitives shared by every model in the package:
 * :class:`ModelSpec` — base dataclass for all model parameter classes.
 * :class:`CharFunc` — callable protocol for characteristic functions.
 """
+
 from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import Protocol
+
 import numpy as np
 
 
@@ -31,6 +34,7 @@ class ForwardSpec:
     disc : float
         Discount factor exp(-r * T), computed automatically.
     """
+
     S0: float
     r: float
     q: float
