@@ -1,61 +1,73 @@
 # fourier-option-pricer
 
-Fourier pricing toolkit for European options using Carr-Madan FFT, FRFT, and COS under characteristic-function models.
+Fourier pricing toolkit for European options: Carr-Madan FFT, FRFT, and COS under
+characteristic-function models.
 
-This package solves a practical numerical-finance problem: pricing vanilla European options quickly when the model is easier to describe through its characteristic function than through a closed-form price formula. It gives one consistent workflow for pricing strips, implied volatilities, and surfaces across Heston, Variance Gamma, Kou, and related models. The PyPI package name is `fourier-option-pricer`, and the Python import name is `foureng`.
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/nl2992/fourier-option-pricer/blob/main/notebooks/demo.ipynb)
 
-### Supported model layer
+---
 
-The pricing layer supports twenty characteristic-function models. Some are thin adapters over [PyFENG](https://github.com/PyFE/PyFENG), while others are implemented in-house inside `foureng.models`.
+## Problem solved
 
-| Model | Public dataclass | Characteristic-function source | Notes |
-|--------|------------------|-------------------------------|-------|
-| Black-Scholes-Merton | `BsmParams` | PyFENG-backed adapter | Diffusion baseline and sanity-check model. |
-| Heston | `HestonParams` | PyFENG-backed adapter | Main stochastic-volatility benchmark. |
-| OUSV / Schobel-Zhu | `OusvParams` | PyFENG-backed adapter | Stochastic-volatility alternative to Heston. |
-| Variance Gamma | `VGParams` | PyFENG-backed adapter | Pure-jump Lévy model used in the repo benchmarks. |
-| CGMY | `CgmyParams` | PyFENG-backed adapter | Infinite-activity tempered-stable jump model. |
-| Normal Inverse Gaussian | `NigParams` | PyFENG-backed adapter | Lévy model with heavier tails than Gaussian diffusion. |
-| Kou | `KouParams` | In-house implementation | Double-exponential jump-diffusion CF and cumulants. |
-| Bates | `BatesParams` | In-house composite | Heston diffusion block plus Merton jump block. |
-| Heston-Kou | `HestonKouParams` | In-house composite | Heston block combined with the Kou jump CF. |
-| Heston-CGMY | `HestonCGMYParams` | In-house composite | Heston block combined with a CGMY jump factor. |
-| 3/2 Stochastic Volatility | `Sv32Params` | PyFENG-backed adapter | Mean-reverting variance process with 3/2 diffusion coefficient. |
-| GARCH (WMW 2012) | `GarchWMW2012Params` | In-house implementation | Discrete-time GARCH model with analytic CF from Wendland-Maller-Weron (2012). |
-| Rough Heston | `RoughHestonParams` | PyFENG-backed adapter | Fractional Brownian motion variance driver (Hurst index H < 1/2). |
-| Merton Jump-Diffusion | `MertonJDParams` | In-house implementation | Geometric Brownian motion plus compound Poisson jumps with log-normal sizes. |
-| Meixner | `MeixnerParams` | In-house implementation | Lévy process with CF based on the hyperbolic cosine; fits S&P500 smile. |
-| Bilateral Gamma | `BilateralGammaParams` | In-house implementation | Separate Gamma processes for upward and downward moves (Küchler & Tappe 2008). |
-| Generalized Hyperbolic | `GHParams` | In-house implementation | Normal variance-mean mixture via GIG; includes NIG (λ=−½) and Hyperbolic (λ=1) as special cases. |
-| Finite Moment Log Stable (FMLS) | `FMLSParams` | In-house implementation | Maximally negatively-skewed α-stable Lévy process; all positive moments of S_T are finite (Carr & Wu 2003). |
-| Double Heston | `DoubleHestonParams` | In-house implementation | Two independent Heston variance factors; CF factorises as a product of two single-Heston CFs (Christoffersen, Heston & Jacobs 2009). |
-| VGSA | `VGSAParams` | In-house implementation | Variance Gamma on a stochastic CIR activity clock; captures term-structure of skew and vol-of-vol clustering (Carr, Geman, Madan & Yor 2003). |
+Pricing vanilla European options is straightforward when the model provides a closed-form
+price formula — as Black-Scholes does. Most richer models (stochastic volatility,
+jump-diffusion, pure-Lévy) do not. They provide a **characteristic function** of the
+log-return, but not a direct formula for the call price.
 
-> **PyFENG dependency note.** The eight PyFENG-backed models require `pyfeng>=0.4.0` (pyfeng 0.4.0 renamed `charfunc_logprice` → `logp_cf` and changed `VarGammaFft`/`ExpNigFft` from `vov=` to `nu=`). Rough Heston imports directly from `pyfeng.sv_fft` (not `pyfeng.ex`) to avoid a broken path that calls the removed `scipy.misc.derivative` in newer SciPy. The `method="pyfeng_fft"` option in `price_strip` is supported only for these eight models; the remaining twelve use the in-house COS / Carr-Madan / FRFT pricers.
+The standard workaround is Monte Carlo simulation, but its error decays as O(n^{−1/2}):
+reducing the error by a factor of 10 requires roughly 100× more paths. In a calibration
+loop that calls the pricer thousands of times across strikes and maturities, the sampling
+cost compounds badly.
 
-All 20 models are **first-class public API objects** importable directly from the top-level package. Their parameter dataclasses, characteristic functions, and cumulant functions are all in `foureng.__all__` and importable as `fe.HestonParams`, `fe.vg_cf`, `fe.fmls_cumulants`, etc. The `MODEL_REGISTRY` in `foureng.models.registry` is the single source of truth for which models are supported and which have a native PyFENG FFT pricer; `price_strip` dispatches through it.
+Fourier methods exploit the characteristic function directly. If the characteristic function
+of log-returns is available, the option price can be written as a deterministic integral —
+no simulation required. This package solves that integral three different ways (Carr-Madan
+FFT, FRFT, and COS), validates every method against published references and independent
+benchmarks, and exposes the result as a clean, uniform Python API across twenty models.
 
-### Why use Fourier methods here instead of plain Monte Carlo?
+---
 
-Monte Carlo is still useful as a validation baseline, but it scales poorly for plain-vanilla European pricing once a characteristic function is available. Its standard error behaves like
+## Project contribution
 
-$$
-\text{MC error} = O(n^{-1/2}),
-$$
+This project is not a re-derivation of the characteristic functions for standard models.
+Its contributions are:
 
-so reducing the error by a factor of 10 usually needs about 100 times as many paths. The Fourier methods in this package reuse the same model input to price whole strike strips much more efficiently than pathwise simulation.
+1. **A uniform pricing layer.** One `price_strip(model, method, strikes, fwd, params)`
+   call prices any of twenty models by any of six methods without model-specific wiring.
 
-### Characteristic-function backbone
+2. **Twenty characteristic-function models.** Eight PyFENG-backed adapters and twelve
+   in-house implementations (including four SVJ composites and six pure-Lévy models).
+   Full model list: [docs/MODEL_ZOO.md](docs/MODEL_ZOO.md).
 
-All three pricing families in this package start from the same object:
+3. **A structured validation harness.** 686 pytest cases classified into five evidence
+   levels: published-paper tables, MathWorks software references, frozen derived references,
+   cross-package parity with PyFENG, and qualitative shape checks. See
+   [docs/VALIDATION_HIERARCHY.md](docs/VALIDATION_HIERARCHY.md).
 
-$$
-\varphi_T(u) = \mathbb{E}^{\mathbb{Q}}\\left[e^{iuX_T}\right],
-\qquad
-X_T = \log\\left(\frac{S_T}{F_0}\right).
-$$
+4. **Improved COS truncation.** The Junike-Pankrashkin (2022) tolerance-based interval
+   selection and Junike (2024) term-count policy, wired into the `cos_improved` path.
+   Demonstrated to beat the naive paper-grid replay on 7 of 8 FO2008 test cases.
 
-Here `i = sqrt(-1)`, `u` is the Fourier frequency, and `X_T` is the terminal log-forward return. Carr-Madan FFT and FRFT recover prices through Fourier inversion of this characteristic function, while COS uses the same object to build cosine-series coefficients on a truncated interval. For PyFENG-backed models, `foureng` translates its dataclasses into the corresponding `pyfeng.*Fft` model and calls `logp_cf`; for the in-house models, the characteristic functions are implemented directly in `foureng.models`.
+5. **Adaptive filtered-COS extension.** A deterministic policy-search layer that chooses
+   among no-filter COS, Junike COS, and filtered Junike COS to satisfy a user tolerance
+   target. Full details: [docs/FILTERED_COS_EXTENSION.md](docs/FILTERED_COS_EXTENSION.md).
+
+---
+
+## Course rubric map
+
+| Rubric criterion | Where to find it |
+|-----------------|-----------------|
+| Mathematical background and derivations | [APPENDIX.md](APPENDIX.md) §7 (characteristic functions), §8 (pricing methods), §14 (Junike theory) |
+| Implementation quality | `foureng/pricers/`, `foureng/models/`, `foureng/utils/`; `pipeline.py` dispatcher |
+| Validation against published benchmarks | [docs/VALIDATION_HIERARCHY.md](docs/VALIDATION_HIERARCHY.md); [docs/paper_validation_matrix.md](docs/paper_validation_matrix.md); `tests/papers/`, `tests/models/` |
+| Extension / innovation | [docs/FILTERED_COS_EXTENSION.md](docs/FILTERED_COS_EXTENSION.md); `notebooks/research/adaptive_cos.ipynb` |
+| Notebook demonstrations | `notebooks/demo.ipynb`, `notebooks/demo_advanced.ipynb`, `notebooks/paper_replications/` |
+| FO2008 paper replication | [docs/FO2008_REPLICATION.md](docs/FO2008_REPLICATION.md); `notebooks/fo2008_replication.ipynb` |
+| Bates & 3/2 SV validation | [docs/BATES_SV32_VALIDATION.md](docs/BATES_SV32_VALIDATION.md); `notebooks/paper_replications/bates_sv32_validation_demo.ipynb` |
+| Code quality / reproducibility | `pyproject.toml`, `tests/`, CI workflow; see [Reproduce results](#reproduce-results) |
+
+---
 
 ## Installation
 
@@ -64,263 +76,363 @@ pip install fourier-option-pricer          # latest (v0.4.1)
 pip install "fourier-option-pricer==0.4.1" # pin to this release
 ```
 
+**Runtime dependencies:** `numpy>=1.24`, `scipy>=1.10`, `pyfeng>=0.4.0`.
+
+---
+
 ## Quick start
 
 ```python
 import numpy as np
 import foureng as fe
 
-fwd = fe.ForwardSpec(S0=100.0, r=0.01, q=0.02, T=1.0)
+fwd    = fe.ForwardSpec(S0=100.0, r=0.01, q=0.02, T=1.0)
 params = fe.HestonParams(kappa=4.0, theta=0.25, nu=1.0, rho=-0.5, v0=0.04)
 
-phi = lambda u: fe.heston_cf_form2(u, fwd, params)
+phi    = lambda u: fe.heston_cf_form2(u, fwd, params)
 strikes = np.array([80.0, 90.0, 100.0, 110.0, 120.0])
-grid = fe.cos_auto_grid(fe.heston_cumulants(fwd, params), N=256, L=10.0)
+grid   = fe.cos_auto_grid(fe.heston_cumulants(fwd, params), N=256, L=10.0)
 result = fe.cos_prices(phi, fwd, strikes, grid)
 
 print(result.call_prices)
 ```
 
-## Testing and validation layout
-
-The repository currently collects 686 pytest cases. They are grouped by
-validation purpose rather than by implementation phase:
-
-| Folder | Contents |
-|--------|----------|
-| `tests/refs/` | Frozen JSON reference files used by no-network paper-replication tests: MathWorks Bates case, PyFENG 3/2 regression target, and Baldeaux-Badran 3/2 figure parameters. |
-| `tests/papers/` | Published-paper and benchmark replications: Carr-Madan, Lewis, FRFT, Fang-Oosterlee COS, Kou/COS, Bates MathWorks reference (all six pricers), and 3/2 Baldeaux-Badran qualitative smoke test. |
-| `tests/models/` | Model adapter, regression-strip, and reduction-limit tests for all 20 models, including paper-backed 3-layer suites (analytic benchmarks, cross-engine agreement, structural properties) for each in-house model, and model-reduction identities (Bates→BSM, Bates→Merton JD, sv32 PyFENG regression). |
-| `tests/methods/` | Pricing-method behavior: COS policies, filters, alpha validity, cross-method agreement, and robustness sweeps. |
-| `tests/features/` | End-to-end package features: Monte Carlo, control variates, implied volatility, calibration, Greeks, public API, integration workflows, and `@pytest.mark.slow` notebook execution guards. |
-
-Run the fast CI-style suite with:
-
-```bash
-pytest -q -m "not slow"
-```
-
-Run every test, including slower reference and Monte Carlo checks, with:
-
-```bash
-pytest -q
-```
-
-See [tests/README.md](tests/README.md) for the folder map.
-
-## API reference
-
-The main public API is exposed from:
+Or use the unified dispatcher to switch methods without touching model code:
 
 ```python
-import foureng as fe
+prices = fe.price_strip("heston", "cos_improved", strikes, fwd, params)
+prices = fe.price_strip("heston", "carr_madan",   strikes, fwd, params)
+prices = fe.price_strip("heston", "lewis",        strikes, fwd, params)
 ```
 
-The unified notebook and benchmark dispatcher is also available as:
+---
 
-```python
-from foureng.pipeline import price_strip
+## Core numerical methods
+
+### Why Fourier methods instead of Monte Carlo?
+
+Monte Carlo standard error is
+
+$$
+\varepsilon_{\mathrm{MC}} = O(n^{-1/2}),
+$$
+
+so reducing error by one order of magnitude needs roughly 100× more paths.
+Fourier methods price a whole strike strip from a single characteristic function evaluation
+and a deterministic transform, giving a more direct speed–accuracy trade-off for European
+vanilla options.
+
+### Common characteristic-function backbone
+
+All three pricing families start from the same object:
+
+$$
+\varphi_T(u) = \mathbb{E}^{\mathbb{Q}}\!\left[e^{iuX_T}\right],
+\qquad
+X_T = \log\!\left(\frac{S_T}{F_0}\right).
+$$
+
+Here `i = √(−1)`, `u` is the Fourier frequency, and `X_T` is the terminal log-forward
+return. This is the characteristic function **in log-forward coordinates**
+(`X_T = log(S_T / F_0)`, not `log(S_T)`). Mixing log-spot and log-forward CFs introduces
+a systematic pricing error.
+
+### Carr-Madan FFT
+
+Carr and Madan (1999) damp the call price as a function of log-strike with a factor
+`exp(α k)` so that the resulting function is square-integrable. After FFT inversion on
+a uniform frequency grid, prices at a uniform log-strike lattice are recovered by
+interpolation.
+
+Key parameters: damping factor `α`, frequency spacing `η`, FFT size `N`, log-strike
+spacing `λ = 2π / (Nη)`. Strike and frequency resolution are coupled — finer strike
+resolution requires either a larger grid or an alternative transform.
+
+### Fractional FFT (FRFT)
+
+FRFT (Chourdakis 2004) relaxes the strict coupling between frequency and strike spacings,
+allowing both grids to be chosen more flexibly. It is useful when reporting strikes do not
+align naturally with the standard Carr-Madan lattice, or when a finer strike grid is needed
+without increasing `N`.
+
+### COS method
+
+The COS method (Fang & Oosterlee 2008) expands the log-return density on a truncated
+interval `[a, b]` using a Fourier-cosine series. The density itself need not be evaluated;
+the cosine coefficients are recovered directly from `φ_T(kπ / (b−a))`.
+
+The standard cumulant-based truncation rule is
+
+$$
+[a, b] = \!\left[
+c_1 - L\sqrt{c_2 + \sqrt{|c_4|}},\;
+c_1 + L\sqrt{c_2 + \sqrt{|c_4|}}
+\right],
+$$
+
+where `c_1`, `c_2`, `c_4` are the first, second, and fourth cumulants, and `L` is a
+multiplier (typically 8–12). Accuracy depends on **both** the interval choice and the
+number of terms `N` — choosing either one alone is insufficient.
+
+### Improved COS (Junike-Pankrashkin / Junike)
+
+A fixed cumulant multiplier is a rule of thumb. If `[a, b]` is too narrow, the method
+discards tail mass before the series even starts; increasing `N` then cannot recover the
+missing probability. If `[a, b]` is too wide, more terms are needed to resolve it.
+
+Junike and Pankrashkin (2022) replace the multiplier with a tail-mass tolerance `ε_trunc`.
+For a centre `m` and half-width `M`, Markov's inequality gives a sufficient condition:
+
+$$
+M \geq \left(\frac{\mathbb{E}[|X_T - m|^n]}{\varepsilon_{\text{trunc}}}\right)^{1/n}.
+$$
+
+Junike (2024) additionally specifies how many terms `N` are needed to resolve the chosen
+interval to a target accuracy. The `cos_improved` path in this package implements both.
+
+---
+
+## Model coverage
+
+The package supports **twenty** characteristic-function models across four families:
+stochastic-volatility (Heston, OUSV, 3/2 SV, Rough Heston, GARCH), SVJ composites (Bates,
+Heston-Kou, Heston-CGMY), pure-Lévy (VG, CGMY, NIG, Kou, Merton JD, Meixner, Bilateral
+Gamma, GH, FMLS, VGSA), and multi-factor (Double Heston).
+
+Full model table with parameter dataclasses, CF sources, and API notes:
+[docs/MODEL_ZOO.md](docs/MODEL_ZOO.md).
+
+---
+
+## Validation summary
+
+| Model / method group | Reference type | Tolerance | Status |
+|----------------------|---------------|-----------|--------|
+| Carr-Madan VG (Case 4 put prices) | Published paper table — Carr & Madan (1999) | exact to 4 d.p. | ✓ done |
+| Lewis Heston five-strike strip | Published paper table — Lewis (2001) | atol=1e-5 | ✓ done |
+| Double Heston vanilla calls | Published paper table — Kelly (2025) | atol=1e-4 | ✓ done |
+| Bates NI prices (MathWorks) | Software reference — `optByBatesNI` | atol=1e-2 | ✓ done |
+| Bates FFT/FRFT surface (MathWorks) | Software reference — `optByBatesFFT` | atol=1e-2 | ✓ done |
+| Bates Delta (MathWorks) | Software reference — `optSensByBatesNI` | atol=5e-3 | ✓ done |
+| BSM all-pricers baseline | Frozen derived reference | COS/COS+: 1e-8; Lewis: 1e-7; CM/FRFT: 1e-4; PyFENG: 1e-5 | ✓ done |
+| 3/2 SV PyFENG surface (7×4) | Frozen PyFENG adapter reference | atol=1e-3 | ✓ done |
+| Merton JD | Derived reference (Poisson-BSM mixture) | atol=1e-8 | ✓ done |
+| FO2008 COS Tables 1–10 | Derived reference (paper-grid replay) | Per-table; see [FO2008_REPLICATION.md](docs/FO2008_REPLICATION.md) | partial |
+| Heston, VG, CGMY, NIG, OUSV, Rough Heston | PyFENG adapter parity | atol=1e-5 | partial |
+| Kou, Bilateral Gamma, GH, FMLS, Meixner, VGSA | Derived reference (cross-method) | atol=1e-4 | partial |
+| Filtered-COS / Junike stress tests | Numerical stability | convergence check | partial |
+
+Full per-paper table: [docs/paper_validation_matrix.md](docs/paper_validation_matrix.md).  
+Evidence-level definitions: [docs/VALIDATION_HIERARCHY.md](docs/VALIDATION_HIERARCHY.md).
+
+---
+
+## Innovation: adaptive filtered-COS
+
+The main project extension goes beyond the Junike interval selection. Even with a correctly
+chosen `[a, b]`, the finite COS series can carry Gibbs-like oscillations if the density has
+sharp features or the characteristic function decays slowly.
+
+The adaptive filtered-COS layer (implemented in `foureng/pricers/filtered_cos.py` and
+`foureng/experiments/cos_filter_grid_search.py`) adds a second control axis:
+
+```
+price = disc · Σ_k  σ_k · A_k · V_k
 ```
 
-### Market inputs and model parameters
+where `σ_k` is a spectral weight near 1 for low-frequency terms and smaller toward the tail.
+Four filter families are available: Fejér, Lanczos, raised-cosine, and exponential.
 
-| Object | Parameters | Returns / purpose |
-|--------|------------|-------------------|
-| `ForwardSpec(S0, r, q, T)` | `S0: float`, `r: float`, `q: float`, `T: float` | Market inputs. Also provides derived `F0` and discount factor `disc`. |
-| `BsmParams(sigma)` | Black-Scholes volatility parameter | Diffusion baseline model dataclass. |
-| `HestonParams(kappa, theta, nu, rho, v0)` | Heston stochastic-volatility parameters | Heston model parameter dataclass. |
-| `OusvParams(sigma0, kappa, theta, nu, rho)` | Schobel-Zhu / OUSV stochastic-volatility parameters | OUSV model parameter dataclass. |
-| `VGParams(sigma, nu, theta)` | Variance Gamma parameters | Variance Gamma parameter dataclass. |
-| `CgmyParams(C, G, M, Y)` | CGMY Levy parameters | CGMY model parameter dataclass. |
-| `NigParams(sigma, nu, theta)` | NIG Levy parameters | NIG model parameter dataclass. |
-| `KouParams(sigma, lam, p, eta1, eta2)` | Diffusion plus jump parameters | Kou double-exponential jump-diffusion parameter dataclass. |
-| `BatesParams(kappa, theta, nu, rho, v0, lam_j, mu_j, sigma_j)` | Heston block plus Merton jump parameters | Bates stochastic-volatility jump-diffusion dataclass. |
-| `HestonKouParams(kappa, theta, nu, rho, v0, lam_j, p_j, eta1, eta2)` | Heston block plus Kou jump parameters | Heston-Kou composite model dataclass. |
-| `HestonCGMYParams(kappa, theta, nu, rho, v0, C, G, M, Y)` | Heston block plus CGMY jump parameters | Heston-CGMY composite model dataclass. |
-| `Sv32Params(v0, kappa, theta, nu, rho)` | 3/2 model parameters | 3/2 stochastic-volatility parameter dataclass. |
-| `GarchWMW2012Params(v0, kappa, theta, nu, rho)` | GARCH diffusion parameters (Wu-Ma-Wang 2012) | Discrete-time GARCH option pricing dataclass. |
-| `RoughHestonParams(sigma, vov, mr, rho, theta, alpha)` | Rough Heston parameters | Rough Heston parameter dataclass; `alpha` in `(0, 1)` (fractional exponent). |
-| `MertonJDParams(sigma, lam, mu_j, sigma_j)` | Diffusion volatility plus jump parameters | Merton jump-diffusion parameter dataclass. |
-| `MeixnerParams(a, b, delta)` | Meixner Lévy parameters | Meixner process parameter dataclass. |
-| `BilateralGammaParams(alpha_p, lambda_p, alpha_m, lambda_m)` | Bilateral Gamma parameters | Bilateral Gamma parameter dataclass (separate up/down Gamma processes). |
-| `GHParams(lam, alpha, beta, delta)` | Generalized Hyperbolic parameters | GH Lévy model dataclass; `lam=-0.5` gives NIG, `lam=1` gives Hyperbolic. |
-| `FMLSParams(alpha, sigma)` | Stability index and scale | FMLS parameter dataclass; `alpha` in `(1, 2]`, recovers BSM at `alpha=2`. |
-| `DoubleHestonParams(kappa1, theta1, nu1, rho1, v01, kappa2, theta2, nu2, rho2, v02)` | Two independent Heston variance-factor parameter sets | Double Heston dataclass; CF factorises as product of two single-Heston CFs. |
-| `VGSAParams(C, G, M, kappa, eta, lam)` | VG tempering rates plus CIR activity-clock parameters | VGSA dataclass; `C` is initial activity, `G`/`M` are left/right tempering rates, `kappa`/`eta`/`lam` are CIR parameters. `lam=0` reduces to standard VG. |
+A deterministic policy-search selector builds a candidate set of `(COSGridPolicy,
+COSFilterSpec)` pairs, prices with each, and returns the **fastest candidate that meets the
+user's error tolerance** — with the no-filter Junike candidate always in the pool. The
+selector therefore weakly dominates fixed Junike-COS in the joint (error, runtime) metric.
 
-### Characteristic functions and cumulants
+Key result: on the FO2008 test suite the adaptive selector beats the naive paper-grid replay
+in 7/8 cases and beats the paper's best reported error in 6/8 cases.
 
-| Object | Parameters | Returns / purpose |
-|--------|------------|-------------------|
-| `bsm_cf(u, fwd, params)` | `u: np.ndarray`, `fwd: ForwardSpec`, `params: BsmParams` | Complex-valued Black-Scholes characteristic function. |
-| `heston_cf_form2(u, fwd, params)` | `u: np.ndarray`, `fwd: ForwardSpec`, `params: HestonParams` | Complex-valued Heston characteristic function in log-forward coordinates. |
-| `ousv_cf(u, fwd, params)` | `u: np.ndarray`, `fwd: ForwardSpec`, `params: OusvParams` | Complex-valued OUSV / Schobel-Zhu characteristic function. |
-| `vg_cf(u, fwd, params)` | `u: np.ndarray`, `fwd: ForwardSpec`, `params: VGParams` | Complex-valued Variance Gamma characteristic function. |
-| `cgmy_cf(u, fwd, params)` | `u: np.ndarray`, `fwd: ForwardSpec`, `params: CgmyParams` | Complex-valued CGMY characteristic function. |
-| `nig_cf(u, fwd, params)` | `u: np.ndarray`, `fwd: ForwardSpec`, `params: NigParams` | Complex-valued NIG characteristic function. |
-| `kou_cf(u, fwd, params)` | `u: np.ndarray`, `fwd: ForwardSpec`, `params: KouParams` | Complex-valued Kou characteristic function. |
-| `bates_cf(u, fwd, params)` | `u: np.ndarray`, `fwd: ForwardSpec`, `params: BatesParams` | Complex-valued Bates characteristic function. |
-| `heston_kou_cf(u, fwd, params)` | `u: np.ndarray`, `fwd: ForwardSpec`, `params: HestonKouParams` | Complex-valued Heston-Kou characteristic function. |
-| `heston_cgmy_cf(u, fwd, params)` | `u: np.ndarray`, `fwd: ForwardSpec`, `params: HestonCGMYParams` | Complex-valued Heston-CGMY characteristic function. |
-| `sv32_cf(u, fwd, params)` | `u: np.ndarray`, `fwd: ForwardSpec`, `params: Sv32Params` | Complex-valued 3/2 stochastic-volatility characteristic function. |
-| `garch_wmw2012_cf(u, fwd, params)` | `u: np.ndarray`, `fwd: ForwardSpec`, `params: GarchWMW2012Params` | Complex-valued GARCH characteristic function (Wendland-Maller-Weron). |
-| `rough_heston_cf(u, fwd, params)` | `u: np.ndarray`, `fwd: ForwardSpec`, `params: RoughHestonParams` | Complex-valued Rough Heston characteristic function via Adams scheme. |
-| `merton_jd_cf(u, fwd, params)` | `u: np.ndarray`, `fwd: ForwardSpec`, `params: MertonJDParams` | Complex-valued Merton jump-diffusion characteristic function. |
-| `meixner_cf(u, fwd, params)` | `u: np.ndarray`, `fwd: ForwardSpec`, `params: MeixnerParams` | Complex-valued Meixner characteristic function. |
-| `bilateral_gamma_cf(u, fwd, params)` | `u: np.ndarray`, `fwd: ForwardSpec`, `params: BilateralGammaParams` | Complex-valued Bilateral Gamma characteristic function. |
-| `gh_cf(u, fwd, params)` | `u: np.ndarray`, `fwd: ForwardSpec`, `params: GHParams` | Complex-valued Generalized Hyperbolic characteristic function (uses Bessel K). |
-| `fmls_cf(u, fwd, params)` | `u: np.ndarray`, `fwd: ForwardSpec`, `params: FMLSParams` | Complex-valued FMLS characteristic function via principal branch of `(iu)^alpha`. |
-| `double_heston_cf(u, fwd, params)` | `u: np.ndarray`, `fwd: ForwardSpec`, `params: DoubleHestonParams` | Complex-valued Double Heston CF; product of two single-Heston CFs. |
-| `vgsa_cf(u, fwd, params)` | `u: np.ndarray`, `fwd: ForwardSpec`, `params: VGSAParams` | Complex-valued VGSA CF via CIR Laplace transform of the VG Lévy exponent. |
-| `bsm_cumulants(fwd, params)` | `ForwardSpec`, `BsmParams` | Black-Scholes cumulants used in COS grid construction. |
-| `heston_cumulants(fwd, params)` | `ForwardSpec`, `HestonParams` | Heston cumulants used to build COS truncation intervals. |
-| `ousv_cumulants(fwd, params)` | `ForwardSpec`, `OusvParams` | OUSV cumulants for COS grid construction. |
-| `vg_cumulants(fwd, params)` | `ForwardSpec`, `VGParams` | Variance Gamma cumulants for COS grid construction. |
-| `cgmy_cumulants(fwd, params)` | `ForwardSpec`, `CgmyParams` | CGMY cumulants for COS grid construction. |
-| `nig_cumulants(fwd, params)` | `ForwardSpec`, `NigParams` | NIG cumulants for COS grid construction. |
-| `kou_cumulants(fwd, params)` | `ForwardSpec`, `KouParams` | Kou cumulants for COS grid construction. |
-| `bates_cumulants(fwd, params)` | `ForwardSpec`, `BatesParams` | Bates cumulants for COS grid construction. |
-| `heston_kou_cumulants(fwd, params)` | `ForwardSpec`, `HestonKouParams` | Heston-Kou cumulants for COS grid construction. |
-| `heston_cgmy_cumulants(fwd, params)` | `ForwardSpec`, `HestonCGMYParams` | Heston-CGMY cumulants for COS grid construction. |
-| `sv32_cumulants(fwd, params)` | `ForwardSpec`, `Sv32Params` | 3/2 model cumulants for COS grid construction. |
-| `garch_wmw2012_cumulants(fwd, params)` | `ForwardSpec`, `GarchWMW2012Params` | GARCH cumulants for COS grid construction. |
-| `rough_heston_cumulants(fwd, params)` | `ForwardSpec`, `RoughHestonParams` | Rough Heston cumulants for COS grid construction. |
-| `merton_jd_cumulants(fwd, params)` | `ForwardSpec`, `MertonJDParams` | Merton jump-diffusion cumulants for COS grid construction. |
-| `meixner_cumulants(fwd, params)` | `ForwardSpec`, `MeixnerParams` | Meixner cumulants for COS grid construction. |
-| `bilateral_gamma_cumulants(fwd, params)` | `ForwardSpec`, `BilateralGammaParams` | Bilateral Gamma cumulants for COS grid construction (closed form). |
-| `gh_cumulants(fwd, params)` | `ForwardSpec`, `GHParams` | Generalized Hyperbolic cumulants for COS grid construction. |
-| `fmls_cumulants(fwd, params)` | `ForwardSpec`, `FMLSParams` | FMLS cumulants via numerical Cauchy integration. Note: COS is not recommended for α<2 (power-law tails); prefer Carr-Madan or FRFT. |
-| `double_heston_cumulants(fwd, params)` | `ForwardSpec`, `DoubleHestonParams` | Double Heston cumulants (sum of the two single-factor Heston cumulants). |
-| `vgsa_cumulants(fwd, params)` | `ForwardSpec`, `VGSAParams` | VGSA cumulants via CIR moment formulas for the integrated activity. |
+Full documentation: [docs/FILTERED_COS_EXTENSION.md](docs/FILTERED_COS_EXTENSION.md).  
+Demo notebook: [`notebooks/research/adaptive_cos.ipynb`](notebooks/research/adaptive_cos.ipynb).
 
-### Grid objects and grid builders
-
-| Object | Parameters | Returns / purpose |
-|--------|------------|-------------------|
-| `COSGrid(a, b, N)` | truncation interval and number of terms | Concrete COS grid used by `cos_prices`. |
-| `COSGridPolicy(...)` | policy fields such as `mode`, `truncation`, `dx_target`, `L`, `eps_trunc` | Rule-based COS grid specification used by the improved and filtered COS paths. |
-| `FFTGrid(N, eta, alpha)` | FFT size, frequency spacing, damping parameter | Carr-Madan FFT grid. |
-| `FRFTGrid(N, eta, lam, alpha)` | FRFT size, spacing, strike step, damping parameter | Fractional FFT grid. |
-| `cos_auto_grid(cumulants, N, L)` | cumulants, term count, truncation multiplier | Returns a `COSGrid` from the standard cumulant rule. |
-| `cos_improved_grid(cumulants, model=..., params=...)` | cumulants plus model context | Returns a `COSGrid` using the improved COS truncation policy. |
-| `recommended_cos_policy(model, params, mode=...)` | model name and parameter dataclass | Returns a `COSGridPolicy` for the improved COS workflow. |
-
-### Core pricing functions
-
-| Object | Parameters | Returns / purpose |
-|--------|------------|-------------------|
-| `cos_prices(phi, fwd, strikes, grid)` | characteristic function, `ForwardSpec`, strike array, `COSGrid` | Returns `COSResult` with `strikes` and `call_prices`. |
-| `carr_madan_price_at_strikes(phi, fwd, grid, strikes)` | characteristic function, `ForwardSpec`, `FFTGrid`, strike array | Returns NumPy array of call prices from Carr-Madan FFT. |
-| `frft_price_at_strikes(phi, fwd, grid, strikes)` | characteristic function, `ForwardSpec`, `FRFTGrid`, strike array | Returns NumPy array of call prices from FRFT. |
-| `filtered_cos_prices(phi, fwd, strikes, grid, filter_spec=...)` | characteristic function, `ForwardSpec`, strike array, COS grid, filter | Returns `COSResult` with spectral filtering applied to the COS coefficients. |
-| `price_strip(model, method, strikes, fwd, params, grid=None, ...)` | model label, method label, strike array, market inputs, model parameters | Unified strip-pricing dispatcher used throughout the notebooks and benchmarks. |
-
-### Filtered-COS helpers
-
-| Object | Parameters | Returns / purpose |
-|--------|------------|-------------------|
-| `COSFilterSpec(name, order=..., alpha=...)` | filter family and optional shape parameters | Filter specification for the filtered COS method. |
-| `cos_filter_weights(N, filter_spec)` | number of COS terms and filter spec | NumPy array of spectral weights `sigma_k`. |
-| `cos_adaptive_decision(...)` | model context and COS policy inputs | Returns `COSPolicyDecision` summarizing the improved COS grid choice. |
-
-### Implied volatility
-
-| Object | Parameters | Returns / purpose |
-|--------|------------|-------------------|
-| `BSInputs(F0, K, T, r, q, is_call)` | Black-style inversion inputs | Dataclass passed into implied-vol routines. |
-| `bs_price_from_fwd(sigma, inputs)` | volatility and `BSInputs` | Black-Scholes price from forward inputs. |
-| `implied_vol_newton_safeguarded(price, inputs)` | option price and `BSInputs` | Returns `float` implied volatility using safeguarded Newton iterations. |
-| `implied_vol_brent(price, inputs)` | option price and `BSInputs` | Returns `float` implied volatility using a bracketing solver. |
-
-### Surfaces, calibration, and Greeks
-
-| Object | Parameters | Returns / purpose |
-|--------|------------|-------------------|
-| `SurfaceSpec(S0, r, q, maturities, strikes)` | market inputs plus maturity/strike grids | Surface input container for model price or IV surfaces. |
-| `model_price_surface(...)` | surface spec plus pricing callbacks | Returns a price surface over maturity and strike grids. |
-| `model_iv_surface(...)` | surface spec plus pricing callbacks | Returns an implied-volatility surface. |
-| `calibrate_heston(...)`, `calibrate_vg(...)`, `calibrate_kou(...)` | market targets, grid inputs, initial guesses | Return `CalibrationResult` for the chosen model. |
-| `cos_price_and_greeks(phi, fwd, strikes, grid)` | characteristic function, market inputs, strike array, grid | Returns `COSGreeks` with prices and sensitivity arrays. |
-| `cos_delta_gamma(phi, fwd, strikes, grid)` | characteristic function, market inputs, strike array, grid | Returns delta and gamma arrays. |
-| `cos_parameter_sensitivity(...)` | model setup plus parameter perturbation inputs | Returns COS-based parameter sensitivities. |
-
-## License
-
-MIT. See [LICENSE](LICENSE).
+---
 
 ## Notebooks
-
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/nl2992/fourier-option-pricer/blob/main/notebooks/demo.ipynb)
 
 ### Quick-start demos
 
 | Notebook | What it covers |
 |----------|---------------|
-| [`notebooks/demo.ipynb`](notebooks/demo.ipynb) | Colab-ready quick-start: Carr-Madan, COS, and FRFT on a Heston strip. Good first read. |
-| [`notebooks/demo_advanced.ipynb`](notebooks/demo_advanced.ipynb) | Full-feature showcase (v0.4.1): all 20 models, all 6 pricers, Greeks, IV surface, Heston calibration, Monte Carlo, and validation highlights in one notebook. |
+| [`notebooks/demo.ipynb`](notebooks/demo.ipynb) | Colab-ready quick-start: Carr-Madan, COS, and FRFT on a Heston strip. |
+| [`notebooks/demo_advanced.ipynb`](notebooks/demo_advanced.ipynb) | Full-feature showcase (v0.4.1): all 20 models, 6 pricers, Greeks, IV surface, calibration, Monte Carlo, validation highlights. |
 
-The advanced demo covers these topics in order:
-
-| Section | Topics |
-|---------|--------|
-| 1. All 20 models | ATM call quick-reference table for every model |
-| 2. Multi-method scoreboard | COS / COS-improved / filtered / Carr-Madan / FRFT / Lewis on one Heston strip |
-| 3. Greeks | COS delta and gamma (Heston + Kou) |
-| 4. Implied volatility | IV smiles inverted from model prices for 4 models |
-| 5. Volatility surface | Heston IV surface heatmap and smile-overlay by maturity |
-| 6. Calibration | Heston fitted to synthetic market IVs via Nelder-Mead |
-| 7. Monte Carlo | BSM MC and Heston conditional MC vs COS-improved |
-| 8. New models | Double Heston and VGSA smile comparisons |
-| 9. Validation highlights | Bates MathWorks reference and 3/2 SV PyFENG regression error tables |
+The advanced demo sections: all-20-model ATM table → multi-method scoreboard → Greeks → IV
+smiles → volatility surface → Heston calibration → Monte Carlo → new models (Double Heston,
+VGSA) → validation highlights.
 
 ### Paper replications
 
-[`notebooks/paper_replications/`](notebooks/paper_replications/) contains four focused paper-validation notebooks:
+[`notebooks/paper_replications/`](notebooks/paper_replications/) contains five focused
+validation notebooks:
 
 | Notebook | Paper / reference | What it shows |
 |----------|-------------------|---------------|
-| [`cosPaper_Replication.ipynb`](notebooks/cosPaper_Replication.ipynb) | Fang & Oosterlee (2008), COS method | Table 2 BSM baseline, Heston scalar and strip cases, VG and CGMY cases; extended scoreboard and error figures comparing all in-house pricers. |
-| [`fo2008_replication.ipynb`](notebooks/fo2008_replication.ipynb) | Fang & Oosterlee (2008), full paper replay | Paper-faithful replication of Tables 2, 5, 7, 8-10 (BSM, Heston, VG, CGMY) plus repo-specific pricer comparisons and benchmark CSVs. |
-| [`paper_replications/bates_mathworks_replication.ipynb`](notebooks/paper_replications/bates_mathworks_replication.ipynb) | MathWorks optByBatesNI / optByBatesFFT | Bates model against the frozen MathWorks reference: COS, improved COS, filtered COS, Carr-Madan, FRFT, and Lewis; scoreboard, error plots, assertion gate, benchmark CSV. |
-| [`paper_replications/three_halves_replication.ipynb`](notebooks/paper_replications/three_halves_replication.ipynb) | Lewis (2000); Baldeaux & Badran (2012) | 3/2 SV: PyFENG regression cross-checked against COS-improved and Lewis; Baldeaux-Badran figure parameters for qualitative IV smile and no-arbitrage shape checks. |
-| [`paper_replications/bates_sv32_validation_demo.ipynb`](notebooks/paper_replications/bates_sv32_validation_demo.ipynb) | MathWorks Bates suite + frozen pyfeng_fft surface | Instructor-requested 12-section validation: BATES-01–07 (NI prices, cross-method, surface heatmap, COS convergence, IV smile, FRFT surface, delta) and SV32-01–05 (frozen surface regression, cos_improved 7×4, Lewis T≥0.5, IV surface, N-convergence); assertion gates and benchmark CSVs. |
+| [`cosPaper_Replication.ipynb`](notebooks/cosPaper_Replication.ipynb) | Fang & Oosterlee (2008) | Table 2 BSM baseline, Heston scalar and strip cases, VG and CGMY; extended scoreboard and error figures. |
+| [`fo2008_replication.ipynb`](notebooks/fo2008_replication.ipynb) | Fang & Oosterlee (2008) full replay | Paper-faithful Tables 2, 5, 7, 8–10 (BSM, Heston, VG, CGMY) plus benchmark CSVs. |
+| [`paper_replications/bates_mathworks_replication.ipynb`](notebooks/paper_replications/bates_mathworks_replication.ipynb) | MathWorks optByBatesNI / FFT | All-engine scoreboard vs frozen MathWorks reference; error plots, assertion gate, CSV. |
+| [`paper_replications/three_halves_replication.ipynb`](notebooks/paper_replications/three_halves_replication.ipynb) | Lewis (2000); Baldeaux & Badran (2012) | 3/2 SV: PyFENG regression + qualitative IV smile and no-arbitrage shape checks. |
+| [`paper_replications/bates_sv32_validation_demo.ipynb`](notebooks/paper_replications/bates_sv32_validation_demo.ipynb) | MathWorks Bates suite + frozen pyfeng_fft surface | 12-section validation: BATES-01–07 and SV32-01–05; assertion gates and benchmark CSVs. |
 
 ### Research notebooks
 
-[`notebooks/research/`](notebooks/research/) contains exploratory notebooks developed alongside the paper work:
-
 | Notebook | What it covers |
 |----------|---------------|
-| [`research/cos_method_improved.ipynb`](notebooks/research/cos_method_improved.ipynb) | The improved COS truncation range (Junike-Pankrashkin 2022 / Junike 2024): framing the upgrade, three pricing strategies side-by-side, Heston T=10 stress case with three error sources isolated, visual diagnostics. |
-| [`research/adaptive_cos.ipynb`](notebooks/research/adaptive_cos.ipynb) | Adaptive filtered-COS using the Fang-Oosterlee test suite: Black-Scholes (Test Case 1), Heston (Table 2 + stress), VG and CGMY; summary comparison with plain COS and filtered COS. |
+| [`research/cos_method_improved.ipynb`](notebooks/research/cos_method_improved.ipynb) | Junike-Pankrashkin 2022 / Junike 2024 improved truncation: three pricing strategies, Heston T=10 stress case, visual diagnostics. |
+| [`research/adaptive_cos.ipynb`](notebooks/research/adaptive_cos.ipynb) | Adaptive filtered-COS: BSM, Heston, VG, CGMY; summary comparison with plain COS and filtered COS. |
 
 ### Presentation notebook
 
-[`notebooks/presentation_fourier_methods.ipynb`](notebooks/presentation_fourier_methods.ipynb) is a lecture-style walkthrough: validation-first workflow, Monte Carlo vs Carr-Madan, Lewis FFT parameter sensitivity, plain COS, improved-truncation COS, multi-model sweep, and conclusions.
+[`notebooks/presentation_fourier_methods.ipynb`](notebooks/presentation_fourier_methods.ipynb) —
+lecture-style walkthrough: validation-first workflow, Monte Carlo vs Carr-Madan, Lewis FFT
+parameter sensitivity, plain COS, improved-truncation COS, multi-model sweep, conclusions.
 
-## Papers used
+---
 
-These are the main papers the package and notebook workflow are built around.
+## Reproduce results
+
+```bash
+# Install
+pip install "fourier-option-pricer==0.4.1"
+
+# Fast CI suite (excludes slow notebook tests):
+pytest -q -m "not slow"
+
+# Full suite including Monte Carlo and notebook guards:
+pytest -q
+
+# Paper-replication tests only:
+pytest -q -m "paper"
+
+# MathWorks Bates software-reference tests:
+pytest -q -m "software_reference"
+
+# FO2008 COS benchmarks:
+pytest -q tests/papers/test_phase4_cos_heston_fo2008.py
+
+# Bates + SV32 full validation notebook (requires pyfeng>=0.4.0):
+jupyter nbconvert --to notebook --execute \
+  notebooks/paper_replications/bates_sv32_validation_demo.ipynb
+```
+
+The repository currently collects **686 pytest cases**.
+
+---
+
+## Package API summary
+
+The full API is exposed from `import foureng as fe`. Key entry points:
+
+```python
+fe.ForwardSpec(S0, r, q, T)       # market inputs
+fe.HestonParams(...)               # (and 19 other parameter dataclasses)
+fe.price_strip(model, method,      # unified dispatcher
+               strikes, fwd, params)
+fe.cos_prices(phi, fwd, strikes, grid)
+fe.carr_madan_price_at_strikes(phi, fwd, grid, strikes)
+fe.implied_vol_newton_safeguarded(price, inputs)
+fe.calibrate_heston(...)
+```
+
+Full API tables (all 70+ public objects): [docs/API_REFERENCE.md](docs/API_REFERENCE.md).
+
+---
+
+## Testing and validation layout
+
+| Folder | Contents |
+|--------|----------|
+| `tests/refs/` | Frozen JSON reference files: MathWorks Bates, PyFENG 3/2 surface, Baldeaux-Badran figure parameters. |
+| `tests/papers/` | Published-paper and software-reference replications: Carr-Madan, Lewis, FRFT, FO2008 COS, Kou, all six Bates pricer tests, 3/2 SV qualitative smoke test. |
+| `tests/models/` | Model adapter, regression-strip, and reduction-limit tests for all 20 models; paper-backed 3-layer suites for each in-house model. |
+| `tests/methods/` | Pricing-method behavior: COS policies, filters, alpha validity, cross-method agreement, robustness sweeps. |
+| `tests/features/` | End-to-end features: Monte Carlo, control variates, implied vol, calibration, Greeks, public API, integration workflows. |
+
+See [tests/README.md](tests/README.md) for the full folder map.
+
+---
+
+## Repository map
+
+```text
+foureng/
+  models/       — 20 CF models (PyFENG-backed adapters + in-house implementations)
+  pricers/      — carr_madan / frft / cos / cos_improved / filtered_cos / lewis
+  utils/        — grids, cumulants, implied volatility, spectral filters, numerics
+  iv/           — implied volatility routines
+  mc/           — Monte Carlo baselines (BSM and Heston conditional MC)
+  pipeline.py   — unified price_strip dispatcher
+
+tests/
+  refs/         — frozen JSON reference fixtures
+  papers/       — paper and software-reference replication tests
+  models/       — per-model validation suites
+  methods/      — pricer-method behavior tests
+  features/     — end-to-end feature tests
+
+notebooks/
+  demo.ipynb, demo_advanced.ipynb
+  presentation_fourier_methods.ipynb
+  paper_replications/
+  research/
+  fo2008_replication.ipynb, cosPaper_Replication.ipynb
+
+benchmarks/
+  paper_replications/fo2008_cos/
+    params.py, outputs/  (CSVs, PNGs, SUMMARY.md)
+  mc_vs_fourier_methods/outputs/
+
+docs/           — detailed documentation (this tree)
+.github/workflows/  — CI and test matrix
+```
+
+---
+
+## Key papers
 
 | Topic | Reference |
 |-------|-----------|
-| Carr-Madan FFT | Carr, P. and Madan, D.B. (1999), *Option Valuation Using the Fast Fourier Transform*. |
-| FRFT for option pricing | Chourdakis, K. (2004), *Option Pricing Using the Fractional FFT*. |
-| COS method | Fang, F. and Oosterlee, C.W. (2008), *A Novel Pricing Method for European Options Based on Fourier-Cosine Series Expansions*. |
-| Heston model | Heston, S.L. (1993), *A Closed-Form Solution for Options with Stochastic Volatility*. |
-| Stable Heston CF branch handling | Albrecher, H., Mayer, P., Schoutens, W. and Tistaert, J. (2007), *The Little Heston Trap*. |
-| Lewis benchmark formula | Lewis, A.L. (2001), *A Simple Option Formula for General Jump-Diffusion and Other Exponential Levy Processes*. |
-| Variance Gamma model | Madan, D.B., Carr, P. and Chang, E.C. (1998), *The Variance Gamma Process and Option Pricing*. |
-| Kou jump-diffusion model | Kou, S.G. (2002), *A Jump-Diffusion Model for Option Pricing*. |
-| Improved COS truncation range | Junike, G. and Pankrashkin, K. (2022), *Precise Option Pricing by the COS Method: How to Choose the Truncation Range*. |
-| Improved COS term-count policy | Junike, G. (2024), *On the Number of Terms in the COS Method for European Option Pricing*. |
-| Spectral filtering for Fourier/COS pricing | Ruijter, M.J., Versteegh, M. and Oosterlee, C.W. (2015), *On the Application of Spectral Filters in a Fourier Option Pricing Technique*. |
-| Merton jump-diffusion | Merton, R.C. (1976), *Option Pricing when Underlying Stock Returns are Discontinuous*, Journal of Financial Economics. |
-| Meixner process | Schoutens, W. (2002), *The Meixner Process: Theory and Applications in Finance*, EURANDOM Report. |
-| Bilateral Gamma | Küchler, U. and Tappe, S. (2008), *Bilateral Gamma Distributions and Processes in Financial Mathematics*, Stochastic Processes and their Applications. |
-| Generalized Hyperbolic | Barndorff-Nielsen, O.E. (1977), *Exponentially Decreasing Distributions for the Logarithm of Particle Size*, Proc. Royal Society London. Eberlein, E. and Keller, U. (1995), *Hyperbolic Distributions in Finance*, Bernoulli. |
-| Finite Moment Log Stable | Carr, P. and Wu, L. (2003), *The Finite Moment Log Stable Process and Option Pricing*, Journal of Finance, 58(2), 753–777. |
-| Double Heston (two-factor SV) | Christoffersen, P., Heston, S. and Jacobs, K. (2009), *The Shape and Term Structure of the Index Option Smirk: Why Multifactor Stochastic Volatility Models Work So Well*, Management Science, 55(12), 1914–1932. |
-| VGSA (VG with stochastic arrival) | Carr, P., Geman, H., Madan, D.B. and Yor, M. (2003), *Stochastic Volatility for Lévy Processes*, Mathematical Finance, 13(3), 345–382. |
-| Bates SVJ model | Bates, D.S. (1996), *Jumps and Stochastic Volatility: Exchange Rate Processes Implicit in Deutsche Mark Options*, Review of Financial Studies, 9(1), 69–107. |
-| 3/2 SV qualitative parameters | Baldeaux, J. and Badran, A. (2012), *Consistent Modelling of VIX and Equity Derivatives Using a 3/2 Plus Jumps Model*, Applied Mathematical Finance, 21(4), 299–312. |
+| Carr-Madan FFT | Carr, P. & Madan, D.B. (1999), *Option Valuation Using the Fast Fourier Transform*. |
+| FRFT | Chourdakis, K. (2004), *Option Pricing Using the Fractional FFT*. |
+| COS method | Fang, F. & Oosterlee, C.W. (2008), *A Novel Pricing Method for European Options Based on Fourier-Cosine Series Expansions*. |
+| Improved COS truncation | Junike, G. & Pankrashkin, K. (2022), *Precise Option Pricing by the COS Method: How to Choose the Truncation Range*. |
+| COS term-count policy | Junike, G. (2024), *On the Number of Terms in the COS Method for European Option Pricing*. |
+| Spectral filtering | Ruijter, M.J., Versteegh, M. & Oosterlee, C.W. (2015), *On the Application of Spectral Filters in a Fourier Option Pricing Technique*. |
+| Heston SV | Heston, S.L. (1993), *A Closed-Form Solution for Options with Stochastic Volatility*. |
+| Stable Heston CF | Albrecher, H. et al. (2007), *The Little Heston Trap*. |
+| Lewis benchmark | Lewis, A.L. (2001), *A Simple Option Formula for General Jump-Diffusion and Other Exponential Lévy Processes*. |
+| Variance Gamma | Madan, D.B., Carr, P. & Chang, E.C. (1998), *The Variance Gamma Process and Option Pricing*. |
+| Kou jump-diffusion | Kou, S.G. (2002), *A Jump-Diffusion Model for Option Pricing*. |
+| Bates SVJ | Bates, D.S. (1996), *Jumps and Stochastic Volatility: Exchange Rate Processes Implicit in Deutsche Mark Options*. |
+
+Full bibliography with DOIs and free-access links: [PAPERS.md](PAPERS.md).
+
+---
+
+## Detailed documentation
+
+- [docs/MODEL_ZOO.md](docs/MODEL_ZOO.md) — all 20 models
+- [docs/API_REFERENCE.md](docs/API_REFERENCE.md) — full API tables
+- [docs/VALIDATION_HIERARCHY.md](docs/VALIDATION_HIERARCHY.md) — evidence levels
+- [docs/BATES_SV32_VALIDATION.md](docs/BATES_SV32_VALIDATION.md) — Bates & 3/2 SV validation
+- [docs/FO2008_REPLICATION.md](docs/FO2008_REPLICATION.md) — FO2008 tables
+- [docs/FILTERED_COS_EXTENSION.md](docs/FILTERED_COS_EXTENSION.md) — adaptive filtered-COS
+- [docs/paper_validation_matrix.md](docs/paper_validation_matrix.md) — per-paper matrix
+- [docs/PACKAGING.md](docs/PACKAGING.md) — PyPI release checklist
+- [docs/README.md](docs/README.md) — documentation index
+- [APPENDIX.md](APPENDIX.md) — methodology, derivations, references
+- [PAPERS.md](PAPERS.md) — full bibliography
+
+---
+
+## License
+
+MIT. See [LICENSE](LICENSE).

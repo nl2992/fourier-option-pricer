@@ -8,11 +8,16 @@ This appendix collects the extra project material that does not belong in the pa
 - `notebooks/demo.ipynb`: Colab-friendly quick-start walkthrough
 - `notebooks/demo_advanced.ipynb`: full-feature showcase — all 20 models, 6 pricers, Greeks, IV surface, calibration, MC, new models, validation highlights (v0.4.1)
 - `notebooks/presentation_fourier_methods.ipynb`: presentation notebook version
-- `notebooks/cos_method_improved.ipynb`: COS truncation and policy notebook
+- `notebooks/fo2008_replication.ipynb`: full Fang-Oosterlee (2008) paper-faithful replication
+- `notebooks/cosPaper_Replication.ipynb`: COS paper replication with extended scoreboard
 - `notebooks/paper_replications/bates_mathworks_replication.ipynb`: Bates all-engine scoreboard vs MathWorks frozen reference
 - `notebooks/paper_replications/three_halves_replication.ipynb`: 3/2 SV PyFENG regression + Baldeaux-Badran qualitative IV smile
+- `notebooks/paper_replications/bates_sv32_validation_demo.ipynb`: instructor-requested 12-section Bates + 3/2 SV validation demo
+- `notebooks/research/cos_method_improved.ipynb`: COS truncation and policy notebook
+- `notebooks/research/adaptive_cos.ipynb`: adaptive filtered-COS extension notebook
 - `benchmarks/`: generated tables and figures used by the notebooks; paper-replication CSVs written here
 - `tests/`: regression and public API tests; `tests/refs/` holds frozen JSON reference data used by no-network paper-replication tests
+- `docs/`: detailed documentation — model zoo, API reference, validation hierarchy, FO2008 tables, filtered-COS extension, Bates/SV32 validation cases
 - `methodology_and_results.md`: jump-convention derivation, reference values, and rationale for qualitative vs. exact 3/2 validation
 
 ## Methods at a glance
@@ -154,7 +159,10 @@ Once a model exposes `phi(u)`, it can be priced by Carr--Madan FFT, FRFT, or COS
 
 ## 6. Model coverage
 
-The ten supported models split into two groups.
+The full model catalogue — all twenty supported models with parameter dataclasses,
+CF sources, and API notes — is in [docs/MODEL_ZOO.md](docs/MODEL_ZOO.md).
+
+The twenty models split into two groups.
 
 ### 6.1 PyFENG-backed characteristic functions
 
@@ -165,18 +173,28 @@ For models where PyFENG already provides a production-quality FFT model, the rep
 - Schobel--Zhu / OUSV (`pyfeng.OusvFft`);
 - Variance Gamma (`pyfeng.VarGammaFft`);
 - CGMY (`pyfeng.CgmyFft`);
-- Normal Inverse Gaussian (`pyfeng.ExpNigFft`).
+- Normal Inverse Gaussian (`pyfeng.ExpNigFft`);
+- 3/2 Stochastic Volatility (`pyfeng.sv_fft`);
+- Rough Heston (`pyfeng.sv_fft`).
 
 The project contribution is not the re-derivation of these characteristic functions. The contribution is the common wrapper, the unified Fourier pricing layer, the validation harness, and the benchmark scoreboard.
 
 ### 6.2 In-house characteristic functions
 
-The following models are implemented directly:
+The following twelve models are implemented directly:
 
 - Kou double-exponential jump diffusion;
-- Bates: Heston plus Merton lognormal jumps;
-- Heston--Kou: Heston plus Kou double-exponential jumps;
-- Heston--CGMY: Heston plus CGMY tempered-stable jumps.
+- Bates: Heston plus Merton lognormal jumps (SVJ composite);
+- Heston--Kou: Heston plus Kou double-exponential jumps (SVJ composite);
+- Heston--CGMY: Heston plus CGMY tempered-stable jumps (SVJ composite);
+- GARCH diffusion (Wu, Ma & Wang 2012 analytic CF);
+- Merton jump-diffusion (compound Poisson with log-normal jump sizes);
+- Meixner process (hyperbolic-cosine CF);
+- Bilateral Gamma (separate up/down Gamma processes, Küchler & Tappe 2008);
+- Generalised Hyperbolic (normal variance-mean mixture via GIG);
+- Finite Moment Log Stable (α-stable, Carr & Wu 2003);
+- Double Heston (two independent Heston variance factors);
+- VGSA (Variance Gamma on a stochastic CIR activity clock).
 
 These are validated by:
 
@@ -555,169 +573,27 @@ Optionally report RMSE:
 
 ## 12. FO2008 full-paper replication
 
-The repository carries a paper-faithful replication report for Fang and Oosterlee (2008). The replication covers:
+The repository carries a paper-faithful replication of Fang and Oosterlee (2008) covering
+BSM Table 2, Heston Tables 4–6, Variance Gamma Table 7, and CGMY Tables 8–10.
 
-- BSM Table 2;
-- Heston Tables 4, 5, and 6;
-- Variance Gamma Table 7 at both maturities;
-- CGMY Tables 8, 9, and 10.
+Full tables, interpretation, and the improved-COS summary are in
+**[docs/FO2008_REPLICATION.md](docs/FO2008_REPLICATION.md)**.
 
-The canonical notebook is:
-
-```text
-notebooks/fo2008_replication.ipynb
-```
-
-The paper registry is:
-
-```text
-benchmarks/paper_replications/fo2008_cos/params.py
-```
-
-Generated CSVs, figures, and summaries live under:
-
-```text
-benchmarks/paper_replications/fo2008_cos/outputs/
-```
-
-The tables below use the same horizontal format as the original paper, with `N` across the columns and error / runtime down the rows.
-
-### 12.1 Table 1: GBM density recovery warm-up
-
-This experiment reconstructs the standard normal density from its characteristic function using the COS density expansion on `[-10,10]`. The reported error is the maximum absolute error evaluated at `x=-5` and `x=5`.
-
-|  | N=4 | N=8 | N=16 | N=32 | N=64 |
-|---|---:|---:|---:|---:|---:|
-| max error | 4.9999e-02 | 3.2088e-02 | 3.6067e-03 | 3.1511e-07 | 5.5040e-17 |
-| cpu time (sec) | ~0.0000 | ~0.0000 | ~0.0000 | ~0.0000 | ~0.0000 |
-
-Interpretation: the error decays rapidly and reaches machine precision by `N=64`. This validates the core COS identity: the density coefficients can be recovered from the characteristic function.
-
-### 12.2 Table 2: GBM calls, COS versus Carr--Madan
-
-Parameters: GBM volatility `sigma=0.25`, interest rate `r=0.1`, dividend yield `q=0`, maturity `T=0.1`, spot `S0=100`, strikes `K=80,100,120`.
-
-|  | N=32 | N=64 | N=128 | N=256 | N=512 |
-|---|---:|---:|---:|---:|---:|
-| paper COS msec | 0.0303 | 0.0327 | 0.0349 | 0.0434 | 0.0588 |
-| paper COS max error | 2.43e-07 | 3.55e-15 | 3.55e-15 | 3.55e-15 | 3.55e-15 |
-| our COS msec | 0.0832 | 0.0841 | 0.1111 | 0.1211 | 0.1695 |
-| our COS max error | 3.15e-05 | 3.15e-05 | 3.15e-05 | 3.15e-05 | 3.15e-05 |
-| paper Carr--Madan msec | 0.0857 | 0.0791 | 0.0853 | 0.0907 | 0.1111 |
-| paper Carr--Madan max error | 9.77e-01 | 1.23e+00 | 7.84e-02 | 6.04e-04 | 4.12e-04 |
-| our Carr--Madan msec | 0.3763 | 0.1569 | 0.1730 | 0.1923 | 0.2651 |
-| our Carr--Madan max error | 1.34e+00 | 1.34e+00 | 4.58e-02 | 1.32e-02 | 4.85e-04 |
-
-Interpretation: our Carr--Madan replay converges toward the paper's final accuracy as `N` increases. The COS row has a flat observed error floor in this paper-grid replay. This is not a general failure of COS; it is evidence that the local setup is dominated by either truncation / reference rounding / implementation-grid choices rather than by the number of series terms.
-
-### 12.3 Table 3: Cash-or-nothing digital option under GBM
-
-Parameters: `sigma=0.2`, `r=0.05`, `q=0`, `T=0.1`, `S0=100`, `K=120`. The paper's quoted reference is `0.273306496497`, corresponding to a unit-cash digital `e^{-rT}N(d_2)`.
-
-|  | N=40 | N=60 | N=80 | N=100 | N=120 | N=140 |
-|---|---:|---:|---:|---:|---:|---:|
-| error | 4.40e-09 | 2.86e-14 | 2.86e-14 | 2.86e-14 | 2.86e-14 | 2.86e-14 |
-| cpu time (msec) | 0.0165 | 0.0169 | 0.0178 | 0.0182 | 0.0190 | 0.0202 |
-
-Interpretation: despite the discontinuous payoff, the COS approximation reaches roundoff-level error quickly when analytic payoff coefficients are used.
-
-### 12.4 Table 4: Heston, `T=1`, ATM
-
-|  | N=40 | N=80 | N=120 | N=160 | N=200 |
-|---|---:|---:|---:|---:|---:|
-| paper max error | 4.69e-02 | 3.81e-04 | 1.17e-05 | 6.18e-07 | 3.70e-09 |
-| our max error | 2.68e-02 | 3.33e-03 | 8.25e-05 | 1.31e-05 | 6.41e-07 |
-| paper msec | 0.0607 | 0.0805 | 0.1078 | 0.1300 | 0.1539 |
-| our msec | 0.3811 | 0.1281 | 0.1138 | 0.1134 | 0.1374 |
-
-Interpretation: the local Heston implementation converges clearly with `N`, but remains less accurate than the paper's reported final row in the strict paper-grid replay. This motivates the improved COS policy below.
-
-### 12.5 Table 5: Heston, `T=10`, ATM
-
-|  | N=40 | N=65 | N=90 | N=115 | N=140 |
-|---|---:|---:|---:|---:|---:|
-| paper max error | 4.96e-01 | 4.63e-03 | 1.35e-05 | 1.08e-07 | 9.88e-10 |
-| our max error | 3.24e+00 | 7.65e-01 | 1.54e-01 | 1.97e-02 | 4.68e-03 |
-| paper msec | 0.0598 | 0.0747 | 0.0916 | 0.1038 | 0.1230 |
-| our msec | 0.1386 | 0.1040 | 0.1190 | 0.1935 | 0.1109 |
-
-Interpretation: this is the most important diagnostic table. The long maturity and wide interval make the naive paper-grid replay converge much more slowly. The issue is the joint choice of interval width and number of terms, not the Heston model itself.
-
-### 12.6 Table 6: Heston, `T=1`, 21-strike strip
-
-|  | N=40 | N=80 | N=160 | N=200 |
-|---|---:|---:|---:|---:|
-| paper max error | 5.19e-02 | 7.18e-04 | 6.18e-07 | 2.05e-08 |
-| our max error | 1.15e-01 | 5.46e-03 | 2.00e-05 | 2.63e-06 |
-| paper msec | 0.1015 | 0.1766 | 0.3383 | 0.4214 |
-| our msec | 0.1337 | 0.1395 | 0.2018 | 0.2347 |
-
-Interpretation: the strip is harder than the ATM single-strike case because one shared interval must serve a wider range of strikes.
-
-### 12.7 Table 7: Variance Gamma
-
-For `T=0.1`:
-
-|  | N=128 | N=256 | N=512 | N=1024 | N=2048 |
-|---|---:|---:|---:|---:|---:|
-| paper max error | 6.97e-04 | 4.19e-06 | 6.80e-06 | 5.70e-07 | 7.98e-08 |
-| our max error | 4.28e-04 | 4.44e-05 | 8.97e-07 | 1.49e-08 | 4.94e-08 |
-| our msec | 0.1412 | 0.1358 | 0.1346 | 0.1734 | 0.2687 |
-
-For `T=1.0`:
-
-|  | N=30 | N=60 | N=90 | N=120 | N=150 |
-|---|---:|---:|---:|---:|---:|
-| paper max error | 7.06e-03 | 1.29e-05 | 2.81e-07 | 3.16e-08 | 1.51e-09 |
-| our max error | 4.57e-04 | 9.34e-06 | 1.71e-07 | 5.47e-09 | 4.39e-10 |
-| our msec | 0.1116 | 0.0779 | 0.0811 | 0.0817 | 0.0876 |
-
-Interpretation: the Variance Gamma replication is strong. The one-year case beats the paper's reported error by the final row. The shorter maturity requires larger `N`, consistent with slower characteristic-function decay and sharper density features.
-
-### 12.8 Tables 8--10: CGMY
-
-For `Y=0.5`:
-
-|  | N=40 | N=60 | N=80 | N=100 | N=120 | N=140 |
-|---|---:|---:|---:|---:|---:|---:|
-| paper max error | 3.82e-02 | 6.87e-04 | 2.11e-05 | 9.45e-07 | 5.56e-08 | 4.04e-09 |
-| our max error | 9.01e-04 | 1.68e-05 | 5.74e-07 | 2.81e-08 | 1.73e-09 | 2.16e-10 |
-| paper msec | 0.0560 | 0.0645 | 0.0844 | 0.1280 | 0.1051 | 0.1216 |
-| our msec | 0.1086 | 0.1194 | 0.1881 | 0.1084 | 0.1346 | 0.1074 |
-
-For `Y=1.5`:
-
-|  | N=40 | N=45 | N=50 | N=55 | N=60 | N=65 |
-|---|---:|---:|---:|---:|---:|---:|
-| paper max error | 1.38e+00 | 1.98e-02 | 4.52e-04 | 9.59e-06 | 1.22e-09 | 7.53e-10 |
-| our max error | 6.57e-07 | 8.72e-09 | 6.62e-10 | 4.79e-10 | 4.77e-10 | 4.77e-10 |
-| paper msec | 0.0545 | 0.0589 | 0.0689 | 0.0690 | 0.0732 | 0.0748 |
-| our msec | 0.1090 | 0.1559 | 0.0939 | 0.1228 | 0.0977 | 0.1340 |
-
-For `Y=1.98`:
-
-|  | N=20 | N=25 | N=30 | N=35 | N=40 |
-|---|---:|---:|---:|---:|---:|
-| paper max error | 4.17e-02 | 5.15e-01 | 6.54e-05 | 1.10e-09 | 1.94e-15 |
-| our max error | 1.81e-06 | 1.71e-09 | 1.48e-11 | 1.47e-11 | 1.47e-11 |
-| paper msec | 0.0463 | 0.0438 | 0.0485 | 0.0511 | 0.0538 |
-| our msec | 0.0874 | 0.0813 | 0.0871 | 0.0828 | 0.0837 |
-
-Interpretation: the CGMY cases show that the COS method can remain effective for infinite-activity Levy models when the interval and cumulants are handled correctly. The `Y=1.98` case is numerically delicate, so the correct report language should focus on the error curve and the truncation-policy diagnostic rather than claiming generic dominance.
+Canonical notebook: [`notebooks/fo2008_replication.ipynb`](notebooks/fo2008_replication.ipynb)  
+Parameter registry: `benchmarks/paper_replications/fo2008_cos/params.py`  
+Generated CSVs: `benchmarks/paper_replications/fo2008_cos/outputs/`
 
 ## 13. What the FO2008 replication actually shows
 
-The ugly rows are not one single "COS failure."
+The "ugly rows" are not a single COS failure.
 
-The correct reading is:
+- BSM Table 2: flat local error floor under paper-grid replay reflects truncation /
+  reference-rounding rather than series-resolution failure.
+- Heston Table 5: the long-maturity / wide-interval case needs interval and term count
+  chosen jointly — increasing N alone cannot recover mass discarded by a too-narrow interval.
+- Paper timings are 2008 hardware measurements and are not portable runtime claims.
 
-- BSM Table 2 shows a flat local error floor under the paper-grid replay. This is consistent with truncation or reference-rounding effects rather than series-resolution error.
-- Heston Table 5 is a long-maturity / wide-interval resolution problem. A wide interval needs enough cosine terms to resolve it.
-- Heston Table 6 is harder because a single interval is used across a 21-strike strip.
-- Paper timings are historical 2008 hardware measurements and should not be treated as directly portable runtime claims.
-- COS accuracy depends on two choices at once: support interval and number of cosine terms.
-
-This motivates the improved COS policy.
+This motivates the improved COS policy described in section 14.
 
 ## 14. Junike / Junike--Pankrashkin improved COS policy
 
@@ -809,116 +685,23 @@ The final narrative should be:
 
 ## 17. Adaptive filtered-COS extension
 
-### 17.1 Motivation
+Full implementation details, spectral filter formulas, the adaptive policy selector
+algorithm, conservative framing, output files, and test coverage are in
+**[docs/FILTERED_COS_EXTENSION.md](docs/FILTERED_COS_EXTENSION.md)**.
 
-Junike-style truncation addresses the *interval-selection* component of COS
-pricing: given the model's cumulants, it adaptively widens the integration
-domain `[a, b]` until the tail-mass proxy falls below a user threshold
-`eps_trunc`.  This is a necessary condition for accuracy but not sufficient.
+Demo notebook: [`notebooks/research/adaptive_cos.ipynb`](notebooks/research/adaptive_cos.ipynb)  
+Improved-truncation notebook: [`notebooks/research/cos_method_improved.ipynb`](notebooks/research/cos_method_improved.ipynb)
 
-Two additional sources of error remain after interval selection is resolved:
+**Summary:** Junike-style truncation fixes the interval-selection problem. Spectral
+filtering damps the high-frequency COS coefficients before the payoff dot product,
+addressing residual finite-series oscillation and nonsmoothness at the truncation boundary.
+The adaptive selector builds a candidate set of `(COSGridPolicy, COSFilterSpec)` pairs and
+returns the fastest candidate satisfying the user's error tolerance — with the no-filter
+Junike candidate always in the pool, so the selector weakly dominates fixed Junike-COS.
 
-1. **Finite-series truncation** — the COS expansion uses `N` terms.  If the
-   characteristic function decays slowly (heavy-tailed models, short maturities)
-   or the payoff density has sharp features, the `N`-term series may carry
-   visible Gibbs-like oscillations even when `[a, b]` is correctly chosen.
-
-2. **Nonsmoothness at the truncation boundary** — the artificial periodisation
-   introduced by COS creates a discontinuity at `a` and `b`.  For models with
-   non-Gaussian densities the boundary effect persists at moderate `N`.
-
-Spectral filtering addresses both by damping the high-frequency COS coefficients
-before the payoff dot product.  The extension is *additive*: the filter is
-applied only when requested; `filter_spec=None` reproduces the old output
-exactly.
-
-**Inspiration:**
-Ruijter, Versteegh and Oosterlee (2015) applied spectral filters to a Fourier
-option pricing technique and showed that exponential and raised-cosine filters
-significantly reduce residual oscillation errors.  Our extension follows their
-approach but wraps it inside a deterministic policy-search selector rather than
-hard-coding a specific filter.
-
-### 17.2 Spectral filter implementations
-
-All filters are implemented in `foureng/utils/spectral_filters.py`.
-Weight vector `σ` has length `N`; it is applied as `A[k] ← σ[k] · A[k]` to
-the characteristic-function samples before the payoff sum.  `σ[0] = 1` always.
-
-| Filter | `σ_k` formula | Notes |
-|--------|--------------|-------|
-| `"none"` | `1` | Identity; default (no-op) |
-| `"fejer"` | `1 - k/(N-1)` | First-order Cesàro summation |
-| `"lanczos"` | `sinc(k/(N-1))` | `sinc` in the `np.sinc` sense |
-| `"raised_cosine"` | `½(1 + cos(πk/(N-1)))` | Hann window |
-| `"exponential"` | `exp(−α·(k/(N-1))^p)` | Order-`p`; default `α = −ln(ε_mach)` |
-
-The exponential filter with `p = 8` is the default in `cos_filtered`.  It
-keeps the low-frequency terms effectively unchanged while sending the
-highest-frequency weight to machine-ε.
-
-### 17.3 Adaptive COS policy grid-search selector
-
-`foureng/experiments/cos_filter_grid_search.py` implements a deterministic
-selector that:
-
-1. Builds a candidate set of `(COSGridPolicy, COSFilterSpec)` pairs.
-2. Prices with each candidate and measures error against a high-resolution
-   reference.
-3. Returns the **fastest candidate satisfying the error tolerance** (or the
-   lowest-error candidate if none satisfies it).
-
-The selector cannot pick a result worse than the best candidate in its set.
-Because the no-filter Junike candidate is always included, the selector weakly
-dominates fixed Junike-COS in the joint (error, runtime) metric under the
-tested grid.
-
-**Selection rule:**
-```
-if any candidate has max_abs_err ≤ tol and status == "ok":
-    pick the one with lowest runtime_ms
-else:
-    pick the one with lowest max_abs_err (among status == "ok")
-```
-
-### 17.4 Conservative framing
-
-The correct claim for this extension is:
-
-> *"Junike helps truncation.  Filtering helps residual finite-series /
-> nonsmoothness cases.  The adaptive selector chooses among vanilla COS,
-> Junike-COS, and filtered Junike-COS."*
-
-We do **not** claim:
-- filtered COS universally dominates Junike COS;
-- the extension is a black-box learned model;
-- the extension removes the need for the Junike interval selection.
-
-The extension is best understood as a second control layer that can improve
-pricing speed or accuracy in cases where the Junike truncation is adequate but
-the finite-series resolution is still the bottleneck.
-
-### 17.5 Output files
-
-The demo notebook and the standalone script
-`scripts/run_filtered_cos_extension.py` write:
-
-| File | Description |
-|------|-------------|
-| `benchmarks/mc_vs_fourier_methods/outputs/cos_policy_search_showcase.csv` | Per-case grid-search results and adaptive result label |
-| `benchmarks/mc_vs_fourier_methods/outputs/adaptive_filtered_cos_model_zoo.csv` | Model-zoo rerun summary |
-| `benchmarks/mc_vs_fourier_methods/outputs/figures/cos_policy_search_showcase.png` | Showcase scatter (runtime vs error) |
-| `benchmarks/mc_vs_fourier_methods/outputs/figures/adaptive_filtered_cos_model_zoo_errors.png` | Model-zoo error grouped bar chart |
-| `benchmarks/mc_vs_fourier_methods/outputs/figures/adaptive_filtered_cos_model_zoo_runtime.png` | Model-zoo runtime grouped bar chart |
-
-### 17.6 New tests added
-
-| Test file | What it covers |
-|-----------|---------------|
-| `tests/test_cos_spectral_filters.py` | Shape, finiteness, monotonicity, edge cases for all 5 filter types |
-| `tests/test_filtered_cos_pricing.py` | Backward compat (no-filter exact match), BSM accuracy, pipeline integration |
-| `tests/test_filtered_cos_grid_search.py` | DataFrame structure, selector logic, tolerance boundary |
-| `tests/test_filtered_cos_outperforms_baselines.py` | Slow stress tests: VG T=0.1, CGMY T=0.25, BSM weak-dominance |
+The correct claim is: *"Junike helps truncation. Filtering helps residual finite-series /
+nonsmoothness cases. The adaptive selector chooses among vanilla COS, Junike-COS, and
+filtered Junike-COS."*
 
 ## 18. References
 
