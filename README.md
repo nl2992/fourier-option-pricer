@@ -66,6 +66,15 @@ Its contributions are:
 | FO2008 paper replication | [docs/FO2008_REPLICATION.md](docs/FO2008_REPLICATION.md); `notebooks/fo2008_replication.ipynb` |
 | Bates & 3/2 SV validation | [docs/BATES_SV32_VALIDATION.md](docs/BATES_SV32_VALIDATION.md); `notebooks/paper_replications/bates_sv32_validation_demo.ipynb` |
 | Code quality / reproducibility | `pyproject.toml`, `tests/`, CI workflow; see [Reproduce results](#reproduce-results) |
+| AI workflow / original contribution | [docs/AI_WORKFLOW_AND_CONTRIBUTION.md](docs/AI_WORKFLOW_AND_CONTRIBUTION.md) |
+
+---
+
+## AI-assisted development workflow
+
+AI tools were used for research assistance, implementation planning, code generation, and documentation restructuring. The workflow was source-driven: Deep Research was used to identify papers, formulas, and benchmark numbers; reasoning models were used to convert those results into implementation TODOs; coding agents were used for first-pass implementation and restructuring; and final acceptance depended on human review, tests, notebooks, and CI.
+
+Full workflow, library reuse policy, original contributions, and validation gates: [docs/AI_WORKFLOW_AND_CONTRIBUTION.md](docs/AI_WORKFLOW_AND_CONTRIBUTION.md).
 
 ---
 
