@@ -94,7 +94,7 @@ Everything is importable from `import foureng as fe`.
 | `DoubleHestonParams` | `kappa1..v01, kappa2..v02` | Two-factor Heston |
 | `VGSAParams` | `C, G, M, kappa, eta, lam` | VG with stochastic activity |
 
-Full model details: [docs/MODEL_ZOO.md](docs/MODEL_ZOO.md).
+Full model details: [docs/model_zoo.md](docs/model_zoo.md).
 
 ### Unified dispatcher
 
@@ -138,7 +138,7 @@ Method labels: `"cos"`, `"cos_improved"`, `"carr_madan"`, `"frft"`, `"lewis"`, `
 | `calibrate_heston(...)` | market targets, grid, initial guess | `CalibrationResult` |
 | `cos_price_and_greeks(phi, fwd, strikes, grid)` | CF, `ForwardSpec`, strikes, grid | `COSGreeks` with prices, delta, gamma |
 
-Full reference for all 70+ public objects: [docs/API_REFERENCE.md](docs/API_REFERENCE.md).
+Full reference for all 70+ public objects: [docs/api_reference.md](docs/api_reference.md).
 
 ---
 
@@ -236,7 +236,7 @@ $$
 M \geq \left(\frac{\mathbb{E}[|X_T - m|^n]}{\varepsilon_{\text{trunc}}}\right)^{1/n}
 $$
 
-Junike (2024) adds a companion result for how many terms N are needed to resolve the chosen interval to a target accuracy. The `cos_improved` path in this package implements both. Full derivations are in [APPENDIX.md](APPENDIX.md) sections 7 and 14.
+Junike (2024) adds a companion result for how many terms N are needed to resolve the chosen interval to a target accuracy. The `cos_improved` path in this package implements both. Full derivations are in [appendix.md](appendix.md) sections 7 and 14.
 
 ---
 
@@ -254,7 +254,7 @@ Four filter families are available: Fejer, Lanczos, raised-cosine, and exponenti
 
 On the FO2008 test suite the adaptive selector beats the naive paper-grid replay in 7 of 8 cases and beats the paper's best reported error in 6 of 8 cases.
 
-Full details: [docs/FILTERED_COS_EXTENSION.md](docs/FILTERED_COS_EXTENSION.md). Demo: [`notebooks/research/adaptive_cos.ipynb`](notebooks/research/adaptive_cos.ipynb).
+Full details: [docs/filtered_cos_extension.md](docs/filtered_cos_extension.md). Demo: [`notebooks/research/adaptive_cos.ipynb`](notebooks/research/adaptive_cos.ipynb).
 
 ---
 
@@ -271,11 +271,11 @@ Full details: [docs/FILTERED_COS_EXTENSION.md](docs/FILTERED_COS_EXTENSION.md). 
 | BSM all-pricers baseline | Frozen derived reference | COS/COS+: 1e-8; Lewis: 1e-7; CM/FRFT: 1e-4; PyFENG: 1e-5 | done |
 | 3/2 SV PyFENG surface (7x4) | Frozen PyFENG adapter reference | atol=1e-3 | done |
 | Merton JD | Derived reference (Poisson-BSM mixture) | atol=1e-8 | done |
-| FO2008 COS Tables 1-10 | Derived reference, paper-grid replay | see [FO2008_REPLICATION.md](docs/FO2008_REPLICATION.md) | partial |
+| FO2008 COS Tables 1-10 | Derived reference, paper-grid replay | see [fo2008_replication.md](docs/fo2008_replication.md) | partial |
 | Heston, VG, CGMY, NIG, OUSV, Rough Heston | PyFENG adapter parity | atol=1e-5 | partial |
 | Kou, Bilateral Gamma, GH, FMLS, Meixner, VGSA | Derived reference, cross-method | atol=1e-4 | partial |
 
-Full per-paper matrix: [docs/paper_validation_matrix.md](docs/paper_validation_matrix.md). Evidence-level definitions: [docs/VALIDATION_HIERARCHY.md](docs/VALIDATION_HIERARCHY.md).
+Full per-paper matrix: [docs/paper_validation_matrix.md](docs/paper_validation_matrix.md). Evidence-level definitions: [docs/validation_hierarchy.md](docs/validation_hierarchy.md).
 
 ---
 
@@ -312,8 +312,8 @@ This is not a reimplementation of existing characteristic functions. The contrib
 
 1. A uniform `price_strip` dispatcher that prices any of 20 models by any of 6 methods with one function call.
 2. Twelve in-house characteristic-function models on top of the eight PyFENG-backed adapters, including four SVJ composites and six pure-Levy models.
-3. A structured validation harness with 686 test cases across [five evidence levels](docs/VALIDATION_HIERARCHY.md).
-4. Improved COS truncation following Junike-Pankrashkin (2022) and Junike (2024), demonstrated on the [full FO2008 test suite](docs/FO2008_REPLICATION.md).
+3. A structured validation harness with 686 test cases across [five evidence levels](docs/validation_hierarchy.md).
+4. Improved COS truncation following Junike-Pankrashkin (2022) and Junike (2024), demonstrated on the [full FO2008 test suite](docs/fo2008_replication.md).
 5. Adaptive filtered-COS as an original extension.
 
 ---
@@ -322,15 +322,15 @@ This is not a reimplementation of existing characteristic functions. The contrib
 
 | Rubric criterion | Where to find it |
 |-----------------|-----------------|
-| Mathematical background and derivations | [APPENDIX.md](APPENDIX.md) sections 7 (characteristic functions), 8 (pricing methods), 14 (Junike theory) |
+| Mathematical background and derivations | [appendix.md](appendix.md) sections 7 (characteristic functions), 8 (pricing methods), 14 (Junike theory) |
 | Implementation quality | `foureng/pricers/`, `foureng/models/`, `foureng/utils/`, `pipeline.py` |
-| Validation against published benchmarks | [docs/VALIDATION_HIERARCHY.md](docs/VALIDATION_HIERARCHY.md); [docs/paper_validation_matrix.md](docs/paper_validation_matrix.md); `tests/papers/`, `tests/models/` |
-| Extension / innovation | [docs/FILTERED_COS_EXTENSION.md](docs/FILTERED_COS_EXTENSION.md); `notebooks/research/adaptive_cos.ipynb` |
+| Validation against published benchmarks | [docs/validation_hierarchy.md](docs/validation_hierarchy.md); [docs/paper_validation_matrix.md](docs/paper_validation_matrix.md); `tests/papers/`, `tests/models/` |
+| Extension / innovation | [docs/filtered_cos_extension.md](docs/filtered_cos_extension.md); `notebooks/research/adaptive_cos.ipynb` |
 | Notebook demonstrations | `notebooks/demo.ipynb`, `notebooks/demo_advanced.ipynb`, `notebooks/paper_replications/` |
-| FO2008 paper replication | [docs/FO2008_REPLICATION.md](docs/FO2008_REPLICATION.md); `notebooks/fo2008_replication.ipynb` |
-| Bates and 3/2 SV validation | [docs/BATES_SV32_VALIDATION.md](docs/BATES_SV32_VALIDATION.md); `notebooks/paper_replications/bates_sv32_validation_demo.ipynb` |
+| FO2008 paper replication | [docs/fo2008_replication.md](docs/fo2008_replication.md); `notebooks/fo2008_replication.ipynb` |
+| Bates and 3/2 SV validation | [docs/bates_sv32_validation.md](docs/bates_sv32_validation.md); `notebooks/paper_replications/bates_sv32_validation_demo.ipynb` |
 | Code quality / reproducibility | `pyproject.toml`, `tests/`, CI workflow; see [Reproduce results](#reproduce-results) |
-| AI workflow / original contribution | [docs/AI_WORKFLOW_AND_CONTRIBUTION.md](docs/AI_WORKFLOW_AND_CONTRIBUTION.md) |
+| AI workflow / original contribution | [docs/ai_workflow_and_contribution.md](docs/ai_workflow_and_contribution.md) |
 
 ---
 
@@ -338,7 +338,7 @@ This is not a reimplementation of existing characteristic functions. The contrib
 
 AI tools were used for research assistance, implementation planning, code generation, and documentation restructuring. The workflow was source-driven: Deep Research identified papers, formulas, and benchmark numbers; reasoning models converted those into implementation TODOs; coding agents handled first-pass implementation and restructuring; and final acceptance required human review, passing tests, working notebooks, and CI.
 
-Full workflow, library reuse policy, original contributions, and validation gates: [docs/AI_WORKFLOW_AND_CONTRIBUTION.md](docs/AI_WORKFLOW_AND_CONTRIBUTION.md).
+Full workflow, library reuse policy, original contributions, and validation gates: [docs/ai_workflow_and_contribution.md](docs/ai_workflow_and_contribution.md).
 
 ---
 
@@ -382,7 +382,7 @@ notebooks/
   fo2008_replication.ipynb, cosPaper_Replication.ipynb
 
 benchmarks/
-  paper_replications/fo2008_cos/  params.py, outputs/ (CSVs, PNGs, SUMMARY.md)
+  paper_replications/fo2008_cos/  params.py, outputs/ (CSVs, PNGs, summary.md)
   mc_vs_fourier_methods/outputs/
 
 docs/           detailed reference documentation (index at docs/README.md)
@@ -408,21 +408,16 @@ docs/           detailed reference documentation (index at docs/README.md)
 | Kou jump-diffusion | Kou, S.G. (2002), *A Jump-Diffusion Model for Option Pricing* |
 | Bates SVJ | Bates, D.S. (1996), *Jumps and Stochastic Volatility: Exchange Rate Processes Implicit in Deutsche Mark Options* |
 
-Full bibliography with DOIs and free-access links: [PAPERS.md](PAPERS.md).
+Full bibliography with DOIs and free-access links: [papers.md](papers.md).
 
 ---
 
 ## Detailed documentation
 
-- [docs/MODEL_ZOO.md](docs/MODEL_ZOO.md) - all 20 models
-- [docs/API_REFERENCE.md](docs/API_REFERENCE.md) - full API tables
-- [docs/VALIDATION_HIERARCHY.md](docs/VALIDATION_HIERARCHY.md) - evidence levels
-- [docs/BATES_SV32_VALIDATION.md](docs/BATES_SV32_VALIDATION.md) - Bates and 3/2 SV validation
-- [docs/FO2008_REPLICATION.md](docs/FO2008_REPLICATION.md) - FO2008 tables
-- [docs/FILTERED_COS_EXTENSION.md](docs/FILTERED_COS_EXTENSION.md) - adaptive filtered-COS
-- [docs/paper_validation_matrix.md](docs/paper_validation_matrix.md) - per-paper matrix
-- [docs/AI_WORKFLOW_AND_CONTRIBUTION.md](docs/AI_WORKFLOW_AND_CONTRIBUTION.md) - AI workflow and original contribution
-- [docs/PACKAGING.md](docs/PACKAGING.md) - PyPI release checklist
-- [docs/README.md](docs/README.md) - documentation index
-- [APPENDIX.md](APPENDIX.md) - methodology, derivations, references
-- [PAPERS.md](PAPERS.md) - full bibliography
+All reference documentation is indexed at **[docs/README.md](docs/README.md)** — model zoo, full API, validation hierarchy, paper replication tables, filtered-COS extension, Bates/3/2 SV validation, AI workflow, and packaging checklist.
+
+| Document | Contents |
+|----------|----------|
+| [appendix.md](appendix.md) | Methodology, derivations, model conventions, benchmark interpretation, and the numbered course-project narrative (sections 1–18). |
+| [papers.md](papers.md) | Full bibliography with DOIs and free-access links, grouped by method and model family. |
+| [numerical_notes.md](numerical_notes.md) | Known numerical limitations: COS truncation failure modes, Carr-Madan alpha conditions, PyFENG version caveats, parameter edge cases, IV inversion guidance. |

@@ -88,6 +88,10 @@ The correct claim for this extension is:
 > *"Junike helps truncation. Filtering helps residual finite-series / nonsmoothness cases.
 > The adaptive selector chooses among vanilla COS, Junike-COS, and filtered Junike-COS."*
 
+On the FO2008 test suite the adaptive selector beats the naive paper-grid replay in **7/8 cases**
+and beats the paper's best reported error in **6/8 cases**.
+Full per-case data: [`benchmarks/cos_method_improved/outputs/cos_method_improved_paper_compare.csv`](../benchmarks/cos_method_improved/outputs/cos_method_improved_paper_compare.csv).
+See also [fo2008_replication.md](fo2008_replication.md) for the table of paper-grid vs. improved-COS errors.
 We do **not** claim:
 - Filtered COS universally dominates Junike COS.
 - The extension is a black-box learned model.
@@ -148,8 +152,8 @@ The demo notebook and `scripts/run_filtered_cos_extension.py` write:
 
 ## Related documents
 
-- [FO2008_REPLICATION.md](FO2008_REPLICATION.md) — where the improved COS beats the naive
+- [fo2008_replication.md](fo2008_replication.md) — where the improved COS beats the naive
   paper-grid replay
-- [VALIDATION_HIERARCHY.md](VALIDATION_HIERARCHY.md) — how the filtered-COS tests are
+- [validation_hierarchy.md](validation_hierarchy.md) — how the filtered-COS tests are
   classified (numerical_stability, no exact numeric target)
-- [APPENDIX.md](../APPENDIX.md) section 14 — Junike/Junike-Pankrashkin theoretical background
+- [appendix.md](../appendix.md) section 14 — Junike/Junike-Pankrashkin theoretical background

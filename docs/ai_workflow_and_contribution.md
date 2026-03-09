@@ -77,14 +77,14 @@ result into a self-contained implementation TODO for tests and notebooks, includ
 file names, tolerances, and expected behaviour.
 ```
 
-Deep Research outputs were used as source summaries, not as final code. For example, a Bates and 3/2 Deep Research run identified MathWorks Bates prices as exact numerical references, while correctly flagging Baldeaux-Badran 3/2 outputs as figure-only rather than hard unit-test targets — a distinction that directly shaped the five-level validation hierarchy in [docs/VALIDATION_HIERARCHY.md](VALIDATION_HIERARCHY.md).
+Deep Research outputs were used as source summaries, not as final code. For example, a Bates and 3/2 Deep Research run identified MathWorks Bates prices as exact numerical references, while correctly flagging Baldeaux-Badran 3/2 outputs as figure-only rather than hard unit-test targets — a distinction that directly shaped the five-level validation hierarchy in [docs/validation_hierarchy.md](validation_hierarchy.md).
 
 For documentation restructuring, the prompts were equally specific:
 
 ```text
 The README is 327 lines and too bloated for a marker. Move the full API table to
-docs/API_REFERENCE.md, the 20-model table to docs/MODEL_ZOO.md, and the FO2008
-replication tables from APPENDIX sections 12-13 to docs/FO2008_REPLICATION.md.
+docs/api_reference.md, the 20-model table to docs/model_zoo.md, and the FO2008
+replication tables from APPENDIX sections 12-13 to docs/fo2008_replication.md.
 Rewrite README.md as a 2500-4000 word project report with a course rubric map,
 problem-solved section, innovation section, and links to all new docs files.
 ```
@@ -287,11 +287,11 @@ The project does not claim:
 | Bates model | `foureng/models/bates.py` |
 | 3/2 model | `foureng/models/sv32.py` |
 | Paper validation matrix | `docs/paper_validation_matrix.md` |
-| Validation hierarchy | `docs/VALIDATION_HIERARCHY.md` |
-| Bates / 3/2 validation notes | `docs/BATES_SV32_VALIDATION.md` |
-| FO2008 replication tables | `docs/FO2008_REPLICATION.md` |
-| Filtered-COS extension | `docs/FILTERED_COS_EXTENSION.md` |
-| Model zoo | `docs/MODEL_ZOO.md` |
+| Validation hierarchy | `docs/validation_hierarchy.md` |
+| Bates / 3/2 validation notes | `docs/bates_sv32_validation.md` |
+| FO2008 replication tables | `docs/fo2008_replication.md` |
+| Filtered-COS extension | `docs/filtered_cos_extension.md` |
+| Model zoo | `docs/model_zoo.md` |
 | Paper replication notebooks | `notebooks/paper_replications/` |
 | Research notebooks | `notebooks/research/` |
 | All tests | `tests/` |

@@ -76,7 +76,7 @@ when analytic payoff coefficients are used.
 
 The local Heston implementation converges clearly with N, but remains less accurate than the
 paper's final row in the strict paper-grid replay.
-This motivates the improved COS policy (see [FILTERED_COS_EXTENSION.md](FILTERED_COS_EXTENSION.md)).
+This motivates the improved COS policy (see [filtered_cos_extension.md](filtered_cos_extension.md)).
 
 ---
 
@@ -184,7 +184,7 @@ The "ugly rows" are not a single COS failure:
 - **COS accuracy depends on two choices at once**: support interval and number of cosine terms.
 
 This motivates the improved COS policy described in
-[FILTERED_COS_EXTENSION.md](FILTERED_COS_EXTENSION.md).
+[filtered_cos_extension.md](filtered_cos_extension.md).
 
 ---
 
@@ -203,3 +203,7 @@ This motivates the improved COS policy described in
 
 Headline: the adaptive path beats the strict paper-grid replay in 7/8 cases and beats the
 paper's best reported error in 6/8 cases.
+
+> **Evidence:** Per-case numbers in [`benchmarks/cos_method_improved/outputs/cos_method_improved_paper_compare.csv`](../benchmarks/cos_method_improved/outputs/cos_method_improved_paper_compare.csv) and [`benchmarks/paper_replications/cos_paper_replication/outputs/fo2008_replication_errors.csv`](../benchmarks/paper_replications/cos_paper_replication/outputs/fo2008_replication_errors.csv).
+> Notebook: [`notebooks/research/cos_method_improved.ipynb`](../notebooks/research/cos_method_improved.ipynb).
+> Summary report: [`benchmarks/paper_replications/cos_paper_replication/outputs/summary.md`](../benchmarks/paper_replications/cos_paper_replication/outputs/summary.md).

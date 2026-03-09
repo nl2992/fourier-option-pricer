@@ -1,14 +1,19 @@
 # Paper Validation Matrix
 
-This matrix links each paper claim in the public README/PAPERS list to the
-repo model or method, the exact reference used, and the test file that backs
-the claim. `external_reference` means a published table or independent source;
-`software_reference` means official software documentation (e.g. MathWorks);
-`derived_reference` means a high-precision internal reference; `adapter` means
-third-party wrapper parity; `numerical_stability` means a stress/convergence
-test rather than a direct paper-table replication; `qualitative_figure` means
-shape checks with no exact numeric target.
+This matrix is the single source of truth for what is validated, at what level, and where the evidence lives.
+Every result claim in the README and APPENDIX can be traced back to a row here.
 
+Evidence-level definitions are in [validation_hierarchy.md](validation_hierarchy.md).
+Quick key:
+
+| Tag | Meaning |
+|-----|---------|
+| `external_reference` | Exact price from a published paper table |
+| `software_reference` | Exact price from official software docs (e.g. MathWorks) |
+| `derived_reference` | High-precision internal reference frozen at generation time |
+| `adapter` | Cross-package parity with PyFENG's `logp_cf` |
+| `numerical_stability` | Stress/convergence test; no single exact numeric target |
+| `qualitative_figure` | Shape checks only; paper has no price table |
 | Paper | Repo model/method | Exact paper table/equation used | Test file | Reference type | Exact numeric target? | Status |
 |---|---|---|---|---|---|---|
 | Carr & Madan (1999) | `carr_madan`, `VGParams` | VG Case 4 put prices | `tests/test_paper_carr_madan_1999.py`; `tests/papers/test_phase2_carr_madan_vg.py` | `external_reference` | yes-paper | done |
