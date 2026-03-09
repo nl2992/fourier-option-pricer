@@ -1,0 +1,10 @@
+section,description,tolerance,max_error,pass,status
+BATES-01,NI prices 5K T=0.5 vs MathWorks,0.01,0.007597511937892598,True,PASS
+BATES-02,cos_improved vs Lewis cross-method,0.01,7.537970247994963e-12,True,PASS
+BATES-03,NI surface 5×6 vs MathWorks,0.01,0.007597511937892598,True,PASS
+BATES-06,FRFT surface vs cos_improved NI ref,0.001,1.5528887509219658e-08,True,PASS
+BATES-07,Delta vs MathWorks optSensByBatesNI,0.005,0.00020158762276328845,True,PASS
+SV32-01a,pyfeng_fft vs frozen surface,0.0005,0.0002469920950542992,True,PASS
+SV32-01b,cos_improved vs frozen surface,0.001,3.0251632310296372e-09,True,PASS
+SV32-02,cos_improved vs pyfeng_fft 7×4,0.0015,0.0002469950794796727,True,PASS
+SV32-03,Lewis vs pyfeng_fft T≥0.5,0.0015,1.0096607249820977e-05,True,PASS
