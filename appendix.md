@@ -17,8 +17,7 @@ This appendix collects the extra project material that does not belong in the pa
 - `notebooks/research/adaptive_cos.ipynb`: adaptive filtered-COS extension notebook
 - `benchmarks/`: generated tables and figures used by the notebooks; paper-replication CSVs written here
 - `tests/`: regression and public API tests; `tests/refs/` holds frozen JSON reference data used by no-network paper-replication tests
-- `docs/`: detailed documentation — model zoo, API reference, validation hierarchy, FO2008 tables, filtered-COS extension, Bates/SV32 validation cases
-- `methodology_and_results.md`: jump-convention derivation, reference values, and rationale for qualitative vs. exact 3/2 validation
+- `docs/`: detailed documentation — model zoo, API reference, validation hierarchy, FO2008 tables, filtered-COS extension, Bates/SV32 validation cases, bibliography, and numerical notes
 
 ## Methods at a glance
 
