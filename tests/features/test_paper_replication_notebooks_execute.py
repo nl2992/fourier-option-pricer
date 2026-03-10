@@ -6,6 +6,7 @@ fast-CI matrix. Run them explicitly with ``pytest -m slow``.
 from __future__ import annotations
 
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -17,7 +18,8 @@ def test_bates_replication_notebook_executes():
     assert nb.exists(), f"Notebook not found: {nb}"
     subprocess.run(
         [
-            "jupyter", "nbconvert", "--to", "notebook", "--execute",
+            sys.executable, "-m", "jupyter", "nbconvert",
+            "--to", "notebook", "--execute",
             "--ExecutePreprocessor.timeout=180", str(nb),
             "--output", "/tmp/bates_mathworks_replication.executed.ipynb",
         ],
@@ -31,7 +33,8 @@ def test_three_halves_replication_notebook_executes():
     assert nb.exists(), f"Notebook not found: {nb}"
     subprocess.run(
         [
-            "jupyter", "nbconvert", "--to", "notebook", "--execute",
+            sys.executable, "-m", "jupyter", "nbconvert",
+            "--to", "notebook", "--execute",
             "--ExecutePreprocessor.timeout=180", str(nb),
             "--output", "/tmp/three_halves_replication.executed.ipynb",
         ],
