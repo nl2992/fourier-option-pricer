@@ -194,9 +194,9 @@ Fourier methods price a whole strike strip from one characteristic function eval
 All three pricers start from the same input:
 
 $$
-\varphi_T(u) = \mathbb{E}^{\mathbb{Q}}\!\left[e^{iuX_T}\right],
+\varphi_T(u) = \mathbb{E}^{\mathbb{Q}}\\left[e^{iuX_T}\right],
 \qquad
-X_T = \log\!\left(\frac{S_T}{F_0}\right).
+X_T = \log\\left(\frac{S_T}{F_0}\right).
 $$
 
 This is the characteristic function in **log-forward coordinates** (`X_T = log(S_T / F_0)`, not `log(S_T)`). Mixing log-spot and log-forward CFs creates a systematic pricing error, so the convention is enforced throughout the codebase.
@@ -218,7 +218,7 @@ The COS method (Fang & Oosterlee 2008) expands the log-return density on a trunc
 The standard cumulant-based truncation rule is:
 
 $$
-[a, b] = \!\left[
+[a, b] = \\left[
 c_1 - L\sqrt{c_2 + \sqrt{|c_4|}},\;
 c_1 + L\sqrt{c_2 + \sqrt{|c_4|}}
 \right]
