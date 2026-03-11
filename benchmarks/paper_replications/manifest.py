@@ -95,7 +95,7 @@ PAPER_OUTPUT_BUNDLES: tuple[PaperOutputBundle, ...] = (
     PaperOutputBundle(
         name="fo2008_replication",
         output_dir="benchmarks/paper_replications/fo2008_cos/outputs",
-        summary_file="SUMMARY.md",
+        summary_file="summary.md",
         csv_files=(
             "fo2008_replication_errors.csv",
             "fo2008_replication_prices.csv",
@@ -113,7 +113,7 @@ PAPER_OUTPUT_BUNDLES: tuple[PaperOutputBundle, ...] = (
     PaperOutputBundle(
         name="cos_paper_replication",
         output_dir="benchmarks/paper_replications/cos_paper_replication/outputs",
-        summary_file="SUMMARY.md",
+        summary_file="summary.md",
         csv_files=(
             "fo2008_replication_errors.csv",
             "fo2008_replication_prices.csv",
