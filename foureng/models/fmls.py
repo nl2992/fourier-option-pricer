@@ -1,8 +1,8 @@
-"""Finite Moment Log Stable (FMLS) model (Carr & Wu 2003) — native CF.
+"""Finite Moment Log Stable (FMLS) model (Carr & Wu 2003)  -  native CF.
 
 The FMLS process models log-stock returns as a maximally negatively-skewed
 alpha-stable Lévy process.  Because all jumps are downward (β = −1), all
-positive moments of S_T are finite — hence "finite moment".
+positive moments of S_T are finite  -  hence "finite moment".
 
 Log-forward CF
 --------------
@@ -26,7 +26,7 @@ Cumulants (closed form)
 -----------------------
     ω   = −σ^α/2        (linear drift of X_T)
     c1  = T · ω
-    c2  = T · σ^α/2 · α · (α−1) · (−1)^{α−2}/2  ... complex formula — use Cauchy
+    c2  = T · σ^α/2 · α · (α−1) · (−1)^{α−2}/2  ... complex formula  -  use Cauchy
     (numerical Cauchy integration is used instead)
 
 References
@@ -114,7 +114,7 @@ def fmls_cf(u: np.ndarray, fwd: ForwardSpec, p: FMLSParams) -> np.ndarray:
 
 
 # ---------------------------------------------------------------------------
-# Cumulants — numerical Cauchy integral
+# Cumulants  -  numerical Cauchy integral
 # ---------------------------------------------------------------------------
 
 

@@ -29,7 +29,7 @@ def test_bates_cos_vs_frft_hi_res(bates_regression_v1):
     K = np.asarray(ref.strikes, dtype=float)[_STRIP_SLICE]
 
     # FRFT hi-res oracle (matches the oracle grid used to seed the frozen
-    # regression strip — same tolerance regime as B4 but with FRFT in the
+    # regression strip  -  same tolerance regime as B4 but with FRFT in the
     # oracle role so we're not comparing COS to itself via CM).
     frft_hi = FRFTGrid(N=16384, eta=0.10, lam=0.0025, alpha=1.5)
     C_frft = price_strip("bates", "frft", K, fwd, p, grid=frft_hi)

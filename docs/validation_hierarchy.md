@@ -11,11 +11,11 @@ these levels via the `reference_type` field in the corresponding JSON fixture or
 
 | Level | Tag | What it means | Numeric target? | Example |
 |-------|-----|---------------|-----------------|---------|
-| 1 (strongest) | `external_reference` | Exact price copied from a published paper table | Yes — paper | Carr & Madan (1999) VG Case 4 put prices |
-| 2 | `software_reference` | Exact price from official software documentation | Yes — software | MathWorks `optByBatesNI` / `optByBatesFFT` |
-| 3 | `derived_reference` | High-precision in-house computation frozen at generation time; reproducible but not from a paper | Yes — derived | Double Heston vanilla price table; pyfeng_fft BSM baseline |
-| 4 | `adapter` | Cross-package parity: our CF agrees with PyFENG's `logp_cf` to tight tolerance | Yes — derived | Heston, VG, BSM adapter tests |
-| 5 (weakest) | `qualitative_figure` / `numerical_stability` | Shape checks, convergence rate checks, stress-regime robustness — no single exact numeric target | No — figure only | Baldeaux-Badran 3/2 IV smile shape; Junike stress tests |
+| 1 (strongest) | `external_reference` | Exact price copied from a published paper table | Yes  -  paper | Carr & Madan (1999) VG Case 4 put prices |
+| 2 | `software_reference` | Exact price from official software documentation | Yes  -  software | MathWorks `optByBatesNI` / `optByBatesFFT` |
+| 3 | `derived_reference` | High-precision in-house computation frozen at generation time; reproducible but not from a paper | Yes  -  derived | Double Heston vanilla price table; pyfeng_fft BSM baseline |
+| 4 | `adapter` | Cross-package parity: our CF agrees with PyFENG's `logp_cf` to tight tolerance | Yes  -  derived | Heston, VG, BSM adapter tests |
+| 5 (weakest) | `qualitative_figure` / `numerical_stability` | Shape checks, convergence rate checks, stress-regime robustness  -  no single exact numeric target | No  -  figure only | Baldeaux-Badran 3/2 IV smile shape; Junike stress tests |
 
 ---
 

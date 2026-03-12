@@ -25,11 +25,11 @@ product:
 
 Available filters
 -----------------
-- ``"none"``           — identity (no filtering).
-- ``"fejer"``          — first-order Cesaro / Fejér summation: σ_k = 1 − k/(N−1).
-- ``"lanczos"``        — sinc filter: σ_k = sinc(k/(N−1)).
-- ``"raised_cosine"``  — raised-cosine (Hann window): σ_k = ½(1 + cos(π·x)).
-- ``"exponential"``    — exponential smoothness filter (order-``p``):
+- ``"none"``            -  identity (no filtering).
+- ``"fejer"``           -  first-order Cesaro / Fejér summation: σ_k = 1 − k/(N−1).
+- ``"lanczos"``         -  sinc filter: σ_k = sinc(k/(N−1)).
+- ``"raised_cosine"``   -  raised-cosine (Hann window): σ_k = ½(1 + cos(π·x)).
+- ``"exponential"``     -  exponential smoothness filter (order-``p``):
                          σ_k = exp(−α·(k/(N−1))^p).  Default α damps to
                          machine-ε at k = N−1.
 """

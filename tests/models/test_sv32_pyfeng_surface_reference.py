@@ -23,7 +23,7 @@ from foureng.pricers.lewis import lewis_call_prices
 
 pytestmark = [pytest.mark.derived_reference, pytest.mark.adapter]
 
-pyfeng = pytest.importorskip("pyfeng", reason="pyfeng not installed — sv32 tests require it")
+pyfeng = pytest.importorskip("pyfeng", reason="pyfeng not installed  -  sv32 tests require it")
 
 _REF_PATH = Path(__file__).resolve().parents[1] / "refs" / "sv32_pyfeng_surface_reference.json"
 

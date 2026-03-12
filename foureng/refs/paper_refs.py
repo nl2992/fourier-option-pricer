@@ -1,22 +1,22 @@
-"""Paper-anchored reference values — **single source of truth**.
+"""Paper-anchored reference values  -  **single source of truth**.
 
 Two flavors live here:
 
-1. ``PaperAnchor`` — published prices from the primary literature. The
+1. ``PaperAnchor``  -  published prices from the primary literature. The
    notebook and tests grade pricer output against these as hard gates.
 
-       * :data:`FO2008_HESTON_ATM`  — Fang & Oosterlee (2008) Heston ATM call.
-       * :data:`LEWIS_HESTON_STRIP` — Lewis (2001) Heston 5-strike strip.
-       * :data:`CM1999_VG_CASE4`    — Carr & Madan (1999) VG Case 4 puts.
+       * :data:`FO2008_HESTON_ATM`   -  Fang & Oosterlee (2008) Heston ATM call.
+       * :data:`LEWIS_HESTON_STRIP`  -  Lewis (2001) Heston 5-strike strip.
+       * :data:`CM1999_VG_CASE4`     -  Carr & Madan (1999) VG Case 4 puts.
 
-2. ``RegressionStrip`` — frozen *numerical* references for models whose
+2. ``RegressionStrip``  -  frozen *numerical* references for models whose
    published papers (Bates 1996, Kou 2002, CGMY 2002) do not ship a
    clean exact price table matching the parameterisation we use. For
    those models we fix a canonical parameter set + strike strip and
    freeze high-accuracy prices produced by a stable internal method
    (Carr-Madan FFT at N=32768, cross-verified against FRFT N=16384 and
    COS N=4096 to ~1e-10). This is standard practice for numerical
-   methods work — the model still comes from the paper; we're just
+   methods work  -  the model still comes from the paper; we're just
    using a controlled oracle to regress against.
 
        * :data:`OUSV_REGRESSION_STRIP_V1`
@@ -26,7 +26,7 @@ Two flavors live here:
        * :data:`HESTON_KOU_REGRESSION_STRIP_V1`
        * :data:`HESTON_CGMY_REGRESSION_STRIP_V1`
 
-The ``_V1`` suffix is a version tag — if we ever regenerate the
+The ``_V1`` suffix is a version tag  -  if we ever regenerate the
 reference prices (e.g. with a different oracle), the new set becomes
 ``_V2`` so downstream tests can pin to a specific version explicitly.
 
@@ -152,7 +152,7 @@ CM1999_VG_CASE4 = PaperAnchor(
     name="CM1999 VG Case 4",
     citation=(
         "Carr & Madan (1999), 'Option valuation using the fast Fourier "
-        "transform', Table 4 Case 4 — Variance-Gamma puts."
+        "transform', Table 4 Case 4  -  Variance-Gamma puts."
     ),
     source="Carr & Madan 1999",
     fwd=ForwardSpec(S0=100.0, r=0.05, q=0.03, T=0.25),
@@ -186,7 +186,7 @@ class RegressionStrip:
     name :
         Short human-readable label.
     model :
-        Dispatcher key — one of the entries in ``pipeline._MODELS``.
+        Dispatcher key  -  one of the entries in ``pipeline._MODELS``.
     fwd :
         Forward spec.
     params :
@@ -230,7 +230,7 @@ class RegressionStrip:
 _REGRESSION_STRIKES_41 = np.linspace(80.0, 120.0, 41)
 
 
-# Oracle method used for all three strips below — kept identical so the
+# Oracle method used for all three strips below  -  kept identical so the
 # cross-model consistency of tolerances is meaningful.
 _ORACLE = (
     "CM FFT N=32768 eta=0.10 alpha=1.5 (cross-verified vs FRFT N=16384 and COS N=4096 to ~1e-10)"
@@ -548,7 +548,7 @@ CGMY_REGRESSION_STRIP_V1 = RegressionStrip(
     ref_method=_ORACLE,
     version=1,
     notes=(
-        "Symmetric tempering G=M=5, activity C=0.5, fine-structure Y=0.7 — "
+        "Symmetric tempering G=M=5, activity C=0.5, fine-structure Y=0.7  -  "
         "a mild, finite-variation CGMY regime with non-zero r and q."
     ),
 )

@@ -1,18 +1,18 @@
 """Tests for the Rough Heston model (El Euch & Rosenbaum 2019).
 
-Layer 1 — paper / PyFENG benchmark
+Layer 1  -  paper / PyFENG benchmark
     Prices from our CF via Lewis integral must match PyFENG's native
     RoughHestonFft.price() to 1e-4.  The docstring benchmark parameters
     (sigma=0.0392, vov=0.1, mr=0.3156, rho=-0.681, theta=0.3156, alpha=0.62,
     spot=100, T=1) produce prices ≈ [40.407, 31.356, 11.473, 1.888] for
     strikes [60, 70, 100, 140].
 
-Layer 2 — cross-engine
+Layer 2  -  cross-engine
     COS, FRFT, Carr-Madan all agree with the Lewis reference to 1e-3.
     Note: Carr-Madan and FRFT use eta=0.1 (not the default 0.25) to keep
     the max frequency within the rough Heston CF's stability range.
 
-Layer 3 — structural (fast)
+Layer 3  -  structural (fast)
     CF normalization: phi(0)=1, martingale: phi(-i)=1, |phi(u)| <= 1.
     Positive variance cumulant. No-arbitrage bounds.
 
@@ -36,7 +36,7 @@ import pytest
 
 pf_sv_fft = pytest.importorskip(
     "pyfeng.sv_fft",
-    reason="pyfeng.sv_fft not available — rough Heston tests require it",
+    reason="pyfeng.sv_fft not available  -  rough Heston tests require it",
 )
 RoughHestonFft = pf_sv_fft.RoughHestonFft
 
@@ -78,7 +78,7 @@ def bench():
 
 @pytest.fixture(scope="module")
 def pyfeng_ref_prices():
-    """PyFENG native prices — authoritative reference."""
+    """PyFENG native prices  -  authoritative reference."""
     m = RoughHestonFft(sigma=0.0392, vov=0.1, mr=0.3156, rho=-0.681,
                         theta=0.3156, alpha=0.62)
     return m.price(STRIKES, spot=SPOT, texp=TEXP, cp=1)
@@ -164,7 +164,7 @@ class TestRoughHestonCrossEngine:
         """COS and Lewis agree to 1e-3 near the money.
 
         Restricted to 3 strikes (cf. 5 for other models) because each CF
-        evaluation involves solving the fractional Riccati ODE — slow.
+        evaluation involves solving the fractional Riccati ODE  -  slow.
         """
         p = _P_BENCH
         fwd = _FWD_BENCH
@@ -233,7 +233,7 @@ class TestRoughHestonStructural:
         """At short maturities, rough Heston ATM skew differs from Heston.
 
         Rough Heston (H < 0.5) produces a steeper ATM skew than standard
-        Heston at short maturities — the key empirical motivation. We verify
+        Heston at short maturities  -  the key empirical motivation. We verify
         that the price surfaces differ (not a limit test, just a smoke test).
         """
         try:

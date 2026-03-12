@@ -61,7 +61,7 @@ def phase4_cos(phi: CharFunc, fwd: ForwardSpec, strikes: np.ndarray, grid: COSGr
 
 
 # ---------------------------------------------------------------------------
-# Unified strip pricing — one call that the notebook / scoreboard goes
+# Unified strip pricing  -  one call that the notebook / scoreboard goes
 # through, with a ``backend=`` knob that switches the characteristic function
 # between in-house analytic and PyFENG, and a ``method="pyfeng_fft"`` option
 # that delegates to PyFENG's own pricer entirely.
@@ -104,7 +104,7 @@ def _pyfeng_fft_price(model: str, strikes, fwd: ForwardSpec, params, cp: int):
     if model not in MODEL_REGISTRY or not MODEL_REGISTRY[model].pyfeng_fft:
         raise ValueError(
             f"method='pyfeng_fft' is not supported for model={model!r} "
-            "— PyFENG has no FFT pricer for this model. Use "
+            " -  PyFENG has no FFT pricer for this model. Use "
             "'cos' / 'frft' / 'carr_madan'."
         )
     try:
@@ -201,12 +201,12 @@ def price_strip(
         ``"vg"``, ``"cgmy"``, ``"nig"``, ``"kou"``, ``"bates"``,
         ``"heston_kou"``, ``"heston_cgmy"``, ``"sv32"``.
     method :
-        * ``"cos"`` — in-house COS (Fang-Oosterlee 2008),
-        * ``"cos_improved"`` — adaptive COS policy with centered intervals,
+        * ``"cos"``  -  in-house COS (Fang-Oosterlee 2008),
+        * ``"cos_improved"``  -  adaptive COS policy with centered intervals,
           coupled N/L selection, and wide-interval fallback,
-        * ``"frft"`` — in-house FRFT (Chourdakis 2004),
-        * ``"carr_madan"`` — in-house Carr-Madan FFT (1999),
-        * ``"pyfeng_fft"`` — PyFENG's own native FFT pricer. Available for:
+        * ``"frft"``  -  in-house FRFT (Chourdakis 2004),
+        * ``"carr_madan"``  -  in-house Carr-Madan FFT (1999),
+        * ``"pyfeng_fft"``  -  PyFENG's own native FFT pricer. Available for:
           BSM, Heston, OUSV, VG, CGMY, NIG, 3/2 SV (``sv32``), Rough Heston.
           Not available for Kou, Bates, Heston-Kou, Heston-CGMY, GARCH,
           Merton JD, Meixner, Bilateral Gamma, GH, or FMLS.
@@ -215,7 +215,7 @@ def price_strip(
     fwd, params :
         Forward spec and model-specific parameter dataclass.
     grid :
-        Grid object appropriate to ``method`` — :class:`FFTGrid` for
+        Grid object appropriate to ``method``  -  :class:`FFTGrid` for
         ``"carr_madan"``, :class:`FRFTGrid` for ``"frft"``,
         :class:`COSGrid` for ``"cos"``. ``method='cos_improved'`` also accepts
         :class:`COSGridPolicy`. If ``None`` and ``method='cos'``, an auto grid
@@ -356,7 +356,7 @@ def price_strip(
             )
 
         if isinstance(policy_or_grid, COSGrid):
-            # Pre-built grid — use it directly
+            # Pre-built grid  -  use it directly
             cos_grid = policy_or_grid
             payoff_mode = _improved_cos_payoff_mode(model, cos_grid)
             res = filtered_cos_prices(
@@ -384,7 +384,7 @@ def price_strip(
         )
 
         # Wide-interval fallback: route to lewis / carr_madan exactly as
-        # cos_improved does — the filter is irrelevant for these engines.
+        # cos_improved does  -  the filter is irrelevant for these engines.
         if decision.method == "lewis":
             return np.asarray(
                 lewis_call_prices(

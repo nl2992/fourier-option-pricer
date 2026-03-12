@@ -2,9 +2,9 @@
 
 Compares every supported pricing method against
 :data:`foureng.refs.paper_refs.BATES_REGRESSION_STRIP_V1`. If a future
-refactor silently shifts prices — a new compensator convention, a
+refactor silently shifts prices  -  a new compensator convention, a
 grid-boundary off-by-one, a PyFENG upgrade with a different CF
-convention — this test is what catches it.
+convention  -  this test is what catches it.
 
 Two tiers of tolerance:
   * ``carr_madan`` at the oracle's own grid : expected bit-identical
@@ -27,7 +27,7 @@ _ORACLE_CM_GRID = FFTGrid(N=32768, eta=0.10, alpha=1.5)
 
 
 def test_bates_regression_cm_oracle_grid(bates_regression_v1):
-    """CM at the oracle grid — numerical identity, tolerance = round-off."""
+    """CM at the oracle grid  -  numerical identity, tolerance = round-off."""
     ref = bates_regression_v1
     C = price_strip(ref.model, "carr_madan",
                     ref.strikes, ref.fwd, ref.params, grid=_ORACLE_CM_GRID)

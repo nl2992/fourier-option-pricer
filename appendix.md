@@ -6,7 +6,7 @@ This appendix collects the extra project material that does not belong in the pa
 
 - `foureng/`: packaged pricing library and public API
 - `notebooks/demo.ipynb`: Colab-friendly quick-start walkthrough
-- `notebooks/demo_advanced.ipynb`: full-feature showcase — all 20 models, 6 pricers, Greeks, IV surface, calibration, MC, new models, validation highlights (v0.4.1)
+- `notebooks/demo_advanced.ipynb`: full-feature showcase  -  all 20 models, 6 pricers, Greeks, IV surface, calibration, MC, new models, validation highlights (v0.4.1)
 - `notebooks/presentation_fourier_methods.ipynb`: presentation notebook version
 - `notebooks/fo2008_replication.ipynb`: full Fang-Oosterlee (2008) paper-faithful replication
 - `notebooks/cosPaper_Replication.ipynb`: COS paper replication with extended scoreboard
@@ -17,7 +17,7 @@ This appendix collects the extra project material that does not belong in the pa
 - `notebooks/research/adaptive_cos.ipynb`: adaptive filtered-COS extension notebook
 - `benchmarks/`: generated tables and figures used by the notebooks; paper-replication CSVs written here
 - `tests/`: regression and public API tests; `tests/refs/` holds frozen JSON reference data used by no-network paper-replication tests
-- `docs/`: detailed documentation — model zoo, API reference, validation hierarchy, FO2008 tables, filtered-COS extension, Bates/SV32 validation cases, bibliography, and numerical notes
+- `docs/`: detailed documentation  -  model zoo, API reference, validation hierarchy, FO2008 tables, filtered-COS extension, Bates/SV32 validation cases, bibliography, and numerical notes
 
 ## Methods at a glance
 
@@ -158,8 +158,8 @@ Once a model exposes `phi(u)`, it can be priced by Carr--Madan FFT, FRFT, or COS
 
 ## 6. Model coverage
 
-The full model catalogue — all twenty supported models with parameter dataclasses,
-CF sources, and API notes — is in [docs/model_zoo.md](docs/model_zoo.md).
+The full model catalogue  -  all twenty supported models with parameter dataclasses,
+CF sources, and API notes  -  is in [docs/model_zoo.md](docs/model_zoo.md).
 
 The twenty models split into two groups.
 
@@ -585,7 +585,7 @@ The "ugly rows" are not a single COS failure.
 - BSM Table 2: flat local error floor under paper-grid replay reflects truncation /
   reference-rounding rather than series-resolution failure.
 - Heston Table 5: the long-maturity / wide-interval case needs interval and term count
-  chosen jointly — increasing N alone cannot recover mass discarded by a too-narrow interval.
+  chosen jointly  -  increasing N alone cannot recover mass discarded by a too-narrow interval.
 - Paper timings are 2008 hardware measurements and are not portable runtime claims.
 
 This motivates the improved COS policy described in section 14.
@@ -691,7 +691,7 @@ Improved-truncation notebook: [`notebooks/research/cos_method_improved.ipynb`](n
 filtering damps the high-frequency COS coefficients before the payoff dot product,
 addressing residual finite-series oscillation and nonsmoothness at the truncation boundary.
 The adaptive selector builds a candidate set of `(COSGridPolicy, COSFilterSpec)` pairs and
-returns the fastest candidate satisfying the user's error tolerance — with the no-filter
+returns the fastest candidate satisfying the user's error tolerance  -  with the no-filter
 Junike candidate always in the pool, so the selector weakly dominates fixed Junike-COS.
 
 The correct claim is: *"Junike helps truncation. Filtering helps residual finite-series /

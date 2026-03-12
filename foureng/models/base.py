@@ -2,9 +2,9 @@
 
 This module defines the three primitives shared by every model in the package:
 
-* :class:`ForwardSpec` — market inputs (spot, rates, maturity).
-* :class:`ModelSpec` — base dataclass for all model parameter classes.
-* :class:`CharFunc` — callable protocol for characteristic functions.
+* :class:`ForwardSpec`  -  market inputs (spot, rates, maturity).
+* :class:`ModelSpec`  -  base dataclass for all model parameter classes.
+* :class:`CharFunc`  -  callable protocol for characteristic functions.
 """
 
 from __future__ import annotations

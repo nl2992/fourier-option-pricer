@@ -1,4 +1,4 @@
-"""Rough Heston model (El Euch & Rosenbaum 2019) — PyFENG-backed.
+"""Rough Heston model (El Euch & Rosenbaum 2019)  -  PyFENG-backed.
 
 The Rough Heston model replaces the Markovian variance process of the
 classical Heston model with a fractional Brownian motion driver, producing
@@ -70,7 +70,7 @@ class RoughHestonParams(ModelSpec):
         Initial instantaneous variance (``v0``). Must be ``> 0``.
         Note: *variance*, not volatility.
     vov : float
-        Vol-of-vol (``nu``) — coefficient on the sqrt(v) fractional
+        Vol-of-vol (``nu``)  -  coefficient on the sqrt(v) fractional
         diffusion term.
     mr : float
         Mean-reversion speed (``kappa``). Must be ``> 0``.
@@ -147,7 +147,7 @@ def _pyfeng_rough_heston_model(fwd: ForwardSpec, p: RoughHestonParams):
 
     def _factory():
         import_pyfeng()
-        # Import directly from sv_fft — pyfeng.ex is broken under newer SciPy
+        # Import directly from sv_fft  -  pyfeng.ex is broken under newer SciPy
         from pyfeng.sv_fft import RoughHestonFft  # type: ignore
 
         return RoughHestonFft(
@@ -188,7 +188,7 @@ def rough_heston_cf(u: np.ndarray, fwd: ForwardSpec, p: RoughHestonParams) -> np
 
 
 # ---------------------------------------------------------------------------
-# Cumulants — numerical Cauchy integral
+# Cumulants  -  numerical Cauchy integral
 # ---------------------------------------------------------------------------
 
 

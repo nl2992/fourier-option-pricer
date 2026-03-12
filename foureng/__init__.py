@@ -101,7 +101,7 @@ __all__ = [
     "ForwardSpec",
     "CharFunc",
     "ModelSpec",
-    # models — params, CF, cumulants (all 20)
+    # models  -  params, CF, cumulants (all 20)
     "BsmParams",
     "bsm_cf",
     "bsm_cumulants",

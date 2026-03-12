@@ -78,7 +78,7 @@ def check_alpha(phi: CharFunc, alpha: float) -> AlphaCheck:
     mag = float(np.abs(vals[1]))
     if mag > 1e12:
         return AlphaCheck(
-            False, f"|phi(-i(alpha+1))| = {mag:.3e} — pole nearby", phi_at_damping=complex(vals[1])
+            False, f"|phi(-i(alpha+1))| = {mag:.3e}  -  pole nearby", phi_at_damping=complex(vals[1])
         )
 
     return AlphaCheck(True, "phi finite at damping line", phi_at_damping=complex(vals[1]))

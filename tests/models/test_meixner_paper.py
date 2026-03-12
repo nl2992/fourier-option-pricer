@@ -1,16 +1,16 @@
 """Tests for the Meixner process (Schoutens & Teugels 1998).
 
-Layer 1 — analytic benchmarks
+Layer 1  -  analytic benchmarks
     * b=0 gives a symmetric distribution (phi is real-valued on real axis).
     * Drift correction ω ensures E[exp(X_T)] = 1 (martingale condition).
     * phi(0) = 1 (normalization).
 
-Layer 2 — cross-engine agreement
+Layer 2  -  cross-engine agreement
     Lewis / COS / Carr-Madan / FRFT must all agree to atol=1e-4 on a
     representative set (a=0.3978, b=-1.1326, delta=0.3462) from Schoutens
     (2002) S&P500 calibration.
 
-Layer 3 — structural
+Layer 3  -  structural
     phi(0)=1, phi(-i)=1, |phi(u)|<=1, c2>0, no-arbitrage bounds,
     monotonicity in vol parameter a and intensity delta.
 

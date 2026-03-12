@@ -1,4 +1,4 @@
-"""Ornstein-Uhlenbeck Stochastic Volatility (Schöbel-Zhu 1999) — PyFENG-backed.
+"""Ornstein-Uhlenbeck Stochastic Volatility (Schöbel-Zhu 1999)  -  PyFENG-backed.
 
 OUSV is the "vol-OU" companion to Heston's "variance-CIR": **the
 instantaneous volatility itself** follows an OU process (not the
@@ -11,12 +11,12 @@ variance). Concretely:
 Compared with Heston: same parameter *count*, different variance
 dynamics. The OU process admits negative values of ``sigma``, but the
 model's option prices depend only on ``sigma_t^2`` entering the
-log-price diffusion — so sign-flipping has no effect on European
+log-price diffusion  -  so sign-flipping has no effect on European
 payoffs. That's the reason OUSV doesn't need a Feller-type condition.
 
 PyFENG ships :class:`pyfeng.OusvFft` with the same public surface as
 :class:`pyfeng.HestonFft`: ``logp_cf``, ``price``, and
-``impvol_brentq``. Adapter conventions mirror :mod:`.heston` exactly —
+``impvol_brentq``. Adapter conventions mirror :mod:`.heston` exactly  - 
 our param dataclass uses the academic names ``(sigma0, kappa, theta,
 nu, rho)`` and we translate to PyFENG's ``(sigma, mr, theta, vov, rho)``
 inside the model factory.
@@ -91,7 +91,7 @@ _OUSV_MODEL_CACHE: dict[tuple, object] = {}
 def _pyfeng_ousv_model(fwd: ForwardSpec, p: OusvParams):
     """Build-and-cache a :class:`pyfeng.OusvFft` for ``(fwd, p)``.
 
-    PyFENG kwarg mapping — mirrors :class:`pyfeng.HestonFft`:
+    PyFENG kwarg mapping  -  mirrors :class:`pyfeng.HestonFft`:
 
         sigma  <-  p.sigma0   (initial vol, not variance)
         mr     <-  p.kappa
@@ -116,14 +116,14 @@ def _pyfeng_ousv_model(fwd: ForwardSpec, p: OusvParams):
 
 
 def ousv_cf(u: np.ndarray, fwd: ForwardSpec, p: OusvParams) -> np.ndarray:
-    """CF of ``X_T = log(S_T / F_0)`` under OUSV — via PyFENG's ``OusvFft``."""
+    """CF of ``X_T = log(S_T / F_0)`` under OUSV  -  via PyFENG's ``OusvFft``."""
     m = _pyfeng_ousv_model(fwd, p)
     u_arr = np.asarray(u)
     return np.asarray(m.logp_cf(u_arr, texp=fwd.T), dtype=np.complex128)
 
 
 # ---------------------------------------------------------------------------
-# Cumulants — numerical via Cauchy integral on the CF
+# Cumulants  -  numerical via Cauchy integral on the CF
 # ---------------------------------------------------------------------------
 
 
@@ -133,7 +133,7 @@ def ousv_cumulants(fwd: ForwardSpec, p: OusvParams) -> tuple[float, float, float
     Closed-form OUSV cumulants are long and parameter-regime-restricted;
     we use the same FFT-on-circle Cauchy-integral routine used for
     Heston and CGMY. Works for any CF analytic on a neighbourhood of
-    ``u = 0`` — which OUSV is under the standard parameter regime.
+    ``u = 0``  -  which OUSV is under the standard parameter regime.
     """
     from ..utils.cumulants import cumulants_from_cf
 

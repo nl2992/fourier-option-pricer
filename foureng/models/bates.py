@@ -1,4 +1,4 @@
-"""Bates (1996) SV + lognormal-jump model — SVJ.
+"""Bates (1996) SV + lognormal-jump model  -  SVJ.
 
 Bates = Heston diffusion + Merton (1976) compound-Poisson jumps with
 log-normal jump sizes, all under the project's log-forward convention
@@ -8,7 +8,7 @@ log-normal jump sizes, all under the project's log-forward convention
 
 where ``phi_H`` is Heston's CF (PyFENG-backed via :mod:`.heston`) and
 ``phi_jump`` is the usual martingale-corrected compound-Poisson factor
-— the same pattern already used for Kou in :mod:`.kou`.
+ -  the same pattern already used for Kou in :mod:`.kou`.
 
 References
 ----------
@@ -32,11 +32,11 @@ from .heston import HestonParams, heston_cf, heston_cumulants
 
 @dataclass(frozen=True)
 class BatesParams(ModelSpec):
-    """Bates (SVJ) parameters — Heston block + log-normal jump block.
+    """Bates (SVJ) parameters  -  Heston block + log-normal jump block.
 
     Heston block
     ------------
-    ``kappa, theta, nu, rho, v0`` — same meaning as :class:`HestonParams`.
+    ``kappa, theta, nu, rho, v0``  -  same meaning as :class:`HestonParams`.
     Feller condition: ``2*kappa*theta >= nu^2``.
 
     Jump block (Merton, 1976)
@@ -135,10 +135,10 @@ def bates_cf(u: np.ndarray, fwd: ForwardSpec, p: BatesParams) -> np.ndarray:
     T = fwd.T
     u_c = np.asarray(u, dtype=np.complex128)
 
-    # Continuous part — delegates to PyFENG via heston_cf.
+    # Continuous part  -  delegates to PyFENG via heston_cf.
     phi_H = heston_cf(u_c, fwd, p.heston_params)
 
-    # Jump part — Merton-style compound Poisson, log-forward convention.
+    # Jump part  -  Merton-style compound Poisson, log-forward convention.
     lam_j, mu_j, sig_j = p.lam_j, p.mu_j, p.sigma_j
     zeta = np.exp(mu_j + 0.5 * sig_j * sig_j) - 1.0
     omega_j = -lam_j * zeta

@@ -7,7 +7,7 @@ Checks:
     perturb the initial guess, recover the truth to ~1e-3 in each param.
   - VG calibration self-consistency: same pattern.
   - Kou calibration self-consistency: same pattern.
-  - Cross-model misfit: Heston data cannot be perfectly fit by VG — residuals
+  - Cross-model misfit: Heston data cannot be perfectly fit by VG  -  residuals
     should be non-trivial, confirming the loss function discriminates.
 """
 from __future__ import annotations
@@ -131,7 +131,7 @@ def test_cross_model_misfit_detected():
 
     init_vg = VGParams(sigma=0.20, nu=0.5, theta=-0.1)
     res = calibrate_vg(spec, market_h, initial=init_vg, N=512)
-    # VG can't match Heston term structure — expect residuals well above numerical noise
+    # VG can't match Heston term structure  -  expect residuals well above numerical noise
     assert np.abs(res.residuals).max() > 1e-3, (
-        "VG fit a Heston smile too tightly — cross-model misfit not detected"
+        "VG fit a Heston smile too tightly  -  cross-model misfit not detected"
     )

@@ -1,16 +1,16 @@
 """Tests for the Finite Moment Log Stable (FMLS) model (Carr & Wu 2003).
 
-Layer 1 — analytic benchmarks
+Layer 1  -  analytic benchmarks
     * phi(0)=1, phi(-i)=1 (normalization and martingale condition).
     * alpha=2 exactly recovers BSM: phi(u;T) = exp(-T*iu*sigma²/2 - T*sigma²*u²/2).
-    * Cumulant c1 = T * (-sigma^alpha/2) — exact closed form for the mean.
+    * Cumulant c1 = T * (-sigma^alpha/2)  -  exact closed form for the mean.
 
-Layer 2 — cross-engine agreement
+Layer 2  -  cross-engine agreement
     Lewis / COS / Carr-Madan / FRFT must all agree to atol=1e-4 on the
     S&P500-calibrated parameters (Carr & Wu 2003 Table II):
     alpha=1.7, sigma=0.4.
 
-Layer 3 — structural
+Layer 3  -  structural
     phi(0)=1, phi(-i)=1, |phi(u)|<=1, c2>0, no-arbitrage bounds,
     price monotone in sigma and alpha.
 

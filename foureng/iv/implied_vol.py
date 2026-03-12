@@ -131,7 +131,7 @@ def implied_vol_newton_safeguarded(
     price : float
         Observed call (or put) price.
     inputs : BSInputs
-        Market inputs — see :class:`BSInputs`.
+        Market inputs  -  see :class:`BSInputs`.
 
     Returns
     -------

@@ -24,7 +24,7 @@ no-filter and Junike-only policies are always included as candidates.
 Design references
 -----------------
 - Junike, G. and Pankrashkin, K. (2022), "Precise option pricing by the COS
-  method—How to choose the truncation range," Applied Mathematics and
+  method - How to choose the truncation range," Applied Mathematics and
   Computation, 421, 126935.
 
 - Ruijter, M. J., Versteegh, M. and Oosterlee, C. W. (2015), "On the
@@ -193,11 +193,11 @@ def default_filtered_cos_candidates() -> list[FilterGridCandidate]:
 
     out: list[FilterGridCandidate] = []
 
-    # Classic policies — no filter (Junike is not applied here)
+    # Classic policies  -  no filter (Junike is not applied here)
     for policy in base_policies:
         out.append(FilterGridCandidate("classic_cos_policy", policy, None))
 
-    # Improved (Junike) policies — no filter + each filter variant
+    # Improved (Junike) policies  -  no filter + each filter variant
     for policy in improved_policies:
         out.extend(
             policy_filter_candidates(
@@ -230,11 +230,11 @@ def run_filtered_cos_grid_search(
 
     For each candidate the function records:
 
-    - ``runtime_ms``    — minimum wall-clock time over ``n_repeat`` runs.
-    - ``max_abs_err``   — max|price − reference| across all strikes.
-    - ``mean_abs_err``  — mean|price − reference|.
-    - ``passes_tol``    — whether ``max_abs_err ≤ tol``.
-    - ``status``        — ``"ok"`` or ``"fail: <ExcType>: <message>"``.
+    - ``runtime_ms``     -  minimum wall-clock time over ``n_repeat`` runs.
+    - ``max_abs_err``    -  max|price − reference| across all strikes.
+    - ``mean_abs_err``   -  mean|price − reference|.
+    - ``passes_tol``     -  whether ``max_abs_err ≤ tol``.
+    - ``status``         -  ``"ok"`` or ``"fail: <ExcType>: <message>"``.
 
     The returned DataFrame is sorted: passing candidates first (by runtime),
     then failing candidates (by error).
@@ -361,10 +361,10 @@ def select_fastest_under_tolerance(df: pd.DataFrame, tol: float) -> pd.Series:
     if not ok.empty:
         return ok.sort_values(["runtime_ms", "max_abs_err"]).iloc[0]
 
-    # No candidate passes — take lowest error among successful runs
+    # No candidate passes  -  take lowest error among successful runs
     valid = df[df["status"] == "ok"].copy()
     if not valid.empty:
         return valid.sort_values(["max_abs_err", "runtime_ms"]).iloc[0]
 
-    # All failed — report the "least bad" regardless
+    # All failed  -  report the "least bad" regardless
     return df.sort_values("max_abs_err").iloc[0]

@@ -6,9 +6,9 @@
 
 This document answers the marker's three assessment questions about AI use in this project:
 
-1. **How AI was prompted** — what kinds of prompts were used and what they were expected to produce.
-2. **How existing libraries and code were reused** — which mature packages were used as-is rather than reimplemented.
-3. **What was added beyond the reference papers** — the original work that goes beyond reproducing existing results.
+1. **How AI was prompted**  -  what kinds of prompts were used and what they were expected to produce.
+2. **How existing libraries and code were reused**  -  which mature packages were used as-is rather than reimplemented.
+3. **What was added beyond the reference papers**  -  the original work that goes beyond reproducing existing results.
 
 It also records human review and control points, validation gates, and the things the project does not claim.
 
@@ -77,7 +77,7 @@ result into a self-contained implementation TODO for tests and notebooks, includ
 file names, tolerances, and expected behaviour.
 ```
 
-Deep Research outputs were used as source summaries, not as final code. For example, a Bates and 3/2 Deep Research run identified MathWorks Bates prices as exact numerical references, while correctly flagging Baldeaux-Badran 3/2 outputs as figure-only rather than hard unit-test targets — a distinction that directly shaped the five-level validation hierarchy in [docs/validation_hierarchy.md](validation_hierarchy.md).
+Deep Research outputs were used as source summaries, not as final code. For example, a Bates and 3/2 Deep Research run identified MathWorks Bates prices as exact numerical references, while correctly flagging Baldeaux-Badran 3/2 outputs as figure-only rather than hard unit-test targets  -  a distinction that directly shaped the five-level validation hierarchy in [docs/validation_hierarchy.md](validation_hierarchy.md).
 
 For documentation restructuring, the prompts were equally specific:
 
@@ -145,14 +145,14 @@ in-house models use the repo's own COS, Carr-Madan, FRFT, filtered-COS, and Lewi
 
 The project's own implementation work includes:
 
-1. **Unified `price_strip` dispatcher** — one call prices any of 20 models by any of 6 methods without model-specific wiring (`foureng/pipeline.py`).
-2. **In-house pricers** — Carr-Madan FFT, FRFT, COS, improved COS (Junike-Pankrashkin truncation + Junike term-count policy), filtered COS, and Lewis Fourier inversion (`foureng/pricers/`).
+1. **Unified `price_strip` dispatcher**  -  one call prices any of 20 models by any of 6 methods without model-specific wiring (`foureng/pipeline.py`).
+2. **In-house pricers**  -  Carr-Madan FFT, FRFT, COS, improved COS (Junike-Pankrashkin truncation + Junike term-count policy), filtered COS, and Lewis Fourier inversion (`foureng/pricers/`).
 3. **In-house characteristic functions** for 12 models not available via PyFENG: Kou, Bates, Heston-Kou, Heston-CGMY, GARCH-WMW2012, Merton JD, Meixner, Bilateral Gamma, Generalised Hyperbolic, FMLS, Double Heston, VGSA.
 4. **Cumulant functions** for all 20 models, used for COS grid construction.
-5. **Spectral-filter utilities** — Fejér, Lanczos, raised-cosine, exponential filters (`foureng/utils/spectral_filters.py`).
-6. **Adaptive policy selector** — deterministic grid-search over `(COSGridPolicy, COSFilterSpec)` candidate sets (`foureng/experiments/cos_filter_grid_search.py`).
-7. **Structured test infrastructure** — 686 pytest cases across five evidence levels; frozen JSON reference fixtures; model-reduction gates; cross-method agreement checks.
-8. **Paper-replication and validation notebooks** — 10 notebooks covering FO2008, Bates MathWorks, 3/2 SV, improved COS, adaptive filtered COS, and advanced demos.
+5. **Spectral-filter utilities**  -  Fejér, Lanczos, raised-cosine, exponential filters (`foureng/utils/spectral_filters.py`).
+6. **Adaptive policy selector**  -  deterministic grid-search over `(COSGridPolicy, COSFilterSpec)` candidate sets (`foureng/experiments/cos_filter_grid_search.py`).
+7. **Structured test infrastructure**  -  686 pytest cases across five evidence levels; frozen JSON reference fixtures; model-reduction gates; cross-method agreement checks.
+8. **Paper-replication and validation notebooks**  -  10 notebooks covering FO2008, Bates MathWorks, 3/2 SV, improved COS, adaptive filtered COS, and advanced demos.
 
 ---
 
@@ -180,7 +180,7 @@ naturally beyond the FO2008 / Heston / VG benchmark set.
 
 ### 8.3 Bates native implementation and MathWorks validation
 
-Bates (1996) does not publish clean vanilla option price tables — it presents fitted
+Bates (1996) does not publish clean vanilla option price tables  -  it presents fitted
 exchange-rate smiles. The project therefore uses the MathWorks Financial Toolbox
 (`optByBatesNI`, `optByBatesFFT`, `optSensByBatesNI`) as an official software reference.
 
@@ -194,7 +194,7 @@ FRFT surface cross-check, and delta.
 3/2 SV is exposed through the same repo API using PyFENG's `Sv32Fft` backend. The project
 validates it through five systematic cases (SV32-01–05): frozen pyfeng_fft surface
 regression, COS vs PyFENG cross-check, Lewis stability at T≥0.5, IV surface shape, and
-N-convergence — distinguishing what can be tested exactly from what can only be checked
+N-convergence  -  distinguishing what can be tested exactly from what can only be checked
 qualitatively (the Baldeaux-Badran figure parameters).
 
 ### 8.5 Adaptive filtered-COS extension
@@ -215,7 +215,7 @@ where `σ_k` is a spectral weight near 1 for low-frequency terms and smaller tow
 Four filter families are available (Fejér, Lanczos, raised-cosine, exponential).
 
 The adaptive selector compares no-filter and filtered candidates and returns the **fastest
-candidate satisfying a tolerance target** — with the no-filter Junike candidate always in
+candidate satisfying a tolerance target**  -  with the no-filter Junike candidate always in
 the pool, so the selector weakly dominates fixed Junike-COS in the joint (error, runtime)
 metric under the tested grid.
 
@@ -234,7 +234,7 @@ The project formalises a five-level evidence classification for all test cases:
 
 This makes explicit what "validated" means for each model and method combination, and
 allows the project to distinguish between "we matched a published table" and "we matched
-a frozen internal reference" — a distinction that matters when evaluating claims.
+a frozen internal reference"  -  a distinction that matters when evaluating claims.
 
 ---
 
@@ -268,7 +268,7 @@ The project does not claim:
 - that AI-generated citations or numbers were accepted without cross-checking;
 - that Bates is natively supported by PyFENG FFT (`method="pyfeng_fft"` does not support Bates);
 - that Bates (1996) provides the exact vanilla price tables used in tests (it does not);
-- that Baldeaux-Badran gives exact vanilla price tables for 3/2 SV (it does not — those tests are `qualitative_figure` and `xfail-if-unstable`);
+- that Baldeaux-Badran gives exact vanilla price tables for 3/2 SV (it does not  -  those tests are `qualitative_figure` and `xfail-if-unstable`);
 - that 3/2 plus jumps is a fully registered model in this repo;
 - that filtered COS universally dominates standard COS;
 - that every model in the zoo has a true published-paper price table;

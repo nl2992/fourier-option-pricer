@@ -93,7 +93,7 @@ def frft_price_at_strikes(
     k0 = log(F0), covers |log(K) - k0| <= b = N*lam/2, and the interpolation
     support is restricted to the interior |log(K) - k0| < window_factor*b to
     avoid Gibbs/aliasing at the edges. Queried strikes outside the window
-    raise a ValueError — widen the grid (larger N or smaller eta/lam) instead
+    raise a ValueError  -  widen the grid (larger N or smaller eta/lam) instead
     of silently extrapolating.
     """
     k0 = float(np.log(fwd.F0))

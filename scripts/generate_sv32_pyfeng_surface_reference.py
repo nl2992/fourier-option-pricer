@@ -1,7 +1,7 @@
 """Generate the frozen Sv32 PyFENG surface reference JSON.
 
 Run this script once to (re)generate tests/refs/sv32_pyfeng_surface_reference.json.
-Do not run this inside pytest — tests read the frozen JSON only.
+Do not run this inside pytest  -  tests read the frozen JSON only.
 
 Usage:
     python scripts/generate_sv32_pyfeng_surface_reference.py

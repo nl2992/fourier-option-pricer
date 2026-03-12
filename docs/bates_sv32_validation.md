@@ -59,49 +59,49 @@ the test suite. The log-forward convention (`X_T = log(S_T / F_0)`) is derived i
 
 ## Bates validation cases (BATES-01 through BATES-07)
 
-### BATES-01 — NI scalar price
+### BATES-01  -  NI scalar price
 
 - **What:** Single ATM call (K=80, T=0.5) via `cos_improved` vs MathWorks `optByBatesNI` value (5.3484).
 - **Reference type:** `software_reference`
 - **Tolerance:** atol=1e-2 (MathWorks publishes 4 decimal places; grid-convention gap ~7.6e-3).
 - **Test:** `tests/papers/test_phase5_bates_mathworks.py`
 
-### BATES-02 — NI five-strike strip
+### BATES-02  -  NI five-strike strip
 
 - **What:** Five strikes [76, 78, 80, 82, 84] at T=0.5 via all six pricers vs MathWorks NI strip.
 - **Reference type:** `software_reference`
 - **Tolerance:** atol=1e-2
 - **Test:** `tests/papers/test_phase5_bates_mathworks.py`
 
-### BATES-03 — NI 5×6 surface
+### BATES-03  -  NI 5×6 surface
 
 - **What:** Five strikes × six maturities (T=0.5, 1.0, 1.5, 2.0, 2.5, 3.0) via `cos_improved` vs MathWorks `optByBatesNI` surface.
 - **Reference type:** `software_reference`
 - **Tolerance:** atol=1e-2
 - **Test:** `tests/papers/test_bates_mathworks_ni_surface.py`
 
-### BATES-04 — COS N-convergence
+### BATES-04  -  COS N-convergence
 
 - **What:** COS-improved ATM price at [16, 32, 64, 128, 256, 512, 1024] terms; monotone error decrease.
 - **Reference type:** `numerical_stability`
 - **Tolerance:** qualitative (convergence shape check)
 - **Notebook section:** BATES-04 in `bates_sv32_validation_demo.ipynb`
 
-### BATES-05 — IV smile
+### BATES-05  -  IV smile
 
 - **What:** Black-Scholes implied volatility smile from Bates prices across strikes at T=0.5 and T=1.0; no-arbitrage shape check (positive vol, left-skewed smile).
 - **Reference type:** `qualitative_figure`
 - **Tolerance:** IV > 0 and decreasing from left to right
 - **Notebook section:** BATES-05
 
-### BATES-06 — FRFT 5×6 surface
+### BATES-06  -  FRFT 5×6 surface
 
 - **What:** FRFT-based 5×6 surface vs internal `cos_improved` reference (not MathWorks truncated values).
 - **Reference type:** `derived_reference` (cross-method parity)
 - **Tolerance:** atol=1e-2 vs MathWorks; atol=1e-3 vs internal `cos_improved`
 - **Test:** `tests/papers/test_bates_mathworks_fft_frft.py`
 
-### BATES-07 — Delta vector
+### BATES-07  -  Delta vector
 
 - **What:** Five-strike delta vector at T=0.5 vs MathWorks `optSensByBatesNI`.
 - **Reference type:** `software_reference`
@@ -127,21 +127,21 @@ T = 0.25, 0.5, 1.0, 2.0; K = 80, 90, 100, 110, 120, 130, 140).
 
 ## SV32 validation cases (SV32-01 through SV32-05)
 
-### SV32-01 — PyFENG surface regression
+### SV32-01  -  PyFENG surface regression
 
 - **What:** 7×4 surface via `cos_improved` vs frozen pyfeng_fft reference surface.
 - **Reference type:** `adapter` / `derived_reference`
 - **Tolerance:** atol=5e-4 (pyfeng_fft) and atol=1e-3 (cos_improved vs pyfeng_fft)
 - **Test:** `tests/models/test_sv32_pyfeng_surface_reference.py`
 
-### SV32-02 — COS vs PyFENG across maturities
+### SV32-02  -  COS vs PyFENG across maturities
 
 - **What:** Seven-strike COS-improved prices vs pyfeng_fft for T = 0.25, 0.5, 1.0, 2.0.
 - **Reference type:** `adapter`
 - **Tolerance:** max error ≤ 1.5e-3
 - **Test:** `tests/models/test_sv32_pyfeng_paper.py`
 
-### SV32-03 — Lewis T ≥ 0.5
+### SV32-03  -  Lewis T ≥ 0.5
 
 - **What:** Lewis Fourier inversion vs pyfeng_fft for T ≥ 0.5 (Lewis is unstable at very
   short maturities for the 3/2 model).
@@ -149,7 +149,7 @@ T = 0.25, 0.5, 1.0, 2.0; K = 80, 90, 100, 110, 120, 130, 140).
 - **Tolerance:** max error ≤ 1.5e-3
 - **Test:** `tests/models/test_sv32_pyfeng_paper.py`
 
-### SV32-04 — IV surface shape
+### SV32-04  -  IV surface shape
 
 - **What:** Black-Scholes implied volatility surface for the 3/2 model; no-arbitrage bounds
   and hump-shaped term structure check.
@@ -157,7 +157,7 @@ T = 0.25, 0.5, 1.0, 2.0; K = 80, 90, 100, 110, 120, 130, 140).
 - **Tolerance:** IV ∈ (0, 2), term structure humped
 - **Notebook section:** SV32-04 in `bates_sv32_validation_demo.ipynb`
 
-### SV32-05 — N-convergence
+### SV32-05  -  N-convergence
 
 - **What:** COS-improved ATM price at [16, 32, 64, 128, 256, 512, 1024] terms; monotone
   error decrease to machine-precision plateau.

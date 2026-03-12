@@ -75,7 +75,7 @@ _GRID_CM   = FFTGrid(N=4096, eta=0.25, alpha=1.5)
 
 
 # ---------------------------------------------------------------------------
-# Tests — one parametrized test per method per set
+# Tests  -  one parametrized test per method per set
 # ---------------------------------------------------------------------------
 
 @pytest.mark.parametrize("name", list(_SETS.keys()))

@@ -22,7 +22,7 @@ DOI: [10.1137/080718061](https://doi.org/10.1137/080718061)
 DOI: [10.21314/JCF.2004.137](https://doi.org/10.21314/JCF.2004.137)
 *(FRFT pricer allowing non-uniform log-strike grids; implemented in `pricers/frft.py`.)*
 
-**Junike, G. & Pankrashkin, K. (2022).** Precise option pricing by the COS method — how to choose the truncation range.
+**Junike, G. & Pankrashkin, K. (2022).** Precise option pricing by the COS method  -  how to choose the truncation range.
 *Applied Mathematics and Computation*, 421, 126935.
 DOI: [10.1016/j.amc.2022.126935](https://doi.org/10.1016/j.amc.2022.126935)
 Preprint: [arXiv:2004.02968](https://arxiv.org/abs/2004.02968)
@@ -126,7 +126,7 @@ DOI: [10.1111/1540-6261.00544](https://doi.org/10.1111/1540-6261.00544)
 *(FMLS CF for asset return distributions with finite upper moments; `models/fmls.py`.)*
 
 **Schoutens, W. & Teugels, J. L. (1998).** Lévy processes, polynomials and martingales.
-*Communications in Statistics — Stochastic Models*, 14(1–2), 335–349.
+*Communications in Statistics  -  Stochastic Models*, 14(1–2), 335–349.
 DOI: [10.1080/15326349808807475](https://doi.org/10.1080/15326349808807475)
 *(Foundational Meixner process paper.)*
 

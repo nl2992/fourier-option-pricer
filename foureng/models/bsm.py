@@ -1,4 +1,4 @@
-"""Black-Scholes-Merton characteristic function — PyFENG-backed.
+"""Black-Scholes-Merton characteristic function  -  PyFENG-backed.
 
 BSM is the simplest Fourier sanity check: the log-forward CF is Gaussian
 
@@ -11,7 +11,7 @@ throughout (verified to ~1e-14 in
 :mod:`tests/test_pyfeng_cf_wrappers.py`).
 
 Why bother at all given we have a closed form? Two reasons:
-  * Cross-model adapter symmetry — BSM becomes one of the ``_MODELS``
+  * Cross-model adapter symmetry  -  BSM becomes one of the ``_MODELS``
     dispatcher entries, so the pipeline + COS + FRFT + CM + PyFENG-FFT
     paths can all be driven by the same API for the BSM baseline.
   * A pricing sanity check that is known exact lets us bound numerical
@@ -30,7 +30,7 @@ from .base import ForwardSpec, ModelSpec
 
 @dataclass(frozen=True)
 class BsmParams(ModelSpec):
-    """Black-Scholes-Merton parameters — one scalar volatility.
+    """Black-Scholes-Merton parameters  -  one scalar volatility.
 
     ``sigma`` is the **lognormal diffusion volatility** (not variance),
     i.e. ``d log S = (r - q - 0.5*sigma^2) dt + sigma dW``.
@@ -63,14 +63,14 @@ def _pyfeng_bsm_model(fwd: ForwardSpec, p: BsmParams):
 
 
 def bsm_cf(u: np.ndarray, fwd: ForwardSpec, p: BsmParams) -> np.ndarray:
-    """CF of ``X_T = log(S_T / F_0)`` under BSM — via PyFENG's ``BsmFft``."""
+    """CF of ``X_T = log(S_T / F_0)`` under BSM  -  via PyFENG's ``BsmFft``."""
     m = _pyfeng_bsm_model(fwd, p)
     u_arr = np.asarray(u)
     return np.asarray(m.logp_cf(u_arr, texp=fwd.T), dtype=np.complex128)
 
 
 # ---------------------------------------------------------------------------
-# Cumulants — closed form (BSM is Gaussian in log-forward)
+# Cumulants  -  closed form (BSM is Gaussian in log-forward)
 # ---------------------------------------------------------------------------
 
 

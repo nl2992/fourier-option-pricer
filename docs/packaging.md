@@ -46,7 +46,7 @@ pip install "fourier-option-pricer==0.4.1" # pin to this release
 ```bash
 git clone https://github.com/nl2992/fourier-option-pricer.git
 cd fourier-option-pricer
-pip install -e ".[dev]"
+python -m pip install -e ".[dev]"
 ```
 
 The `[dev]` extra installs pytest, pytest-cov, and notebook dependencies.
@@ -57,7 +57,7 @@ The `[dev]` extra installs pytest, pytest-cov, and notebook dependencies.
 
 | Package | Minimum version | Purpose |
 |---------|----------------|---------|
-| numpy | ≥ 1.24 | Array operations |
+| numpy | ≥ 1.26 | Array operations |
 | scipy | ≥ 1.10 | Numerical integration, special functions |
 | pyfeng | ≥ 0.4.0 | CF backends for 8 PyFENG-backed models |
 
@@ -67,16 +67,18 @@ The `[dev]` extra installs pytest, pytest-cov, and notebook dependencies.
 
 ```bash
 # Fast CI-style suite (excludes slow and notebook tests):
-pytest -q -m "not slow"
+python -m pip install -e ".[test]"
+python -m pytest -q -m "not slow"
 
 # Full suite including Monte Carlo and notebook execution guards:
-pytest -q
+python -m pip install -e ".[test,notebook]"
+python -m pytest -q
 
 # Paper-replication tests only:
-pytest -q -m "paper"
+python -m pytest -q -m "paper"
 
 # Software-reference tests only (MathWorks Bates):
-pytest -q -m "software_reference"
+python -m pytest -q -m "software_reference"
 ```
 
 ---
@@ -120,8 +122,8 @@ pytest -q -m "software_reference"
 ## CI / GitHub Actions
 
 The CI workflow (`.github/workflows/`) runs the fast test suite on push to `main` and on
-all pull requests. The matrix covers Python 3.9, 3.10, 3.11, and 3.12 on Ubuntu.
+all pull requests. The matrix covers Python 3.10, 3.11, and 3.12 on Ubuntu.
 
 pyfeng 0.4.x is pinned in the CI environment. Tests that depend on PyFENG (Bates, Heston,
 SV32, VG, CGMY, NIG, OUSV, Rough Heston) may fail locally if only pyfeng 0.3.x is
-installed — this is expected and does not indicate a code bug.
+installed  -  this is expected and does not indicate a code bug.

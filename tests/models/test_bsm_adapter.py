@@ -1,4 +1,4 @@
-"""BSM adapter — baseline sanity gate for the whole PyFENG integration.
+"""BSM adapter  -  baseline sanity gate for the whole PyFENG integration.
 
 BSM is the only model here with a trivial closed-form CF, so we get
 four hard gates for the price of one:
@@ -28,7 +28,7 @@ pyfeng = pytest.importorskip("pyfeng", reason="BSM adapter is PyFENG-backed")
 
 
 def _bs_call(S, K, r, q, T, sigma):
-    """Black-Scholes call — closed form, hand-rolled to stay PyFENG-free."""
+    """Black-Scholes call  -  closed form, hand-rolled to stay PyFENG-free."""
     from scipy.stats import norm
     F = S * np.exp((r - q) * T)
     d1 = (np.log(F / K) + 0.5 * sigma * sigma * T) / (sigma * np.sqrt(T))

@@ -1,7 +1,7 @@
 """Phase 2 tests: Carr-Madan FFT vs published tables.
 
-CM1999 Case 4 — Variance Gamma PUT prices at K=77,78,79.
-Lewis (2001)  — 15-digit Heston CALL prices at K=80..120.
+CM1999 Case 4  -  Variance Gamma PUT prices at K=77,78,79.
+Lewis (2001)   -  15-digit Heston CALL prices at K=80..120.
 """
 from __future__ import annotations
 import numpy as np

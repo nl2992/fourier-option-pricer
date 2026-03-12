@@ -31,7 +31,7 @@ def kou_setup():
     p = KouParams(sigma=0.16, lam=1.0, p=0.4, eta1=10.0, eta2=5.0)
     strikes = np.array([90.0, 95.0, 100.0, 105.0, 110.0])
     phi = lambda u: kou_cf(u, fwd, p)
-    # Carr-Madan reference at N=16384 — converged to ~1e-7
+    # Carr-Madan reference at N=16384  -  converged to ~1e-7
     ref = carr_madan_price_at_strikes(phi, fwd, FFTGrid(16384, 0.05, 1.5), strikes)
     return dict(fwd=fwd, p=p, phi=phi, strikes=strikes, ref=ref)
 

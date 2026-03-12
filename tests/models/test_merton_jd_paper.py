@@ -1,14 +1,14 @@
 """Tests for the Merton (1976) jump-diffusion model.
 
-Layer 1 — limit / analytic benchmarks
+Layer 1  -  limit / analytic benchmarks
     * lambda=0  reduces to BSM (verified against bs_price_from_fwd).
     * Cumulant formulae match numerical Cauchy integration.
 
-Layer 2 — cross-engine agreement
+Layer 2  -  cross-engine agreement
     Lewis / COS / Carr-Madan / FRFT must all agree to atol=1e-4 on a
     representative parameter set (sigma=0.2, lam=0.3, muj=-0.05, sigj=0.1).
 
-Layer 3 — structural
+Layer 3  -  structural
     phi(0)=1, phi(-i)=1, |phi(u)|<=1, c2>0, no-arbitrage bounds,
     monotonicity in lambda and sigma.
 

@@ -58,7 +58,7 @@ def test_iv_heston_smile_shape_is_sane(lewis_heston):
     iv = implied_vol_from_prices(C, K, fwd, cp=1)
 
     assert np.all(np.isfinite(iv)), iv
-    # Negative-rho Heston: IV(K=80) > IV(K=120). Loose check — depends on
+    # Negative-rho Heston: IV(K=80) > IV(K=120). Loose check  -  depends on
     # parameter regime but is robust for Lewis's canonical set.
     assert iv[0] > iv[-1], f"no left skew: iv[80]={iv[0]}, iv[120]={iv[-1]}"
 

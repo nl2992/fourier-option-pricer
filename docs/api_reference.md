@@ -114,7 +114,7 @@ from foureng.pipeline import price_strip
 | `carr_madan_price_at_strikes(phi, fwd, grid, strikes)` | CF, `ForwardSpec`, `FFTGrid`, strike array | NumPy array of call prices. |
 | `frft_price_at_strikes(phi, fwd, grid, strikes)` | CF, `ForwardSpec`, `FRFTGrid`, strike array | NumPy array of call prices. |
 | `filtered_cos_prices(phi, fwd, strikes, grid, filter_spec=...)` | CF, `ForwardSpec`, strike array, grid, filter | `COSResult` with spectral filtering applied. |
-| `price_strip(model, method, strikes, fwd, params, grid=None, ...)` | model label, method label, strike array, market inputs, params | Unified dispatcher — returns NumPy array of call prices. |
+| `price_strip(model, method, strikes, fwd, params, grid=None, ...)` | model label, method label, strike array, market inputs, params | Unified dispatcher  -  returns NumPy array of call prices. |
 
 ### `price_strip` method labels
 

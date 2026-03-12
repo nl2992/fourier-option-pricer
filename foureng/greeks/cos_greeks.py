@@ -71,7 +71,7 @@ def _chi_psi_put(a: float, b: float, N: int, K: np.ndarray, F0: float):
 
     The put payoff is non-zero for y in [a, min(b, y*)] where y* = log(K/F0).
     All arrays broadcast to shape (N, nK); omega is (N,); d, in_interval,
-    deep_itm, deep_otm are (nK,). ``cos_cd`` is cos(omega*(d-a)) — reused
+    deep_itm, deep_otm are (nK,). ``cos_cd`` is cos(omega*(d-a))  -  reused
     for the Gamma formula.
     """
     K = np.atleast_1d(np.asarray(K, dtype=float))

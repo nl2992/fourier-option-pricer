@@ -1,11 +1,11 @@
-"""NIG adapter — CF parity, cross-method, frozen strip.
+"""NIG adapter  -  CF parity, cross-method, frozen strip.
 
-Parallel to ``test_cgmy_adapter.py`` — same gate pattern for the
+Parallel to ``test_cgmy_adapter.py``  -  same gate pattern for the
 Normal-Inverse-Gaussian Lévy model, backed by :class:`pyfeng.ExpNigFft`:
 
   1. ``nig_cf`` matches :meth:`pyfeng.ExpNigFft.charfunc_logprice`
      bit-exactly (~1e-14).
-  2. ``phi(u=0) = 1`` and ``phi(-i) = 1`` — the CF has the martingale
+  2. ``phi(u=0) = 1`` and ``phi(-i) = 1``  -  the CF has the martingale
      correction ``mu`` baked in (see :mod:`foureng.models.nig`).
   3. COS / FRFT / CM all agree with PyFENG's :meth:`ExpNigFft.price` to
      the ~1e-7 default-grid floor.
@@ -31,7 +31,7 @@ _PARAMS = NigParams(sigma=0.2, nu=0.5, theta=-0.10)
 
 
 def test_nig_cf_matches_pyfeng_charfunc_logprice():
-    """Bit-identity wrapper check — see models/nig.py for the translation."""
+    """Bit-identity wrapper check  -  see models/nig.py for the translation."""
     u = np.linspace(-10.0, 10.0, 41)
     phi_ours = nig_cf(u, _FWD, _PARAMS)
 
@@ -51,7 +51,7 @@ def test_nig_cf_martingale_at_zero():
 
 
 def test_nig_cf_martingale_at_minus_i():
-    """phi(-i) = E[exp(X_T)] = 1 — the ``mu`` drift is set for this."""
+    """phi(-i) = E[exp(X_T)] = 1  -  the ``mu`` drift is set for this."""
     phi_mi = nig_cf(np.array([-1j]), _FWD, _PARAMS)[0]
     assert abs(phi_mi - 1.0) < 1e-12
 
@@ -75,7 +75,7 @@ def test_nig_prices_match_pyfeng_fft_across_methods():
 
 
 def test_nig_regression_cm_oracle_grid(nig_regression_v1):
-    """CM at the oracle grid — numerical identity with the frozen array."""
+    """CM at the oracle grid  -  numerical identity with the frozen array."""
     ref = nig_regression_v1
     C = price_strip(ref.model, "carr_madan", ref.strikes, ref.fwd, ref.params,
                     grid=FFTGrid(N=32768, eta=0.10, alpha=1.5))

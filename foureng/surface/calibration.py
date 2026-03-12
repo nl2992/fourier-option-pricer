@@ -8,7 +8,7 @@ Default method is Nelder-Mead (gradient-free, bounded). The natural choice
 would be L-BFGS-B, but the IV-residual objective inherits ~1e-8 numerical
 noise per grid cell from COS pricing + safeguarded-Newton IV inversion. That
 noise trips L-BFGS-B's Wolfe line search on wider smile surfaces ("ABNORMAL
-TERMINATION IN LNSRCH" — the classic noisy-objective failure). Nelder-Mead
+TERMINATION IN LNSRCH"  -  the classic noisy-objective failure). Nelder-Mead
 is robust to this and converges reliably once parameters are normalised to a
 unit box.
 
@@ -135,7 +135,7 @@ def _calibrate(
             cum = cumulant_factory_from_params(params)
             ivs = model_iv_surface(spec, cf, cum, N=N, L=L)
         except Exception:
-            return 1e12  # infeasible region — push optimiser away
+            return 1e12  # infeasible region  -  push optimiser away
         if not np.all(np.isfinite(ivs)):
             return 1e12
         r = ivs - market_ivs

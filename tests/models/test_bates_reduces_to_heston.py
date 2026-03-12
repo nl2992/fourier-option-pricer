@@ -21,7 +21,7 @@ from foureng.utils.grids import FFTGrid, FRFTGrid
 
 
 def test_bates_cf_equals_heston_cf_when_lamj_zero(lewis_heston):
-    """CF identity — checked pointwise on a handful of frequencies."""
+    """CF identity  -  checked pointwise on a handful of frequencies."""
     d = lewis_heston
     fwd = ForwardSpec(S0=d["S0"], r=d["r"], q=d["q"], T=d["T"])
     hp = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"],
@@ -37,7 +37,7 @@ def test_bates_cf_equals_heston_cf_when_lamj_zero(lewis_heston):
 
 
 def test_bates_price_equals_heston_price_when_lamj_zero_cos(lewis_heston):
-    """COS strip reduction — deterministic engine, should be bit-identical."""
+    """COS strip reduction  -  deterministic engine, should be bit-identical."""
     d = lewis_heston
     fwd = ForwardSpec(S0=d["S0"], r=d["r"], q=d["q"], T=d["T"])
     hp = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"],
@@ -54,7 +54,7 @@ def test_bates_price_equals_heston_price_when_lamj_zero_cos(lewis_heston):
 
 
 def test_bates_price_equals_heston_price_when_lamj_zero_frft(lewis_heston):
-    """FRFT strip reduction — second Fourier engine, same identity."""
+    """FRFT strip reduction  -  second Fourier engine, same identity."""
     d = lewis_heston
     fwd = ForwardSpec(S0=d["S0"], r=d["r"], q=d["q"], T=d["T"])
     hp = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"],
@@ -72,7 +72,7 @@ def test_bates_price_equals_heston_price_when_lamj_zero_frft(lewis_heston):
 
 
 def test_bates_price_equals_heston_price_when_lamj_zero_cm(lewis_heston):
-    """Carr-Madan FFT strip reduction — third engine."""
+    """Carr-Madan FFT strip reduction  -  third engine."""
     d = lewis_heston
     fwd = ForwardSpec(S0=d["S0"], r=d["r"], q=d["q"], T=d["T"])
     hp = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"],

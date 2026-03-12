@@ -1,4 +1,4 @@
-"""GARCH diffusion model (Wu, Ma & Wang 2012) — native CF implementation.
+"""GARCH diffusion model (Wu, Ma & Wang 2012)  -  native CF implementation.
 
 The GARCH diffusion model couples a log-normal spot process with a
 mean-reverting variance process whose diffusion coefficient is proportional
@@ -26,7 +26,7 @@ the MGF formula directly from Lemma 2.1, bypassing PyFENG entirely.
 PyFENG compatibility note
 -------------------------
 The PyFENG docstring for ``GarchFftWuMaWang2012`` lists the same benchmark
-prices as ``Sv32Fft`` with identical parameters — this appears to be a
+prices as ``Sv32Fft`` with identical parameters  -  this appears to be a
 copy-paste error in the upstream docstring. The GARCH diffusion and 3/2
 SV models are mathematically distinct: with the Lewis (2000) benchmark
 parameters (sigma=0.06, mr=20.48, theta=0.218, vov=3.20, rho=-0.99,
@@ -67,7 +67,7 @@ class GarchWMW2012Params(ModelSpec):
     theta :
         Long-term mean of the variance process. Must be ``> 0``.
     nu :
-        Vol-of-vol — coefficient on the ``v * dW2`` diffusion term.
+        Vol-of-vol  -  coefficient on the ``v * dW2`` diffusion term.
         Must be ``> 0``.
     rho :
         Correlation between spot and variance Brownian motions.
@@ -107,7 +107,7 @@ class GarchWMW2012Params(ModelSpec):
 
 
 # ---------------------------------------------------------------------------
-# Native MGF / CF — independent of PyFENG's pyfeng.GarchFftWuMaWang2012
+# Native MGF / CF  -  independent of PyFENG's pyfeng.GarchFftWuMaWang2012
 # ---------------------------------------------------------------------------
 
 
@@ -191,7 +191,7 @@ def garch_wmw2012_cf(u: np.ndarray, fwd: ForwardSpec, p: GarchWMW2012Params) -> 
 
 
 # ---------------------------------------------------------------------------
-# Cumulants — numerical Cauchy integral
+# Cumulants  -  numerical Cauchy integral
 # ---------------------------------------------------------------------------
 
 

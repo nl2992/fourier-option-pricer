@@ -1,4 +1,4 @@
-"""Meixner process (Schoutens & Teugels 1998) — native CF.
+"""Meixner process (Schoutens & Teugels 1998)  -  native CF.
 
 The Meixner distribution is an infinitely divisible distribution whose
 characteristic function has a closed form related to the ratio of cosine
@@ -22,9 +22,9 @@ Equivalently, the Lévy exponent of X_T (with martingale correction) is:
 so φ(u) = exp(T · ψ(u)).
 
 Here the parameters are:
-    a : float, a > 0  — the "scale" parameter (controls tail heaviness).
-    b : float, |b| < π — skewness parameter.
-    delta : float, delta > 0 — intensity parameter (controls kurtosis).
+    a : float, a > 0   -  the "scale" parameter (controls tail heaviness).
+    b : float, |b| < π  -  skewness parameter.
+    delta : float, delta > 0  -  intensity parameter (controls kurtosis).
 
 The one-parameter martingale condition is:
     ω = −2δ · [log cos(b/2) − log cos((b+a)/2)]
@@ -45,7 +45,7 @@ We compute cumulants numerically for COS grid construction.
 References
 ----------
 * Schoutens, W. & Teugels, J. L. (1998), "Lévy processes, polynomials
-  and martingales", *Communications in Statistics — Stochastic Models*,
+  and martingales", *Communications in Statistics  -  Stochastic Models*,
   14(1-2), 335–349.
 * Schoutens, W. (2002), "The Meixner Process: Theory and Applications in
   Finance", *EUT Report*, EURANDOM, Eindhoven.
@@ -145,7 +145,7 @@ def meixner_cf(u: np.ndarray, fwd: ForwardSpec, p: MeixnerParams) -> np.ndarray:
 
 
 # ---------------------------------------------------------------------------
-# Cumulants — numerical Cauchy integral (no simple closed form needed)
+# Cumulants  -  numerical Cauchy integral (no simple closed form needed)
 # ---------------------------------------------------------------------------
 
 

@@ -1,6 +1,6 @@
 """Heston (1993) characteristic function.
 
-Implementation note — **PyFENG is the CF implementation for this model**.
+Implementation note  -  **PyFENG is the CF implementation for this model**.
 We use :meth:`pyfeng.HestonFft.logp_cf` directly so the project
 does not duplicate the professor's code. The previous in-house analytic
 "Formulation 2" CF has been retired; :data:`heston_cf_form2` is kept as a
@@ -12,7 +12,7 @@ This project uses ``X_T = log(S_T / F_0)`` throughout (log-forward).
 PyFENG's method name says "logprice" but it numerically agrees with our
 log-forward CF to ~1e-18 on the Lewis parameters (verified across
 ``u in [-10, 10]``). If a future PyFENG release changes this, the single
-convention shift ``phi * exp(-1j*u*log(F0))`` belongs here — marked
+convention shift ``phi * exp(-1j*u*log(F0))`` belongs here  -  marked
 inline below.
 """
 
@@ -73,9 +73,9 @@ def _pyfeng_heston_model(fwd: ForwardSpec, p: HestonParams):
     """Build-and-cache a :class:`pyfeng.HestonFft` for (fwd, p).
 
     PyFENG's constructor is relatively expensive; :meth:`logp_cf`
-    is cheap. We cache per ``(p, fwd)`` so repeated CF evaluations — e.g.
+    is cheap. We cache per ``(p, fwd)`` so repeated CF evaluations  -  e.g.
     the 64-point contour integral in :func:`heston_cumulants` and a
-    subsequent COS/FRFT/Carr-Madan pricing pass — all hit the same model.
+    subsequent COS/FRFT/Carr-Madan pricing pass  -  all hit the same model.
     """
     return build_cached(
         _HESTON_MODEL_CACHE,
@@ -110,7 +110,7 @@ def heston_cf(u: np.ndarray, fwd: ForwardSpec, p: HestonParams) -> np.ndarray:
     m = _pyfeng_heston_model(fwd, p)
     u_arr = np.asarray(u)
     phi = np.asarray(m.logp_cf(u_arr, texp=fwd.T), dtype=np.complex128)
-    # Convention-shift hook (currently a no-op — PyFENG's logp_cf
+    # Convention-shift hook (currently a no-op  -  PyFENG's logp_cf
     # is already in log-forward convention for this class, verified). If
     # this ever changes upstream: phi *= np.exp(-1j * u_arr * np.log(fwd.F0))
     return phi
@@ -122,7 +122,7 @@ heston_cf_form2 = heston_cf
 
 
 # ---------------------------------------------------------------------------
-# Riccati decomposition — needed by Double Heston and any model that
+# Riccati decomposition  -  needed by Double Heston and any model that
 # composes two independent Heston variance factors.
 # ---------------------------------------------------------------------------
 

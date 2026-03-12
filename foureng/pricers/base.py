@@ -16,7 +16,7 @@ from __future__ import annotations
 
 
 class BasePricer:
-    """Abstract pricer contract — one class per Fourier method.
+    """Abstract pricer contract  -  one class per Fourier method.
 
     **Pass 1: empty placeholder.** Intended Pass-2 surface:
 
