@@ -1,0 +1,2 @@
+case_id,table,model,method,option_type,S0,r,q,T,sigma,lam,p,eta1,eta2,K,expected_price,tolerance_abs,reference_type
+kou_phase4,Derived high-resolution strip,kou,cos,call,100.0,0.05,0.0,0.5,0.16,1.0,0.4,10.0,5.0,80.0,,1.0e-6,derived_reference

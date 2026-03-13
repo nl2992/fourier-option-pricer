@@ -1,0 +1,9 @@
+paper_key: fmls_2003
+citation: "Carr, P. and Wu, L. (2003), The Finite Moment Log Stable Process and Option Pricing"
+doi: "10.1111/1540-6261.00544"
+reference_type: derived_reference
+model: fmls
+method: carr_madan
+table: "Table II representative parameters and alpha=2 BSM limit"
+tolerance_abs: 1.0e-4
+notes: "Tests use Carr-Wu representative parameters and analytic alpha=2 BSM limit; exact table prices are not yet copied."

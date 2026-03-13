@@ -1,0 +1,2 @@
+case_id,table,model,method,option_type,S0,r,q,T,sigma,lam,mu_j,sigma_j,K,expected_price,tolerance_abs,reference_type
+merton_zero_lambda,BSM limit,merton_jd,poisson_mixture_bsm,call,100.0,0.0,0.0,1.0,0.2,0.0,0.0,0.0,85.0,,1.0e-5,external_reference

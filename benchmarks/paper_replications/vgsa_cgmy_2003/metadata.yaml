@@ -1,0 +1,9 @@
+paper_key: vgsa_cgmy_2003
+citation: "Carr, P., Geman, H., Madan, D.B. and Yor, M. (2002), The Fine Structure of Asset Returns"
+doi: "10.1086/338705"
+reference_type: derived_reference
+model: vgsa
+method: cos_carr_madan_frft
+table: "CGMY/VGSA-style parameter set checks"
+tolerance_abs: 1.0e-4
+notes: "Current tests use parameter-set and cross-method checks; exact paper price tables are not copied."

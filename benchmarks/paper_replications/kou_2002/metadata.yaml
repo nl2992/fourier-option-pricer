@@ -1,0 +1,9 @@
+paper_key: kou_2002
+citation: "Kou, S.G. (2002), A Jump-Diffusion Model for Option Pricing"
+doi: "10.1287/mnsc.48.8.1086.166"
+reference_type: derived_reference
+model: kou
+method: cos
+table: "Double-exponential jump-diffusion CF/cumulant checks"
+tolerance_abs: 1.0e-6
+notes: "The current tests use high-resolution Carr-Madan/COS references rather than copied Kou paper tables."

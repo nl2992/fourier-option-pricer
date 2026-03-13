@@ -1,0 +1,9 @@
+paper_key: fang_oosterlee_2008_cos
+citation: "Fang, F. and Oosterlee, C.W. (2008), A Novel Pricing Method for European Options Based on Fourier-Cosine Series Expansions"
+doi: "10.1137/080718061"
+reference_type: paper_table
+model: bsm_heston_vg_cgmy
+method: cos
+table: "Tables 1, 2, 4, 5, 7, 8, 9, 10"
+tolerance_abs: 1.0e-4
+notes: "Scalar published prices are copied from the FO2008 replication registry; Table 6 strip remains a derived high-N COS reference."

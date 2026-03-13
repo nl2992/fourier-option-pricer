@@ -1,0 +1,9 @@
+paper_key: ruijter_2015_spectral_filters
+citation: "Ruijter, M.J., Versteegh, M. and Oosterlee, C.W. (2015), On the Application of Spectral Filters in a Fourier Option Pricing Technique"
+doi: "10.21314/JCF.2015.306"
+reference_type: numerical_stability
+model: cos
+method: filtered_cos
+table: "Gibbs/stability improvement checks"
+tolerance_abs: 1.0e-4
+notes: "Current tests validate filter weights and fixed-N improvement behavior, not copied paper tables."

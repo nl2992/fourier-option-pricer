@@ -1,0 +1,6 @@
+case_id,table,model,method,option_type,S0,r,q,T,kappa,theta,nu,rho,v0,K,expected_price,tolerance_abs,reference_type
+lewis_heston_strip,Derived Lewis-Heston strip,heston,frft,call,100.0,0.01,0.02,1.0,4.0,0.25,1.0,-0.5,0.04,80.0,26.774758743998854,1.0e-4,derived_reference
+lewis_heston_strip,Derived Lewis-Heston strip,heston,frft,call,100.0,0.01,0.02,1.0,4.0,0.25,1.0,-0.5,0.04,90.0,20.933349000596710,1.0e-4,derived_reference
+lewis_heston_strip,Derived Lewis-Heston strip,heston,frft,call,100.0,0.01,0.02,1.0,4.0,0.25,1.0,-0.5,0.04,100.0,16.070154917028834,1.0e-4,derived_reference
+lewis_heston_strip,Derived Lewis-Heston strip,heston,frft,call,100.0,0.01,0.02,1.0,4.0,0.25,1.0,-0.5,0.04,110.0,12.132211516709845,1.0e-4,derived_reference
+lewis_heston_strip,Derived Lewis-Heston strip,heston,frft,call,100.0,0.01,0.02,1.0,4.0,0.25,1.0,-0.5,0.04,120.0,9.024913483457836,1.0e-4,derived_reference

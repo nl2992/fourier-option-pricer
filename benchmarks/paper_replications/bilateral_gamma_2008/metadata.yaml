@@ -1,0 +1,9 @@
+paper_key: bilateral_gamma_2008
+citation: "Kuchler, U. and Tappe, S. (2008), Bilateral Gamma Distributions and Processes in Financial Mathematics"
+doi: "10.1016/j.spa.2007.04.006"
+reference_type: derived_reference
+model: bilateral_gamma
+method: carr_madan
+table: "Moment, cumulant, martingale, and DAX-style parameter sanity checks"
+tolerance_abs: 1.0e-4
+notes: "Tests validate analytic moments and martingale structure; exact option price table values are not yet copied."

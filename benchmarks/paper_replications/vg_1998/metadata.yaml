@@ -1,0 +1,9 @@
+paper_key: vg_1998
+citation: "Madan, D.B., Carr, P. and Chang, E.C. (1998), The Variance Gamma Process and Option Pricing"
+doi: "10.1023/A:1009703431535"
+reference_type: adapter
+model: variance_gamma
+method: cos_carr_madan_frft_pyfeng
+table: "VG structural and cross-engine checks"
+tolerance_abs: 1.0e-3
+notes: "Exact VG price anchor currently comes through Carr-Madan 1999 VG Case 4; VG 1998 table values are not separately copied."

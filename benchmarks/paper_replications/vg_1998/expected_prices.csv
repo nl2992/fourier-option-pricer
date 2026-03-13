@@ -1,0 +1,2 @@
+case_id,table,model,method,option_type,S0,r,q,T,sigma,nu,theta,K,expected_price,tolerance_abs,reference_type
+cm1999_vg_case4,VG Case 4 via Carr-Madan 1999,variance_gamma,carr_madan,put,100.0,0.05,0.03,0.25,0.25,2.0,-0.10,77.0,0.6356,1.0e-3,paper_table
