@@ -23,6 +23,9 @@ from foureng.pipeline import price_strip
 from foureng.utils.grids import COSGrid, COSGridPolicy
 
 
+pytestmark = [pytest.mark.numerical_stability]
+
+
 # ---------------------------------------------------------------------------
 # Backward-compatibility: filter_spec=None / "none" → exact old output
 # ---------------------------------------------------------------------------

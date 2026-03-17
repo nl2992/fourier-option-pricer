@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import numpy as np
+import pytest
 
 from foureng.models.base import ForwardSpec
 from foureng.models.bsm import BsmParams, bsm_cf, bsm_cumulants
@@ -11,6 +12,9 @@ from foureng.pricers.cos import cos_adaptive_decision, cos_auto_grid, cos_prices
 from foureng.pricers.lewis import lewis_call_prices
 from foureng.utils.cumulants import Cumulants, cos_centered_half_width
 from foureng.utils.grids import COSGrid, COSGridPolicy
+
+
+pytestmark = [pytest.mark.numerical_stability]
 
 
 def test_centered_cos_grid_matches_uncentered_bsm():

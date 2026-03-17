@@ -29,6 +29,8 @@ from foureng.experiments.cos_filter_grid_search import (
     select_fastest_under_tolerance,
 )
 
+pytestmark = [pytest.mark.numerical_stability]
+
 # ---------------------------------------------------------------------------
 # Shared fixtures
 # ---------------------------------------------------------------------------

@@ -2,12 +2,16 @@
 from __future__ import annotations
 
 import numpy as np
+import pytest
 
 from foureng.models.base import ForwardSpec
 from foureng.models.heston import HestonParams, heston_cf_form2, heston_cumulants
 from foureng.pricers.carr_madan import carr_madan_price_at_strikes
 from foureng.pricers.cos import cos_auto_grid, cos_prices
 from foureng.utils.grids import FFTGrid
+
+
+pytestmark = [pytest.mark.paper, pytest.mark.external_reference]
 
 
 def test_heston_carr_madan_lewis(lewis_heston):

@@ -18,6 +18,9 @@ import pytest
 from foureng.utils.spectral_filters import COSFilterSpec, cos_filter_weights
 
 
+pytestmark = [pytest.mark.numerical_stability]
+
+
 # ---------------------------------------------------------------------------
 # Parametrised shape / finiteness / sigma_0 = 1
 # ---------------------------------------------------------------------------

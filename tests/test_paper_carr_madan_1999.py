@@ -2,11 +2,17 @@
 from __future__ import annotations
 
 import numpy as np
+import pytest
 
 from foureng.models.base import ForwardSpec
 from foureng.models.variance_gamma import VGParams, vg_cf
 from foureng.pricers.carr_madan import carr_madan_price_at_strikes
 from foureng.utils.grids import FFTGrid
+from tests._paper_assertions import assert_price_table
+from tests._reference_loaders import load_paper_case, numeric_column
+
+
+pytestmark = [pytest.mark.paper, pytest.mark.external_reference]
 
 
 def test_vg_carr_madan_cm1999_case4(cm1999_vg):
@@ -19,5 +25,6 @@ def test_vg_carr_madan_cm1999_case4(cm1999_vg):
     calls = carr_madan_price_at_strikes(phi, fwd, grid, d["strikes"])
     puts = calls - d["S0"] * np.exp(-d["q"] * d["T"]) + d["strikes"] * np.exp(-d["r"] * d["T"])
 
-    err = np.abs(puts - d["ref_puts"]).max()
-    assert err < 1e-3, f"CM1999 VG Case 4 max err = {err:.3e}\n puts = {puts}\n ref = {d['ref_puts']}"
+    case = load_paper_case("carr_madan_1999", "vg_case4")
+    expected = np.asarray(numeric_column(case.rows, "expected_price"))
+    assert_price_table(puts, expected, case.atol, case.label)

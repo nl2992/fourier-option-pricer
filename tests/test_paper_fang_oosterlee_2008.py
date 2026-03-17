@@ -28,6 +28,9 @@ from tests._paper_test_support import (
 )
 
 
+pytestmark = [pytest.mark.paper, pytest.mark.external_reference]
+
+
 def test_fo2008_anchor_registry_stays_explicit():
     assert tuple(PUBLISHED_PAPER_ANCHOR_KEYS) == (
         "fo2008_heston_atm",

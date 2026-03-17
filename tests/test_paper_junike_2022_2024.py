@@ -24,6 +24,9 @@ from tests._paper_test_support import (
 )
 
 
+pytestmark = [pytest.mark.paper, pytest.mark.derived_reference, pytest.mark.numerical_stability]
+
+
 def test_centered_cos_grid_matches_uncentered_bsm():
     """Centered COS should match the legacy uncentered grid on BSM."""
     fwd = ForwardSpec(S0=100.0, r=0.03, q=0.01, T=0.5)

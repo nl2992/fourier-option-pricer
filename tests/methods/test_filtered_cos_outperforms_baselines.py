@@ -47,6 +47,8 @@ from foureng.experiments.cos_filter_grid_search import (
     select_fastest_under_tolerance,
 )
 
+pytestmark = [pytest.mark.numerical_stability]
+
 
 def _make_candidate_set(policy: COSGridPolicy) -> list[FilterGridCandidate]:
     """Standard candidate set: Junike-no-filter + four filter variants."""
