@@ -67,6 +67,7 @@ class HestonParams(ModelSpec):
 # ---------------------------------------------------------------------------
 
 _HESTON_MODEL_CACHE: dict[tuple, Any] = {}
+_HESTON_CUMULANT_CACHE: dict[tuple[HestonParams, ForwardSpec], tuple[float, float, float]] = {}
 
 
 def _pyfeng_heston_model(fwd: ForwardSpec, p: HestonParams):
@@ -208,10 +209,16 @@ def heston_cumulants(fwd: ForwardSpec, p: HestonParams) -> tuple[float, float, f
     on the CF. Matches the project's convention documented in
     ``utils/cumulants.py`` and used by :func:`cos_auto_grid`.
     """
+    cached = _HESTON_CUMULANT_CACHE.get((p, fwd))
+    if cached is not None:
+        return cached
+
     from ..utils.cumulants import cumulants_from_cf
 
     def _phi(u):
         return heston_cf(u, fwd, p)
 
     c = cumulants_from_cf(_phi, order=4, radius=0.25, M=64)
-    return float(c[0]), float(c[1]), float(c[3])
+    out = (float(c[0]), float(c[1]), float(c[3]))
+    _HESTON_CUMULANT_CACHE[(p, fwd)] = out
+    return out

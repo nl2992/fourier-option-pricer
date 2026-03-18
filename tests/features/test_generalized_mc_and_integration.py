@@ -224,3 +224,23 @@ def test_invalid_inputs_raise_clear_errors():
         price_strip("bsm", "not_a_method", np.array([100.0]), fwd, bsm)
     with pytest.raises(ValueError, match="unknown model"):
         price_strip("not_a_model", "cos", np.array([100.0]), fwd, bsm)
+    with pytest.raises(ValueError, match="requires an explicit FFTGrid"):
+        price_strip("bsm", "carr_madan", np.array([100.0]), fwd, bsm)
+    with pytest.raises(ValueError, match="requires an explicit FRFTGrid"):
+        price_strip("bsm", "frft", np.array([100.0]), fwd, bsm)
+
+
+def test_heston_cos_improved_repeated_calls_are_stable():
+    """Repeated identical Heston calls should stay numerically identical.
+
+    This guards the cached-cumulant path used by ``cos_improved`` so the
+    optimization remains behavior-preserving.
+    """
+    fwd = ForwardSpec(S0=100.0, r=0.01, q=0.02, T=1.0)
+    p = HestonParams(kappa=4.0, theta=0.25, nu=1.0, rho=-0.5, v0=0.04)
+    strikes = np.linspace(80.0, 120.0, 9)
+
+    first = price_strip("heston", "cos_improved", strikes, fwd, p)
+    second = price_strip("heston", "cos_improved", strikes, fwd, p)
+
+    assert np.array_equal(first, second)
