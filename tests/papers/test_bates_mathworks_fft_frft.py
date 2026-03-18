@@ -18,6 +18,7 @@ Tolerance notes:
   Same 4-decimal truncation and grid-centre difference apply; the max
   observed deviation is ~7.6e-3 across the 5x6 surface.
 """
+
 from __future__ import annotations
 
 import json

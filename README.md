@@ -341,6 +341,22 @@ python -m pip install -e ".[test,notebook]"
 python -m pytest -q tests/features/test_paper_replication_notebooks_execute.py
 ```
 
+For developer quality checks:
+
+```bash
+python -m pip install -e ".[dev]"
+ruff check foureng/ tests/
+ruff format --check foureng/ tests/
+python -m mypy foureng
+```
+
+For optional performance regression tracking:
+
+```bash
+python -m pip install -e ".[bench]"
+python benchmarks/pyperf_canonical_cases.py
+```
+
 ---
 
 ## Project contribution
@@ -417,6 +433,8 @@ Full workflow, library reuse policy, original contributions, and validation gate
 | `tests/features/` | End-to-end features: Monte Carlo, control variates, implied vol, calibration, Greeks, public API. |
 
 See [tests/README.md](tests/README.md) for the full folder map.
+
+Contributor guide: [CONTRIBUTING.md](CONTRIBUTING.md). Benchmark notes: [docs/benchmarking.md](docs/benchmarking.md). Citation metadata: [CITATION.cff](CITATION.cff).
 
 ---
 

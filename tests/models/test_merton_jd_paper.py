@@ -19,24 +19,24 @@ References
 * Cont, R. & Tankov, P. (2004), *Financial Modelling with Jump Processes*,
   CRC Press.
 """
+
 from __future__ import annotations
 
 import numpy as np
 import pytest
 
+from foureng.iv.implied_vol import BSInputs, bs_price_from_fwd
+from foureng.models.base import ForwardSpec
 from foureng.models.merton_jd import (
     MertonJDParams,
     merton_jd_cf,
     merton_jd_cumulants,
 )
-from foureng.models.base import ForwardSpec
-from foureng.pricers.lewis import lewis_call_prices
+from foureng.pricers.carr_madan import carr_madan_price_at_strikes
 from foureng.pricers.cos import cos_auto_grid, cos_prices
 from foureng.pricers.frft import frft_price_at_strikes
-from foureng.pricers.carr_madan import carr_madan_price_at_strikes
+from foureng.pricers.lewis import lewis_call_prices
 from foureng.utils.grids import FFTGrid, FRFTGrid
-from foureng.iv.implied_vol import BSInputs, bs_price_from_fwd
-
 
 pytestmark = [pytest.mark.paper, pytest.mark.derived_reference]
 
@@ -64,13 +64,13 @@ def bench():
 def lewis_ref(bench):
     p, fwd = bench
     phi = lambda u: merton_jd_cf(u, fwd, p)
-    return lewis_call_prices(phi, STRIKES, spot=fwd.S0, texp=fwd.T,
-                             intr=fwd.r, divr=fwd.q)
+    return lewis_call_prices(phi, STRIKES, spot=fwd.S0, texp=fwd.T, intr=fwd.r, divr=fwd.q)
 
 
 # ---------------------------------------------------------------------------
 # Layer 1: Limit cases and analytic benchmarks
 # ---------------------------------------------------------------------------
+
 
 class TestMertonJDLimitCases:
     """lambda=0 reduces to BSM; cumulants match numerical Cauchy integral."""
@@ -91,7 +91,9 @@ class TestMertonJDLimitCases:
             BSInputs(F0=fwd.F0, K=K, T=fwd.T, r=fwd.r, q=fwd.q),
         )
         np.testing.assert_allclose(
-            jd_price, bsm_price, atol=1e-5,
+            jd_price,
+            bsm_price,
+            atol=1e-5,
             err_msg=f"MJD(lam=0) vs BSM at K={K}",
         )
 
@@ -100,7 +102,7 @@ class TestMertonJDLimitCases:
         p = _P_BENCH
         fwd = _FWD_BENCH
         c1, c2, c4 = merton_jd_cumulants(fwd, p)
-        zeta = np.expm1(p.muj + 0.5 * p.sigj ** 2)
+        zeta = np.expm1(p.muj + 0.5 * p.sigj**2)
         omega = -p.lam * zeta
         expected_c1 = fwd.T * (omega + p.lam * p.muj)
         np.testing.assert_allclose(c1, expected_c1, rtol=1e-12)
@@ -110,7 +112,7 @@ class TestMertonJDLimitCases:
         p = _P_BENCH
         fwd = _FWD_BENCH
         c1, c2, c4 = merton_jd_cumulants(fwd, p)
-        expected_c2 = fwd.T * (p.sigma ** 2 + p.lam * (p.muj ** 2 + p.sigj ** 2))
+        expected_c2 = fwd.T * (p.sigma**2 + p.lam * (p.muj**2 + p.sigj**2))
         np.testing.assert_allclose(c2, expected_c2, rtol=1e-12)
 
     def test_cumulants_c4(self):
@@ -118,9 +120,7 @@ class TestMertonJDLimitCases:
         p = _P_BENCH
         fwd = _FWD_BENCH
         c1, c2, c4 = merton_jd_cumulants(fwd, p)
-        expected_c4 = fwd.T * p.lam * (
-            p.muj ** 4 + 6 * p.muj ** 2 * p.sigj ** 2 + 3 * p.sigj ** 4
-        )
+        expected_c4 = fwd.T * p.lam * (p.muj**4 + 6 * p.muj**2 * p.sigj**2 + 3 * p.sigj**4)
         np.testing.assert_allclose(c4, expected_c4, rtol=1e-12)
 
     def test_price_increases_with_jump_vol(self):
@@ -138,14 +138,14 @@ class TestMertonJDLimitCases:
         p_lo = price_at_sigj(0.05)
         p_hi = price_at_sigj(0.30)
         assert p_hi > p_lo, (
-            f"ATM call should increase with sigj: "
-            f"sigj=0.05→{p_lo:.4f}, sigj=0.30→{p_hi:.4f}"
+            f"ATM call should increase with sigj: sigj=0.05→{p_lo:.4f}, sigj=0.30→{p_hi:.4f}"
         )
 
 
 # ---------------------------------------------------------------------------
 # Layer 2: Cross-engine agreement
 # ---------------------------------------------------------------------------
+
 
 class TestMertonJDCrossEngine:
     """All pricers must agree with the Lewis reference to atol=1e-4."""
@@ -156,24 +156,21 @@ class TestMertonJDCrossEngine:
         cums = merton_jd_cumulants(fwd, p)
         grid = cos_auto_grid(cums, N=512, L=12.0)
         res = cos_prices(phi, fwd, STRIKES, grid)
-        np.testing.assert_allclose(res.call_prices, lewis_ref, atol=1e-4,
-                                   err_msg="COS vs Lewis")
+        np.testing.assert_allclose(res.call_prices, lewis_ref, atol=1e-4, err_msg="COS vs Lewis")
 
     def test_carr_madan_vs_lewis(self, bench, lewis_ref):
         p, fwd = bench
         phi = lambda u: merton_jd_cf(u, fwd, p)
         grid = FFTGrid(N=4096, eta=0.25, alpha=1.5)
         prices = carr_madan_price_at_strikes(phi, fwd, grid, STRIKES)
-        np.testing.assert_allclose(prices, lewis_ref, atol=1e-4,
-                                   err_msg="Carr-Madan vs Lewis")
+        np.testing.assert_allclose(prices, lewis_ref, atol=1e-4, err_msg="Carr-Madan vs Lewis")
 
     def test_frft_vs_lewis(self, bench, lewis_ref):
         p, fwd = bench
         phi = lambda u: merton_jd_cf(u, fwd, p)
         grid = FRFTGrid(N=4096, eta=0.25, alpha=1.5, lam=0.01)
         prices = frft_price_at_strikes(phi, fwd, grid, STRIKES)
-        np.testing.assert_allclose(prices, lewis_ref, atol=1e-4,
-                                   err_msg="FRFT vs Lewis")
+        np.testing.assert_allclose(prices, lewis_ref, atol=1e-4, err_msg="FRFT vs Lewis")
 
     @pytest.mark.parametrize("K", [85.0, 90.0, 100.0, 110.0, 115.0])
     def test_cos_vs_lewis_per_strike(self, K):
@@ -181,18 +178,19 @@ class TestMertonJDCrossEngine:
         fwd = _FWD_BENCH
         phi = lambda u: merton_jd_cf(u, fwd, p)
         strikes = np.array([K])
-        lewis = lewis_call_prices(phi, strikes, spot=fwd.S0, texp=fwd.T,
-                                  intr=fwd.r, divr=fwd.q)
+        lewis = lewis_call_prices(phi, strikes, spot=fwd.S0, texp=fwd.T, intr=fwd.r, divr=fwd.q)
         cums = merton_jd_cumulants(fwd, p)
         grid = cos_auto_grid(cums, N=512, L=12.0)
         res = cos_prices(phi, fwd, strikes, grid)
-        np.testing.assert_allclose(res.call_prices, lewis, atol=1e-4,
-                                   err_msg=f"COS vs Lewis at K={K}")
+        np.testing.assert_allclose(
+            res.call_prices, lewis, atol=1e-4, err_msg=f"COS vs Lewis at K={K}"
+        )
 
 
 # ---------------------------------------------------------------------------
 # Layer 3: Structural tests
 # ---------------------------------------------------------------------------
+
 
 class TestMertonJDStructural:
     """CF normalization and no-arbitrage properties."""
@@ -207,16 +205,18 @@ class TestMertonJDStructural:
         """phi(-i) = 1, i.e. E[S_T/F_0] = 1."""
         p, fwd = bench
         phi_neg_i = merton_jd_cf(np.array([-1j]), fwd, p)
-        np.testing.assert_allclose(abs(phi_neg_i[0] - 1.0), 0.0, atol=1e-12,
-                                   err_msg="Merton JD martingale phi(-i)=1")
+        np.testing.assert_allclose(
+            abs(phi_neg_i[0] - 1.0), 0.0, atol=1e-12, err_msg="Merton JD martingale phi(-i)=1"
+        )
 
     def test_cf_modulus_le_one(self, bench):
         """|phi(u)| <= 1 for real u."""
         p, fwd = bench
         u_grid = np.linspace(-20, 20, 401)
         phi = merton_jd_cf(u_grid, fwd, p)
-        assert np.all(np.abs(phi) <= 1.0 + 1e-12), \
+        assert np.all(np.abs(phi) <= 1.0 + 1e-12), (
             f"|phi|>1 at some u: max={np.max(np.abs(phi)):.6f}"
+        )
 
     def test_cumulants_positive_variance(self, bench):
         """Second cumulant (variance) must be positive."""
@@ -229,8 +229,7 @@ class TestMertonJDStructural:
         """Call prices >= max(F-K, 0)."""
         p, fwd = bench
         intrinsic = np.maximum(fwd.F0 - STRIKES, 0.0)
-        assert np.all(lewis_ref >= intrinsic - 1e-6), \
-            "Call price below intrinsic value"
+        assert np.all(lewis_ref >= intrinsic - 1e-6), "Call price below intrinsic value"
 
     def test_call_le_spot(self, bench, lewis_ref):
         """Call prices <= spot."""
@@ -243,8 +242,7 @@ class TestMertonJDStructural:
 
     def test_prices_monotone_decreasing(self, lewis_ref):
         """Calls are monotone decreasing in strike."""
-        assert np.all(np.diff(lewis_ref) < 0), \
-            f"Call prices not monotone in strike: {lewis_ref}"
+        assert np.all(np.diff(lewis_ref) < 0), f"Call prices not monotone in strike: {lewis_ref}"
 
     def test_price_monotone_in_sigma(self):
         """Higher diffusion vol → higher call prices (all else equal)."""
@@ -260,5 +258,6 @@ class TestMertonJDStructural:
 
         p_lo = price_at_sigma(0.1)
         p_hi = price_at_sigma(0.3)
-        assert p_hi > p_lo, \
+        assert p_hi > p_lo, (
             f"Price should increase with sigma: sigma=0.1→{p_lo:.4f}, sigma=0.3→{p_hi:.4f}"
+        )

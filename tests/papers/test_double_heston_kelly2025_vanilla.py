@@ -20,6 +20,7 @@ Reference calls (4 d.p.)
 
 Tolerance: 5e-4 (one unit in the last stated decimal).
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -30,7 +31,6 @@ from foureng.models.double_heston import DoubleHestonParams
 from foureng.pipeline import price_strip
 from foureng.utils.grids import FFTGrid, FRFTGrid
 
-
 pytestmark = [pytest.mark.paper, pytest.mark.external_reference]
 
 # ---------------------------------------------------------------------------
@@ -40,8 +40,16 @@ pytestmark = [pytest.mark.paper, pytest.mark.external_reference]
 _FWD = ForwardSpec(S0=100.0, r=0.1, q=0.0, T=1.0)
 
 _PARAMS = DoubleHestonParams(
-    kappa1=0.9,  theta1=0.10, nu1=0.1, rho1=-0.5, v01=0.36,
-    kappa2=1.2,  theta2=0.15, nu2=0.2, rho2=-0.5, v02=0.49,
+    kappa1=0.9,
+    theta1=0.10,
+    nu1=0.1,
+    rho1=-0.5,
+    v01=0.36,
+    kappa2=1.2,
+    theta2=0.15,
+    nu2=0.2,
+    rho2=-0.5,
+    v02=0.49,
 )
 
 _STRIKES = np.array([60.0, 80.0, 100.0, 110.0, 130.0])
@@ -54,6 +62,7 @@ _TOL = 5e-4
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
+
 
 def test_double_heston_calls_cos():
     calls = price_strip("double_heston", "cos", _STRIKES, _FWD, _PARAMS)
@@ -79,9 +88,7 @@ def test_double_heston_calls_carr_madan():
     grid = FFTGrid(N=4096, eta=0.25, alpha=1.5)
     calls = price_strip("double_heston", "carr_madan", _STRIKES, _FWD, _PARAMS, grid=grid)
     err = float(np.max(np.abs(calls - _REF_CALLS)))
-    assert err < _TOL, (
-        f"Double Heston CM calls vs Kelly (2025): max|err| = {err:.2e} > {_TOL:.2e}"
-    )
+    assert err < _TOL, f"Double Heston CM calls vs Kelly (2025): max|err| = {err:.2e} > {_TOL:.2e}"
 
 
 def test_double_heston_puts_put_call_parity():

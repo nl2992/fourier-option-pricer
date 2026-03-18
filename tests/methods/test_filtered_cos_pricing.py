@@ -9,6 +9,7 @@ Covers:
 - Existing "cos" and "cos_improved" outputs are unchanged.
 - All four filter types produce finite prices on a BSM example.
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -17,11 +18,10 @@ import pytest
 from foureng.models.base import ForwardSpec
 from foureng.models.bsm import BsmParams, bsm_cf, bsm_cumulants
 from foureng.models.variance_gamma import VGParams
-from foureng.pricers.cos import cos_auto_grid, cos_prices
-from foureng.utils.spectral_filters import COSFilterSpec
 from foureng.pipeline import price_strip
-from foureng.utils.grids import COSGrid, COSGridPolicy
-
+from foureng.pricers.cos import cos_auto_grid, cos_prices
+from foureng.utils.grids import COSGridPolicy
+from foureng.utils.spectral_filters import COSFilterSpec
 
 pytestmark = [pytest.mark.numerical_stability]
 
@@ -29,6 +29,7 @@ pytestmark = [pytest.mark.numerical_stability]
 # ---------------------------------------------------------------------------
 # Backward-compatibility: filter_spec=None / "none" → exact old output
 # ---------------------------------------------------------------------------
+
 
 def test_no_filter_matches_existing_cos_exactly():
     """cos_prices(..., filter_spec=None) must match filter-less output exactly."""
@@ -57,9 +58,7 @@ def test_none_filter_spec_matches_existing_cos_exactly():
     grid = cos_auto_grid(bsm_cumulants(fwd, p), N=512, L=10.0)
 
     old = cos_prices(phi, fwd, strikes, grid).call_prices
-    new = cos_prices(
-        phi, fwd, strikes, grid, filter_spec=COSFilterSpec("none")
-    ).call_prices
+    new = cos_prices(phi, fwd, strikes, grid, filter_spec=COSFilterSpec("none")).call_prices
 
     assert np.allclose(new, old, atol=0.0, rtol=0.0), (
         f"COSFilterSpec('none') changed output: max diff = {np.max(np.abs(new - old)):.3e}"
@@ -69,6 +68,7 @@ def test_none_filter_spec_matches_existing_cos_exactly():
 # ---------------------------------------------------------------------------
 # Accuracy: filtered COS should not damage BSM to more than 1e-6
 # ---------------------------------------------------------------------------
+
 
 def test_filtered_cos_does_not_damage_bsm_materially():
     """Exponential-filtered COS on BSM should match Black-Scholes to 1e-6."""
@@ -82,27 +82,31 @@ def test_filtered_cos_does_not_damage_bsm_materially():
     grid = cos_auto_grid(bsm_cumulants(fwd, p), N=1024, L=10.0)
 
     got = cos_prices(
-        phi, fwd, strikes, grid,
+        phi,
+        fwd,
+        strikes,
+        grid,
         filter_spec=COSFilterSpec("exponential", order=12),
     ).call_prices
 
-    ref = np.array([
-        bs_price_from_fwd(
-            0.25,
-            BSInputs(F0=fwd.F0, K=float(K), T=fwd.T, r=fwd.r, q=fwd.q, is_call=True),
-        )
-        for K in strikes
-    ])
+    ref = np.array(
+        [
+            bs_price_from_fwd(
+                0.25,
+                BSInputs(F0=fwd.F0, K=float(K), T=fwd.T, r=fwd.r, q=fwd.q, is_call=True),
+            )
+            for K in strikes
+        ]
+    )
 
     max_err = float(np.max(np.abs(got - ref)))
-    assert max_err < 1e-6, (
-        f"Filtered COS damaged BSM accuracy: max|err| = {max_err:.3e}"
-    )
+    assert max_err < 1e-6, f"Filtered COS damaged BSM accuracy: max|err| = {max_err:.3e}"
 
 
 # ---------------------------------------------------------------------------
 # All four non-trivial filter types: prices finite and non-negative
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.parametrize("name", ["fejer", "lanczos", "raised_cosine", "exponential"])
 def test_all_filter_types_give_finite_nonneg_bsm_prices(name):
@@ -115,7 +119,10 @@ def test_all_filter_types_give_finite_nonneg_bsm_prices(name):
     grid = cos_auto_grid(bsm_cumulants(fwd, p), N=512, L=10.0)
 
     prices = cos_prices(
-        phi, fwd, strikes, grid,
+        phi,
+        fwd,
+        strikes,
+        grid,
         filter_spec=COSFilterSpec(name=name),
     ).call_prices
 
@@ -126,6 +133,7 @@ def test_all_filter_types_give_finite_nonneg_bsm_prices(name):
 # ---------------------------------------------------------------------------
 # Pipeline integration: price_strip("vg", "cos_filtered", ...)
 # ---------------------------------------------------------------------------
+
 
 def test_pipeline_cos_filtered_runs_on_vg():
     """price_strip("vg", "cos_filtered", ...) must return finite, non-negative prices."""
@@ -158,7 +166,11 @@ def test_pipeline_cos_filtered_accepts_policy_and_filter_tuple():
     )
 
     prices = price_strip(
-        "vg", "cos_filtered", strikes, fwd, p,
+        "vg",
+        "cos_filtered",
+        strikes,
+        fwd,
+        p,
         grid=(policy, COSFilterSpec("exponential", order=8)),
     )
 
@@ -173,10 +185,15 @@ def test_pipeline_cos_filtered_accepts_explicit_grid_and_filter_tuple():
     strikes = np.linspace(80.0, 120.0, 5)
 
     from foureng.models.bsm import bsm_cumulants
+
     cos_grid = cos_auto_grid(bsm_cumulants(fwd, p), N=512, L=10.0)
 
     prices = price_strip(
-        "bsm", "cos_filtered", strikes, fwd, p,
+        "bsm",
+        "cos_filtered",
+        strikes,
+        fwd,
+        p,
         grid=(cos_grid, COSFilterSpec("lanczos")),
     )
 
@@ -200,6 +217,7 @@ def test_pipeline_cos_filtered_grid_none_uses_default_policy():
 # Existing cos and cos_improved must be unchanged
 # ---------------------------------------------------------------------------
 
+
 def test_existing_cos_output_unchanged():
     """Adding cos_filtered must not change cos output on a simple BSM case."""
     fwd = ForwardSpec(S0=100.0, r=0.03, q=0.01, T=1.0)
@@ -210,7 +228,7 @@ def test_existing_cos_output_unchanged():
     grid = cos_auto_grid(bsm_cumulants(fwd, p), N=512, L=10.0)
 
     baseline = cos_prices(phi, fwd, strikes, grid).call_prices
-    after    = cos_prices(phi, fwd, strikes, grid, filter_spec=None).call_prices
+    after = cos_prices(phi, fwd, strikes, grid, filter_spec=None).call_prices
 
     assert np.allclose(baseline, after, atol=0.0, rtol=0.0)
 
@@ -235,6 +253,7 @@ def test_existing_cos_improved_output_unchanged():
 # (sanity check: smooth model + adequate N → filter does not hurt much)
 # ---------------------------------------------------------------------------
 
+
 def test_filtered_cos_no_worse_than_unfiltered_bsm_atm():
     """For smooth BSM at ATM, filtered COS error should be ≤ 1e-5."""
     from foureng.iv.implied_vol import BSInputs, bs_price_from_fwd
@@ -252,10 +271,11 @@ def test_filtered_cos_no_worse_than_unfiltered_bsm_atm():
     )
 
     filt = cos_prices(
-        phi, fwd, K, grid,
+        phi,
+        fwd,
+        K,
+        grid,
         filter_spec=COSFilterSpec("exponential", order=8),
     ).call_prices[0]
 
-    assert abs(filt - ref) < 1e-5, (
-        f"Filtered ATM error = {abs(filt - ref):.3e}"
-    )
+    assert abs(filt - ref) < 1e-5, f"Filtered ATM error = {abs(filt - ref):.3e}"

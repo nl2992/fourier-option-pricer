@@ -1,4 +1,5 @@
 """Carr & Madan (1999) paper-facing tests."""
+
 from __future__ import annotations
 
 import numpy as np
@@ -10,7 +11,6 @@ from foureng.pricers.carr_madan import carr_madan_price_at_strikes
 from foureng.utils.grids import FFTGrid
 from tests._paper_assertions import assert_price_table
 from tests._reference_loaders import load_paper_case, numeric_column
-
 
 pytestmark = [pytest.mark.paper, pytest.mark.external_reference]
 

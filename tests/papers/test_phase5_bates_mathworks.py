@@ -18,6 +18,7 @@ jump-mean formula. For tight cross-engine agreement tests we use internally
 computed high-resolution prices (``call_prices_our_convention`` in the JSON),
 which agree to 1e-4.
 """
+
 from __future__ import annotations
 
 import json
@@ -41,11 +42,11 @@ with _REF_PATH.open() as _f:
     _REF = json.load(_f)
 
 _STRIKES = np.array(_REF["strikes"])
-_REF_PRICES_MATHWORKS = np.array(_REF["call_prices"])            # published MathWorks
+_REF_PRICES_MATHWORKS = np.array(_REF["call_prices"])  # published MathWorks
 _REF_PRICES_INTERNAL = np.array(_REF["call_prices_our_convention"])  # our hi-res Lewis
-_ATOL_MATHWORKS = 1e-2      # MathWorks agree to ~1%; they use a different mu_j convention
-_ATOL_INTERNAL = 1e-4       # strict internal cross-engine agreement
-_ATOL_LOOSE = 1e-3          # loose cross-engine (CM, FRFT)
+_ATOL_MATHWORKS = 1e-2  # MathWorks agree to ~1%; they use a different mu_j convention
+_ATOL_INTERNAL = 1e-4  # strict internal cross-engine agreement
+_ATOL_LOOSE = 1e-3  # loose cross-engine (CM, FRFT)
 
 
 def _make_fwd_params():
@@ -100,11 +101,15 @@ def test_bates_cos_matches_mathworks_reference():
     fwd, params = _make_fwd_params()
     prices = fe.price_strip("bates", "cos", _STRIKES, fwd, params)
     np.testing.assert_allclose(
-        prices, _REF_PRICES_INTERNAL, atol=_ATOL_INTERNAL,
+        prices,
+        _REF_PRICES_INTERNAL,
+        atol=_ATOL_INTERNAL,
         err_msg="Bates COS vs internal hi-res reference",
     )
     np.testing.assert_allclose(
-        prices, _REF_PRICES_MATHWORKS, atol=_ATOL_MATHWORKS,
+        prices,
+        _REF_PRICES_MATHWORKS,
+        atol=_ATOL_MATHWORKS,
         err_msg="Bates COS vs MathWorks qualitative check",
     )
 
@@ -119,11 +124,15 @@ def test_bates_cos_improved_matches_mathworks_reference():
     fwd, params = _make_fwd_params()
     prices = fe.price_strip("bates", "cos_improved", _STRIKES, fwd, params)
     np.testing.assert_allclose(
-        prices, _REF_PRICES_INTERNAL, atol=_ATOL_INTERNAL,
+        prices,
+        _REF_PRICES_INTERNAL,
+        atol=_ATOL_INTERNAL,
         err_msg="Bates COS-improved vs internal hi-res reference",
     )
     np.testing.assert_allclose(
-        prices, _REF_PRICES_MATHWORKS, atol=_ATOL_MATHWORKS,
+        prices,
+        _REF_PRICES_MATHWORKS,
+        atol=_ATOL_MATHWORKS,
         err_msg="Bates COS-improved vs MathWorks qualitative check",
     )
 
@@ -138,7 +147,9 @@ def test_bates_cos_filtered_is_reasonable_against_mathworks_reference():
     fwd, params = _make_fwd_params()
     prices = fe.price_strip("bates", "cos_filtered", _STRIKES, fwd, params, grid=None)
     np.testing.assert_allclose(
-        prices, _REF_PRICES_INTERNAL, atol=_ATOL_LOOSE,
+        prices,
+        _REF_PRICES_INTERNAL,
+        atol=_ATOL_LOOSE,
         err_msg="Bates COS-filtered vs internal hi-res reference",
     )
 
@@ -154,7 +165,9 @@ def test_bates_carr_madan_matches_mathworks_reference():
     grid = fe.FFTGrid(N=16384, eta=0.05, alpha=1.5)
     prices = fe.price_strip("bates", "carr_madan", _STRIKES, fwd, params, grid=grid)
     np.testing.assert_allclose(
-        prices, _REF_PRICES_INTERNAL, atol=_ATOL_LOOSE,
+        prices,
+        _REF_PRICES_INTERNAL,
+        atol=_ATOL_LOOSE,
         err_msg="Bates Carr-Madan vs internal hi-res reference",
     )
 
@@ -170,7 +183,9 @@ def test_bates_frft_matches_mathworks_reference():
     grid = fe.FRFTGrid(N=4096, eta=0.05, lam=0.01, alpha=1.5)
     prices = fe.price_strip("bates", "frft", _STRIKES, fwd, params, grid=grid)
     np.testing.assert_allclose(
-        prices, _REF_PRICES_INTERNAL, atol=_ATOL_LOOSE,
+        prices,
+        _REF_PRICES_INTERNAL,
+        atol=_ATOL_LOOSE,
         err_msg="Bates FRFT vs internal hi-res reference",
     )
 
@@ -185,15 +200,25 @@ def test_bates_lewis_matches_mathworks_reference():
     fwd, params = _make_fwd_params()
     phi = lambda u: fe.bates_cf(u, fwd, params)
     prices = lewis_call_prices(
-        phi, _STRIKES, fwd.S0, fwd.T,
-        intr=fwd.r, divr=fwd.q,
-        method="trapz", u_max=250.0, n_u=16384,
+        phi,
+        _STRIKES,
+        fwd.S0,
+        fwd.T,
+        intr=fwd.r,
+        divr=fwd.q,
+        method="trapz",
+        u_max=250.0,
+        n_u=16384,
     )
     np.testing.assert_allclose(
-        prices, _REF_PRICES_INTERNAL, atol=_ATOL_INTERNAL,
+        prices,
+        _REF_PRICES_INTERNAL,
+        atol=_ATOL_INTERNAL,
         err_msg="Bates Lewis vs internal hi-res reference",
     )
     np.testing.assert_allclose(
-        prices, _REF_PRICES_MATHWORKS, atol=_ATOL_MATHWORKS,
+        prices,
+        _REF_PRICES_MATHWORKS,
+        atol=_ATOL_MATHWORKS,
         err_msg="Bates Lewis vs MathWorks qualitative check",
     )

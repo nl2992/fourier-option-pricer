@@ -9,6 +9,7 @@ This file covers:
 2. cos_improved prices vs the frozen JSON reference (new engine)
 3. CF martingale/normalization loaded from JSON params (belt-and-suspenders)
 """
+
 from __future__ import annotations
 
 import json
@@ -34,7 +35,7 @@ with _REF_PATH.open() as _f:
 
 _STRIKES = np.array(_REF["strikes"])
 _REF_PRICES = np.array(_REF["call_prices"])
-_ATOL_TIGHT = _REF["absolute_tolerance_published_prices"]   # 5e-4
+_ATOL_TIGHT = _REF["absolute_tolerance_published_prices"]  # 5e-4
 _ATOL_LOOSE = 1e-3
 
 
@@ -65,7 +66,9 @@ def test_sv32_pyfeng_fft_matches_frozen_reference():
     fwd, params = _make_fwd_params()
     prices = fe.price_strip("sv32", "pyfeng_fft", _STRIKES, fwd, params)
     np.testing.assert_allclose(
-        prices, _REF_PRICES, atol=_ATOL_TIGHT,
+        prices,
+        _REF_PRICES,
+        atol=_ATOL_TIGHT,
         err_msg="sv32 pyfeng_fft vs frozen reference",
     )
 
@@ -80,7 +83,9 @@ def test_sv32_cos_improved_agrees_with_frozen_reference():
     fwd, params = _make_fwd_params()
     prices = fe.price_strip("sv32", "cos_improved", _STRIKES, fwd, params)
     np.testing.assert_allclose(
-        prices, _REF_PRICES, atol=_ATOL_LOOSE,
+        prices,
+        _REF_PRICES,
+        atol=_ATOL_LOOSE,
         err_msg="sv32 cos_improved vs frozen reference",
     )
 
@@ -99,6 +104,4 @@ def test_sv32_cf_martingale_from_json_params():
     assert abs(val_zero - 1.0) < 1e-13, f"sv32 phi(0) = {val_zero} != 1"
 
     val_neg_i = phi(np.array([-1j]))[0]
-    assert abs(val_neg_i - 1.0) < 1e-10, (
-        f"sv32 phi(-i) = {val_neg_i} != 1 (martingale condition)"
-    )
+    assert abs(val_neg_i - 1.0) < 1e-10, f"sv32 phi(-i) = {val_neg_i} != 1 (martingale condition)"

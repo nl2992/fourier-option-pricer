@@ -1,12 +1,14 @@
 """Phase 1 tests: MC baselines should agree with BS analytic to MC tolerance."""
+
 from __future__ import annotations
+
 import numpy as np
 import pytest
 
-from foureng.mc.black_scholes_mc import european_call_mc, MCSpec
-from foureng.mc.heston_conditional_mc import heston_conditional_mc_calls, HestonMCScheme
+from foureng.iv.implied_vol import BSInputs, bs_price_from_fwd
+from foureng.mc.black_scholes_mc import MCSpec, european_call_mc
+from foureng.mc.heston_conditional_mc import HestonMCScheme, heston_conditional_mc_calls
 from foureng.models.heston import HestonParams
-from foureng.iv.implied_vol import bs_price_from_fwd, BSInputs
 
 
 def _bs_call(S0, K, T, r, q, vol):
@@ -31,7 +33,12 @@ def test_heston_cond_mc_recovers_bs_when_nu_small():
     K = np.array([80.0, 100.0, 120.0])
     p = HestonParams(kappa=kappa, theta=theta, nu=nu, rho=rho, v0=v0)
     mc = heston_conditional_mc_calls(
-        S0, K, T, r, q, p,
+        S0,
+        K,
+        T,
+        r,
+        q,
+        p,
         HestonMCScheme(n_paths=200_000, n_steps=100, seed=123, scheme="exact"),
     )
     ref = _bs_call(S0, K, T, r, q, np.sqrt(v0))
@@ -42,10 +49,14 @@ def test_heston_cond_mc_recovers_bs_when_nu_small():
 def test_heston_cond_mc_lewis_benchmark(lewis_heston):
     """Conditional MC on Lewis (2001) parameters should be within ~3e-2 at 500k paths."""
     d = lewis_heston
-    p = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"],
-                     rho=d["rho"], v0=d["v0"])
+    p = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"], rho=d["rho"], v0=d["v0"])
     mc = heston_conditional_mc_calls(
-        d["S0"], d["strikes"], d["T"], d["r"], d["q"], p,
+        d["S0"],
+        d["strikes"],
+        d["T"],
+        d["r"],
+        d["q"],
+        p,
         HestonMCScheme(n_paths=500_000, n_steps=200, seed=7, scheme="exact"),
     )
     err = np.abs(mc - d["ref_calls"]).max()

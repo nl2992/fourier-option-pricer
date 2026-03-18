@@ -15,6 +15,7 @@ Layer 3  -  limit / structural
     Cumulants: c2 > 0, c1 is finite.
     Rho=0 symmetry: call(K) = call(2*F-K) mirrored around ATM.
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -25,14 +26,13 @@ pf = pytest.importorskip(
     reason="pyfeng not installed  -  sv32 tests require it",
 )
 
-from foureng.models.sv32 import Sv32Params, sv32_cf, sv32_cumulants
 from foureng.models.base import ForwardSpec
-from foureng.pricers.lewis import lewis_call_prices
+from foureng.models.sv32 import Sv32Params, sv32_cf, sv32_cumulants
+from foureng.pricers.carr_madan import carr_madan_price_at_strikes
 from foureng.pricers.cos import cos_auto_grid, cos_prices
 from foureng.pricers.frft import frft_price_at_strikes
-from foureng.pricers.carr_madan import carr_madan_price_at_strikes
+from foureng.pricers.lewis import lewis_call_prices
 from foureng.utils.grids import FFTGrid, FRFTGrid
-
 
 pytestmark = [pytest.mark.paper, pytest.mark.adapter]
 
@@ -69,6 +69,7 @@ def pyfeng_ref_prices():
 # Layer 1: Paper / docstring benchmark
 # ---------------------------------------------------------------------------
 
+
 class TestSv32PaperBenchmark:
     """Prices must match Lewis (2000) via-PyFENG docstring values to 1e-3."""
 
@@ -76,11 +77,16 @@ class TestSv32PaperBenchmark:
         p, fwd = bench_params
         phi = lambda u: sv32_cf(u, fwd, p)
         prices = lewis_call_prices(
-            phi, STRIKES, spot=fwd.S0, texp=fwd.T,
-            intr=fwd.r, divr=fwd.q,
+            phi,
+            STRIKES,
+            spot=fwd.S0,
+            texp=fwd.T,
+            intr=fwd.r,
+            divr=fwd.q,
         )
-        np.testing.assert_allclose(prices, _REF_PRICES, atol=1e-3,
-                                   err_msg="Lewis pricer vs paper benchmark")
+        np.testing.assert_allclose(
+            prices, _REF_PRICES, atol=1e-3, err_msg="Lewis pricer vs paper benchmark"
+        )
 
     def test_cos_matches_paper(self, bench_params):
         p, fwd = bench_params
@@ -88,21 +94,24 @@ class TestSv32PaperBenchmark:
         cums = sv32_cumulants(fwd, p)
         grid = cos_auto_grid(cums, N=256, L=10.0)
         res = cos_prices(phi, fwd, STRIKES, grid)
-        np.testing.assert_allclose(res.call_prices, _REF_PRICES, atol=1e-3,
-                                   err_msg="COS pricer vs paper benchmark")
+        np.testing.assert_allclose(
+            res.call_prices, _REF_PRICES, atol=1e-3, err_msg="COS pricer vs paper benchmark"
+        )
 
     def test_carr_madan_matches_paper(self, bench_params):
         p, fwd = bench_params
         phi = lambda u: sv32_cf(u, fwd, p)
         grid = FFTGrid(N=4096, eta=0.25, alpha=1.5)
         prices = carr_madan_price_at_strikes(phi, fwd, grid, STRIKES)
-        np.testing.assert_allclose(prices, _REF_PRICES, atol=1e-3,
-                                   err_msg="Carr-Madan pricer vs paper benchmark")
+        np.testing.assert_allclose(
+            prices, _REF_PRICES, atol=1e-3, err_msg="Carr-Madan pricer vs paper benchmark"
+        )
 
 
 # ---------------------------------------------------------------------------
 # Layer 2: Cross-engine agreement
 # ---------------------------------------------------------------------------
+
 
 class TestSv32CrossEngine:
     """All pricers using our CF must match PyFENG's native Sv32Fft to 1e-4."""
@@ -111,11 +120,16 @@ class TestSv32CrossEngine:
         p, fwd = bench_params
         phi = lambda u: sv32_cf(u, fwd, p)
         lewis = lewis_call_prices(
-            phi, STRIKES, spot=fwd.S0, texp=fwd.T,
-            intr=fwd.r, divr=fwd.q,
+            phi,
+            STRIKES,
+            spot=fwd.S0,
+            texp=fwd.T,
+            intr=fwd.r,
+            divr=fwd.q,
         )
-        np.testing.assert_allclose(lewis, pyfeng_ref_prices, atol=1e-4,
-                                   err_msg="Lewis vs PyFENG Sv32Fft")
+        np.testing.assert_allclose(
+            lewis, pyfeng_ref_prices, atol=1e-4, err_msg="Lewis vs PyFENG Sv32Fft"
+        )
 
     def test_cos_vs_pyfeng(self, bench_params, pyfeng_ref_prices):
         p, fwd = bench_params
@@ -123,24 +137,27 @@ class TestSv32CrossEngine:
         cums = sv32_cumulants(fwd, p)
         grid = cos_auto_grid(cums, N=256, L=10.0)
         res = cos_prices(phi, fwd, STRIKES, grid)
-        np.testing.assert_allclose(res.call_prices, pyfeng_ref_prices, atol=1e-4,
-                                   err_msg="COS vs PyFENG Sv32Fft")
+        np.testing.assert_allclose(
+            res.call_prices, pyfeng_ref_prices, atol=1e-4, err_msg="COS vs PyFENG Sv32Fft"
+        )
 
     def test_frft_vs_pyfeng(self, bench_params, pyfeng_ref_prices):
         p, fwd = bench_params
         phi = lambda u: sv32_cf(u, fwd, p)
         grid = FRFTGrid(N=4096, eta=0.25, alpha=1.5, lam=0.01)
         prices = frft_price_at_strikes(phi, fwd, grid, STRIKES)
-        np.testing.assert_allclose(prices, pyfeng_ref_prices, atol=1e-4,
-                                   err_msg="FRFT vs PyFENG Sv32Fft")
+        np.testing.assert_allclose(
+            prices, pyfeng_ref_prices, atol=1e-4, err_msg="FRFT vs PyFENG Sv32Fft"
+        )
 
     def test_carr_madan_vs_pyfeng(self, bench_params, pyfeng_ref_prices):
         p, fwd = bench_params
         phi = lambda u: sv32_cf(u, fwd, p)
         grid = FFTGrid(N=4096, eta=0.25, alpha=1.5)
         prices = carr_madan_price_at_strikes(phi, fwd, grid, STRIKES)
-        np.testing.assert_allclose(prices, pyfeng_ref_prices, atol=1e-4,
-                                   err_msg="Carr-Madan vs PyFENG Sv32Fft")
+        np.testing.assert_allclose(
+            prices, pyfeng_ref_prices, atol=1e-4, err_msg="Carr-Madan vs PyFENG Sv32Fft"
+        )
 
     @pytest.mark.parametrize("K", [80.0, 90.0, 95.0, 100.0, 105.0, 110.0, 120.0])
     def test_cos_vs_lewis_wider_strikes(self, K):
@@ -150,13 +167,20 @@ class TestSv32CrossEngine:
         phi = lambda u: sv32_cf(u, fwd, p)
         strikes = np.array([K])
         lewis_price = lewis_call_prices(
-            phi, strikes, spot=fwd.S0, texp=fwd.T, intr=fwd.r, divr=fwd.q,
+            phi,
+            strikes,
+            spot=fwd.S0,
+            texp=fwd.T,
+            intr=fwd.r,
+            divr=fwd.q,
         )
         cums = sv32_cumulants(fwd, p)
         grid = cos_auto_grid(cums, N=512, L=12.0)
         cos_res = cos_prices(phi, fwd, strikes, grid)
         np.testing.assert_allclose(
-            cos_res.call_prices, lewis_price, atol=1e-3,
+            cos_res.call_prices,
+            lewis_price,
+            atol=1e-3,
             err_msg=f"COS vs Lewis at K={K}",
         )
 
@@ -164,6 +188,7 @@ class TestSv32CrossEngine:
 # ---------------------------------------------------------------------------
 # Layer 3: Structural / limit tests
 # ---------------------------------------------------------------------------
+
 
 class TestSv32Structural:
     """CF normalization and statistical properties."""
@@ -178,16 +203,18 @@ class TestSv32Structural:
         """φ(-i) = 1 (E[S_T/F_0] = 1)."""
         p, fwd = bench_params
         phi_neg_i = sv32_cf(np.array([-1j]), fwd, p)
-        np.testing.assert_allclose(abs(phi_neg_i[0] - 1.0), 0.0, atol=1e-10,
-                                   err_msg="sv32 martingale condition φ(-i)=1")
+        np.testing.assert_allclose(
+            abs(phi_neg_i[0] - 1.0), 0.0, atol=1e-10, err_msg="sv32 martingale condition φ(-i)=1"
+        )
 
     def test_cf_modulus_le_one(self, bench_params):
         """|φ(u)| ≤ 1 for all real u."""
         p, fwd = bench_params
         u_grid = np.linspace(-20, 20, 401)
         phi = sv32_cf(u_grid, fwd, p)
-        assert np.all(np.abs(phi) <= 1.0 + 1e-12), \
+        assert np.all(np.abs(phi) <= 1.0 + 1e-12), (
             f"|φ(u)| > 1 at some u: max={np.max(np.abs(phi)):.6f}"
+        )
 
     def test_cumulants_positive_variance(self, bench_params):
         """Second cumulant (variance) must be positive."""
@@ -207,8 +234,6 @@ class TestSv32Structural:
         """
         fwd = ForwardSpec(S0=100.0, r=0.0, q=0.0, T=0.5)
         K_otm = np.array([90.0])  # OTM call
-        phi_fn = lambda p, u: sv32_cf(u, fwd, p)
-
         p_neg_rho = Sv32Params(v0=0.06, kappa=20.48, theta=0.218, nu=3.20, rho=-0.99)
         p_pos_rho = Sv32Params(v0=0.06, kappa=20.48, theta=0.218, nu=3.20, rho=0.0)
 
@@ -222,10 +247,11 @@ class TestSv32Structural:
         price_pos = cos_prices(lambda u: sv32_cf(u, fwd, p_pos_rho), fwd, K_otm, grid_pos)
 
         # Negative rho → more expensive deep ITM call (= OTM put parity)
-        assert price_neg.call_prices[0] > price_pos.call_prices[0], \
-            f"Negative rho should increase OTM (K=90) call price: " \
-            f"rho=-0.99 gave {price_neg.call_prices[0]:.4f}, " \
+        assert price_neg.call_prices[0] > price_pos.call_prices[0], (
+            f"Negative rho should increase OTM (K=90) call price: "
+            f"rho=-0.99 gave {price_neg.call_prices[0]:.4f}, "
             f"rho=0 gave {price_pos.call_prices[0]:.4f}"
+        )
 
     def test_price_monotone_in_v0(self):
         """ATM call price must be monotone increasing in initial variance v0."""
@@ -242,8 +268,7 @@ class TestSv32Structural:
             prices.append(float(res.call_prices[0]))
 
         for i in range(len(prices) - 1):
-            assert prices[i] < prices[i + 1], \
-                f"ATM call should increase with v0: prices={prices}"
+            assert prices[i] < prices[i + 1], f"ATM call should increase with v0: prices={prices}"
 
     def test_call_ge_intrinsic(self, bench_params):
         """Call prices must exceed max(F-K, 0)."""
@@ -254,8 +279,7 @@ class TestSv32Structural:
         strikes = np.array([80.0, 90.0, 100.0, 110.0, 120.0])
         res = cos_prices(phi, fwd, strikes, grid)
         intrinsic = np.maximum(fwd.F0 - strikes, 0.0)
-        assert np.all(res.call_prices >= intrinsic - 1e-6), \
-            "Call prices fall below intrinsic value"
+        assert np.all(res.call_prices >= intrinsic - 1e-6), "Call prices fall below intrinsic value"
 
     def test_call_le_spot(self, bench_params):
         """Call prices must not exceed spot (no-arbitrage upper bound)."""
@@ -265,5 +289,4 @@ class TestSv32Structural:
         grid = cos_auto_grid(cums, N=256, L=10.0)
         strikes = np.array([80.0, 90.0, 100.0, 110.0, 120.0])
         res = cos_prices(phi, fwd, strikes, grid)
-        assert np.all(res.call_prices <= fwd.S0 + 1e-8), \
-            "Call price exceeds spot"
+        assert np.all(res.call_prices <= fwd.S0 + 1e-8), "Call price exceeds spot"

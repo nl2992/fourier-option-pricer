@@ -13,7 +13,6 @@ from foureng.pricers.lewis import lewis_call_prices
 from foureng.utils.cumulants import Cumulants, cos_centered_half_width
 from foureng.utils.grids import COSGrid, COSGridPolicy
 
-
 pytestmark = [pytest.mark.numerical_stability]
 
 

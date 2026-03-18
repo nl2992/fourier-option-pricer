@@ -1,4 +1,5 @@
 """Junike-style improved-COS policy tests."""
+
 from __future__ import annotations
 
 import numpy as np
@@ -10,7 +11,12 @@ from foureng.models.bsm import BsmParams, bsm_cf, bsm_cumulants
 from foureng.models.heston import HestonParams, heston_cf, heston_cumulants
 from foureng.models.variance_gamma import VGParams
 from foureng.pipeline import price_strip
-from foureng.pricers.cos import cos_adaptive_decision, cos_auto_grid, cos_prices, recommended_cos_policy
+from foureng.pricers.cos import (
+    cos_adaptive_decision,
+    cos_auto_grid,
+    cos_prices,
+    recommended_cos_policy,
+)
 from foureng.pricers.lewis import lewis_call_prices
 from foureng.utils.cumulants import Cumulants, cos_centered_half_width
 from foureng.utils.grids import COSGrid, COSGridPolicy
@@ -22,7 +28,6 @@ from tests._paper_test_support import (
     max_abs_err,
     paper_cos_prices,
 )
-
 
 pytestmark = [pytest.mark.paper, pytest.mark.derived_reference, pytest.mark.numerical_stability]
 

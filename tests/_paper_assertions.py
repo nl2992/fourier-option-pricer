@@ -1,4 +1,5 @@
 """Assertion helpers for paper and numerical-reference tests."""
+
 from __future__ import annotations
 
 import numpy as np

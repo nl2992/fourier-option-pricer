@@ -11,6 +11,7 @@ decreasing, convex in strike). No exact prices are asserted.
 For the original Baldeaux-Badran figure params see:
     tests/papers/test_sv32_baldeaux_badran_original_smoke.py
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -43,6 +44,4 @@ def test_sv32_compat_params_monotone_decreasing():
 def test_sv32_compat_params_convex_in_strike():
     prices = fe.price_strip("sv32", "pyfeng_fft", _STRIKES, _FWD, _PARAMS)
     convexity = prices[:-2] - 2 * prices[1:-1] + prices[2:]
-    assert np.all(convexity >= -1e-8), (
-        f"Call prices not convex in strike: {prices}"
-    )
+    assert np.all(convexity >= -1e-8), f"Call prices not convex in strike: {prices}"

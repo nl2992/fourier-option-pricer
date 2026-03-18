@@ -18,18 +18,20 @@ PyFENG convention notes (verified against our fixtures):
   - ``VarGammaFft(sigma, vov=nu, theta)``: same sigma/theta as ours, vov = nu.
   - Both take ``intr`` and ``divr`` in the constructor, not in ``price``.
 """
+
 from __future__ import annotations
+
 import numpy as np
 import pytest
 
 from foureng.models.base import ForwardSpec
 from foureng.models.heston import HestonParams, heston_cf_form2, heston_cumulants
 from foureng.models.variance_gamma import VGParams, vg_cf, vg_cumulants
-from foureng.pricers.cos import cos_prices, cos_auto_grid
+from foureng.pricers.cos import cos_auto_grid, cos_prices
 
-
-pyfeng = pytest.importorskip("pyfeng", reason="pyfeng not installed; "
-                                               "this suite cross-checks against it")
+pyfeng = pytest.importorskip(
+    "pyfeng", reason="pyfeng not installed; this suite cross-checks against it"
+)
 
 pytestmark = [pytest.mark.adapter]
 
@@ -43,16 +45,16 @@ def test_cos_heston_agrees_with_pyfeng_fft(lewis_heston):
     """COS on Lewis params vs PyFENG HestonFft: agree to 1e-5."""
     d = lewis_heston
     fwd = ForwardSpec(S0=d["S0"], r=d["r"], q=d["q"], T=d["T"])
-    p = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"],
-                     rho=d["rho"], v0=d["v0"])
+    p = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"], rho=d["rho"], v0=d["v0"])
     phi = lambda u: heston_cf_form2(u, fwd, p)
 
     strikes = d["strikes"]
     C_cos = _cos_prices(phi, fwd, strikes, heston_cumulants(fwd, p), N=256, L=10.0)
 
     # PyFENG HestonFft.sigma is v0 (variance), NOT sqrt(v0). Verified.
-    h = pyfeng.HestonFft(sigma=p.v0, vov=p.nu, rho=p.rho, mr=p.kappa, theta=p.theta,
-                         intr=fwd.r, divr=fwd.q)
+    h = pyfeng.HestonFft(
+        sigma=p.v0, vov=p.nu, rho=p.rho, mr=p.kappa, theta=p.theta, intr=fwd.r, divr=fwd.q
+    )
     C_pf = h.price(strikes, spot=fwd.S0, texp=fwd.T, cp=1)
 
     err = float(np.max(np.abs(C_cos - C_pf)))
@@ -63,15 +65,15 @@ def test_cos_heston_agrees_with_pyfeng_fft_fo2008(fo2008_heston):
     """FO2008 ATM (Feller-violated) regime vs PyFENG HestonFft."""
     d = fo2008_heston
     fwd = ForwardSpec(S0=d["S0"], r=d["r"], q=d["q"], T=d["T"])
-    p = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"],
-                     rho=d["rho"], v0=d["v0"])
+    p = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"], rho=d["rho"], v0=d["v0"])
     phi = lambda u: heston_cf_form2(u, fwd, p)
 
     strikes = np.array([d["K"]], dtype=float)
     C_cos = _cos_prices(phi, fwd, strikes, heston_cumulants(fwd, p), N=256, L=10.0)
 
-    h = pyfeng.HestonFft(sigma=p.v0, vov=p.nu, rho=p.rho, mr=p.kappa, theta=p.theta,
-                         intr=fwd.r, divr=fwd.q)
+    h = pyfeng.HestonFft(
+        sigma=p.v0, vov=p.nu, rho=p.rho, mr=p.kappa, theta=p.theta, intr=fwd.r, divr=fwd.q
+    )
     C_pf = h.price(strikes, spot=fwd.S0, texp=fwd.T, cp=1)
 
     err = float(np.abs(C_cos[0] - C_pf[0]))
@@ -88,8 +90,7 @@ def test_cos_vg_agrees_with_pyfeng_fft(cm1999_vg):
     strikes = d["strikes"]
     C_cos = _cos_prices(phi, fwd, strikes, vg_cumulants(fwd, p), N=2048, L=10.0)
 
-    m = pyfeng.VarGammaFft(sigma=p.sigma, nu=p.nu, theta=p.theta,
-                            intr=fwd.r, divr=fwd.q)
+    m = pyfeng.VarGammaFft(sigma=p.sigma, nu=p.nu, theta=p.theta, intr=fwd.r, divr=fwd.q)
     C_pf = m.price(strikes, spot=fwd.S0, texp=fwd.T, cp=1)
 
     # VG at T/nu small (heavy tails) is the hardest regime; allow 1e-3.

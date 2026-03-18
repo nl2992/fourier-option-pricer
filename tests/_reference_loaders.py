@@ -1,11 +1,11 @@
 """Shared loaders for versioned paper-replication fixtures."""
+
 from __future__ import annotations
 
+import csv
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-import csv
-
 
 ROOT = Path(__file__).resolve().parents[1]
 PAPER_FIXTURE_ROOT = ROOT / "benchmarks" / "paper_replications"
@@ -75,7 +75,9 @@ def load_paper_metadata(paper_key: str) -> dict[str, str]:
 
 
 @lru_cache(maxsize=None)
-def load_paper_rows(paper_key: str, filename: str = "expected_prices.csv") -> tuple[dict[str, str], ...]:
+def load_paper_rows(
+    paper_key: str, filename: str = "expected_prices.csv"
+) -> tuple[dict[str, str], ...]:
     path = PAPER_FIXTURE_ROOT / paper_key / filename
     if not path.exists():
         raise FileNotFoundError(f"No paper row fixture at {path}")

@@ -11,12 +11,13 @@ The measured COS-vs-FRFT-hi gap on this strip is ~1e-9 (limited by the
 FRFT grid's truncation error, not COS). We gate at 1e-6 to stay well
 above any flakiness threshold while still catching real regressions.
 """
+
 from __future__ import annotations
+
 import numpy as np
 
 from foureng.pipeline import price_strip
 from foureng.utils.grids import FRFTGrid
-
 
 # Mid-strip slice of the full 41-strike reference. Keeps the test runtime
 # short while retaining ITM/ATM/OTM coverage.
@@ -34,7 +35,7 @@ def test_bates_cos_vs_frft_hi_res(bates_regression_v1):
     frft_hi = FRFTGrid(N=16384, eta=0.10, lam=0.0025, alpha=1.5)
     C_frft = price_strip("bates", "frft", K, fwd, p, grid=frft_hi)
     # COS at the pipeline's default production settings (auto-grid, N=256).
-    C_cos  = price_strip("bates", "cos",  K, fwd, p)
+    C_cos = price_strip("bates", "cos", K, fwd, p)
 
     err = float(np.max(np.abs(C_cos - C_frft)))
     assert err < 1e-6, (

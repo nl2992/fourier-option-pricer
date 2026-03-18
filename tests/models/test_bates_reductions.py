@@ -12,14 +12,15 @@ We use nu=1e-4 (effectively zero vol-of-vol: Feller ratio >> 1) so the
 variance process is virtually deterministic. The resulting prices agree
 with BSM / Merton JD to better than 1e-4.
 """
+
 from __future__ import annotations
 
 import numpy as np
 import pytest
 
 import foureng as fe
-from foureng.pricers.cos import cos_auto_grid, cos_prices
 from foureng.models.bates import bates_cumulants
+from foureng.pricers.cos import cos_auto_grid, cos_prices
 
 pytestmark = pytest.mark.paper
 
@@ -47,8 +48,14 @@ def test_bates_reduces_to_bsm():
     causes a ~1e-8 Feller-condition induced correction that is negligible.
     """
     bates_params = fe.BatesParams(
-        kappa=2.0, theta=0.04, nu=1e-4, rho=0.0, v0=0.04,
-        lam_j=0.0, mu_j=0.0, sigma_j=0.0,
+        kappa=2.0,
+        theta=0.04,
+        nu=1e-4,
+        rho=0.0,
+        v0=0.04,
+        lam_j=0.0,
+        mu_j=0.0,
+        sigma_j=0.0,
     )
     bsm_params = fe.BsmParams(sigma=0.2)  # sqrt(0.04)
 
@@ -60,7 +67,9 @@ def test_bates_reduces_to_bsm():
     prices_bsm = fe.price_strip("bsm", "cos", _STRIKES, _FWD, bsm_params)
 
     np.testing.assert_allclose(
-        prices_bates, prices_bsm, atol=1e-4,
+        prices_bates,
+        prices_bsm,
+        atol=1e-4,
         err_msg="Bates(nu~0, lam_j=0) should reduce to BSM",
     )
 
@@ -78,12 +87,20 @@ def test_bates_reduces_to_merton_jd():
     construction used in both models, so prices agree to better than 1e-4.
     """
     bates_params = fe.BatesParams(
-        kappa=2.0, theta=0.04, nu=1e-4, rho=0.0, v0=0.04,
-        lam_j=2.0, mu_j=0.01660262729617973, sigma_j=0.08,
+        kappa=2.0,
+        theta=0.04,
+        nu=1e-4,
+        rho=0.0,
+        v0=0.04,
+        lam_j=2.0,
+        mu_j=0.01660262729617973,
+        sigma_j=0.08,
     )
     merton_params = fe.MertonJDParams(
-        sigma=0.2, lam=2.0,
-        muj=0.01660262729617973, sigj=0.08,
+        sigma=0.2,
+        lam=2.0,
+        muj=0.01660262729617973,
+        sigj=0.08,
     )
 
     phi_b = lambda u: fe.bates_cf(u, _FWD, bates_params)
@@ -94,6 +111,8 @@ def test_bates_reduces_to_merton_jd():
     prices_merton = fe.price_strip("merton_jd", "cos", _STRIKES, _FWD, merton_params)
 
     np.testing.assert_allclose(
-        prices_bates, prices_merton, atol=1e-4,
+        prices_bates,
+        prices_merton,
+        atol=1e-4,
         err_msg="Bates(nu~0, lam_j=2) should reduce to Merton JD",
     )

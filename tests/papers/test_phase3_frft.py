@@ -4,7 +4,9 @@ The headline claim: at matched N, FRFT reaches far better accuracy than CM-FFT
 because it decouples the frequency step (for quadrature) from the log-strike
 step (for interpolation). Nyquist-constrained CM-FFT can't have both fine.
 """
+
 from __future__ import annotations
+
 import numpy as np
 import pytest
 
@@ -12,17 +14,15 @@ from foureng.models.base import ForwardSpec
 from foureng.models.heston import HestonParams, heston_cf_form2
 from foureng.models.variance_gamma import VGParams, vg_cf
 from foureng.pricers.carr_madan import carr_madan_price_at_strikes
-from foureng.pricers.frft import frft_prices, frft_price_at_strikes
+from foureng.pricers.frft import frft_price_at_strikes
 from foureng.utils.grids import FFTGrid, FRFTGrid
-
 
 pytestmark = [pytest.mark.paper, pytest.mark.derived_reference, pytest.mark.numerical_stability]
 
 
 def _heston_lewis_phi(d):
     fwd = ForwardSpec(S0=d["S0"], r=d["r"], q=d["q"], T=d["T"])
-    p = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"],
-                     rho=d["rho"], v0=d["v0"])
+    p = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"], rho=d["rho"], v0=d["v0"])
     return fwd, lambda u: heston_cf_form2(u, fwd, p)
 
 

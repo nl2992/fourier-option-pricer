@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+title: fourier-option-pricer
+message: "If you use this repository, please cite the software and the primary papers referenced in the README."
+type: software
+authors:
+  - family-names: Li
+    given-names: Nigel
+repository-code: "https://github.com/nl2992/fourier-option-pricer"
+url: "https://github.com/nl2992/fourier-option-pricer"
+license: MIT
+version: 0.4.1
+date-released: 2026-05-13
+keywords:
+  - quant finance
+  - option pricing
+  - Fourier methods
+  - COS method
+  - Carr-Madan
+

@@ -11,6 +11,7 @@ Delta is computed by central finite difference:
 using COS-improved prices. The tolerance atol=5e-3 matches the MathWorks
 published 4-decimal precision.
 """
+
 from __future__ import annotations
 
 import json

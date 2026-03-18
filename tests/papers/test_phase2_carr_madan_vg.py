@@ -3,16 +3,17 @@
 CM1999 Case 4  -  Variance Gamma PUT prices at K=77,78,79.
 Lewis (2001)   -  15-digit Heston CALL prices at K=80..120.
 """
+
 from __future__ import annotations
+
 import numpy as np
 import pytest
 
 from foureng.models.base import ForwardSpec
-from foureng.models.variance_gamma import VGParams, vg_cf
 from foureng.models.heston import HestonParams, heston_cf_form2
+from foureng.models.variance_gamma import VGParams, vg_cf
 from foureng.pricers.carr_madan import carr_madan_price_at_strikes
 from foureng.utils.grids import FFTGrid
-
 
 pytestmark = [pytest.mark.paper, pytest.mark.external_reference]
 
@@ -36,8 +37,7 @@ def test_vg_carr_madan_cm1999_case4(cm1999_vg):
 def test_heston_carr_madan_lewis(lewis_heston):
     d = lewis_heston
     fwd = ForwardSpec(S0=d["S0"], r=d["r"], q=d["q"], T=d["T"])
-    params = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"],
-                          rho=d["rho"], v0=d["v0"])
+    params = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"], rho=d["rho"], v0=d["v0"])
     phi = lambda u: heston_cf_form2(u, fwd, params)
 
     grid = FFTGrid(N=4096, eta=0.25, alpha=1.5)
@@ -50,8 +50,7 @@ def test_heston_atm_put_call_parity(lewis_heston):
     """Robustness: FFT-priced call + discounted-cash  ==  underlying-fwd (put-call parity)."""
     d = lewis_heston
     fwd = ForwardSpec(S0=d["S0"], r=d["r"], q=d["q"], T=d["T"])
-    params = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"],
-                          rho=d["rho"], v0=d["v0"])
+    params = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"], rho=d["rho"], v0=d["v0"])
     phi = lambda u: heston_cf_form2(u, fwd, params)
 
     K = np.array([100.0])
@@ -65,8 +64,7 @@ def test_carr_madan_fft_grid_sensitivity(lewis_heston):
     """Minimum N to hit 1e-4: should not require more than 4096."""
     d = lewis_heston
     fwd = ForwardSpec(S0=d["S0"], r=d["r"], q=d["q"], T=d["T"])
-    params = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"],
-                          rho=d["rho"], v0=d["v0"])
+    params = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"], rho=d["rho"], v0=d["v0"])
     phi = lambda u: heston_cf_form2(u, fwd, params)
 
     ok = False

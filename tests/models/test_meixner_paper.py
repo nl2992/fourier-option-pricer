@@ -21,24 +21,24 @@ References
 * Cont, R. & Tankov, P. (2004), *Financial Modelling with Jump Processes*,
   CRC Press, Chapter 4.
 """
+
 from __future__ import annotations
 
 import numpy as np
 import pytest
 
+from foureng.models.base import ForwardSpec
 from foureng.models.meixner import (
     MeixnerParams,
+    _meixner_omega,
     meixner_cf,
     meixner_cumulants,
-    _meixner_omega,
 )
-from foureng.models.base import ForwardSpec
-from foureng.pricers.lewis import lewis_call_prices
+from foureng.pricers.carr_madan import carr_madan_price_at_strikes
 from foureng.pricers.cos import cos_auto_grid, cos_prices
 from foureng.pricers.frft import frft_price_at_strikes
-from foureng.pricers.carr_madan import carr_madan_price_at_strikes
+from foureng.pricers.lewis import lewis_call_prices
 from foureng.utils.grids import FFTGrid, FRFTGrid
-
 
 pytestmark = [pytest.mark.paper, pytest.mark.derived_reference]
 
@@ -68,13 +68,13 @@ def bench():
 def lewis_ref(bench):
     p, fwd = bench
     phi = lambda u: meixner_cf(u, fwd, p)
-    return lewis_call_prices(phi, STRIKES, spot=fwd.S0, texp=fwd.T,
-                             intr=fwd.r, divr=fwd.q)
+    return lewis_call_prices(phi, STRIKES, spot=fwd.S0, texp=fwd.T, intr=fwd.r, divr=fwd.q)
 
 
 # ---------------------------------------------------------------------------
 # Layer 1: Analytic benchmarks
 # ---------------------------------------------------------------------------
+
 
 class TestMeixnerAnalyticBenchmarks:
     """Closed-form properties of the Meixner CF."""
@@ -89,8 +89,9 @@ class TestMeixnerAnalyticBenchmarks:
         """phi(-i) = 1, i.e. E[S_T/F_0] = 1."""
         p, fwd = bench
         phi_neg_i = meixner_cf(np.array([-1j]), fwd, p)
-        np.testing.assert_allclose(abs(phi_neg_i[0] - 1.0), 0.0, atol=1e-12,
-                                   err_msg="Meixner martingale phi(-i)=1")
+        np.testing.assert_allclose(
+            abs(phi_neg_i[0] - 1.0), 0.0, atol=1e-12, err_msg="Meixner martingale phi(-i)=1"
+        )
 
     def test_symmetric_modulus_even(self):
         """With b=0, |phi(u)| is even in u (symmetric distribution modulus)."""
@@ -99,8 +100,9 @@ class TestMeixnerAnalyticBenchmarks:
         u_pos = np.linspace(0.5, 5.0, 20)
         phi_pos = np.abs(meixner_cf(u_pos, fwd, p))
         phi_neg = np.abs(meixner_cf(-u_pos, fwd, p))
-        np.testing.assert_allclose(phi_pos, phi_neg, atol=1e-14,
-                                   err_msg="Meixner(b=0): |phi(u)| should equal |phi(-u)|")
+        np.testing.assert_allclose(
+            phi_pos, phi_neg, atol=1e-14, err_msg="Meixner(b=0): |phi(u)| should equal |phi(-u)|"
+        )
 
     def test_symmetric_martingale(self):
         """Symmetric case also satisfies the martingale condition."""
@@ -136,6 +138,7 @@ class TestMeixnerAnalyticBenchmarks:
 # Layer 2: Cross-engine agreement
 # ---------------------------------------------------------------------------
 
+
 class TestMeixnerCrossEngine:
     """All pricers must agree with the Lewis reference to atol=1e-4."""
 
@@ -145,24 +148,21 @@ class TestMeixnerCrossEngine:
         cums = meixner_cumulants(fwd, p)
         grid = cos_auto_grid(cums, N=512, L=12.0)
         res = cos_prices(phi, fwd, STRIKES, grid)
-        np.testing.assert_allclose(res.call_prices, lewis_ref, atol=1e-4,
-                                   err_msg="COS vs Lewis")
+        np.testing.assert_allclose(res.call_prices, lewis_ref, atol=1e-4, err_msg="COS vs Lewis")
 
     def test_carr_madan_vs_lewis(self, bench, lewis_ref):
         p, fwd = bench
         phi = lambda u: meixner_cf(u, fwd, p)
         grid = FFTGrid(N=4096, eta=0.25, alpha=1.5)
         prices = carr_madan_price_at_strikes(phi, fwd, grid, STRIKES)
-        np.testing.assert_allclose(prices, lewis_ref, atol=1e-4,
-                                   err_msg="Carr-Madan vs Lewis")
+        np.testing.assert_allclose(prices, lewis_ref, atol=1e-4, err_msg="Carr-Madan vs Lewis")
 
     def test_frft_vs_lewis(self, bench, lewis_ref):
         p, fwd = bench
         phi = lambda u: meixner_cf(u, fwd, p)
         grid = FRFTGrid(N=4096, eta=0.25, alpha=1.5, lam=0.01)
         prices = frft_price_at_strikes(phi, fwd, grid, STRIKES)
-        np.testing.assert_allclose(prices, lewis_ref, atol=1e-4,
-                                   err_msg="FRFT vs Lewis")
+        np.testing.assert_allclose(prices, lewis_ref, atol=1e-4, err_msg="FRFT vs Lewis")
 
     @pytest.mark.parametrize("K", [85.0, 90.0, 100.0, 110.0, 115.0])
     def test_cos_vs_lewis_per_strike(self, K):
@@ -170,18 +170,19 @@ class TestMeixnerCrossEngine:
         fwd = _FWD_BENCH
         phi = lambda u: meixner_cf(u, fwd, p)
         strikes = np.array([K])
-        lewis = lewis_call_prices(phi, strikes, spot=fwd.S0, texp=fwd.T,
-                                  intr=fwd.r, divr=fwd.q)
+        lewis = lewis_call_prices(phi, strikes, spot=fwd.S0, texp=fwd.T, intr=fwd.r, divr=fwd.q)
         cums = meixner_cumulants(fwd, p)
         grid = cos_auto_grid(cums, N=512, L=12.0)
         res = cos_prices(phi, fwd, strikes, grid)
-        np.testing.assert_allclose(res.call_prices, lewis, atol=1e-4,
-                                   err_msg=f"COS vs Lewis at K={K}")
+        np.testing.assert_allclose(
+            res.call_prices, lewis, atol=1e-4, err_msg=f"COS vs Lewis at K={K}"
+        )
 
 
 # ---------------------------------------------------------------------------
 # Layer 3: Structural tests
 # ---------------------------------------------------------------------------
+
 
 class TestMeixnerStructural:
     """CF properties and no-arbitrage bounds."""
@@ -191,8 +192,9 @@ class TestMeixnerStructural:
         p, fwd = bench
         u_grid = np.linspace(-20, 20, 401)
         phi = meixner_cf(u_grid, fwd, p)
-        assert np.all(np.abs(phi) <= 1.0 + 1e-12), \
+        assert np.all(np.abs(phi) <= 1.0 + 1e-12), (
             f"|phi|>1 at some u: max={np.max(np.abs(phi)):.6f}"
+        )
 
     def test_cumulants_positive_variance(self, bench):
         """Second cumulant (variance) must be positive."""
@@ -205,8 +207,7 @@ class TestMeixnerStructural:
         """Call prices >= max(F-K, 0)."""
         p, fwd = bench
         intrinsic = np.maximum(fwd.F0 - STRIKES, 0.0)
-        assert np.all(lewis_ref >= intrinsic - 1e-6), \
-            "Call price below intrinsic value"
+        assert np.all(lewis_ref >= intrinsic - 1e-6), "Call price below intrinsic value"
 
     def test_call_le_spot(self, bench, lewis_ref):
         """Call prices <= spot."""
@@ -219,8 +220,7 @@ class TestMeixnerStructural:
 
     def test_prices_monotone_decreasing(self, lewis_ref):
         """Calls are monotone decreasing in strike."""
-        assert np.all(np.diff(lewis_ref) < 0), \
-            f"Call prices not monotone in strike: {lewis_ref}"
+        assert np.all(np.diff(lewis_ref) < 0), f"Call prices not monotone in strike: {lewis_ref}"
 
     def test_price_increases_with_delta(self):
         """Higher intensity delta → higher ATM prices (more variance)."""
@@ -236,8 +236,9 @@ class TestMeixnerStructural:
 
         p_lo = price_at_delta(0.2)
         p_hi = price_at_delta(0.8)
-        assert p_hi > p_lo, \
+        assert p_hi > p_lo, (
             f"ATM price should increase with delta: delta=0.2→{p_lo:.4f}, 0.8→{p_hi:.4f}"
+        )
 
     def test_price_increases_with_a(self):
         """Higher scale a → higher ATM prices (heavier tails / more variance)."""
@@ -253,5 +254,4 @@ class TestMeixnerStructural:
 
         p_lo = price_at_a(0.1)
         p_hi = price_at_a(0.4)
-        assert p_hi > p_lo, \
-            f"ATM price should increase with a: a=0.1→{p_lo:.4f}, 0.4→{p_hi:.4f}"
+        assert p_hi > p_lo, f"ATM price should increase with a: a=0.1→{p_lo:.4f}, 0.4→{p_hi:.4f}"

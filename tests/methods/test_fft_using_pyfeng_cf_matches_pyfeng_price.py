@@ -12,7 +12,9 @@ way the paper-anchored tests can't.
 
 Skipped if PyFENG isn't installed.
 """
+
 from __future__ import annotations
+
 import numpy as np
 import pytest
 
@@ -20,10 +22,9 @@ from foureng.models.base import ForwardSpec
 from foureng.models.heston import HestonParams, heston_cumulants
 from foureng.models.variance_gamma import VGParams, vg_cumulants
 from foureng.pricers.carr_madan import carr_madan_price_at_strikes
+from foureng.pricers.cos import cos_auto_grid, cos_prices
 from foureng.pricers.frft import frft_price_at_strikes
-from foureng.pricers.cos import cos_prices, cos_auto_grid
 from foureng.utils.grids import FFTGrid, FRFTGrid
-
 
 pyfeng = pytest.importorskip(
     "pyfeng",
@@ -36,13 +37,12 @@ pytestmark = [pytest.mark.adapter]
 def _heston_bundle(lewis_heston):
     d = lewis_heston
     fwd = ForwardSpec(S0=d["S0"], r=d["r"], q=d["q"], T=d["T"])
-    p = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"],
-                     rho=d["rho"], v0=d["v0"])
-    m = pyfeng.HestonFft(sigma=p.v0, vov=p.nu, rho=p.rho, mr=p.kappa,
-                          theta=p.theta, intr=fwd.r, divr=fwd.q)
+    p = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"], rho=d["rho"], v0=d["v0"])
+    m = pyfeng.HestonFft(
+        sigma=p.v0, vov=p.nu, rho=p.rho, mr=p.kappa, theta=p.theta, intr=fwd.r, divr=fwd.q
+    )
     # PyFENG CF as ``phi(u)``  -  independent of our own heston_cf wrapper.
-    phi = lambda u: np.asarray(m.logp_cf(np.asarray(u), texp=fwd.T),
-                               dtype=np.complex128)
+    phi = lambda u: np.asarray(m.logp_cf(np.asarray(u), texp=fwd.T), dtype=np.complex128)
     return fwd, p, m, phi, np.asarray(d["strikes"], dtype=float)
 
 
@@ -50,14 +50,13 @@ def _vg_bundle(cm1999_vg):
     d = cm1999_vg
     fwd = ForwardSpec(S0=d["S0"], r=d["r"], q=d["q"], T=d["T"])
     p = VGParams(sigma=d["sigma"], nu=d["nu"], theta=d["theta"])
-    m = pyfeng.VarGammaFft(sigma=p.sigma, nu=p.nu, theta=p.theta,
-                            intr=fwd.r, divr=fwd.q)
-    phi = lambda u: np.asarray(m.logp_cf(np.asarray(u), texp=fwd.T),
-                               dtype=np.complex128)
+    m = pyfeng.VarGammaFft(sigma=p.sigma, nu=p.nu, theta=p.theta, intr=fwd.r, divr=fwd.q)
+    phi = lambda u: np.asarray(m.logp_cf(np.asarray(u), texp=fwd.T), dtype=np.complex128)
     return fwd, p, m, phi, np.asarray(d["strikes"], dtype=float)
 
 
 # --- Heston ---------------------------------------------------------------
+
 
 def test_carr_madan_with_pyfeng_cf_matches_pyfeng_price_heston(lewis_heston):
     fwd, p, m, phi, K = _heston_bundle(lewis_heston)
@@ -90,6 +89,7 @@ def test_cos_with_pyfeng_cf_matches_pyfeng_price_heston(lewis_heston):
 # FFT price floats around ~1e-3 vs the published table, and so does ours.
 # Comparing our engine to PyFENG's price directly (same CF underneath)
 # should be tighter since both are the same integrand. Keep 1e-3 here.
+
 
 def test_carr_madan_with_pyfeng_cf_matches_pyfeng_price_vg(cm1999_vg):
     fwd, p, m, phi, K = _vg_bundle(cm1999_vg)

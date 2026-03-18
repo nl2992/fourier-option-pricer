@@ -10,7 +10,9 @@ The utility wraps PyFENG's Brent solver. Three things matter:
   3. **Guard rails**: prices below intrinsic / above forward return
      NaN rather than raising.
 """
+
 from __future__ import annotations
+
 import numpy as np
 import pytest
 
@@ -19,7 +21,6 @@ from foureng.models.bsm import BsmParams
 from foureng.models.heston import HestonParams
 from foureng.pipeline import price_strip
 from foureng.utils.implied_vol import implied_vol_from_prices
-
 
 pyfeng = pytest.importorskip("pyfeng", reason="utility uses pyfeng.BsmFft")
 
@@ -51,8 +52,7 @@ def test_iv_heston_smile_shape_is_sane(lewis_heston):
     """Heston with rho < 0 produces a left-skewed smile: ITM IV > OTM IV."""
     d = lewis_heston
     fwd = ForwardSpec(S0=d["S0"], r=d["r"], q=d["q"], T=d["T"])
-    p = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"],
-                     rho=d["rho"], v0=d["v0"])
+    p = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"], rho=d["rho"], v0=d["v0"])
     K = np.linspace(80.0, 120.0, 21)
     C = price_strip("heston", "cos", K, fwd, p)
     iv = implied_vol_from_prices(C, K, fwd, cp=1)
@@ -85,6 +85,4 @@ def test_iv_above_forward_returns_nan():
 def test_iv_shape_mismatch_raises():
     fwd = ForwardSpec(S0=100.0, r=0.03, q=0.01, T=1.0)
     with pytest.raises(ValueError, match="must match"):
-        implied_vol_from_prices(
-            np.array([1.0, 2.0]), np.array([100.0]), fwd, cp=1
-        )
+        implied_vol_from_prices(np.array([1.0, 2.0]), np.array([100.0]), fwd, cp=1)

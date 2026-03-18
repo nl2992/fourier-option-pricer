@@ -11,16 +11,17 @@ Three replication checks:
   - Monotone N-convergence at L=10
   - L-sensitivity at N=512
 """
+
 from __future__ import annotations
+
 import numpy as np
 import pytest
 
 from foureng.models.base import ForwardSpec
 from foureng.models.kou import KouParams, kou_cf, kou_cumulants
-from foureng.pricers.cos import cos_prices, cos_auto_grid
 from foureng.pricers.carr_madan import carr_madan_price_at_strikes
+from foureng.pricers.cos import cos_auto_grid, cos_prices
 from foureng.utils.grids import FFTGrid
-
 
 pytestmark = [pytest.mark.paper, pytest.mark.derived_reference]
 
@@ -84,6 +85,7 @@ def test_cos_kou_L_sensitivity(kou_setup):
 def test_kou_cumulants_analytic_matches_cf(kou_setup):
     """Analytic Kou cumulants must match CF-derived to FP precision."""
     from foureng.utils.cumulants import cumulants_from_cf
+
     d = kou_setup
     c_num = cumulants_from_cf(d["phi"], order=4, radius=0.25, M=64)
     c_ana = kou_cumulants(d["fwd"], d["p"])

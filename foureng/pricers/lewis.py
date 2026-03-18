@@ -108,7 +108,7 @@ def cf_from_logprice_cf(logprice_cf: CF, x0: float) -> CF:
 
 def _lewis_integrand(
     u: np.ndarray,
-    k_log_moneyness: float,
+    k_log_moneyness: np.ndarray,
     cf_shifted_vals: np.ndarray,
 ) -> np.ndarray:
     """

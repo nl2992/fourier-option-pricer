@@ -13,14 +13,15 @@ These tests lock that claim down. Failure here means either:
 
 Skipped if PyFENG isn't installed.
 """
+
 from __future__ import annotations
+
 import numpy as np
 import pytest
 
 from foureng.models.base import ForwardSpec
 from foureng.models.heston import HestonParams, heston_cf
 from foureng.models.variance_gamma import VGParams, vg_cf
-
 
 pyfeng = pytest.importorskip(
     "pyfeng",
@@ -34,16 +35,15 @@ def test_heston_cf_matches_pyfeng_charfunc_logprice(lewis_heston):
     """Our ``heston_cf`` is exactly ``pf.HestonFft.charfunc_logprice``."""
     d = lewis_heston
     fwd = ForwardSpec(S0=d["S0"], r=d["r"], q=d["q"], T=d["T"])
-    p = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"],
-                     rho=d["rho"], v0=d["v0"])
+    p = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"], rho=d["rho"], v0=d["v0"])
 
     u = np.linspace(-10.0, 10.0, 41)
     phi_ours = heston_cf(u, fwd, p)
 
-    m = pyfeng.HestonFft(sigma=p.v0, vov=p.nu, rho=p.rho, mr=p.kappa,
-                         theta=p.theta, intr=fwd.r, divr=fwd.q)
-    phi_pyfeng = np.asarray(m.logp_cf(u, texp=fwd.T),
-                            dtype=np.complex128)
+    m = pyfeng.HestonFft(
+        sigma=p.v0, vov=p.nu, rho=p.rho, mr=p.kappa, theta=p.theta, intr=fwd.r, divr=fwd.q
+    )
+    phi_pyfeng = np.asarray(m.logp_cf(u, texp=fwd.T), dtype=np.complex128)
 
     err = float(np.max(np.abs(phi_ours - phi_pyfeng)))
     # Bit-identical up to float round-off  -  our wrapper does no extra math.
@@ -59,10 +59,8 @@ def test_vg_cf_matches_pyfeng_charfunc_logprice(cm1999_vg):
     u = np.linspace(-10.0, 10.0, 41)
     phi_ours = vg_cf(u, fwd, p)
 
-    m = pyfeng.VarGammaFft(sigma=p.sigma, nu=p.nu, theta=p.theta,
-                            intr=fwd.r, divr=fwd.q)
-    phi_pyfeng = np.asarray(m.logp_cf(u, texp=fwd.T),
-                            dtype=np.complex128)
+    m = pyfeng.VarGammaFft(sigma=p.sigma, nu=p.nu, theta=p.theta, intr=fwd.r, divr=fwd.q)
+    phi_pyfeng = np.asarray(m.logp_cf(u, texp=fwd.T), dtype=np.complex128)
 
     err = float(np.max(np.abs(phi_ours - phi_pyfeng)))
     assert err < 1e-14, f"VG CF wrapper vs PyFENG: max|err| = {err:.3e}"
@@ -72,8 +70,7 @@ def test_heston_cf_martingale(lewis_heston):
     """``phi(u=0) = 1`` exactly  -  pure consistency check on our wrapper."""
     d = lewis_heston
     fwd = ForwardSpec(S0=d["S0"], r=d["r"], q=d["q"], T=d["T"])
-    p = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"],
-                     rho=d["rho"], v0=d["v0"])
+    p = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"], rho=d["rho"], v0=d["v0"])
 
     phi0 = heston_cf(np.array([0.0]), fwd, p)[0]
     assert abs(phi0 - 1.0) < 1e-14, f"phi(0) = {phi0}, expected 1+0j"

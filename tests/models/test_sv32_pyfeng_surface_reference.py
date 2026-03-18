@@ -10,6 +10,7 @@ Three engines are tested:
 - lewis: tested only on the two longer-maturity columns (T=0.5, 1.0); deep-OTM
   rows at short maturities can require extremely wide integration ranges.
 """
+
 from __future__ import annotations
 
 import json

@@ -22,10 +22,29 @@ jobs:
         run: pip install ruff
 
       - name: ruff check
-        run: ruff check foureng/
+        run: ruff check foureng/ tests/
 
       - name: ruff format check
-        run: ruff format --check foureng/
+        run: ruff format --check foureng/ tests/
+
+  typecheck:
+    name: Type check
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[typecheck]"
+
+      - name: mypy
+        run: python -m mypy foureng
 
   test:
     name: Test Python ${{ matrix.python-version }} (${{ matrix.deps }})
@@ -63,7 +82,7 @@ jobs:
           pip install -e ".[test]"
 
       - name: Fast tests with coverage
-        run: pytest -q --tb=short -m "not slow" --cov=foureng --cov-report=term-missing --cov-fail-under=60
+        run: pytest -q --tb=short -m "not slow" --cov=foureng --cov-report=term-missing --cov-fail-under=70
 
   paper-tests:
     name: Paper/reference tests
