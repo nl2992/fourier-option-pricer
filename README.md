@@ -276,11 +276,28 @@ Junike (2024) adds a companion result for how many terms N are needed to resolve
 
 Even with a well-chosen `[a, b]`, the finite COS series can still show oscillation when the density has sharp features, the model is short-maturity and jump-heavy, or the characteristic function decays slowly.
 
-The adaptive filtered-COS layer adds a second control: spectral weights `sigma_k` that damp the high-frequency COS terms before the payoff sum:
+**This is an original project extension, not a paper replication.**
+The idea is **inspired by** spectral-filter work such as Ruijter, Versteegh and Oosterlee (2015), but this repo does **not** claim to reproduce a published adaptive filtered-COS paper. The project contribution is the combination of:
+
+1. a filtered-COS pricing layer on top of the standard COS machinery,
+2. a deterministic search across filter and grid-policy candidates,
+3. a selection rule that always keeps the unfiltered Junike-style candidate available.
+
+![Adaptive filtered-COS schematic](docs/assets/adaptive_filtered_cos_schematic.svg)
+
+Plain COS keeps the usual payoff sum
+
+```
+price = disc * sum_k  A_k * V_k
+```
+
+while the project extension adds spectral weights `sigma_k` that damp the high-frequency COS modes before the final sum:
 
 ```
 price = disc * sum_k  sigma_k * A_k * V_k
 ```
+
+with `sigma_k in [0, 1]`, near one for the low modes and smaller in the tail modes.
 
 Four filter families are available: Fejer, Lanczos, raised-cosine, and exponential. A deterministic policy-search selector compares candidates from `(COSGridPolicy, COSFilterSpec)` pairs and returns the fastest one that meets the user's error tolerance, with the no-filter Junike candidate always included.
 

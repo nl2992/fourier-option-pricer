@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="430" viewBox="0 0 1200 430">
+  <defs>
+    <style>
+      .title { font: 700 28px Arial, sans-serif; fill: #1f3b64; }
+      .subtitle { font: 600 18px Arial, sans-serif; fill: #355c8a; }
+      .label { font: 16px Arial, sans-serif; fill: #2e3c4f; }
+      .small { font: 14px Arial, sans-serif; fill: #44566c; }
+      .formula { font: italic 22px Georgia, serif; fill: #1f2f3d; }
+      .box { fill: #fbfdff; stroke: #c8d8ea; stroke-width: 2; rx: 16; }
+      .grid { stroke: #e8eef5; stroke-width: 1; }
+      .axis { stroke: #8197ad; stroke-width: 2; }
+      .plain { fill: none; stroke: #5a86b8; stroke-width: 4; stroke-dasharray: 10 8; }
+      .filtered { fill: none; stroke: #a9d2eb; stroke-width: 5; }
+      .target { fill: none; stroke: #1f2f3d; stroke-width: 4; }
+      .marker { stroke: #9eb5cb; stroke-width: 2; stroke-dasharray: 4 6; }
+    </style>
+  </defs>
+
+  <rect x="18" y="18" width="1164" height="394" fill="#ffffff" stroke="#d7e4f0" stroke-width="2" rx="20"/>
+  <text x="38" y="54" class="title">Adaptive filtered-COS is an original project extension</text>
+  <text x="38" y="82" class="label">Inspired by spectral-filter ideas from Ruijter, Versteegh and Oosterlee (2015), but implemented here as a new deterministic policy layer.</text>
+  <text x="38" y="106" class="label">This is not a paper replication. The project keeps the same CF, interval, and payoff coefficients, then adds frequency damping and policy search.</text>
+
+  <rect x="38" y="132" width="548" height="214" class="box"/>
+  <rect x="614" y="132" width="548" height="214" class="box"/>
+
+  <text x="58" y="164" class="subtitle">Payoff-kink intuition</text>
+  <text x="634" y="164" class="subtitle">High-frequency mode damping</text>
+
+  <!-- left panel axes -->
+  <line x1="86" y1="300" x2="528" y2="300" class="axis"/>
+  <line x1="86" y1="300" x2="86" y2="190" class="axis"/>
+  <line x1="306" y1="182" x2="306" y2="305" class="marker"/>
+  <text x="92" y="322" class="small">local log-moneyness</text>
+  <text x="16" y="220" transform="rotate(-90 16 220)" class="small">series contribution</text>
+
+  <!-- left grid -->
+  <line x1="86" y1="270" x2="528" y2="270" class="grid"/>
+  <line x1="86" y1="240" x2="528" y2="240" class="grid"/>
+  <line x1="86" y1="210" x2="528" y2="210" class="grid"/>
+
+  <!-- left panel curves -->
+  <path d="M 92 298 C 150 298, 180 298, 218 297 C 250 293, 265 286, 282 304 C 295 316, 315 250, 330 242 C 350 236, 382 218, 435 178 C 465 154, 495 129, 520 108" class="plain"/>
+  <path d="M 92 298 C 170 298, 205 298, 252 297 C 275 297, 295 296, 308 293 C 324 276, 338 250, 351 238 C 372 224, 403 208, 437 179 C 469 153, 495 130, 520 108" class="filtered"/>
+  <path d="M 92 298 L 294 298 L 306 292 L 322 266 L 340 240 L 520 108" class="target"/>
+
+  <text x="390" y="193" class="small">Target payoff shape</text>
+  <line x1="348" y1="188" x2="382" y2="188" class="target"/>
+  <text x="390" y="214" class="small">Plain COS (ringing)</text>
+  <line x1="348" y1="209" x2="382" y2="209" class="plain"/>
+  <text x="390" y="235" class="small">Filtered COS</text>
+  <line x1="348" y1="230" x2="382" y2="230" class="filtered"/>
+
+  <!-- right panel axes -->
+  <line x1="662" y1="300" x2="1104" y2="300" class="axis"/>
+  <line x1="662" y1="300" x2="662" y2="190" class="axis"/>
+  <text x="782" y="322" class="small">COS mode k</text>
+  <text x="592" y="220" transform="rotate(-90 592 220)" class="small">relative contribution</text>
+
+  <line x1="662" y1="270" x2="1104" y2="270" class="grid"/>
+  <line x1="662" y1="240" x2="1104" y2="240" class="grid"/>
+  <line x1="662" y1="210" x2="1104" y2="210" class="grid"/>
+
+  <path d="M 672 196 C 720 208, 760 228, 808 248 C 846 263, 898 274, 946 272 C 986 270, 1019 250, 1050 247 C 1072 246, 1088 252, 1100 264" class="plain"/>
+  <path d="M 672 196 C 724 214, 775 235, 826 254 C 882 276, 930 292, 985 297 C 1028 300, 1068 300, 1100 300" class="filtered"/>
+  <text x="910" y="198" class="small">Unfiltered mode weight</text>
+  <line x1="842" y1="193" x2="896" y2="193" class="plain"/>
+  <text x="910" y="221" class="small">After spectral damping</text>
+  <line x1="842" y1="216" x2="896" y2="216" class="filtered"/>
+
+  <text x="42" y="374" class="label">Plain COS:</text>
+  <text x="170" y="374" class="formula">V ≈ Σ Aₖ Uₖ</text>
+  <text x="492" y="374" class="small">published COS structure</text>
+
+  <text x="640" y="374" class="label">Project innovation:</text>
+  <text x="838" y="374" class="formula">V ≈ Σ σₖ Aₖ Uₖ</text>
+  <text x="1042" y="374" class="small">plus deterministic policy search</text>
+
+  <text x="42" y="400" class="small">Here Aₖ are CF-side COS coefficients, Uₖ are payoff coefficients, and σₖ ∈ [0,1] damps tail modes without changing the underlying model.</text>
+</svg>
