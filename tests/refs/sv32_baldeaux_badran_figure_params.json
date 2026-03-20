@@ -1,0 +1,24 @@
+{
+  "source": "Baldeaux and Badran 2012, 3/2 plus jumps figure-only reference",
+  "purpose": "Qualitative notebook replication only. Do not use as hard exact price unit test.",
+  "model": "sv32",
+  "spot_or_forward_normalized": 100.0,
+  "risk_free_rate": 0.0,
+  "dividend_yield": 0.0,
+  "maturity_days": 9,
+  "maturity_years": 0.024657534246575342,
+  "pure_3_2": {
+    "kappa": 19.45,
+    "theta": 0.04,
+    "nu": 0.28,
+    "rho": -0.72,
+    "v0": 0.0016
+  },
+  "plus_jumps_if_implemented": {
+    "jump_frequency": 5.67,
+    "mean_jump_percentage": 0.018,
+    "jump_vol": 0.17,
+    "converted_log_jump_mean": 0.003521372800029441
+  },
+  "test_policy": "figure-only; use for notebook plots and qualitative smoke tests, not exact price asserts"
+}
