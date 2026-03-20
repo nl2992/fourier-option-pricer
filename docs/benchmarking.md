@@ -1,8 +1,8 @@
 # Benchmarking
 
 The repository includes a small `pyperf` benchmark harness for canonical
-pricing workloads. This makes the efficiency claim testable as an engineering
-process rather than only as a one-off report claim.
+pricing workloads. This makes the efficiency story testable as an engineering
+process rather than only as a one-off report result.
 
 ## Canonical benchmark cases
 

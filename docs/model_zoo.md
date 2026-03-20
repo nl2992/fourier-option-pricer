@@ -66,6 +66,6 @@ The `MODEL_REGISTRY` in `foureng.models.registry` is the single source of truth 
 
 Each model is validated at one of five evidence levels defined in [validation_hierarchy.md](validation_hierarchy.md).
 
-| Per-model evidence table | [paper_validation_matrix.md](paper_validation_matrix.md)  -  links every paper claim to its test file, reference type, and numeric target |
+| Per-model evidence table | [paper_validation_matrix.md](paper_validation_matrix.md)  -  links every paper-backed result to its test file, reference type, and numeric target |
 | Bates and 3/2 SV detail | [bates_sv32_validation.md](bates_sv32_validation.md)  -  BATES-01–07 and SV32-01–05 cases with parameters, tolerances, test files, and benchmark CSVs |
 | FO2008 replication tables | [fo2008_replication.md](fo2008_replication.md)  -  Tables 1–10 paper-faithful replay and improved-COS summary |
