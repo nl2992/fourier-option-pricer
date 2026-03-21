@@ -285,6 +285,8 @@ The idea is **inspired by** spectral-filter work such as Ruijter, Versteegh and 
 
 ![Adaptive filtered-COS schematic](docs/assets/adaptive_filtered_cos_schematic.svg)
 
+Our innovation on top of that inspiration is the policy layer: we keep the same characteristic function, truncation logic, and payoff coefficients, then add spectral damping and choose among explicit `(grid policy, filter)` candidates while always preserving the unfiltered Junike-style path as a fallback.
+
 Plain COS keeps the usual payoff sum
 
 ```
