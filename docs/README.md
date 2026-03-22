@@ -14,6 +14,7 @@ Start at [README.md](../README.md) for the project overview; come here for depth
 | [packaging.md](packaging.md) | PyPI package identity, install instructions, runtime dependencies, CI setup, and build/release checklist. |
 | [papers.md](papers.md) | Comprehensive bibliography: all papers cited in the codebase, grouped by category, with DOIs and free-access links. |
 | [numerical_notes.md](numerical_notes.md) | Known numerical limitations: COS truncation failure modes, Carr-Madan alpha conditions, PyFENG version caveats, parameter edge cases, IV inversion guidance. |
+| [numerical_quality_checklist.md](numerical_quality_checklist.md) | M1/M4 floating-point rubric audit: per-item pass/fail status, the `expm1` bug fix in `bates.py`, and evidence links to `tests/methods/test_numerical_quality.py`. |
 
 ## Validation and results
 
