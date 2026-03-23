@@ -136,8 +136,8 @@ had mature implementations. The project added:
 - paper-replication notebooks and benchmark CSVs.
 
 The repo explicitly separates PyFENG-backed models from in-house models.
-PyFENG-backed models can use `method="pyfeng_fft"` in addition to all other methods;
-in-house models use the repo's own COS, Carr-Madan, FRFT, filtered-COS, and Lewis paths.
+PyFENG-backed models can use `method="pyfeng_fft"` in addition to all other methods; here `pyfeng_fft` is the PyFENG-backed Lewis-style FFT route, separate from the repo's own `method="lewis"` implementation.
+In-house models use the repo's own COS, Carr-Madan, FRFT, filtered-COS, and Lewis paths.
 
 ---
 

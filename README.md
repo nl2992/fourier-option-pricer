@@ -135,6 +135,7 @@ Full model details: [docs/model_zoo.md](docs/model_zoo.md).
 | `price_strip(model, method, strikes, fwd, params, grid=None)` | model label, method label, strike array, `ForwardSpec`, model params, optional grid | `np.ndarray` of call prices |
 
 Method labels: `"cos"`, `"cos_improved"`, `"carr_madan"`, `"frft"`, `"lewis"`, `"pyfeng_fft"`.
+Here `"lewis"` means the repo's own in-house Lewis Fourier inversion in `foureng/pricers/lewis.py`, while `"pyfeng_fft"` means the PyFENG-backed Lewis-style FFT path available only for PyFENG-supported models.
 
 ### Core pricing functions
 

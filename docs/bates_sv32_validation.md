@@ -120,8 +120,9 @@ the test suite. The log-forward convention (`X_T = log(S_T / F_0)`) is derived i
 | Vol-of-vol ν | 8.56 |
 | Correlation ρ | −0.99 |
 
-Frozen pyfeng_fft reference surface in `tests/refs/sv32_pyfeng_surface.json` (7×4 grid:
+Frozen `pyfeng_fft` reference surface in `tests/refs/sv32_pyfeng_surface.json` (7×4 grid:
 T = 0.25, 0.5, 1.0, 2.0; K = 80, 90, 100, 110, 120, 130, 140).
+Here `pyfeng_fft` refers to the PyFENG-backed Lewis-style FFT path, used as an external software oracle; it is distinct from the repo's own `lewis` pricer.
 
 ---
 
