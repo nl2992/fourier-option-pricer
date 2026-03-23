@@ -82,15 +82,16 @@ print(result.call_prices)
 
 ## Testing and validation layout
 
-The repository currently collects 600 pytest cases. They are grouped by
+The repository currently collects 669 pytest cases. They are grouped by
 validation purpose rather than by implementation phase:
 
 | Folder | Contents |
 |--------|----------|
-| `tests/papers/` | Published-paper and benchmark replications: Carr-Madan, Lewis, FRFT, Fang-Oosterlee COS, and Kou/COS checks. |
-| `tests/models/` | Model adapter, regression-strip, and reduction-limit tests for all 20 models, including paper-backed 3-layer suites (analytic benchmarks, cross-engine agreement, structural properties) for each in-house model. |
+| `tests/refs/` | Frozen JSON reference files used by no-network paper-replication tests: MathWorks Bates case, PyFENG 3/2 regression target, and Baldeaux-Badran 3/2 figure parameters. |
+| `tests/papers/` | Published-paper and benchmark replications: Carr-Madan, Lewis, FRFT, Fang-Oosterlee COS, Kou/COS, Bates MathWorks reference (all six pricers), and 3/2 Baldeaux-Badran qualitative smoke test. |
+| `tests/models/` | Model adapter, regression-strip, and reduction-limit tests for all 20 models, including paper-backed 3-layer suites (analytic benchmarks, cross-engine agreement, structural properties) for each in-house model, and model-reduction identities (Bates→BSM, Bates→Merton JD, sv32 PyFENG regression). |
 | `tests/methods/` | Pricing-method behavior: COS policies, filters, alpha validity, cross-method agreement, and robustness sweeps. |
-| `tests/features/` | End-to-end package features: Monte Carlo, control variates, implied volatility, calibration, Greeks, public API, and integration workflows. |
+| `tests/features/` | End-to-end package features: Monte Carlo, control variates, implied volatility, calibration, Greeks, public API, integration workflows, and `@pytest.mark.slow` notebook execution guards. |
 
 Run the fast CI-style suite with:
 
@@ -252,6 +253,13 @@ MIT. See [LICENSE](LICENSE).
 
 The Colab-ready demo notebook lives at [notebooks/demo.ipynb](notebooks/demo.ipynb).
 
+Paper-replication notebooks live at [notebooks/paper_replications/](notebooks/paper_replications/):
+
+| Notebook | What it shows |
+|----------|--------------|
+| `bates_mathworks_replication.ipynb` | Bates model priced against the frozen MathWorks reference case using COS, improved COS, filtered COS, Carr-Madan, FRFT, and Lewis. Includes a scoreboard table, error plots, an assertion gate, and a CSV saved to `benchmarks/`. |
+| `three_halves_replication.ipynb` | 3/2 SV model: PyFENG regression case cross-checked against COS-improved and Lewis; Baldeaux-Badran figure parameters used for qualitative IV smile and no-arbitrage shape checks. |
+
 ## Papers used
 
 These are the main papers the package and notebook workflow are built around.
@@ -276,3 +284,5 @@ These are the main papers the package and notebook workflow are built around.
 | Finite Moment Log Stable | Carr, P. and Wu, L. (2003), *The Finite Moment Log Stable Process and Option Pricing*, Journal of Finance, 58(2), 753–777. |
 | Double Heston (two-factor SV) | Christoffersen, P., Heston, S. and Jacobs, K. (2009), *The Shape and Term Structure of the Index Option Smirk: Why Multifactor Stochastic Volatility Models Work So Well*, Management Science, 55(12), 1914–1932. |
 | VGSA (VG with stochastic arrival) | Carr, P., Geman, H., Madan, D.B. and Yor, M. (2003), *Stochastic Volatility for Lévy Processes*, Mathematical Finance, 13(3), 345–382. |
+| Bates SVJ model | Bates, D.S. (1996), *Jumps and Stochastic Volatility: Exchange Rate Processes Implicit in Deutsche Mark Options*, Review of Financial Studies, 9(1), 69–107. |
+| 3/2 SV qualitative parameters | Baldeaux, J. and Badran, A. (2012), *Consistent Modelling of VIX and Equity Derivatives Using a 3/2 Plus Jumps Model*, Applied Mathematical Finance, 21(4), 299–312. |

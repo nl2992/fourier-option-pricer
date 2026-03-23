@@ -8,8 +8,11 @@ This appendix collects the extra project material that does not belong in the pa
 - `notebooks/demo.ipynb`: Colab-friendly walkthrough of the main pricing workflow
 - `notebooks/presentation_fourier_methods.ipynb`: presentation notebook version
 - `notebooks/cos_method_improved.ipynb`: COS truncation and policy notebook
-- `benchmarks/`: generated tables and figures used by the notebooks
-- `tests/`: regression and public API tests
+- `notebooks/paper_replications/bates_mathworks_replication.ipynb`: Bates all-engine scoreboard vs MathWorks frozen reference
+- `notebooks/paper_replications/three_halves_replication.ipynb`: 3/2 SV PyFENG regression + Baldeaux-Badran qualitative IV smile
+- `benchmarks/`: generated tables and figures used by the notebooks; paper-replication CSVs written here
+- `tests/`: regression and public API tests; `tests/refs/` holds frozen JSON reference data used by no-network paper-replication tests
+- `methodology_and_results.md`: jump-convention derivation, reference values, and rationale for qualitative vs. exact 3/2 validation
 
 ## Methods at a glance
 
