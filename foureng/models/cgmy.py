@@ -102,7 +102,7 @@ def cgmy_cf(u: np.ndarray, fwd: ForwardSpec, p: CgmyParams) -> np.ndarray:
     """CF of ``X_T = log(S_T / F_0)`` under CGMY — via PyFENG's ``CgmyFft``."""
     m = _pyfeng_cgmy_model(fwd, p)
     u_arr = np.asarray(u)
-    return np.asarray(m.charfunc_logprice(u_arr, texp=fwd.T), dtype=np.complex128)
+    return np.asarray(m.logp_cf(u_arr, texp=fwd.T), dtype=np.complex128)
 
 
 # ---------------------------------------------------------------------------
