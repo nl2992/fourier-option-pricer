@@ -1,7 +1,7 @@
 """Variance-Gamma characteristic function.
 
 Implementation note — **PyFENG is the CF implementation for this model**.
-``vg_cf`` is a thin wrapper around :meth:`pyfeng.VarGammaFft.charfunc_logprice`;
+``vg_cf`` is a thin wrapper around :meth:`pyfeng.VarGammaFft.logp_cf`;
 parameters are in the canonical CM1999 ``(sigma, nu, theta)`` convention
 the project uses throughout, and PyFENG's CF agrees with the analytic
 VG formula to ~1e-18 under that convention (verified).

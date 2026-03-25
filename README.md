@@ -31,7 +31,7 @@ The pricing layer supports twenty characteristic-function models. Some are thin 
 | Double Heston | `DoubleHestonParams` | In-house implementation | Two independent Heston variance factors; CF factorises as a product of two single-Heston CFs (Christoffersen, Heston & Jacobs 2009). |
 | VGSA | `VGSAParams` | In-house implementation | Variance Gamma on a stochastic CIR activity clock; captures term-structure of skew and vol-of-vol clustering (Carr, Geman, Madan & Yor 2003). |
 
-> **PyFENG dependency note.** The eight PyFENG-backed models rely on `pyfeng>=0.3.0`. Rough Heston imports directly from `pyfeng.sv_fft` (not `pyfeng.ex`) to avoid a broken path that calls the removed `scipy.misc.derivative` in newer SciPy. The `method="pyfeng_fft"` option in `price_strip` is supported only for these eight models; the remaining twelve use the in-house COS / Carr-Madan / FRFT pricers.
+> **PyFENG dependency note.** The eight PyFENG-backed models require `pyfeng>=0.4.0` (pyfeng 0.4.0 renamed `charfunc_logprice` → `logp_cf` and changed `VarGammaFft`/`ExpNigFft` from `vov=` to `nu=`). Rough Heston imports directly from `pyfeng.sv_fft` (not `pyfeng.ex`) to avoid a broken path that calls the removed `scipy.misc.derivative` in newer SciPy. The `method="pyfeng_fft"` option in `price_strip` is supported only for these eight models; the remaining twelve use the in-house COS / Carr-Madan / FRFT pricers.
 
 All 20 models are **first-class public API objects** importable directly from the top-level package. Their parameter dataclasses, characteristic functions, and cumulant functions are all in `foureng.__all__` and importable as `fe.HestonParams`, `fe.vg_cf`, `fe.fmls_cumulants`, etc. The `MODEL_REGISTRY` in `foureng.models.registry` is the single source of truth for which models are supported and which have a native PyFENG FFT pricer; `price_strip` dispatches through it.
 
@@ -55,13 +55,13 @@ $$
 X_T = \log\\left(\frac{S_T}{F_0}\right).
 $$
 
-Here `i = sqrt(-1)`, `u` is the Fourier frequency, and `X_T` is the terminal log-forward return. Carr-Madan FFT and FRFT recover prices through Fourier inversion of this characteristic function, while COS uses the same object to build cosine-series coefficients on a truncated interval. For PyFENG-backed models, `foureng` translates its dataclasses into the corresponding `pyfeng.*Fft` model and evaluates `charfunc_logprice`; for the in-house models, the characteristic functions are implemented directly in `foureng.models`.
+Here `i = sqrt(-1)`, `u` is the Fourier frequency, and `X_T` is the terminal log-forward return. Carr-Madan FFT and FRFT recover prices through Fourier inversion of this characteristic function, while COS uses the same object to build cosine-series coefficients on a truncated interval. For PyFENG-backed models, `foureng` translates its dataclasses into the corresponding `pyfeng.*Fft` model and calls `logp_cf`; for the in-house models, the characteristic functions are implemented directly in `foureng.models`.
 
 ## Installation
 
 ```bash
-pip install fourier-option-pricer          # latest (v0.4.0)
-pip install "fourier-option-pricer==0.4.0" # pin to this release
+pip install fourier-option-pricer          # latest (v0.4.1)
+pip install "fourier-option-pricer==0.4.1" # pin to this release
 ```
 
 ## Quick start
@@ -254,7 +254,7 @@ MIT. See [LICENSE](LICENSE).
 
 The Colab-ready quick-start demo lives at [notebooks/demo.ipynb](notebooks/demo.ipynb).
 
-The full-feature advanced demo (v0.4.0) is at [notebooks/demo_advanced.ipynb](notebooks/demo_advanced.ipynb) and covers all 20 models, 6 pricers, Greeks, IV surface, calibration, and Monte Carlo in one notebook.
+The full-feature advanced demo (v0.4.1) is at [notebooks/demo_advanced.ipynb](notebooks/demo_advanced.ipynb) and covers all 20 models, 6 pricers, Greeks, IV surface, calibration, and Monte Carlo in one notebook.
 
 Paper-replication notebooks live at [notebooks/paper_replications/](notebooks/paper_replications/):
 

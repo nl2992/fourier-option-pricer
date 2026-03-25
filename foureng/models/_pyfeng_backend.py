@@ -6,7 +6,7 @@ pattern:
     1. Take our project-side parameter dataclass + :class:`ForwardSpec`.
     2. Translate to PyFENG's constructor kwargs.
     3. Cache the constructed model per (params, forward), then call
-       :meth:`charfunc_logprice` on every CF request.
+       :meth:`logp_cf` on every CF request.
 
 Keeping the pattern in one helper module lets each model file (BSM,
 Heston, VG, OUSV, …) stay a thin 2-line wrapper around its own kwarg
@@ -22,7 +22,7 @@ hands it to :func:`build_cached`. The cache is unbounded in principle,
 but a typical run sees O(1) distinct ``(params, fwd)`` tuples — one
 per calibration point, one per notebook example. Constructing a
 :class:`pyfeng.HestonFft` is an order of magnitude slower than a
-single :meth:`charfunc_logprice` call, so caching matters for COS's
+single :meth:`logp_cf` call, so caching matters for COS's
 two-pass usage (cumulant Cauchy integral + strip pricing).
 """
 

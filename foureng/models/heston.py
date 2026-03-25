@@ -1,7 +1,7 @@
 """Heston (1993) characteristic function.
 
 Implementation note — **PyFENG is the CF implementation for this model**.
-We use :meth:`pyfeng.HestonFft.charfunc_logprice` directly so the project
+We use :meth:`pyfeng.HestonFft.logp_cf` directly so the project
 does not duplicate the professor's code. The previous in-house analytic
 "Formulation 2" CF has been retired; :data:`heston_cf_form2` is kept as a
 back-compat alias pointing at :func:`heston_cf`.
@@ -72,7 +72,7 @@ _HESTON_MODEL_CACHE: dict[tuple, Any] = {}
 def _pyfeng_heston_model(fwd: ForwardSpec, p: HestonParams):
     """Build-and-cache a :class:`pyfeng.HestonFft` for (fwd, p).
 
-    PyFENG's constructor is relatively expensive; :meth:`charfunc_logprice`
+    PyFENG's constructor is relatively expensive; :meth:`logp_cf`
     is cheap. We cache per ``(p, fwd)`` so repeated CF evaluations — e.g.
     the 64-point contour integral in :func:`heston_cumulants` and a
     subsequent COS/FRFT/Carr-Madan pricing pass — all hit the same model.

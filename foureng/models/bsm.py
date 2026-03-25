@@ -6,7 +6,7 @@ BSM is the simplest Fourier sanity check: the log-forward CF is Gaussian
 
 with ``X_T = log(S_T / F_0) = -0.5*sigma^2*T + sigma*sqrt(T)*Z`` under
 the martingale convention. PyFENG's :class:`pyfeng.BsmFft` exposes this
-through :meth:`charfunc_logprice` with the same convention we use
+through :meth:`logp_cf` with the same convention we use
 throughout (verified to ~1e-14 in
 :mod:`tests/test_pyfeng_cf_wrappers.py`).
 
