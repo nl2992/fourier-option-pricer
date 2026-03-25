@@ -15,7 +15,7 @@ dependencies = [
     "scipy>=1.10",
     "matplotlib>=3.7",
     "statsmodels>=0.14",
-    "pyfeng>=0.3.0",
+    "pyfeng>=0.4.0",
 ]
 keywords = [
     "quant-finance",
