@@ -39,11 +39,27 @@ from .vol_surface import SurfaceSpec, model_iv_surface
 
 @dataclass
 class CalibrationResult:
-    params: dict  # best-fit parameters as a dict
-    loss: float  # final objective (weighted SSE on IVs)
+    """Output of a model calibration run.
+
+    Attributes
+    ----------
+    params : dict
+        Best-fit model parameters as a plain dict (parameter names to values).
+    loss : float
+        Final objective value (sum of squared IV residuals, model minus market).
+    success : bool
+        True if the optimiser reported convergence.
+    nfev : int
+        Number of objective function evaluations.
+    residuals : np.ndarray
+        Shape (nT, nK). Per-cell IV residuals (model IV minus market IV).
+    """
+
+    params: dict
+    loss: float
     success: bool
     nfev: int
-    residuals: np.ndarray  # (nT, nK) IV residuals model - market
+    residuals: np.ndarray
 
 
 # --- Param-vector <-> model converters ---------------------------------------

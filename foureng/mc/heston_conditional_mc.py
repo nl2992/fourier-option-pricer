@@ -1,3 +1,20 @@
+"""Heston conditional Monte Carlo via exact CIR variance sampling.
+
+The conditional scheme simulates the CIR variance process to obtain the pair
+(v_T, V_T) where V_T = int_0^T v_s ds is the path-integrated variance, then
+prices each call analytically via the Black-Scholes formula conditional on
+(v_T, V_T). This removes discretisation bias from the spot path: the only MC
+error comes from the variance simulation.
+
+Two variance schemes:
+    "exact"    -- noncentral chi-squared draws (zero discretisation error for v_t)
+    "milstein" -- Milstein step with reflection at zero (faster, O(dt) bias)
+
+A PyFENG-backed Heston MC baseline is also provided via
+heston_mc_pyfeng_price_strip for comparison against the in-house scheme.
+It uses the Andersen (2008) QE scheme by default.
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -12,6 +29,23 @@ from ..models.heston import HestonParams
 
 @dataclass(frozen=True)
 class HestonMCScheme:
+    """Configuration for the Heston conditional MC.
+
+    Attributes
+    ----------
+    n_paths : int
+        Number of sample paths.
+    n_steps : int
+        Number of CIR discretisation steps over [0, T].
+    seed : int or None
+        RNG seed. None gives a non-reproducible run.
+    scheme : str
+        "exact" uses noncentral chi-squared draws for v_t (no discretisation
+        error in the variance). "milstein" uses Milstein time-stepping with
+        reflection at zero, which is faster per step but introduces an O(dt)
+        bias in V_T.
+    """
+
     n_paths: int
     n_steps: int
     seed: int | None = None

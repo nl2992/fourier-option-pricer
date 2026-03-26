@@ -9,6 +9,19 @@ import numpy as np
 
 @dataclass(frozen=True)
 class Cumulants:
+    """First four cumulants of the log-return X_T = log(S_T / F_0).
+
+    Attributes
+    ----------
+    c1 : float
+        First cumulant (mean of X_T).
+    c2 : float
+        Second cumulant (variance of X_T).
+    c4 : float
+        Fourth cumulant. Used by the Fang-Oosterlee truncation rule to
+        account for excess kurtosis when setting the interval half-width.
+    """
+
     c1: float
     c2: float
     c4: float

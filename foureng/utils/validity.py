@@ -25,6 +25,18 @@ from ..models.variance_gamma import VGParams
 
 @dataclass(frozen=True)
 class AlphaCheck:
+    """Result of a Carr-Madan dampening-exponent admissibility check.
+
+    Attributes
+    ----------
+    ok : bool
+        True if alpha is admissible for the given model and characteristic function.
+    reason : str
+        Short description of why the check passed or failed.
+    phi_at_damping : complex or None
+        Value of phi at u = -i*(alpha+1); None if not evaluated (e.g. early rejection).
+    """
+
     ok: bool
     reason: str
     phi_at_damping: complex | None = None

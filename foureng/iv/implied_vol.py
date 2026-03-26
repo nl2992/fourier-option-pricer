@@ -1,3 +1,14 @@
+"""Black-Scholes implied-volatility utilities in forward-measure form.
+
+All formulas use the forward F0 and discount D = exp(-rT) rather than spot S0,
+so they work directly for equity (q = continuous dividend) and FX options
+(r_d, r_f) without any spot-to-forward conversion in the caller.
+
+Two root-finding solvers are provided:
+    implied_vol_brent              -- Brent's method, guaranteed convergence in (lo, hi)
+    implied_vol_newton_safeguarded -- Newton-Raphson with automatic Brent fallback
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -9,6 +20,24 @@ from scipy.stats import norm
 
 @dataclass(frozen=True)
 class BSInputs:
+    """Market inputs for a Black-Scholes implied-vol calculation.
+
+    Attributes
+    ----------
+    F0 : float
+        Forward price at maturity T.
+    K : float
+        Strike.
+    T : float
+        Time to maturity in years.
+    r : float
+        Continuously compounded risk-free rate.
+    q : float
+        Continuous dividend (or foreign risk-free) yield.
+    is_call : bool
+        True for a call, False for a put. Default True.
+    """
+
     F0: float
     K: float
     T: float

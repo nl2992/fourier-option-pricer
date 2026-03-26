@@ -1,3 +1,12 @@
+"""Plain Black-Scholes Monte Carlo baseline for European options.
+
+Uses a one-step exact GBM simulation:
+    S_T = S0 * exp((r - q - vol^2/2)*T + vol*sqrt(T)*Z)
+
+Intended as a reference MC for convergence tests and a simple sanity check
+against closed-form BS prices. For Heston MC see heston_conditional_mc.py.
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -7,6 +16,16 @@ import numpy as np
 
 @dataclass(frozen=True)
 class MCSpec:
+    """Configuration for a plain Monte Carlo run.
+
+    Attributes
+    ----------
+    n_paths : int
+        Number of sample paths to simulate.
+    seed : int or None
+        Seed for NumPy's default_rng. None gives a non-reproducible run.
+    """
+
     n_paths: int
     seed: int | None = None
 

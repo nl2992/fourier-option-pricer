@@ -61,6 +61,14 @@ class ForwardSpec:
 
 @dataclass(frozen=True)
 class ModelSpec:
+    """Base class for all model parameter dataclasses.
+
+    Every parameter class in the package inherits from ModelSpec and sets
+    ``name`` in its ``__init__`` to identify itself (for example "heston",
+    "kou", "vg"). The ``name`` is used by the model registry and the
+    pipeline dispatcher to look up the correct CF and cumulant functions.
+    """
+
     name: str
 
 
