@@ -42,8 +42,10 @@ The jump compensator ensures the forward price remains F0:
 
 #### Tolerances
 
-- COS, COS-improved, Lewis: atol = 5e-4 (half the last published decimal).
-- Carr-Madan, FRFT, filtered-COS: atol = 1e-3.
+- COS, COS-improved, Lewis: atol = 1e-2 against MathWorks published values; 5e-4 for internal cross-engine tests.
+- Carr-Madan, FRFT, filtered-COS: atol = 1e-3 against internal reference.
+
+MathWorks specifies jumps through a proportional mean jump `MeanJ`. The repo converts it to the log-jump mean using `mu_j = log(1 + MeanJ) - 0.5 * JumpVol^2`, which matches the documented MathWorks convention. Any residual discrepancy should be treated as a date, basis, integration, grid, LittleTrap, or implementation-convention issue rather than automatically as a different jump-mean formula. The MathWorks reference prices are classified as `software_reference`; internally generated high-resolution prices are classified as `derived_reference`.
 
 ### 3/2 Stochastic Volatility
 

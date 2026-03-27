@@ -5,16 +5,18 @@ against the frozen JSON reference prices derived from MathWorks toolbox output.
 
 Note on reference prices
 ------------------------
-The MathWorks reference prices use a slightly different parameter convention
-for mu_j (the log-jump mean). Our convention is:
+MathWorks specifies jumps through a proportional mean jump MeanJ and states
+that log(1+J) is normally distributed with mean log(1+MeanJ) - 0.5*JumpVol^2.
+The repo converts this to the log-jump mean parameter using:
 
-    mu_j = log(1 + mean_jump_percentage) - 0.5 * sigma_j^2
+    mu_j = log(1 + MeanJ) - 0.5 * JumpVol^2 = 0.01660262729617973
 
-which is the correct log-normal mean consistent with E[J-1] = mean_jump_percentage
-and the martingale condition phi(-i) = 1. The resulting prices agree with the
-MathWorks values to within ~1% (absolute atol ~1e-2). For tight cross-engine
-agreement tests we use our internally computed ground-truth prices
-(``call_prices_our_convention`` in the JSON), which agree to 1e-4.
+which matches the documented MathWorks convention. Any residual discrepancy
+should be treated as a date, basis, integration, grid, LittleTrap, or
+implementation-convention issue rather than automatically as a different
+jump-mean formula. For tight cross-engine agreement tests we use internally
+computed high-resolution prices (``call_prices_our_convention`` in the JSON),
+which agree to 1e-4.
 """
 from __future__ import annotations
 
@@ -27,7 +29,7 @@ import pytest
 import foureng as fe
 from foureng.pricers.lewis import lewis_call_prices
 
-pytestmark = [pytest.mark.paper, pytest.mark.external_reference]
+pytestmark = [pytest.mark.paper, pytest.mark.software_reference]
 
 # ---------------------------------------------------------------------------
 # Load reference

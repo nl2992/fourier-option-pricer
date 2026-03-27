@@ -23,7 +23,7 @@ env/
 /notebooks/presentation_fourier_methods.ipynb
 
 # ── Local notebook tooling / patch scripts ───────────────────────────────────
-/scripts/
+# /scripts/ removed — reference-generating scripts are tracked
 
 # ── macOS ─────────────────────────────────────────────────────────────────────
 .DS_Store
@@ -37,5 +37,5 @@ env/
 
 # ── Local / personal files not needed for submission ─────────────────────────
 _local_backup/
-Papers/
+/Papers/
 PyFENG/
