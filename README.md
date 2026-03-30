@@ -185,9 +185,11 @@ MIT. See [LICENSE](LICENSE).
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/nl2992/fourier-option-pricer/blob/main/notebooks/demo.ipynb)
 
-[`notebooks/demo.ipynb`](notebooks/demo.ipynb) is the best starting point: Carr-Madan, COS, and FRFT on a Heston strip, runnable in Colab with no local setup.
+[`notebooks/demo.ipynb`](notebooks/demo.ipynb) is the primary entry point: Carr-Madan, COS, and FRFT on a Heston strip, runnable in Colab with no local setup.
 
-[`notebooks/demo_advanced.ipynb`](notebooks/demo_advanced.ipynb) covers everything in one place: all 20 models, all 6 pricers, Greeks, IV surface, Heston calibration, Monte Carlo, new models (Double Heston, VGSA), and validation highlights.
+### Supplementary notebook
+
+[`notebooks/demo_advanced.ipynb`](notebooks/demo_advanced.ipynb) is a **supplementary reference** for readers who want a comprehensive tour after the main demo. It covers all 20 models, all 6 pricers, Greeks, IV surface, Heston calibration, Monte Carlo, new models (Double Heston, VGSA), and validation highlights. It is **not** the recommended starting point.
 
 ---
 
@@ -290,17 +292,17 @@ Our innovation on top of that inspiration is the policy layer: we keep the same 
 
 Plain COS keeps the usual payoff sum:
 
-```math
-\mathrm{price} \approx \mathrm{disc}\sum_k A_k V_k
+```text
+price = disc * sum_k A_k * V_k
 ```
 
-The project extension adds spectral weights `\sigma_k` that damp the high-frequency COS modes before the final sum:
+The project extension adds spectral weights `sigma_k` that damp the high-frequency COS modes before the final sum:
 
-```math
-\mathrm{price} \approx \mathrm{disc}\sum_k \sigma_k A_k V_k
+```text
+price = disc * sum_k sigma_k * A_k * V_k
 ```
 
-with `\sigma_k \in [0,1]`, near one for the low modes and smaller in the tail modes.
+with `sigma_k in [0, 1]`, near one for the low modes and smaller in the tail modes.
 
 Four filter families are available: Fejer, Lanczos, raised-cosine, and exponential. A deterministic policy-search selector compares candidates from `(COSGridPolicy, COSFilterSpec)` pairs and returns the fastest one that meets the user's error tolerance, with the no-filter Junike candidate always included.
 
@@ -431,7 +433,7 @@ This is not a reimplementation of existing characteristic functions. The contrib
 | Implementation quality | `foureng/pricers/`, `foureng/models/`, `foureng/utils/`, `pipeline.py` |
 | Validation against published benchmarks | [docs/validation_hierarchy.md](docs/validation_hierarchy.md); [docs/paper_validation_matrix.md](docs/paper_validation_matrix.md); `tests/papers/`, `tests/models/` |
 | Extension / innovation | [docs/filtered_cos_extension.md](docs/filtered_cos_extension.md); `notebooks/research/adaptive_cos.ipynb` |
-| Notebook demonstrations | `notebooks/demo.ipynb`, `notebooks/demo_advanced.ipynb`, `notebooks/paper_replications/` |
+| Notebook demonstrations | `notebooks/demo.ipynb` (primary); `notebooks/demo_advanced.ipynb` (supplementary); `notebooks/paper_replications/` |
 | FO2008 paper replication | [docs/fo2008_replication.md](docs/fo2008_replication.md); `notebooks/fo2008_replication.ipynb` |
 | Bates and 3/2 SV validation | [docs/bates_sv32_validation.md](docs/bates_sv32_validation.md); `notebooks/paper_replications/bates_sv32_validation_demo.ipynb` |
 | Code quality / reproducibility | `pyproject.toml`, `tests/`, CI workflow; see [Reproduce results](#reproduce-results) |
@@ -509,7 +511,8 @@ tests/
   features/    end-to-end feature tests
 
 notebooks/
-  demo.ipynb, demo_advanced.ipynb
+  demo.ipynb                     ← primary demo
+  demo_advanced.ipynb            ← supplementary (comprehensive tour)
   presentation_fourier_methods.ipynb
   paper_replications/
   research/
