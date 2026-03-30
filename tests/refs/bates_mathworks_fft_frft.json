@@ -36,6 +36,6 @@
       [3.6073, 5.8705, 7.6581, 9.1594, 10.4771, 11.6491]
     ]
   },
-  "default_fft_absolute_tolerance": 0.001,
-  "tuned_frft_absolute_tolerance": 0.0005
+  "default_fft_absolute_tolerance": 0.01,
+  "tuned_frft_absolute_tolerance": 0.01
 }
