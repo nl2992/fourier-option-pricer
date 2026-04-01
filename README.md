@@ -83,7 +83,7 @@ print(result.call_prices)
 
 ## Testing and validation layout
 
-The repository currently collects 669 pytest cases. They are grouped by
+The repository currently collects 686 pytest cases. They are grouped by
 validation purpose rather than by implementation phase:
 
 | Folder | Contents |
@@ -248,34 +248,55 @@ from foureng.pipeline import price_strip
 
 MIT. See [LICENSE](LICENSE).
 
-## Demo notebook
+## Notebooks
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/nl2992/fourier-option-pricer/blob/main/notebooks/demo.ipynb)
 
-The Colab-ready quick-start demo lives at [notebooks/demo.ipynb](notebooks/demo.ipynb).
+### Quick-start demos
 
-The full-feature advanced demo (v0.4.1) is at [notebooks/demo_advanced.ipynb](notebooks/demo_advanced.ipynb) and covers all 20 models, 6 pricers, Greeks, IV surface, calibration, and Monte Carlo in one notebook.
+| Notebook | What it covers |
+|----------|---------------|
+| [`notebooks/demo.ipynb`](notebooks/demo.ipynb) | Colab-ready quick-start: Carr-Madan, COS, and FRFT on a Heston strip. Good first read. |
+| [`notebooks/demo_advanced.ipynb`](notebooks/demo_advanced.ipynb) | Full-feature showcase (v0.4.1): all 20 models, all 6 pricers, Greeks, IV surface, Heston calibration, Monte Carlo, and validation highlights in one notebook. |
 
-Paper-replication notebooks live at [notebooks/paper_replications/](notebooks/paper_replications/):
-
-| Notebook | What it shows |
-|----------|--------------|
-| `bates_mathworks_replication.ipynb` | Bates model priced against the frozen MathWorks reference case using COS, improved COS, filtered COS, Carr-Madan, FRFT, and Lewis. Includes a scoreboard table, error plots, an assertion gate, and a CSV saved to `benchmarks/`. |
-| `three_halves_replication.ipynb` | 3/2 SV model: PyFENG regression case cross-checked against COS-improved and Lewis; Baldeaux-Badran figure parameters used for qualitative IV smile and no-arbitrage shape checks. |
-
-The advanced demo notebook covers all package capabilities in sequence:
+The advanced demo covers these topics in order:
 
 | Section | Topics |
 |---------|--------|
 | 1. All 20 models | ATM call quick-reference table for every model |
 | 2. Multi-method scoreboard | COS / COS-improved / filtered / Carr-Madan / FRFT / Lewis on one Heston strip |
-| 3. Greeks | COS delta and gamma (Heston + Kou); spot-Greek formulas |
+| 3. Greeks | COS delta and gamma (Heston + Kou) |
 | 4. Implied volatility | IV smiles inverted from model prices for 4 models |
 | 5. Volatility surface | Heston IV surface heatmap and smile-overlay by maturity |
 | 6. Calibration | Heston fitted to synthetic market IVs via Nelder-Mead |
 | 7. Monte Carlo | BSM MC and Heston conditional MC vs COS-improved |
 | 8. New models | Double Heston and VGSA smile comparisons |
 | 9. Validation highlights | Bates MathWorks reference and 3/2 SV PyFENG regression error tables |
+
+### Paper replications
+
+[`notebooks/paper_replications/`](notebooks/paper_replications/) contains four focused paper-validation notebooks:
+
+| Notebook | Paper / reference | What it shows |
+|----------|-------------------|---------------|
+| [`cosPaper_Replication.ipynb`](notebooks/cosPaper_Replication.ipynb) | Fang & Oosterlee (2008), COS method | Table 2 BSM baseline, Heston scalar and strip cases, VG and CGMY cases; extended scoreboard and error figures comparing all in-house pricers. |
+| [`fo2008_replication.ipynb`](notebooks/fo2008_replication.ipynb) | Fang & Oosterlee (2008), full paper replay | Paper-faithful replication of Tables 2, 5, 7, 8-10 (BSM, Heston, VG, CGMY) plus repo-specific pricer comparisons and benchmark CSVs. |
+| [`paper_replications/bates_mathworks_replication.ipynb`](notebooks/paper_replications/bates_mathworks_replication.ipynb) | MathWorks optByBatesNI / optByBatesFFT | Bates model against the frozen MathWorks reference: COS, improved COS, filtered COS, Carr-Madan, FRFT, and Lewis; scoreboard, error plots, assertion gate, benchmark CSV. |
+| [`paper_replications/three_halves_replication.ipynb`](notebooks/paper_replications/three_halves_replication.ipynb) | Lewis (2000); Baldeaux & Badran (2012) | 3/2 SV: PyFENG regression cross-checked against COS-improved and Lewis; Baldeaux-Badran figure parameters for qualitative IV smile and no-arbitrage shape checks. |
+| [`paper_replications/bates_sv32_validation_demo.ipynb`](notebooks/paper_replications/bates_sv32_validation_demo.ipynb) | MathWorks Bates suite + frozen pyfeng_fft surface | Instructor-requested 12-section validation: BATES-01–07 (NI prices, cross-method, surface heatmap, COS convergence, IV smile, FRFT surface, delta) and SV32-01–05 (frozen surface regression, cos_improved 7×4, Lewis T≥0.5, IV surface, N-convergence); assertion gates and benchmark CSVs. |
+
+### Research notebooks
+
+[`notebooks/research/`](notebooks/research/) contains exploratory notebooks developed alongside the paper work:
+
+| Notebook | What it covers |
+|----------|---------------|
+| [`research/cos_method_improved.ipynb`](notebooks/research/cos_method_improved.ipynb) | The improved COS truncation range (Junike-Pankrashkin 2022 / Junike 2024): framing the upgrade, three pricing strategies side-by-side, Heston T=10 stress case with three error sources isolated, visual diagnostics. |
+| [`research/adaptive_cos.ipynb`](notebooks/research/adaptive_cos.ipynb) | Adaptive filtered-COS using the Fang-Oosterlee test suite: Black-Scholes (Test Case 1), Heston (Table 2 + stress), VG and CGMY; summary comparison with plain COS and filtered COS. |
+
+### Presentation notebook
+
+[`notebooks/presentation_fourier_methods.ipynb`](notebooks/presentation_fourier_methods.ipynb) is a lecture-style walkthrough: validation-first workflow, Monte Carlo vs Carr-Madan, Lewis FFT parameter sensitivity, plain COS, improved-truncation COS, multi-model sweep, and conclusions.
 
 ## Papers used
 
