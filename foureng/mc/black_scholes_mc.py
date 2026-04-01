@@ -44,17 +44,19 @@ def european_call_mc(
     S_T = S0 * exp((r - q - 0.5*vol^2)*T + vol*sqrt(T)*Z)
     Returns array of prices shape (len(K),).
     """
-    K = np.atleast_1d(np.asarray(K, dtype=float))
+    K = np.atleast_1d(np.asarray(K, dtype=np.float64))
     if K.size == 0:
         raise ValueError("K/strikes must be non-empty")
-    if np.any(K <= 0.0):
-        raise ValueError("All strikes must be strictly positive")
-    if S0 <= 0.0:
-        raise ValueError("S0 must be strictly positive")
-    if T <= 0.0:
-        raise ValueError("T must be strictly positive")
-    if vol < 0.0:
-        raise ValueError("vol must be non-negative")
+    if np.any(~np.isfinite(K)) or np.any(K <= 0.0):
+        raise ValueError("All strikes must be finite and strictly positive")
+    if not (np.isfinite(S0) and S0 > 0.0):
+        raise ValueError(f"S0 must be finite and strictly positive; got {S0}")
+    if not (np.isfinite(T) and T > 0.0):
+        raise ValueError(f"T must be finite and strictly positive; got {T}")
+    if not (np.isfinite(r) and np.isfinite(q)):
+        raise ValueError(f"r and q must be finite; got r={r}, q={q}")
+    if not (np.isfinite(vol) and vol >= 0.0):
+        raise ValueError(f"vol must be finite and non-negative; got {vol}")
     if mc.n_paths <= 0:
         raise ValueError("n_paths must be positive")
     rng = np.random.default_rng(mc.seed)

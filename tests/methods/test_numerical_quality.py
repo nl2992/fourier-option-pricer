@@ -21,6 +21,8 @@ import numpy as np
 import pytest
 
 import foureng as fe
+from foureng.mc.black_scholes_mc import MCSpec, european_call_mc
+from foureng.mc.heston_conditional_mc import HestonMCScheme, heston_conditional_mc_calls
 from foureng.models.bates import bates_cf, bates_cumulants
 
 # ---------------------------------------------------------------------------
@@ -217,6 +219,32 @@ class TestMCReproducibility:
         assert np.all(np.isfinite(prices)), "MC prices must be finite"
 
 
+@pytest.mark.parametrize(
+    "kwargs,match",
+    [
+        ({"S0": np.nan}, "S0 must be finite"),
+        ({"T": np.inf}, "T must be finite"),
+        ({"r": np.nan}, "r and q must be finite"),
+        ({"vol": np.nan}, "vol must be finite"),
+        ({"K": np.array([100.0, np.nan])}, "strikes must be finite"),
+    ],
+)
+def test_black_scholes_mc_rejects_non_finite_inputs(kwargs, match):
+    """MC kernels must not allow NaN/inf inputs to propagate into prices."""
+    args = {
+        "S0": _FWD.S0,
+        "K": _STRIKES,
+        "T": _FWD.T,
+        "r": _FWD.r,
+        "q": _FWD.q,
+        "vol": 0.2,
+        "mc": MCSpec(n_paths=10, seed=1),
+    }
+    args.update(kwargs)
+    with pytest.raises(ValueError, match=match):
+        european_call_mc(**args)
+
+
 # ---------------------------------------------------------------------------
 # 5. Variance floor — no NaN from near-zero sigma in Heston conditional MC
 # ---------------------------------------------------------------------------
@@ -234,6 +262,33 @@ class TestVarianceFloor:
         scheme = HestonMCScheme(n_paths=500, n_steps=50, seed=7)
         prices = heston_conditional_mc_calls(fwd.S0, _STRIKES, fwd.T, fwd.r, fwd.q, params, scheme)
         assert np.all(np.isfinite(prices)), "Near-zero v0 must not produce NaN in MC"
+
+
+@pytest.mark.parametrize(
+    "kwargs,match",
+    [
+        ({"S0": np.nan}, "S0 must be finite"),
+        ({"T": np.inf}, "T must be finite"),
+        ({"q": np.nan}, "r and q must be finite"),
+        ({"strikes": np.array([100.0, np.inf])}, "strikes must be finite"),
+    ],
+)
+def test_heston_conditional_mc_rejects_non_finite_inputs(kwargs, match):
+    """Conditional Heston MC should fail before any non-finite path arithmetic."""
+    params = fe.HestonParams(kappa=10.0, theta=0.04, nu=0.1, rho=-0.5, v0=0.04)
+    scheme = HestonMCScheme(n_paths=10, n_steps=2, seed=7)
+    args = {
+        "S0": _FWD.S0,
+        "strikes": _STRIKES,
+        "T": _FWD.T,
+        "r": _FWD.r,
+        "q": _FWD.q,
+        "p": params,
+        "mc": scheme,
+    }
+    args.update(kwargs)
+    with pytest.raises(ValueError, match=match):
+        heston_conditional_mc_calls(**args)
 
 
 # ---------------------------------------------------------------------------

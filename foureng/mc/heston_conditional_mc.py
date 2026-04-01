@@ -106,15 +106,17 @@ def heston_conditional_mc_calls(
       sigma_cond = sqrt( (1 - rho^2) * V_T )
     Then price each strike by BS-style integration across paths.
     """
-    K = np.atleast_1d(np.asarray(strikes, dtype=float))
+    K = np.atleast_1d(np.asarray(strikes, dtype=np.float64))
     if K.size == 0:
         raise ValueError("strikes must be non-empty")
-    if np.any(K <= 0.0):
-        raise ValueError("All strikes must be strictly positive")
-    if S0 <= 0.0:
-        raise ValueError("S0 must be strictly positive")
-    if T <= 0.0:
-        raise ValueError("T must be strictly positive")
+    if np.any(~np.isfinite(K)) or np.any(K <= 0.0):
+        raise ValueError("All strikes must be finite and strictly positive")
+    if not (np.isfinite(S0) and S0 > 0.0):
+        raise ValueError(f"S0 must be finite and strictly positive; got {S0}")
+    if not (np.isfinite(T) and T > 0.0):
+        raise ValueError(f"T must be finite and strictly positive; got {T}")
+    if not (np.isfinite(r) and np.isfinite(q)):
+        raise ValueError(f"r and q must be finite; got r={r}, q={q}")
     if mc.n_paths <= 0:
         raise ValueError("n_paths must be positive")
     if mc.n_steps <= 0:
@@ -243,6 +245,16 @@ def heston_mc_pyfeng_price_strip(
         Strip prices, one per strike.
     """
     K = np.ascontiguousarray(np.asarray(strikes, dtype=np.float64))
+    if K.size == 0:
+        raise ValueError("strikes must be non-empty")
+    if np.any(~np.isfinite(K)) or np.any(K <= 0.0):
+        raise ValueError("All strikes must be finite and strictly positive")
+    if n_paths <= 0:
+        raise ValueError("n_paths must be positive")
+    if dt is not None and not (np.isfinite(dt) and dt > 0.0):
+        raise ValueError(f"dt must be finite and strictly positive; got {dt}")
+    if cp not in (1, -1):
+        raise ValueError(f"cp must be +1 or -1; got {cp}")
     m = _get_pyfeng_mc_model(engine, fwd, p)
     # 100 substeps: matches the default n_steps in heston_conditional_mc_calls
     step = float(fwd.T) / 100.0 if dt is None else float(dt)
