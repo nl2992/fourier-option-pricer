@@ -6,13 +6,21 @@ that verifies it.
 
 ---
 
-## Quick-reference status
+## Maintained checklist
+
+This project is a Fourier option-pricing package, so the maintained checklist
+focuses on the parts we actually use: floating-point safety, scalar stability,
+root finding, Greeks, Monte Carlo, vectorization, option-pricing sanity,
+Fourier/COS/FFT conventions, calibration, project structure, and tests.
+QMC, PDE solvers, fixed-income curve construction, market-data pipelines, and
+VaR/risk engines are not package features in this repository and are therefore
+tracked as out of scope rather than as missing work.
 
 | # | Item | Status | Evidence |
 |---|------|--------|----------|
 | 1 | `float64` default throughout | ✅ pass | All CF arrays cast to `np.complex128`; output arrays are `float64`. |
 | 2 | `expm1` for `exp(x)−1`, `log1p` for `log(1+x)` | ✅ fixed | `bates.py` zeta formula fixed (was `np.exp(x) - 1`). |
-| 3 | `np.isfinite` guards on outputs | ✅ pass | `validity.py`, `implied_vol.py`, surface layer all guard. |
+| 3 | `np.isfinite` guards on outputs and MC inputs | ✅ pass | `validity.py`, `implied_vol.py`, surface layer, and MC entry points guard finite values. |
 | 4 | No `log(sum(exp(...)))` pattern | ✅ pass | `logsumexp` not needed; no such pattern found in codebase. |
 | 5 | Greeks via analytic formula, not FD | ✅ pass | `greeks/cos_greeks.py` — analytic ∂/∂F₀ and ∂²/∂F₀². |
 | 6 | Central-difference step ∝ √ε | ✅ pass | `cumulants.py` 5-point central FD on imaginary axis uses `finfo.eps`. |
@@ -22,8 +30,14 @@ that verifies it.
 | 10 | No `np.prod(U)` underflow risk | ✅ pass | No `np.prod` on probability arrays found in `foureng/`. |
 | 11 | `float64` dtype on pricer output | ✅ pass | `price_strip` → `np.ndarray` of `dtype=float64`. |
 | 12 | Input validation raises `ValueError` | ✅ pass | `models/fmls.py`, `meixner.py`, `merton_jd.py`, `bilateral_gamma.py`, `generalized_hyperbolic.py`. |
-| 13 | No hardcoded magic tolerances | ✅ pass | `1e-16` floors are `≈ finfo.tiny`; `finfo(float).eps` used in filters. |
+| 13 | Tolerances have scale logic where they matter | ✅ pass | Public numerical tests use `assert_allclose`/mixed absolute-relative tolerances; `finfo(float).eps` drives FD steps and filters. |
 | 14 | Extreme inputs tested | ✅ pass | `tests/methods/test_numerical_quality.py` tiny-T, tiny-σ, wide strike range. |
+| 15 | Bracketed IV root finding | ✅ pass | `implied_vol.py` and `utils/implied_vol.py` use Brent-style bracketing with no-arbitrage guards. |
+| 16 | Fourier/COS/FFT conventions exposed | ✅ pass | Public grids expose `N`, `eta`, `alpha`, `lam`, truncation, filters, and COS range policy. |
+| 17 | Model reductions tested | ✅ pass | Bates/Heston jump-off, Heston-Kou/Heston, Heston-CGMY/Heston, VGSA/VG, FMLS/BSM limits. |
+| 18 | Calibration diagnostics | ✅ pass | Surface calibration returns `CalibrationResult` with params, loss, success, and optimizer message. |
+| 19 | QMC/Sobol | N/A | Not implemented or claimed. |
+| 20 | PDE/fixed-income/risk/market-data engines | N/A | Not implemented or claimed; outside this Fourier package scope. |
 
 ---
 
@@ -96,8 +110,10 @@ Step size is tied to machine epsilon, not hardcoded.
 sigma2 = (1.0 - rho^2) * V_T
 sigma  = np.sqrt(np.maximum(sigma2, 1e-16))   # floor ≈ sqrt(eps_machine)
 ```
-`1e-16 ≈ finfo.tiny / 4` prevents `sqrt(0)` → `0` divide-later or
-`sqrt(negative)` → `NaN` when numerical noise drives `V_T` marginally negative.
+`1e-16` is an explicit variance floor on the order of double-precision
+machine epsilon, so the conditional volatility floor is about `1e-8`.
+It prevents `sqrt(0)` → `0` divide-later or `sqrt(negative)` → `NaN`
+when numerical noise drives `V_T` marginally negative.
 
 ---
 
@@ -147,6 +163,8 @@ Key test classes:
 | `test_pricer_output_non_negative` | Call price ≥ 0 |
 | `TestCOSGreeks` | Analytic Delta/Gamma finite, Delta ∈ (0,1), Gamma ≥ 0 |
 | `TestMCReproducibility` | Same seed → same prices; different seeds → different prices |
+| `test_black_scholes_mc_rejects_non_finite_inputs` | NaN/inf BS MC inputs raise before path generation |
+| `test_heston_conditional_mc_rejects_non_finite_inputs` | NaN/inf Heston MC inputs raise before path arithmetic |
 | `TestVarianceFloor` | Near-zero v0 does not produce NaN in conditional MC |
 | `TestExtremeInputs` | Tiny T, tiny σ, wide strike range all finite |
 | `TestDtypes` | CF returns `complex128`; cumulants return `float` |
@@ -159,7 +177,7 @@ The following initially appeared suspicious but on inspection are correct:
 
 | Pattern | Location | Why it is fine |
 |---------|----------|---------------|
-| `np.maximum(sigma2, 1e-16)` | `heston_conditional_mc.py` | `1e-16 ≈ finfo.tiny`; it is a precision guard, not a magic tolerance |
+| `np.maximum(sigma2, 1e-16)` | `heston_conditional_mc.py` | `1e-16` is an explicit machine-epsilon-scale variance floor; it is not a pricing tolerance |
 | `max(c.c2, 1e-16)` | `cumulants.py` | Same; prevents `sqrt(0)` in grid construction |
 | `1e-12` theta/v0 floor | `double_heston.py` | Degenerate-parameter guard for the PyFENG CF backend |
 | `abs(Y-1) > 1e-12` | `heston_cgmy.py` | Singularity check at the CGMY Y=1 pole |
