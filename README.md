@@ -236,7 +236,7 @@ $$
 M \geq \left(\frac{\mathbb{E}[|X_T - m|^n]}{\varepsilon_{\text{trunc}}}\right)^{1/n}
 $$
 
-Junike (2024) adds a companion result for how many terms N are needed to resolve the chosen interval to a target accuracy. The `cos_improved` path in this package implements both.
+Junike (2024) adds a companion result for how many terms N are needed to resolve the chosen interval to a target accuracy. The `cos_improved` path in this package implements both. Full derivations are in [APPENDIX.md](APPENDIX.md) sections 7 and 14.
 
 ---
 
@@ -312,8 +312,8 @@ This is not a reimplementation of existing characteristic functions. The contrib
 
 1. A uniform `price_strip` dispatcher that prices any of 20 models by any of 6 methods with one function call.
 2. Twelve in-house characteristic-function models on top of the eight PyFENG-backed adapters, including four SVJ composites and six pure-Levy models.
-3. A structured validation harness with 686 test cases across five evidence levels.
-4. Improved COS truncation following Junike-Pankrashkin (2022) and Junike (2024), demonstrated on the full FO2008 test suite.
+3. A structured validation harness with 686 test cases across [five evidence levels](docs/VALIDATION_HIERARCHY.md).
+4. Improved COS truncation following Junike-Pankrashkin (2022) and Junike (2024), demonstrated on the [full FO2008 test suite](docs/FO2008_REPLICATION.md).
 5. Adaptive filtered-COS as an original extension.
 
 ---
@@ -385,7 +385,7 @@ benchmarks/
   paper_replications/fo2008_cos/  params.py, outputs/ (CSVs, PNGs, SUMMARY.md)
   mc_vs_fourier_methods/outputs/
 
-docs/           detailed reference documentation
+docs/           detailed reference documentation (index at docs/README.md)
 .github/        CI and test matrix
 ```
 
