@@ -35,7 +35,7 @@ The AI workflow was **iterative and source-driven**, not one-shot or freeform. A
 flowchart TD
     A[Course project requirements] --> B[Human topic selection: Fourier option pricing]
     B --> C[Deep Research prompt: find papers, formulas, test cases, exact benchmark numbers]
-    C --> D[Deep Research report: sources, formulas, Bates/3-2 targets, validation plan]
+    C --> D[Deep Research report: sources, formulas, model-specific targets, validation plan]
     D --> E[Reasoning LLM: convert research into self-contained TODOs]
     E --> F[Human review: tighten wording, check references, decide priorities]
     F --> G[AI coding agent / implementation model implementation pass]
@@ -67,17 +67,17 @@ The main prompt pattern was:
 7. specify expected test behaviour and tolerances;
 8. produce notebook demonstration plans.
 
-**Example prompt:**
+**Generic prompt template:**
 
 ```text
-Inspect the repository and existing TODOs. For Bates and 3/2 stochastic volatility,
+Inspect the repository and existing TODOs. For [model or method],
 find exact paper or official software benchmark cases with inputs and expected outputs.
-Separate true paper tables from software examples and qualitative figures. Turn the
-result into a self-contained implementation TODO for tests and notebooks, including
-file names, tolerances, and expected behaviour.
+Separate true paper tables from software examples, derived references, and qualitative
+figures. Turn the result into a self-contained implementation TODO for tests and
+notebooks, including file names, tolerances, and expected behaviour.
 ```
 
-Deep Research outputs were used as source summaries, not as final code. For example, a Bates and 3/2 Deep Research run identified MathWorks Bates prices as exact numerical references, while correctly flagging Baldeaux-Badran 3/2 outputs as figure-only rather than hard unit-test targets  -  a distinction that directly shaped the five-level validation hierarchy in [docs/validation_hierarchy.md](validation_hierarchy.md).
+**Worked example:** for Bates and 3/2 stochastic volatility, the same template identified MathWorks Bates prices as exact numerical references, while correctly flagging Baldeaux-Badran 3/2 outputs as figure-only rather than hard unit-test targets  -  a distinction that directly shaped the five-level validation hierarchy in [docs/validation_hierarchy.md](validation_hierarchy.md).
 
 For documentation restructuring, the prompts were equally specific:
 
@@ -105,10 +105,17 @@ AI outputs were manually reviewed before implementation. The human checks were:
 
 **Concrete examples of human review decisions:**
 
+- FO2008 / Heston / VG cases were treated as direct paper-table anchors where exact numbers were available.
 - Bates was not presented as a native PyFENG model because `price_strip(..., method="pyfeng_fft")` does not support Bates. It is described as an in-house implementation validated against official MathWorks examples.
 - 3/2 SV was described as PyFENG-backed rather than fully in-house, because the characteristic function comes from `pyfeng.sv_fft`.
 - Baldeaux-Badran 3/2 parameters were kept as qualitative figure checks (`xfail-if-unstable`) because the paper does not provide exact vanilla option price tables.
 - MathWorks tolerances were set to `atol=1e-2` (not 1e-4) after diagnosing a ~7.6e-3 grid-convention gap between the repo's `log(F0)`-centred grid and the MathWorks FFT convention, plus 4-decimal truncation in the published values.
+
+These examples are included because they expose the main decision branches in the workflow:
+- direct paper-table validation;
+- official software-reference validation;
+- adapter / backend validation;
+- qualitative-figure validation when no exact table exists.
 
 ---
 
@@ -178,7 +185,22 @@ SVJ-composite, pure-Lévy, and multi-factor families. This gives a wider stress-
 than any single reference paper and demonstrates that the common CF interface generalises
 naturally beyond the FO2008 / Heston / VG benchmark set.
 
-### 8.3 Bates native implementation and MathWorks validation
+### 8.3 Why Bates and 3/2 appear repeatedly in this document
+
+Bates and 3/2 SV are used as repeated examples in this workflow note because they were the
+two highest-friction validation cases in the repo:
+
+- **Bates** required an official software-reference route because the original paper is not a
+  clean source of vanilla option price tables in the exact form needed for automated tests.
+- **3/2 SV** required a mixed strategy: PyFENG-backed adapter validation where exact software
+  outputs were available, plus qualitative handling where the literature provided figures but
+  not reusable price tables.
+
+They appear repeatedly here because they are the clearest examples of the general workflow
+under harder evidence conditions, especially when the project has to move between exact
+paper tables, official software references, adapter references, and qualitative figures.
+
+### 8.4 Bates native implementation and MathWorks validation
 
 Bates (1996) does not publish clean vanilla option price tables  -  it presents fitted
 exchange-rate smiles. The project therefore uses the MathWorks Financial Toolbox
@@ -189,7 +211,7 @@ block under the repo's log-forward convention, validated across 7 test cases (BA
 covering scalar prices, five-strike strips, a 5×6 surface, COS N-convergence, IV smile,
 FRFT surface cross-check, and delta.
 
-### 8.4 3/2 SV integration and systematic cross-validation
+### 8.5 3/2 SV integration and systematic cross-validation
 
 3/2 SV is exposed through the same repo API using PyFENG's `Sv32Fft` backend. The project
 validates it through five systematic cases (SV32-01–05): frozen pyfeng_fft surface
@@ -197,7 +219,7 @@ regression, COS vs PyFENG cross-check, Lewis stability at T≥0.5, IV surface sh
 N-convergence  -  distinguishing what can be tested exactly from what can only be checked
 qualitatively (the Baldeaux-Badran figure parameters).
 
-### 8.5 Adaptive filtered-COS extension
+### 8.6 Adaptive filtered-COS extension
 
 The main original extension goes beyond the Junike truncation policy. Even with a correctly
 chosen `[a, b]`, the finite COS series can carry Gibbs-like oscillations when:
@@ -225,7 +247,7 @@ in 7/8 cases and beats the paper's best reported error in 6/8 cases.
 > Filtered COS is best interpreted as an additional stability control. The adaptive selector
 > then chooses the best candidate within a defined candidate set and tolerance rule.
 
-### 8.6 Five-level validation hierarchy
+### 8.7 Five-level validation hierarchy
 
 The project formalises a five-level evidence classification for all test cases:
 `external_reference` → `software_reference` → `derived_reference` → `adapter` →
