@@ -1,0 +1,102 @@
+flowchart LR
+  classDef entry fill:#f7f9fc,stroke:#b8cae5,color:#253b62,stroke-width:1px;
+  classDef api fill:#eaf2ff,stroke:#9db8e6,color:#244575,stroke-width:1px;
+  classDef core fill:#edf3ff,stroke:#8caee0,color:#26446f,stroke-width:1px;
+  classDef model fill:#eef8f1,stroke:#9cccad,color:#1f6b53,stroke-width:1px;
+  classDef kernel fill:#fff4e8,stroke:#e3bd8f,color:#8b5312,stroke-width:1px;
+  classDef feature fill:#f5efff,stroke:#c7afe9,color:#614096,stroke-width:1px;
+  classDef output fill:#f7f9fc,stroke:#c4d1e6,color:#314967,stroke-width:1px;
+  classDef dep fill:#fff0f6,stroke:#d7a9bf,color:#8a3f69,stroke-width:1px;
+
+  subgraph ENTRY["Entry points"]
+    readme["README / quick start"]
+    notebooks["notebooks/"]
+    benchmarks["benchmarks/"]
+    tests["tests/"]
+  end
+
+  subgraph API["Public API surface"]
+    init["foureng.__init__<br/>ForwardSpec<br/>parameter dataclasses<br/>price_strip(...)"]
+  end
+
+  subgraph CORE["Routing and orchestration core"]
+    pipeline["foureng/pipeline.py<br/>model + method dispatcher<br/>improved-COS / filtered-COS policy logic"]
+    registry["foureng/models/registry.py<br/>model -> params / CF / cumulants / backend metadata"]
+  end
+
+  subgraph MODEL["Model layer"]
+    native["In-house model CFs<br/>Bates, Kou, Heston-CGMY, Heston-Kou<br/>Merton JD, Meixner, Bilateral Gamma<br/>GH, FMLS, Double Heston, VGSA, GARCH"]
+    pyfeng["PyFENG-backed adapters<br/>BSM, Heston, OUSV, VG, CGMY, NIG<br/>SV32, Rough Heston<br/>plus pyfeng_fft where supported"]
+  end
+
+  subgraph KERNEL["Numerical kernel layer"]
+    pricers["Pricers<br/>cos.py<br/>filtered_cos.py<br/>carr_madan.py<br/>frft.py<br/>lewis.py"]
+    utils["Utilities<br/>grids.py<br/>cumulants.py<br/>spectral_filters.py<br/>validity.py<br/>numerics.py"]
+    experiments["Research policy tools<br/>cos_filter_grid_search.py<br/>benchmark helpers"]
+  end
+
+  subgraph FEATURES["Higher-level features"]
+    iv["iv/<br/>implied vol inversion"]
+    greeks["greeks/<br/>COS Greeks"]
+    surface["surface/<br/>surfaces + calibration"]
+    mc["mc/<br/>MC baselines + control variates"]
+  end
+
+  subgraph OUTPUTS["Validation and outputs"]
+    validation["tests/ + benchmarks/<br/>paper replications<br/>runtime frontiers<br/>CSV artifacts"]
+    reporting["docs/ + notebooks/<br/>report, appendix, demos, research notes"]
+  end
+
+  subgraph DEPS["External dependencies"]
+    numpy["NumPy / SciPy"]
+    pyfeng_dep["PyFENG"]
+    release["GitHub Actions / PyPI"]
+  end
+
+  readme --> init
+  notebooks --> init
+  benchmarks --> init
+  tests --> init
+
+  init --> pipeline
+  init --> registry
+  pipeline --> registry
+
+  registry --> native
+  registry --> pyfeng
+  pipeline --> pricers
+  pipeline --> utils
+  pipeline --> experiments
+  native --> pricers
+  pyfeng --> pricers
+  utils --> pricers
+
+  pricers --> iv
+  pricers --> greeks
+  pricers --> surface
+  pricers --> mc
+
+  pricers --> validation
+  experiments --> validation
+  iv --> reporting
+  greeks --> reporting
+  surface --> reporting
+  mc --> reporting
+  validation --> reporting
+
+  numpy --> native
+  numpy --> pricers
+  numpy --> utils
+  pyfeng_dep --> pyfeng
+  pyfeng_dep --> pipeline
+  release --> validation
+  release --> reporting
+
+  class readme,notebooks,benchmarks,tests entry;
+  class init api;
+  class pipeline,registry core;
+  class native,pyfeng model;
+  class pricers,utils,experiments kernel;
+  class iv,greeks,surface,mc feature;
+  class validation,reporting output;
+  class numpy,pyfeng_dep,release dep;

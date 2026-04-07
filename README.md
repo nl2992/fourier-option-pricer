@@ -24,7 +24,7 @@ This project implements the **improved COS truncation** of Junike & Pankrashkin 
 
 The package covers **20 models** across stochastic-volatility, jump-diffusion, pure-Lévy, rough-volatility, and hybrid SVJ families, all priced through one `price_strip` dispatcher with **6 interchangeable engines**.
 
-Full methodology: [appendix.md](appendix.md) · Extension details: [docs/filtered_cos_extension.md](docs/filtered_cos_extension.md).
+Full methodology: [appendix.md](appendix.md) · Extension details: [docs/filtered_cos_extension.md](docs/filtered_cos_extension.md) · Package architecture: [docs/architecture_overview.md](docs/architecture_overview.md).
 
 ---
 
@@ -246,7 +246,7 @@ python -m mypy foureng
 | Correct implementation and paper validation | [docs/paper_validation_matrix.md](docs/paper_validation_matrix.md); [docs/fo2008_replication.md](docs/fo2008_replication.md); [docs/bates_sv32_validation.md](docs/bates_sv32_validation.md) |
 | Robustness testing | `tests/methods/`, `tests/models/`; robustness sweeps and parameter-edge tests in `test_numerical_quality.py`, `test_robustness_sweep.py` |
 | Coding efficiency (vectorised NumPy) | `foureng/pricers/`, `foureng/mc/`; strip pricing via array ops, no Python path loops |
-| Coding quality (class / package structure) | `foureng/` package; `ModelSpec` / `ForwardSpec` dataclasses; `pipeline.py` unified dispatcher |
+| Coding quality (class / package structure) | `foureng/` package; `ModelSpec` / `ForwardSpec` dataclasses; `pipeline.py` unified dispatcher; [docs/architecture_overview.md](docs/architecture_overview.md) package map |
 | README quality | This file, structured per instructor template |
 | Innovation / new idea | [What problem it solves](#what-problem-it-solves) above; [docs/filtered_cos_extension.md](docs/filtered_cos_extension.md); `notebooks/research/adaptive_cos.ipynb` |
 | Mathematical background and derivations | [appendix.md](appendix.md) sections 7–8 (CF and pricing methods), 14 (Junike theory) |
