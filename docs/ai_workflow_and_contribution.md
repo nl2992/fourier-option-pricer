@@ -77,7 +77,7 @@ figures. Turn the result into a self-contained implementation TODO for tests and
 notebooks, including file names, tolerances, and expected behaviour.
 ```
 
-**Worked example:** for Bates and 3/2 stochastic volatility, the same template identified MathWorks Bates prices as exact numerical references, while correctly flagging Baldeaux-Badran 3/2 outputs as figure-only rather than hard unit-test targets  -  a distinction that directly shaped the five-level validation hierarchy in [docs/validation_hierarchy.md](validation_hierarchy.md).
+**Worked example:** Bates and 3/2 stochastic volatility were professor-requested validation cases, so the same template was used there to identify exact references where available and qualitative references where exact tables were unavailable.
 
 For documentation restructuring, the prompts were equally specific:
 
@@ -111,11 +111,7 @@ AI outputs were manually reviewed before implementation. The human checks were:
 - Baldeaux-Badran 3/2 parameters were kept as qualitative figure checks (`xfail-if-unstable`) because the paper does not provide exact vanilla option price tables.
 - MathWorks tolerances were set to `atol=1e-2` (not 1e-4) after diagnosing a ~7.6e-3 grid-convention gap between the repo's `log(F0)`-centred grid and the MathWorks FFT convention, plus 4-decimal truncation in the published values.
 
-These examples are included because they expose the main decision branches in the workflow:
-- direct paper-table validation;
-- official software-reference validation;
-- adapter / backend validation;
-- qualitative-figure validation when no exact table exists.
+These examples are included because Bates and 3/2 were professor-requested validation cases and serve as compact worked examples of the broader review process.
 
 ---
 
@@ -185,20 +181,12 @@ SVJ-composite, pure-Lévy, and multi-factor families. This gives a wider stress-
 than any single reference paper and demonstrates that the common CF interface generalises
 naturally beyond the FO2008 / Heston / VG benchmark set.
 
-### 8.3 Why Bates and 3/2 appear repeatedly in this document
+### 8.3 Bates and 3/2 as worked examples
 
-Bates and 3/2 SV are used as repeated examples in this workflow note because they were the
-two highest-friction validation cases in the repo:
-
-- **Bates** required an official software-reference route because the original paper is not a
-  clean source of vanilla option price tables in the exact form needed for automated tests.
-- **3/2 SV** required a mixed strategy: PyFENG-backed adapter validation where exact software
-  outputs were available, plus qualitative handling where the literature provided figures but
-  not reusable price tables.
-
-They appear repeatedly here because they are the clearest examples of the general workflow
-under harder evidence conditions, especially when the project has to move between exact
-paper tables, official software references, adapter references, and qualitative figures.
+Bates and 3/2 SV appear repeatedly in this document because they were professor-requested
+validation cases. They are used here as worked examples of the same general workflow:
+identify the best available reference source, assign the right evidence level, and turn
+that into tests, notebooks, and tolerances.
 
 ### 8.4 Bates native implementation and MathWorks validation
 
