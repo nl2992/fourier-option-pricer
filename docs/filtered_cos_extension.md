@@ -92,14 +92,15 @@ The key interpretation for this extension is:
 > *"Junike helps truncation. Filtering helps residual finite-series / nonsmoothness cases.
 > The adaptive selector chooses among vanilla COS, Junike-COS, and filtered Junike-COS."*
 
-On the FO2008 test suite the adaptive selector beats the naive paper-grid replay in **7/8 cases**
-and beats the paper's best reported error in **6/8 cases**.
+On the FO2008 test suite, the **Junike improved truncation** (which the selector always includes as a candidate) beats the naive paper-grid COS in **7/8 cases** and beats the paper's own best-N result in **6/8 cases**.
 Full per-case data: [`benchmarks/cos_method_improved/outputs/cos_method_improved_paper_compare.csv`](../benchmarks/cos_method_improved/outputs/cos_method_improved_paper_compare.csv).
+The spectral filter adds a further stability layer in cases where the truncation window is already correct but residual oscillation from finite-series remains.
 See also [fo2008_replication.md](fo2008_replication.md) for the table of paper-grid vs. improved-COS errors.
 Appropriate scope for the extension:
-- Filtered COS serves as a complementary stability control alongside Junike COS.
+- The 7/8 and 6/8 results are attributable to the Junike truncation improvement, not to spectral filtering.
+- Filtered COS serves as a complementary stability control on top of Junike COS.
 - The extension is a deterministic policy layer over explicit candidate methods and filters.
-- Junike interval selection remains part of the overall method design.
+- Junike interval selection remains the primary driver of accuracy improvement.
 
 The extension is best understood as a second control layer that can improve pricing speed or
 accuracy in cases where the Junike truncation is adequate but the finite-series resolution
