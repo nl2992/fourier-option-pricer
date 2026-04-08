@@ -184,4 +184,4 @@ the inversion.
 
 ## References
 
-See [PAPERS.md](PAPERS.md) for full citations of all methods.
+See [papers.md](papers.md) for full citations of all methods.

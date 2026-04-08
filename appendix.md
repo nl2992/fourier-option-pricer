@@ -160,7 +160,7 @@ Once a model exposes `phi(u)`, it can be priced by Carr--Madan FFT, FRFT, or COS
 ## 6. Model coverage
 
 The full model catalogue — all twenty supported models with parameter dataclasses,
-CF sources, and API notes — is in [docs/MODEL_ZOO.md](docs/MODEL_ZOO.md).
+CF sources, and API notes — is in [docs/model_zoo.md](docs/model_zoo.md).
 
 The twenty models split into two groups.
 
@@ -499,13 +499,9 @@ tests/              # replication tests, PyFENG identity gates,
 notebooks/          # validation, benchmarking, demo, FO2008 replication
 
 benchmarks/
-  paper_replications/fo2008_cos/
-    params.py
-    outputs/
-      SUMMARY.md
-      *.csv
-      *.png
-
+  paper_replications/   # per-paper CSVs, params.py, summary.md files
+  cos_method_improved/  # COS policy comparison CSVs
+  mc_vs_fourier_methods/# cross-model and adaptive-selector CSVs
 .github/workflows/  # CI and test matrix
 ```
 
@@ -577,7 +573,7 @@ The repository carries a paper-faithful replication of Fang and Oosterlee (2008)
 BSM Table 2, Heston Tables 4–6, Variance Gamma Table 7, and CGMY Tables 8–10.
 
 Full tables, interpretation, and the improved-COS summary are in
-**[docs/FO2008_REPLICATION.md](docs/FO2008_REPLICATION.md)**.
+**[docs/fo2008_replication.md](docs/fo2008_replication.md)**.
 
 Canonical notebook: [`notebooks/fo2008_replication.ipynb`](notebooks/fo2008_replication.ipynb)  
 Parameter registry: `benchmarks/paper_replications/fo2008_cos/params.py`  
@@ -687,7 +683,7 @@ The final narrative should be:
 
 Full implementation details, spectral filter formulas, the adaptive policy selector
 algorithm, conservative framing, output files, and test coverage are in
-**[docs/FILTERED_COS_EXTENSION.md](docs/FILTERED_COS_EXTENSION.md)**.
+**[docs/filtered_cos_extension.md](docs/filtered_cos_extension.md)**.
 
 Demo notebook: [`notebooks/research/adaptive_cos.ipynb`](notebooks/research/adaptive_cos.ipynb)  
 Improved-truncation notebook: [`notebooks/research/cos_method_improved.ipynb`](notebooks/research/cos_method_improved.ipynb)
