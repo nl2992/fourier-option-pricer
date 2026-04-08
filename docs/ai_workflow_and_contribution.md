@@ -167,7 +167,7 @@ The reference papers each present one method in isolation. This repo compares al
 methods under one interface on the same model and strike strip:
 
 ```python
-for method in ["cos", "cos_improved", "carr_madan", "frft", "lewis", "pyfeng_fft"]:
+for method in ["cos", "cos_improved", "cos_filtered", "carr_madan", "frft", "pyfeng_fft"]:
     prices = fe.price_strip("heston", method, strikes, fwd, params)
 ```
 

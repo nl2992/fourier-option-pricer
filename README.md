@@ -61,9 +61,9 @@ print(prices)
 Swap the method string to switch pricers without touching any other code:
 
 ```python
-prices = fe.price_strip("heston", "carr_madan", strikes, fwd, params)
-prices = fe.price_strip("heston", "lewis",      strikes, fwd, params)
-prices = fe.price_strip("bates",  "frft",       strikes, fwd, params)
+prices = fe.price_strip("heston", "cos_improved", strikes, fwd, params)
+prices = fe.price_strip("heston", "cos_filtered", strikes, fwd, params)
+prices = fe.price_strip("bates",  "cos_improved", strikes, fwd, params)
 ```
 
 ---
@@ -111,7 +111,7 @@ Full model details: [docs/model_zoo.md](docs/model_zoo.md).
 |----------|------------|---------|
 | `price_strip(model, method, strikes, fwd, params, grid=None)` | model label, method label, strike array, `ForwardSpec`, model params, optional grid | `np.ndarray` of call prices |
 
-Method labels: `"cos"`, `"cos_improved"`, `"carr_madan"`, `"frft"`, `"lewis"`, `"pyfeng_fft"`.
+Method labels: `"cos"`, `"cos_improved"`, `"cos_filtered"`, `"carr_madan"`, `"frft"`, `"pyfeng_fft"`.
 
 ### Core pricing functions
 
@@ -188,18 +188,21 @@ MIT. See [LICENSE](LICENSE).
 
 | Model / method group | Reference | Tolerance | Status |
 |----------------------|-----------|-----------|--------|
-| Carr-Madan VG Case 4 put prices | Carr & Madan (1999) table | exact to 4 d.p. | done |
-| Lewis Heston five-strike strip | Lewis (2001) table | atol=1e-5 | done |
-| Double Heston vanilla calls | Kelly (2025) table | atol=1e-4 | done |
+| Carr-Madan VG Case 4 put prices | Carr & Madan (1999) table | atol=1e-3 | done |
+| Lewis Heston five-strike strip | Lewis (2001) table | atol=1e-4 | done |
+| Double Heston vanilla calls | Kelly (2025) table | atol=5e-4 | done |
 | Bates NI prices | MathWorks `optByBatesNI` | atol=1e-2 | done |
 | Bates FFT/FRFT surface | MathWorks `optByBatesFFT` | atol=1e-2 | done |
 | Bates Delta | MathWorks `optSensByBatesNI` | atol=5e-3 | done |
-| BSM all-pricers baseline | Frozen derived reference | COS/COS+: 1e-8; Lewis: 1e-7; CM/FRFT: 1e-4 | done |
-| 3/2 SV PyFENG surface (7×4) | Frozen PyFENG adapter reference | atol=1e-3 | done |
-| Merton JD | Derived reference (Poisson-BSM mixture) | atol=1e-8 | done |
+| BSM all-pricers baseline | Frozen derived reference | COS/COS+: 1e-8; CM/FRFT: 1e-4 | done |
+| 3/2 SV PyFENG surface (7×4) | Frozen PyFENG adapter reference | atol=1.5e-3 | done |
+| Merton JD | Derived reference (Poisson-BSM mixture) | atol=1e-4 | done |
 | FO2008 COS Tables 1–10 | Derived reference, paper-grid replay | see [fo2008_replication.md](docs/fo2008_replication.md) | partial |
-| Heston, VG, CGMY, NIG, OUSV, Rough Heston | PyFENG adapter parity | atol=1e-5 | partial |
-| Kou, Bilateral Gamma, GH, FMLS, Meixner, VGSA | Derived reference, cross-method | atol=1e-4 | partial |
+| Heston, CGMY | PyFENG adapter parity | atol=1e-5 | partial |
+| NIG, OUSV | PyFENG adapter parity | atol=1e-4 | partial |
+| VG, Rough Heston | PyFENG adapter parity | atol=1e-3 | partial |
+| Kou, Bilateral Gamma, GH, FMLS, Meixner | Derived reference, cross-method | atol=1e-4 | partial |
+| VGSA | Derived reference, cross-method | atol=1e-3 | partial |
 
 Full per-paper matrix: [docs/paper_validation_matrix.md](docs/paper_validation_matrix.md). Evidence-level definitions: [docs/validation_hierarchy.md](docs/validation_hierarchy.md).
 
