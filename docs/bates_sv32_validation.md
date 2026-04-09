@@ -29,6 +29,32 @@ stochastic-volatility model.
 Reference: MathWorks Financial Toolbox `optByBatesNI`, `optByBatesFFT`, `optSensByBatesNI`.
 Frozen values stored in `tests/refs/bates_mathworks_ni.json` and `tests/refs/bates_mathworks_fft_frft.json`.
 
+### mu_j conversion formula
+
+MathWorks specifies jumps via `MeanJ` (the expected proportional change in price per jump).
+The log-jump mean `mu_j` used internally is:
+
+```
+mu_j = log(1 + MeanJ) - 0.5 * sigma_j^2
+```
+
+For the reference case (`MeanJ = 0.02`, `sigma_j = 0.08`):
+
+```
+mu_j = log(1.02) - 0.5 * 0.08^2 = 0.01660262729617973
+```
+
+The jump compensator ensures the forward price remains F0:
+
+```
+zeta  = exp(mu_j + 0.5 * sigma_j^2) - 1 = MeanJ = 0.02
+omega = -lambda * zeta
+```
+
+Both the Bates CF and the log-forward martingale condition `phi(-i) = 1` are verified in
+the test suite. The log-forward convention (`X_T = log(S_T / F_0)`) is derived in
+[appendix.md](../appendix.md) Section 4.
+
 ---
 
 ## Bates validation cases (BATES-01 through BATES-07)

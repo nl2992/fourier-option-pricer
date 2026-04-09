@@ -408,7 +408,7 @@ docs/           detailed reference documentation (index at docs/README.md)
 | Kou jump-diffusion | Kou, S.G. (2002), *A Jump-Diffusion Model for Option Pricing* |
 | Bates SVJ | Bates, D.S. (1996), *Jumps and Stochastic Volatility: Exchange Rate Processes Implicit in Deutsche Mark Options* |
 
-Full bibliography with DOIs and free-access links: [papers.md](papers.md).
+Full bibliography with DOIs and free-access links: [docs/papers.md](docs/papers.md).
 
 ---
 
@@ -419,5 +419,5 @@ All reference documentation is indexed at **[docs/README.md](docs/README.md)** â
 | Document | Contents |
 |----------|----------|
 | [appendix.md](appendix.md) | Methodology, derivations, model conventions, benchmark interpretation, and the numbered course-project narrative (sections 1â€“18). |
-| [papers.md](papers.md) | Full bibliography with DOIs and free-access links, grouped by method and model family. |
-| [numerical_notes.md](numerical_notes.md) | Known numerical limitations: COS truncation failure modes, Carr-Madan alpha conditions, PyFENG version caveats, parameter edge cases, IV inversion guidance. |
+| [docs/papers.md](docs/papers.md) | Full bibliography with DOIs and free-access links, grouped by method and model family. |
+| [docs/numerical_notes.md](docs/numerical_notes.md) | Known numerical limitations: COS truncation failure modes, Carr-Madan alpha conditions, PyFENG version caveats, parameter edge cases, IV inversion guidance. |
