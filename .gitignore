@@ -17,10 +17,8 @@ env/
 /notebooks/benchmarks/
 /notebooks/*_executed.ipynb
 /notebooks/*-executed.ipynb
-/notebooks/cosPaper_Replication.ipynb
+/notebooks/demo_executed_check.ipynb
 /notebooks/demo-deprecated.ipynb
-/notebooks/demo_executed.ipynb
-/notebooks/presentation_fourier_methods.ipynb
 
 # ── Local notebook tooling / patch scripts ───────────────────────────────────
 # /scripts/ removed — reference-generating scripts are tracked
@@ -34,6 +32,12 @@ env/
 .idea/
 .vscode/
 *.swp
+
+# ── Local tooling / coverage artefacts ───────────────────────────────────────
+.assistant-state/
+.coverage
+.coverage.*
+htmlcov/
 
 # ── Local / personal files not needed for submission ─────────────────────────
 _local_backup/

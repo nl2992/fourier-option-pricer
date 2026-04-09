@@ -16,7 +16,7 @@ Most option pricing models beyond Black-Scholes do not have a price formula you 
 pip install fourier-option-pricer
 ```
 
-Requires Python 3.9+, `numpy>=1.24`, `scipy>=1.10`, `pyfeng>=0.4.0`.
+Requires Python 3.10+, `numpy>=1.26`, `scipy>=1.10`, `pyfeng>=0.4.0`.
 
 To pin a version:
 

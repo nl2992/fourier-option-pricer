@@ -11,7 +11,7 @@ This document describes how `fourier-option-pricer` is packaged, versioned, and 
 | PyPI name | `fourier-option-pricer` |
 | Python import name | `foureng` |
 | Current version | 0.4.1 |
-| Python version support | ≥ 3.9 |
+| Python version support | ≥ 3.10 |
 | License | MIT |
 
 ---
