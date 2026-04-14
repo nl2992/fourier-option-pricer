@@ -1,4 +1,4 @@
-"""Variance Gamma with Stochastic Arrival (VGSA) — Carr, Geman, Madan, Yor 2003.
+"""Variance Gamma with Stochastic Arrival (VGSA)  -  Carr, Geman, Madan, Yor 2003.
 
 VGSA runs a Variance Gamma (VG) Lévy process on a stochastic CIR activity
 clock.  Where the homogeneous VG model struggles with the term structure of
@@ -8,8 +8,8 @@ jump activity through the CIR (Cox-Ingersoll-Ross) process y_t:
     dy_t = kappa*(eta - y_t) dt + lam*sqrt(y_t) dW_t
     X_T  = VG_{Y_T}  − drift correction,   Y_T = ∫_0^T y_s ds
 
-The VG process X is parameterised by (G, M) — the exponential tempering
-rates of the left and right jump tails — at unit activity per unit time.
+The VG process X is parameterised by (G, M)  -  the exponential tempering
+rates of the left and right jump tails  -  at unit activity per unit time.
 The CIR process y_t has initial value y_0 = C (the stochastic-activity
 analogue of v_0 in Heston), long-run mean eta, speed kappa, and
 diffusion lam.  The drift correction keeps X_T in log-forward convention.
@@ -32,13 +32,13 @@ which ensures E[exp(X_T)] = 1 (log-forward convention).
 
 Parameter convention
 --------------------
-* ``C``      — initial activity y_0 > 0 (NOT the CGMY C parameter)
-* ``G``      — left-tail (negative-jump) tempering rate, G > 0
-* ``M``      — right-tail (positive-jump) tempering rate, M > 1
+* ``C``       -  initial activity y_0 > 0 (NOT the CGMY C parameter)
+* ``G``       -  left-tail (negative-jump) tempering rate, G > 0
+* ``M``       -  right-tail (positive-jump) tempering rate, M > 1
                 (``M > 1`` required for finite E[exp(X_t)])
-* ``kappa``  — CIR mean-reversion speed, > 0
-* ``eta``    — CIR long-run activity mean, > 0
-* ``lam``    — CIR vol-of-activity (diffusion), >= 0
+* ``kappa``   -  CIR mean-reversion speed, > 0
+* ``eta``     -  CIR long-run activity mean, > 0
+* ``lam``     -  CIR vol-of-activity (diffusion), >= 0
                (``lam = 0``: deterministic clock → VGSA reduces to VG)
 
 Reduction to VG
@@ -124,7 +124,7 @@ class VGSAParams(ModelSpec):
 
 
 # ---------------------------------------------------------------------------
-# VG Lévy exponent in (G, M) parameterisation — unit activity
+# VG Lévy exponent in (G, M) parameterisation  -  unit activity
 # ---------------------------------------------------------------------------
 
 
@@ -214,7 +214,7 @@ def _cir_integrated_cf(
     exp_gT = np.exp(gamma * T)
     denom = (kappa + gamma) * (exp_gT - 1.0) + 2.0 * gamma
 
-    # A(s, T) factor — raised to 2*kappa*eta/lam^2
+    # A(s, T) factor  -  raised to 2*kappa*eta/lam^2
     exp_half = np.exp((kappa + gamma) * T / 2.0)
     A_ratio = 2.0 * gamma * exp_half / denom  # scalar-like per z element
     A_exp = 2.0 * kappa * eta / lam2
@@ -277,7 +277,7 @@ def vgsa_cf(u: np.ndarray, fwd: ForwardSpec, p: VGSAParams) -> np.ndarray:
 
 
 # ---------------------------------------------------------------------------
-# Cumulants — numerical Cauchy integral
+# Cumulants  -  numerical Cauchy integral
 # ---------------------------------------------------------------------------
 
 

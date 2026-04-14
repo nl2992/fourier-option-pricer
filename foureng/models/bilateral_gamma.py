@@ -1,4 +1,4 @@
-"""Bilateral Gamma (BG) model (Küchler & Tappe 2008) — native CF.
+"""Bilateral Gamma (BG) model (Küchler & Tappe 2008)  -  native CF.
 
 The Bilateral Gamma process is the difference of two independent Gamma
 processes:

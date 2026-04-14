@@ -1,11 +1,11 @@
-"""CGMY adapter — CF parity, cumulants, cross-method, frozen strip.
+"""CGMY adapter  -  CF parity, cumulants, cross-method, frozen strip.
 
-Parallel to ``test_ousv_adapter.py`` — same gate pattern adapted to the
+Parallel to ``test_ousv_adapter.py``  -  same gate pattern adapted to the
 pure-Lévy (no stochastic variance) CGMY model:
 
   1. ``cgmy_cf`` matches :meth:`pyfeng.CgmyFft.charfunc_logprice`
-     bit-exactly (~1e-14) — our wrapper is a pure adapter.
-  2. ``phi(u=0) = 1`` and ``phi(-i) = 1`` — martingale.
+     bit-exactly (~1e-14)  -  our wrapper is a pure adapter.
+  2. ``phi(u=0) = 1`` and ``phi(-i) = 1``  -  martingale.
   3. Closed-form cumulants match a numerical Cauchy-integral reference
      computed off the PyFENG CF (cross-check against our own analytic
      formula in ``cgmy.py``).
@@ -35,7 +35,7 @@ _PARAMS = CgmyParams(C=0.5, G=5.0, M=5.0, Y=0.7)
 
 
 def test_cgmy_cf_matches_pyfeng_charfunc_logprice():
-    """Bit-identity wrapper check — see models/cgmy.py for the translation."""
+    """Bit-identity wrapper check  -  see models/cgmy.py for the translation."""
     u = np.linspace(-10.0, 10.0, 41)
     phi_ours = cgmy_cf(u, _FWD, _PARAMS)
 
@@ -90,7 +90,7 @@ def test_cgmy_prices_match_pyfeng_fft_across_methods():
 
 
 def test_cgmy_regression_cm_oracle_grid(cgmy_regression_v1):
-    """CM at the oracle grid — numerical identity with the frozen array."""
+    """CM at the oracle grid  -  numerical identity with the frozen array."""
     ref = cgmy_regression_v1
     C = price_strip(ref.model, "carr_madan", ref.strikes, ref.fwd, ref.params,
                     grid=FFTGrid(N=32768, eta=0.10, alpha=1.5))

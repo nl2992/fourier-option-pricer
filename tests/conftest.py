@@ -7,7 +7,7 @@ needed to be rewritten when the constants moved out of this file.
 
 New tests should prefer importing the ``PaperAnchor`` / ``RegressionStrip``
 objects directly (they carry the citation, notes, and the read-only
-arrays) — see e.g. ``test_bates_regression_strip.py``.
+arrays)  -  see e.g. ``test_bates_regression_strip.py``.
 """
 from __future__ import annotations
 import sys
@@ -20,7 +20,7 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from foureng.refs.paper_refs import (  # noqa: E402  — after sys.path mutation
+from foureng.refs.paper_refs import (  # noqa: E402   -  after sys.path mutation
     CM1999_VG_CASE4 as _CM1999,
     LEWIS_HESTON_STRIP as _LEWIS,
     FO2008_HESTON_ATM as _FO2008,
@@ -34,13 +34,13 @@ from foureng.refs.paper_refs import (  # noqa: E402  — after sys.path mutation
 
 
 # ---------------------------------------------------------------------------
-# Legacy dict-shape fixtures — back-compat with tests that predate the
+# Legacy dict-shape fixtures  -  back-compat with tests that predate the
 # PaperAnchor refactor. New tests should depend on the objects directly.
 # ---------------------------------------------------------------------------
 
 @pytest.fixture
 def cm1999_vg():
-    """Carr & Madan (1999) Case 4 VG puts — legacy dict shape."""
+    """Carr & Madan (1999) Case 4 VG puts  -  legacy dict shape."""
     p = _CM1999.params
     return {
         "S0": _CM1999.fwd.S0, "r": _CM1999.fwd.r,
@@ -53,7 +53,7 @@ def cm1999_vg():
 
 @pytest.fixture
 def lewis_heston():
-    """Lewis (2001) 15-digit Heston calls — legacy dict shape."""
+    """Lewis (2001) 15-digit Heston calls  -  legacy dict shape."""
     p = _LEWIS.params
     return {
         "S0": _LEWIS.fwd.S0, "r": _LEWIS.fwd.r,
@@ -67,7 +67,7 @@ def lewis_heston():
 
 @pytest.fixture
 def fo2008_heston():
-    """Fang & Oosterlee (2008) Heston ATM call — legacy dict shape."""
+    """Fang & Oosterlee (2008) Heston ATM call  -  legacy dict shape."""
     p = _FO2008.params
     return {
         "S0": _FO2008.fwd.S0, "r": _FO2008.fwd.r,
@@ -80,7 +80,7 @@ def fo2008_heston():
 
 
 # ---------------------------------------------------------------------------
-# Direct-object fixtures for new tests — carry citations, read-only arrays,
+# Direct-object fixtures for new tests  -  carry citations, read-only arrays,
 # and the ready-to-use parameter dataclass.
 # ---------------------------------------------------------------------------
 

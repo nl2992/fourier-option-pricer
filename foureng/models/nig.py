@@ -1,7 +1,7 @@
-"""Normal Inverse Gaussian (Barndorff-Nielsen 1997) CF — PyFENG-backed.
+"""Normal Inverse Gaussian (Barndorff-Nielsen 1997) CF  -  PyFENG-backed.
 
 NIG is, like Variance Gamma, a **pure-jump Lévy model built by subordinating
-a drifted Brownian motion to a random time change** — but the time change
+a drifted Brownian motion to a random time change**  -  but the time change
 is an inverse-Gaussian (IG) subordinator rather than a Gamma one:
 
     X_t = theta * tau_t + sigma * W_{tau_t},   tau_t ~ IG(t, nu).
@@ -24,7 +24,7 @@ Adapter
 PyFENG's :class:`ExpNigFft` inherits from :class:`SvABC`, which means its
 ``__init__`` takes the SV-style ``(sigma, vov, rho, mr, theta, ...)``
 signature even though only ``sigma``, ``vov``, ``theta`` matter for the
-pure-Lévy NIG — the extra ``rho`` / ``mr`` are unused dead weight. We
+pure-Lévy NIG  -  the extra ``rho`` / ``mr`` are unused dead weight. We
 default them in the factory and expose only the three meaningful
 parameters in our dataclass.
 
@@ -55,9 +55,9 @@ class NigParams(ModelSpec):
         ``> 0``.
     nu :
         IG time-subordinator rate (akin to VG's ``nu``). Controls the
-        excess kurtosis — larger ``nu`` = heavier tails.
+        excess kurtosis  -  larger ``nu`` = heavier tails.
     theta :
-        Drift of the subordinated BM. Controls skew — ``theta < 0``
+        Drift of the subordinated BM. Controls skew  -  ``theta < 0``
         produces the familiar negative equity skew.
 
     Existence condition: ``1 - 2*theta*nu - sigma^2*nu > 0``, otherwise
@@ -103,7 +103,7 @@ def _pyfeng_nig_model(fwd: ForwardSpec, p: NigParams):
         sigma  <-  p.sigma
         vov    <-  p.nu
         theta  <-  p.theta
-        rho    <-  0.0   (unused by the NIG CF — SvABC baggage)
+        rho    <-  0.0   (unused by the NIG CF  -  SvABC baggage)
         mr     <-  0.01  (unused, but SvABC insists on it; PyFENG default)
     """
 
@@ -121,14 +121,14 @@ def _pyfeng_nig_model(fwd: ForwardSpec, p: NigParams):
 
 
 def nig_cf(u: np.ndarray, fwd: ForwardSpec, p: NigParams) -> np.ndarray:
-    """CF of ``X_T = log(S_T / F_0)`` under NIG — via PyFENG's ``ExpNigFft``."""
+    """CF of ``X_T = log(S_T / F_0)`` under NIG  -  via PyFENG's ``ExpNigFft``."""
     m = _pyfeng_nig_model(fwd, p)
     u_arr = np.asarray(u)
     return np.asarray(m.logp_cf(u_arr, texp=fwd.T), dtype=np.complex128)
 
 
 # ---------------------------------------------------------------------------
-# Cumulants — numerical Cauchy integral on the PyFENG CF
+# Cumulants  -  numerical Cauchy integral on the PyFENG CF
 # ---------------------------------------------------------------------------
 
 

@@ -10,7 +10,7 @@ pattern:
 
 Keeping the pattern in one helper module lets each model file (BSM,
 Heston, VG, OUSV, …) stay a thin 2-line wrapper around its own kwarg
-translation. No file imports this module at top level — PyFENG is
+translation. No file imports this module at top level  -  PyFENG is
 imported lazily on first use so the project still imports cleanly in
 an environment where PyFENG is not installed (the CF just raises a
 clear :class:`ImportError` when invoked).
@@ -19,7 +19,7 @@ Cache design
 ------------
 Each model file owns a private ``dict`` keyed on ``(params, fwd)`` and
 hands it to :func:`build_cached`. The cache is unbounded in principle,
-but a typical run sees O(1) distinct ``(params, fwd)`` tuples — one
+but a typical run sees O(1) distinct ``(params, fwd)`` tuples  -  one
 per calibration point, one per notebook example. Constructing a
 :class:`pyfeng.HestonFft` is an order of magnitude slower than a
 single :meth:`logp_cf` call, so caching matters for COS's
@@ -58,7 +58,7 @@ def build_cached(
     ``factory`` is a zero-arg callable that returns the PyFENG model
     instance. Passing a thunk (rather than a prebuilt instance) means
     we skip the :class:`pyfeng.*Fft` constructor entirely on cache
-    hits — the whole point of caching here.
+    hits  -  the whole point of caching here.
     """
     m = cache.get(key)
     if m is not None:

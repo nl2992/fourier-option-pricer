@@ -11,7 +11,7 @@ select the right method for a given model, and interpret any unexpected results.
 The COS method (Fang & Oosterlee 2008) approximates the risk-neutral density
 as a cosine series on a finite interval `[a, b]`. Truncating outside this
 interval introduces a systematic error that does **not** decrease with the
-number of terms `N` — it can only be reduced by widening `[a, b]`.
+number of terms `N`  -  it can only be reduced by widening `[a, b]`.
 
 **Standard rule** (`cos_auto_grid`):
 
@@ -25,7 +25,7 @@ tails (all diffusion and most Lévy models here). It can fail for:
 
 - **Alpha-stable distributions with α < 2**: power-law tails mean the
   cumulant-based width rule will underestimate the required truncation. For
-  FMLS with α < 1.9, use Carr-Madan or FRFT rather than COS — they work
+  FMLS with α < 1.9, use Carr-Madan or FRFT rather than COS  -  they work
   on the real frequency axis where the CF decays exponentially. See
   `tests/models/test_fmls_paper.py`.
 - **Very long maturities or high vol-of-vol**: the distribution spreads out;
@@ -50,7 +50,7 @@ under Heston at typical maturities.
 Exponential convergence degrades to algebraic if:
 
 - The density has discontinuities in its derivative (e.g., compound-Poisson
-  models with `lam` very small but non-zero — the density has a point mass
+  models with `lam` very small but non-zero  -  the density has a point mass
   mixing with a smooth component).
 - The truncation interval is too narrow (Gibbs phenomenon).
 
@@ -95,7 +95,7 @@ For most models, `alpha = 1.5` is a safe default. It can fail if:
 
 - The model has fat right tails (e.g., CGMY with `M` close to 1, or FMLS
   with `alpha` close to 1). Increase `M` or decrease `alpha`.
-- `alpha` is set so large that the integrand oscillates before decaying —
+- `alpha` is set so large that the integrand oscillates before decaying  - 
   reduce `alpha`.
 
 The `utils/validity.py` module provides `alpha_valid_upper_bound(model, params)`

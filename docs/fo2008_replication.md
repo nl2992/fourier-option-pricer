@@ -1,4 +1,4 @@
-# Fang & Oosterlee (2008) — Full Paper Replication
+# Fang & Oosterlee (2008)  -  Full Paper Replication
 
 This document collects the paper-faithful replication tables for Fang and Oosterlee (2008),
 *A Novel Pricing Method for European Options Based on Fourier-Cosine Series Expansions*,
@@ -13,7 +13,7 @@ columns and error / runtime down the rows.
 
 ---
 
-## Table 1 — GBM density recovery warm-up
+## Table 1  -  GBM density recovery warm-up
 
 Reconstructs the standard normal density from its characteristic function using the COS
 density expansion on `[-10, 10]`.
@@ -29,7 +29,7 @@ density coefficients are recoverable from the characteristic function.
 
 ---
 
-## Table 2 — GBM calls, COS versus Carr-Madan
+## Table 2  -  GBM calls, COS versus Carr-Madan
 
 Parameters: σ=0.25, r=0.1, q=0, T=0.1, S0=100, K=80,100,120.
 
@@ -50,7 +50,7 @@ effects rather than series-resolution error.
 
 ---
 
-## Table 3 — Cash-or-nothing digital option under GBM
+## Table 3  -  Cash-or-nothing digital option under GBM
 
 Parameters: σ=0.2, r=0.05, q=0, T=0.1, S0=100, K=120.
 Paper reference: 0.273306496497.
@@ -65,7 +65,7 @@ when analytic payoff coefficients are used.
 
 ---
 
-## Table 4 — Heston, T=1, ATM
+## Table 4  -  Heston, T=1, ATM
 
 |  | N=40 | N=80 | N=120 | N=160 | N=200 |
 |---|---:|---:|---:|---:|---:|
@@ -80,7 +80,7 @@ This motivates the improved COS policy (see [filtered_cos_extension.md](filtered
 
 ---
 
-## Table 5 — Heston, T=10, ATM
+## Table 5  -  Heston, T=10, ATM
 
 This is the most important diagnostic table.
 The long maturity and wide interval make the naive paper-grid replay converge much more slowly.
@@ -96,7 +96,7 @@ The issue is the joint choice of interval width and number of terms, not the Hes
 
 ---
 
-## Table 6 — Heston, T=1, 21-strike strip
+## Table 6  -  Heston, T=1, 21-strike strip
 
 |  | N=40 | N=80 | N=160 | N=200 |
 |---|---:|---:|---:|---:|
@@ -110,7 +110,7 @@ wider range of strikes.
 
 ---
 
-## Table 7 — Variance Gamma
+## Table 7  -  Variance Gamma
 
 For T=0.1:
 
@@ -134,7 +134,7 @@ The shorter maturity requires larger N, consistent with slower characteristic-fu
 
 ---
 
-## Tables 8–10 — CGMY
+## Tables 8–10  -  CGMY
 
 For Y=0.5:
 
@@ -174,11 +174,11 @@ truncation-policy diagnostic.
 
 The "ugly rows" are not a single COS failure:
 
-- **BSM Table 2** — flat local error floor under the paper-grid replay is consistent with
+- **BSM Table 2**  -  flat local error floor under the paper-grid replay is consistent with
   truncation or reference-rounding effects, not series-resolution error.
-- **Heston Table 5** — a long-maturity / wide-interval resolution problem.
+- **Heston Table 5**  -  a long-maturity / wide-interval resolution problem.
   A wide interval needs enough cosine terms to resolve it.
-- **Heston Table 6** — harder because a single interval is used across a 21-strike strip.
+- **Heston Table 6**  -  harder because a single interval is used across a 21-strike strip.
 - **Paper timings** are historical 2008 hardware measurements and should not be treated as
   directly portable runtime claims.
 - **COS accuracy depends on two choices at once**: support interval and number of cosine terms.

@@ -1,4 +1,4 @@
-"""Spectral-filtered COS pricer — thin convenience wrapper.
+"""Spectral-filtered COS pricer  -  thin convenience wrapper.
 
 This module exposes ``filtered_cos_prices``, a one-liner that calls the
 standard :func:`~foureng.pricers.cos.cos_prices` with a non-trivial

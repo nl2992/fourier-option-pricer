@@ -1,4 +1,4 @@
-"""3/2 Stochastic Volatility model (Lewis 2000) — PyFENG-backed.
+"""3/2 Stochastic Volatility model (Lewis 2000)  -  PyFENG-backed.
 
 The 3/2 model is a stochastic-volatility model where the *instantaneous
 variance* v_t satisfies a mean-reverting SDE with diffusion term proportional
@@ -58,7 +58,7 @@ class Sv32Params(ModelSpec):
         Long-term mean of the variance process (``theta`` in PyFENG).
         Must be ``> 0``.
     nu :
-        Vol-of-vol — coefficient on the v^(3/2) diffusion term (``vov``
+        Vol-of-vol  -  coefficient on the v^(3/2) diffusion term (``vov``
         in PyFENG).  Must be ``> 0``.
     rho :
         Correlation between the spot and variance Brownian motions.
@@ -156,7 +156,7 @@ def sv32_cf(u: np.ndarray, fwd: ForwardSpec, p: Sv32Params) -> np.ndarray:
 
 
 # ---------------------------------------------------------------------------
-# Cumulants — numerical Cauchy integral
+# Cumulants  -  numerical Cauchy integral
 # ---------------------------------------------------------------------------
 
 

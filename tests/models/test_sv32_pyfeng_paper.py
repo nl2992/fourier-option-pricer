@@ -1,16 +1,16 @@
-"""Tests for the 3/2 SV model (sv32) — paper benchmark, cross-engine, limit-cases.
+"""Tests for the 3/2 SV model (sv32)  -  paper benchmark, cross-engine, limit-cases.
 
-Layer 1 — paper formula
+Layer 1  -  paper formula
     Lewis (2000) docstring benchmark: sigma=0.06, mr=20.48, theta=0.218,
     vov=3.20, rho=-0.99, strikes=[95,100,105], spot=100, texp=0.5
     → prices ≈ [11.7235, 8.9978, 6.7091]
 
-Layer 2 — cross-engine
+Layer 2  -  cross-engine
     Our CF via Lewis integral must match PyFENG's native Sv32Fft pricer
     to 1e-4 (1 bp), and all Fourier pricers (COS, FRFT, Carr-Madan) must
     agree to each other to 1e-3.
 
-Layer 3 — limit / structural
+Layer 3  -  limit / structural
     CF normalization: φ(0)=1, φ(-i)=1 (martingale).
     Cumulants: c2 > 0, c1 is finite.
     Rho=0 symmetry: call(K) = call(2*F-K) mirrored around ATM.
@@ -22,7 +22,7 @@ import pytest
 
 pf = pytest.importorskip(
     "pyfeng",
-    reason="pyfeng not installed — sv32 tests require it",
+    reason="pyfeng not installed  -  sv32 tests require it",
 )
 
 from foureng.models.sv32 import Sv32Params, sv32_cf, sv32_cumulants
@@ -60,7 +60,7 @@ def bench_params():
 
 @pytest.fixture(scope="module")
 def pyfeng_ref_prices():
-    """Prices computed directly by PyFENG Sv32Fft — authoritative reference."""
+    """Prices computed directly by PyFENG Sv32Fft  -  authoritative reference."""
     m = pf.Sv32Fft(sigma=0.06, vov=3.20, mr=20.48, rho=-0.99, theta=0.218)
     return m.price(STRIKES, spot=SPOT, texp=TEXP, cp=1)
 

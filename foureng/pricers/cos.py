@@ -283,7 +283,7 @@ def _call_payoff_coeffs(a: float, b: float, N: int, K: np.ndarray, F0: float) ->
     Retained for backward compatibility and for modules that explicitly want
     the call-payoff form (e.g. parameter-sensitivity Greeks in
     ``foureng.greeks.cos_greeks``). **Do not use for pricing at long
-    maturities** — the ``e^b`` factor in the chi integral catastrophically
+    maturities**  -  the ``e^b`` factor in the chi integral catastrophically
     loses precision for wide truncation intervals (``b > ~10``). Pricing
     goes through :func:`_put_payoff_coeffs` + put-call parity instead.
     """

@@ -5,7 +5,7 @@ crash-heavy) at two maturities. For each case, price the same strike strip
 with two independent Fourier inversions already in the repo (FRFT and FFT)
 and verify:
 
-  A) FRFT agrees with FFT at high resolution (they should — both are damped-
+  A) FRFT agrees with FFT at high resolution (they should  -  both are damped-
      integrand Carr-Madan, just different quadratures),
   B) COS at moderate N agrees with the FRFT reference,
   C) COS error decreases as N grows and is stable across the truncation-L
@@ -58,7 +58,7 @@ def _setup(case: dict):
 
 @pytest.mark.parametrize("case", KOU_CASES, ids=[c["name"] for c in KOU_CASES])
 def test_kou_frft_and_fft_agree(case):
-    """FRFT and FFT should agree tightly — they're both damped-integrand CM."""
+    """FRFT and FFT should agree tightly  -  they're both damped-integrand CM."""
     fwd, p, phi = _setup(case)
     strikes = _strikes_around_forward(fwd, -0.20, 0.20, 9)
 
@@ -118,7 +118,7 @@ def test_kou_cos_stable_in_L(case):
     """At N=1024 the prices should not depend on L within the recommended range.
 
     FO2008 recommends ``L=10`` for Kou-like jump models; L=6 under-resolves
-    the tails (the deficit persists at N=2048 — it is pure truncation
+    the tails (the deficit persists at N=2048  -  it is pure truncation
     error). Sweep is restricted to L in {8, 10, 12} so we measure the COS
     numerical sensitivity rather than the FO2008 truncation rule.
     """

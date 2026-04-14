@@ -1,4 +1,4 @@
-"""Generalized Hyperbolic (GH) model (Barndorff-Nielsen 1977) — native CF.
+"""Generalized Hyperbolic (GH) model (Barndorff-Nielsen 1977)  -  native CF.
 
 The Generalized Hyperbolic distribution is a normal variance-mean mixture
 where the mixing distribution is a Generalized Inverse Gaussian (GIG).
@@ -198,7 +198,7 @@ def gh_cf(u: np.ndarray, fwd: ForwardSpec, p: GHParams) -> np.ndarray:
 
 
 # ---------------------------------------------------------------------------
-# Cumulants — numerical Cauchy integral
+# Cumulants  -  numerical Cauchy integral
 # ---------------------------------------------------------------------------
 
 
@@ -206,7 +206,7 @@ def gh_cumulants(fwd: ForwardSpec, p: GHParams) -> tuple[float, float, float]:
     """Cumulants ``(c1, c2, c4)`` of X_T under the GH Lévy model.
 
     Uses numerical Cauchy-circle integration (GH has closed-form cumulants
-    but they involve Bessel function ratios — numerical is simpler and
+    but they involve Bessel function ratios  -  numerical is simpler and
     equally accurate).
     """
     from ..utils.cumulants import cumulants_from_cf

@@ -1,10 +1,10 @@
-"""Implied-volatility utilities — robust Brent inversion of the BSM formula.
+"""Implied-volatility utilities  -  robust Brent inversion of the BSM formula.
 
 Given a Fourier-priced option strip we often want the BSM-implied vol
 per strike for smile plots and calibration diagnostics. The core
 operation is a one-dimensional root-find on the Black-Scholes price
 function, which is monotone in sigma on the admissible interval
-``(intrinsic, F*disc)`` — a textbook Brent problem.
+``(intrinsic, F*disc)``  -  a textbook Brent problem.
 
 Implementation note
 -------------------
@@ -62,7 +62,7 @@ def implied_vol_from_prices(
     ----------
     prices :
         1-D array of option prices. Calls if ``cp=1``, puts if ``cp=-1``.
-        Interpreted as **discounted** option prices — the same output
+        Interpreted as **discounted** option prices  -  the same output
         scale produced by every pricer in :mod:`foureng.pipeline`.
     strikes :
         1-D array of strikes, same shape as ``prices``.

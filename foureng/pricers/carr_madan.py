@@ -94,7 +94,7 @@ def carr_madan_price_at_strikes(
     restrict the interpolation support to the interior
         |log(K) - k0| < window_factor * b
     and REQUIRE queried strikes to lie inside that window (anything past it
-    is a user error — make N larger or eta smaller to widen the grid).
+    is a user error  -  make N larger or eta smaller to widen the grid).
     """
     strikes = np.asarray(strikes, dtype=float)
     if np.any(strikes <= 0.0):

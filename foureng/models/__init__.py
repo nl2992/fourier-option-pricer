@@ -2,29 +2,29 @@
 
 PyFENG-backed (thin adapters around ``pyfeng.*Fft.logp_cf``, requires pyfeng>=0.4.0):
 
-    bsm          BsmParams      — Black-Scholes-Merton
-    heston       HestonParams   — Heston (1993) stochastic volatility
-    ousv         OusvParams     — Schöbel-Zhu (1999) OU stochastic volatility
-    vg           VGParams       — Variance Gamma (Madan-Carr-Chang 1998)
-    cgmy         CgmyParams     — CGMY (Carr-Geman-Madan-Yor 2002)
-    nig          NigParams      — Normal Inverse Gaussian (Barndorff-Nielsen 1997)
-    sv32         Sv32Params     — 3/2 stochastic volatility (Lewis 2000)
-    rough_heston RoughHestonParams — Rough Heston (El Euch & Rosenbaum 2019)
+    bsm          BsmParams       -  Black-Scholes-Merton
+    heston       HestonParams    -  Heston (1993) stochastic volatility
+    ousv         OusvParams      -  Schöbel-Zhu (1999) OU stochastic volatility
+    vg           VGParams        -  Variance Gamma (Madan-Carr-Chang 1998)
+    cgmy         CgmyParams      -  CGMY (Carr-Geman-Madan-Yor 2002)
+    nig          NigParams       -  Normal Inverse Gaussian (Barndorff-Nielsen 1997)
+    sv32         Sv32Params      -  3/2 stochastic volatility (Lewis 2000)
+    rough_heston RoughHestonParams  -  Rough Heston (El Euch & Rosenbaum 2019)
 
 In-house native CFs:
 
-    kou          KouParams             — double-exponential jump-diffusion
-    bates        BatesParams           — Heston + Merton log-normal jumps
-    heston_kou   HestonKouParams       — Heston + Kou jumps
-    heston_cgmy  HestonCGMYParams      — Heston + CGMY jumps
-    garch_wmw2012 GarchWMW2012Params   — discrete GARCH (Wu-Ma-Wang 2012)
-    merton_jd    MertonJDParams        — Merton (1976) jump-diffusion
-    meixner      MeixnerParams         — Meixner process (Schoutens 2002)
-    bilateral_gamma BilateralGammaParams — Bilateral Gamma (Küchler-Tappe 2008)
-    generalized_hyperbolic GHParams    — GH Lévy (Barndorff-Nielsen 1977)
-    fmls           FMLSParams            — Finite Moment Log Stable (Carr-Wu 2003)
-    double_heston  DoubleHestonParams    — Two-factor Heston SV (Christoffersen 2009)
-    vgsa           VGSAParams            — VG with Stochastic Arrival (CGMY 2003)
+    kou          KouParams              -  double-exponential jump-diffusion
+    bates        BatesParams            -  Heston + Merton log-normal jumps
+    heston_kou   HestonKouParams        -  Heston + Kou jumps
+    heston_cgmy  HestonCGMYParams       -  Heston + CGMY jumps
+    garch_wmw2012 GarchWMW2012Params    -  discrete GARCH (Wu-Ma-Wang 2012)
+    merton_jd    MertonJDParams         -  Merton (1976) jump-diffusion
+    meixner      MeixnerParams          -  Meixner process (Schoutens 2002)
+    bilateral_gamma BilateralGammaParams  -  Bilateral Gamma (Küchler-Tappe 2008)
+    generalized_hyperbolic GHParams     -  GH Lévy (Barndorff-Nielsen 1977)
+    fmls           FMLSParams             -  Finite Moment Log Stable (Carr-Wu 2003)
+    double_heston  DoubleHestonParams     -  Two-factor Heston SV (Christoffersen 2009)
+    vgsa           VGSAParams             -  VG with Stochastic Arrival (CGMY 2003)
 """
 
 from .base import CharFunc, ForwardSpec, ModelSpec

@@ -1,4 +1,4 @@
-"""Merton (1976) jump-diffusion model — native CF.
+"""Merton (1976) jump-diffusion model  -  native CF.
 
 The Merton jump-diffusion (MJD) model adds compound-Poisson log-normal jumps
 to a geometric Brownian motion (GBM):
@@ -49,7 +49,7 @@ class MertonJDParams(ModelSpec):
     sigma : float
         GBM diffusion volatility (annualized). Must be ``>= 0``.
     lam : float
-        Jump intensity — expected number of jumps per year. Must be ``>= 0``.
+        Jump intensity  -  expected number of jumps per year. Must be ``>= 0``.
     muj : float
         Mean of the log-jump size (``μ_j``). Can be positive or negative;
         negative values model downside jump risk.

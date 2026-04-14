@@ -282,23 +282,29 @@ Full per-paper matrix: [docs/paper_validation_matrix.md](docs/paper_validation_m
 ## Reproduce results
 
 ```bash
+# install test dependencies for the fast CI-style suite
+python -m pip install -e ".[test]"
+
 # fast CI suite (skips slow notebook tests)
-pytest -q -m "not slow"
+python -m pytest -q -m "not slow"
+
+# add notebook dependencies for the full suite and notebook execution guards
+python -m pip install -e ".[test,notebook]"
 
 # full suite including Monte Carlo and notebook guards
-pytest -q
+python -m pytest -q
 
 # paper-replication tests only
-pytest -q -m "paper"
+python -m pytest -q -m "paper"
 
 # MathWorks Bates software-reference tests
-pytest -q -m "software_reference"
+python -m pytest -q -m "software_reference"
 
 # FO2008 COS benchmarks
-pytest -q tests/papers/test_phase4_cos_heston_fo2008.py
+python -m pytest -q tests/papers/test_phase4_cos_heston_fo2008.py
 
 # run the Bates + SV32 validation notebook (needs pyfeng>=0.4.0)
-jupyter nbconvert --to notebook --execute \
+python -m jupyter nbconvert --to notebook --execute \
   notebooks/paper_replications/bates_sv32_validation_demo.ipynb
 ```
 
@@ -414,7 +420,7 @@ Full bibliography with DOIs and free-access links: [docs/papers.md](docs/papers.
 
 ## Detailed documentation
 
-All reference documentation is indexed at **[docs/README.md](docs/README.md)** — model zoo, full API, validation hierarchy, paper replication tables, filtered-COS extension, Bates/3/2 SV validation, AI workflow, and packaging checklist.
+All reference documentation is indexed at **[docs/README.md](docs/README.md)**  -  model zoo, full API, validation hierarchy, paper replication tables, filtered-COS extension, Bates/3/2 SV validation, AI workflow, and packaging checklist.
 
 | Document | Contents |
 |----------|----------|

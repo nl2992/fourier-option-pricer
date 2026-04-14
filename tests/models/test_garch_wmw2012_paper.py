@@ -1,16 +1,16 @@
 """Tests for the GARCH diffusion model (Wu, Ma & Wang 2012).
 
-Layer 1 — paper formula
+Layer 1  -  paper formula
     Cross-checks our native MGF implementation against PyFENG's
     ``mgf_logprice_old`` (the slower but NumPy-compatible formula in
     ``GarchFftWuMaWang2012``).  The two formulas implement the same
     Lemma 2.1 and must agree to < 1e-12.
 
-Layer 2 — cross-engine
+Layer 2  -  cross-engine
     All three Fourier pricers (Lewis, COS, Carr-Madan) must agree
     to 1e-4 (1 bp) against each other.
 
-Layer 3 — structural / limit
+Layer 3  -  structural / limit
     CF normalization (phi(0)=1), martingale condition (phi(-i)=1),
     modulus bound (|phi(u)| <= 1), positive variance cumulant,
     no-arbitrage price bounds.
@@ -31,7 +31,7 @@ rho=-0.99, spot=100, T=0.5, r=q=0:
     GARCH prices ≈ [14.7732, 12.2470, 10.0435]
 
 Note: PyFENG's docstring for GarchFftWuMaWang2012 shows [11.7235, 8.9978,
-6.7091] — the same values as Sv32Fft with identical parameters. This is a
+6.7091]  -  the same values as Sv32Fft with identical parameters. This is a
 copy-paste error in PyFENG; those are the Sv32 prices. The GARCH diffusion
 model (nu*v diffusion) gives different prices from the 3/2 SV model
 (nu*v^(3/2) diffusion).
@@ -97,7 +97,7 @@ class TestGarchMGFFormula:
     @pytest.fixture(autouse=True)
     def _pyfeng_old_model(self):
         pf = pytest.importorskip("pyfeng",
-            reason="pyfeng not installed — GARCH MGF cross-check requires it")
+            reason="pyfeng not installed  -  GARCH MGF cross-check requires it")
         if not hasattr(pf, "GarchFftWuMaWang2012"):
             pytest.skip("pyfeng.GarchFftWuMaWang2012 not available in this pyfeng version")
         self._pf_model = pf.GarchFftWuMaWang2012(

@@ -1,4 +1,4 @@
-"""Heston-CGMY SVJ model — Heston SV + CGMY tempered-stable jumps.
+"""Heston-CGMY SVJ model  -  Heston SV + CGMY tempered-stable jumps.
 
 CGMY (Carr, Geman, Madan, Yor 2002) is a pure-jump, infinite-activity,
 tempered-stable Lévy process. Combined with Heston's diffusion we have
@@ -34,14 +34,14 @@ Closed-form cumulants of CGMY have restricted existence regimes. We
 instead delegate to :func:`foureng.utils.cumulants.cumulants_from_cf`
 which evaluates a 64-point Cauchy integral on a small complex circle
 around ``u = 0``. This is the same routine used for Heston and works
-for any CF that is analytic near the origin — which CGMY is for the
+for any CF that is analytic near the origin  -  which CGMY is for the
 standard parameter regimes used in practice.
 
 References
 ----------
 * Carr, Geman, Madan, Yor (2002), "The Fine Structure of Asset Returns:
   An Empirical Investigation", Journal of Business 75(2).
-* Fang & Oosterlee (2008) — COS truncation rule.
+* Fang & Oosterlee (2008)  -  COS truncation rule.
 """
 
 from __future__ import annotations
@@ -61,7 +61,7 @@ class HestonCGMYParams(ModelSpec):
 
     Heston block
     ------------
-    ``kappa, theta, nu, rho, v0`` — see :class:`HestonParams`.
+    ``kappa, theta, nu, rho, v0``  -  see :class:`HestonParams`.
 
     CGMY block
     ----------
@@ -148,7 +148,7 @@ class HestonCGMYParams(ModelSpec):
 
 
 def _validate_cgmy(p: HestonCGMYParams) -> None:
-    # C == 0 is the degenerate "no CGMY jumps" edge case — the Lévy exponent
+    # C == 0 is the degenerate "no CGMY jumps" edge case  -  the Lévy exponent
     # becomes identically zero and Heston-CGMY collapses to pure Heston.
     # We allow it so the reduction-to-Heston gate can be bit-identical.
     if p.C < 0.0:
@@ -221,7 +221,7 @@ def heston_cgmy_cumulants(fwd: ForwardSpec, p: HestonCGMYParams) -> tuple[float,
     """Cumulants (c1, c2, c4) of X_T under Heston-CGMY.
 
     Computed numerically from the CF via
-    :func:`foureng.utils.cumulants.cumulants_from_cf` — the same
+    :func:`foureng.utils.cumulants.cumulants_from_cf`  -  the same
     FFT-on-circle routine used for Heston. No closed-form CGMY moments
     required; works as long as the CF is analytic on a small
     neighbourhood of ``u = 0``, which holds for the supported parameter

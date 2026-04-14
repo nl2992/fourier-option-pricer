@@ -19,7 +19,7 @@ import pytest
 
 pytestmark = [pytest.mark.paper, pytest.mark.derived_reference]
 
-pyfeng = pytest.importorskip("pyfeng", reason="pyfeng not installed — sv32 tests require it")
+pyfeng = pytest.importorskip("pyfeng", reason="pyfeng not installed  -  sv32 tests require it")
 
 import foureng as fe
 

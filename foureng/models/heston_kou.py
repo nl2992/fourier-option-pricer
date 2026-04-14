@@ -1,4 +1,4 @@
-"""Heston-Kou SVJ model — Heston SV + Kou double-exponential jumps.
+"""Heston-Kou SVJ model  -  Heston SV + Kou double-exponential jumps.
 
 Heston's stochastic-volatility diffusion combined with a compound-Poisson
 jump whose size follows Kou's (2002) double-exponential law. The CF
@@ -8,14 +8,14 @@ factorises under independence:
 
 where ``phi_H`` is Heston (PyFENG-backed via :func:`heston_cf`) and
 ``phi_jump`` is the log-forward, martingale-corrected compound-Poisson
-factor — the same construction already used in :mod:`.kou` and
+factor  -  the same construction already used in :mod:`.kou` and
 :mod:`.bates`.
 
 References
 ----------
 * Heston, S. (1993).
 * Kou, S. (2002), "A Jump-Diffusion Model for Option Pricing".
-* Fang & Oosterlee (2008) — COS truncation rule consumes the cumulants
+* Fang & Oosterlee (2008)  -  COS truncation rule consumes the cumulants
   returned here.
 """
 
@@ -35,7 +35,7 @@ class HestonKouParams(ModelSpec):
 
     Heston block
     ------------
-    ``kappa, theta, nu, rho, v0`` — same meaning as :class:`HestonParams`.
+    ``kappa, theta, nu, rho, v0``  -  same meaning as :class:`HestonParams`.
     Feller condition: ``2*kappa*theta >= nu^2``.
 
     Kou jump block (double-exponential)
@@ -125,7 +125,7 @@ def heston_kou_cf(u: np.ndarray, fwd: ForwardSpec, p: HestonKouParams) -> np.nda
 
     ``phi_H`` comes from the PyFENG-backed :func:`heston_cf`. The
     compensator choice enforces ``E[exp(X_T)] = 1`` so ``F_0`` remains
-    the martingale of the discounted price — the same convention used
+    the martingale of the discounted price  -  the same convention used
     by every CF in this project.
     """
     T = fwd.T

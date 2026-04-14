@@ -1,11 +1,11 @@
-"""OUSV (Schöbel-Zhu) adapter — CF parity, cross-method, frozen strip.
+"""OUSV (Schöbel-Zhu) adapter  -  CF parity, cross-method, frozen strip.
 
 OUSV does not have a clean closed-form log-forward CF we can check
 against, so the gates are:
 
   1. ``ousv_cf`` matches :meth:`pyfeng.OusvFft.charfunc_logprice`
-     bit-exactly (~1e-14) — our wrapper is a pure adapter.
-  2. ``phi(u=0) = 1`` — martingale.
+     bit-exactly (~1e-14)  -  our wrapper is a pure adapter.
+  2. ``phi(u=0) = 1``  -  martingale.
   3. COS / FRFT / CM all agree with PyFENG's own ``price`` to the
      same ~1e-7 floor we see for Heston/VG on their default grids.
   4. A frozen 41-strike regression strip pins prices against any
@@ -30,7 +30,7 @@ _PARAMS = OusvParams(sigma0=0.2, kappa=2.0, theta=0.2, nu=0.3, rho=-0.5)
 
 
 def test_ousv_cf_matches_pyfeng_charfunc_logprice():
-    """Bit-identity wrapper check — see models/ousv.py for the translation."""
+    """Bit-identity wrapper check  -  see models/ousv.py for the translation."""
     u = np.linspace(-10.0, 10.0, 41)
     phi_ours = ousv_cf(u, _FWD, _PARAMS)
 
@@ -67,7 +67,7 @@ def test_ousv_prices_match_pyfeng_fft_across_methods():
 
 
 def test_ousv_regression_cm_oracle_grid(ousv_regression_v1):
-    """CM at the oracle grid — numerical identity with the frozen array."""
+    """CM at the oracle grid  -  numerical identity with the frozen array."""
     ref = ousv_regression_v1
     C = price_strip(ref.model, "carr_madan", ref.strikes, ref.fwd, ref.params,
                     grid=FFTGrid(N=32768, eta=0.10, alpha=1.5))

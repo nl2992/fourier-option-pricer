@@ -1,4 +1,4 @@
-"""Bates model reduction tests — BSM and MertonJD limits.
+"""Bates model reduction tests  -  BSM and MertonJD limits.
 
 NOTE: The Bates → Heston reduction (lam_j=0) is already covered in
 ``test_bates_reduces_to_heston.py``. This file covers the two additional

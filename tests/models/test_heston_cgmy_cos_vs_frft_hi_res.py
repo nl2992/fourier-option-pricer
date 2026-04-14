@@ -1,7 +1,7 @@
 """Cross-method agreement for Heston-CGMY: COS vs FRFT hi-res oracle.
 
 Parallels :mod:`test_bates_cos_vs_frft_hi_res`. The CGMY Lévy exponent
-involves fractional complex powers, so — in principle — this is the
+involves fractional complex powers, so  -  in principle  -  this is the
 roughest CF of the three. In practice the chosen parameter regime
 (Y=0.7, G=M=5, symmetric tempering) is well-behaved and COS still
 saturates at ~1e-9 vs the FRFT hi-res oracle. Gate at 1e-6.

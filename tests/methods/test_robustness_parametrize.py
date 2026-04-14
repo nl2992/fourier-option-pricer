@@ -1,17 +1,17 @@
-"""Parametrised robustness tests — Rubric 2 (robustness / edge cases).
+"""Parametrised robustness tests  -  Rubric 2 (robustness / edge cases).
 
 Covers three axes the per-model tests do not sweep:
 
-  1. BSM sigma sweep   — all four pricing engines (COS/FRFT/CM/PyFENG) must
+  1. BSM sigma sweep    -  all four pricing engines (COS/FRFT/CM/PyFENG) must
      agree with the Black-Scholes closed form across a range of volatilities,
      not just one fixed sigma=0.20 case.
 
-  2. Put-call parity   — COS must satisfy C - P = disc*(F - K) to machine
+  2. Put-call parity    -  COS must satisfy C - P = disc*(F - K) to machine
      precision across five models (BSM, Heston, VG, Kou, CGMY), two
      maturities, and multiple strikes. This is model-agnostic: it holds
      whenever the pricing formula is internally consistent.
 
-  3. Heston parameter sweep — prices must be finite, positive, and sensible
+  3. Heston parameter sweep  -  prices must be finite, positive, and sensible
      (call ≤ spot, put ≤ strike) across a grid of (kappa, theta, nu, rho)
      combinations including the Feller-violated region (2κθ < ν²).
 """
@@ -54,7 +54,7 @@ def _bs_put(S, K, r, q, T, sigma):
 
 
 # ---------------------------------------------------------------------------
-# 1. BSM sigma sweep — engines must track Black-Scholes across volatilities
+# 1. BSM sigma sweep  -  engines must track Black-Scholes across volatilities
 # ---------------------------------------------------------------------------
 
 BSM_SIGMAS = [0.05, 0.10, 0.20, 0.30, 0.40, 0.60, 0.80]
@@ -98,7 +98,7 @@ def test_bsm_frft_tracks_black_scholes(sigma):
 
 
 # ---------------------------------------------------------------------------
-# 2. Put-call parity — C - P = disc*(F - K)  for multiple models
+# 2. Put-call parity  -  C - P = disc*(F - K)  for multiple models
 # ---------------------------------------------------------------------------
 
 def _cos_two_path_error(phi_fn, fwd, cumulants, strikes, N=512, L=10.0):
@@ -118,7 +118,7 @@ def _cos_two_path_error(phi_fn, fwd, cumulants, strikes, N=512, L=10.0):
     return float(np.max(np.abs(C_pp - C_cd)))
 
 
-# Near-ATM short/medium maturities only — call_direct blows up at long T
+# Near-ATM short/medium maturities only  -  call_direct blows up at long T
 TWO_PATH_MATURITIES = [0.25, 1.0]
 
 @pytest.mark.parametrize("T", TWO_PATH_MATURITIES)
@@ -173,10 +173,10 @@ def test_two_path_consistency_cgmy(T):
 
 
 # ---------------------------------------------------------------------------
-# 3. Heston parameter sweep — prices finite/positive, call ≤ S0
+# 3. Heston parameter sweep  -  prices finite/positive, call ≤ S0
 # ---------------------------------------------------------------------------
 
-# (kappa, theta, nu, rho, v0) — includes Feller-satisfied and Feller-violated
+# (kappa, theta, nu, rho, v0)  -  includes Feller-satisfied and Feller-violated
 HESTON_CASES = [
     # Feller satisfied: 2*kappa*theta >= nu^2
     dict(name="feller_ok_low_vol",   kappa=4.0, theta=0.04, nu=0.5,  rho=-0.7, v0=0.04),

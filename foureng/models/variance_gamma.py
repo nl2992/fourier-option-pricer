@@ -1,13 +1,13 @@
 """Variance-Gamma characteristic function.
 
-Implementation note — **PyFENG is the CF implementation for this model**.
+Implementation note  -  **PyFENG is the CF implementation for this model**.
 ``vg_cf`` is a thin wrapper around :meth:`pyfeng.VarGammaFft.logp_cf`;
 parameters are in the canonical CM1999 ``(sigma, nu, theta)`` convention
 the project uses throughout, and PyFENG's CF agrees with the analytic
 VG formula to ~1e-18 under that convention (verified).
 
 The analytic cumulants are still computed in-house from FO2008 Table 10
-— PyFENG doesn't expose cumulants and we need them for the COS
+ -  PyFENG doesn't expose cumulants and we need them for the COS
 auto-grid truncation.
 """
 
@@ -43,7 +43,7 @@ class VGParams(ModelSpec):
 
 
 # ---------------------------------------------------------------------------
-# PyFENG-backed CF — uses the shared (cache, lazy-import) backend helpers so
+# PyFENG-backed CF  -  uses the shared (cache, lazy-import) backend helpers so
 # every PyFENG-backed wrapper (BSM / Heston / OUSV / VG / CGMY / NIG) has the
 # same 10-line factory shape.
 # ---------------------------------------------------------------------------
@@ -85,7 +85,7 @@ def vg_cf(u: np.ndarray, fwd: ForwardSpec, p: VGParams) -> np.ndarray:
 
     with ``omega = (1/nu) * log(1 - theta*nu - 0.5*sigma^2*nu)`` ensuring
     ``E[exp(X_T)] = 1``. Requires ``1 - theta*nu - 0.5*sigma^2*nu > 0`` for
-    the log to be real — we do not re-check that condition here; PyFENG
+    the log to be real  -  we do not re-check that condition here; PyFENG
     handles it.
     """
     m = _pyfeng_vg_model(fwd, p)
@@ -96,7 +96,7 @@ def vg_cf(u: np.ndarray, fwd: ForwardSpec, p: VGParams) -> np.ndarray:
 def vg_cumulants(fwd: ForwardSpec, p: VGParams) -> tuple[float, float, float]:
     """Cumulants (c1, c2, c4) of log(S_T/F0) under VG (FO 2008 Table 10).
 
-    Closed form — kept in-house because PyFENG does not expose cumulants
+    Closed form  -  kept in-house because PyFENG does not expose cumulants
     and we need them for the COS truncation-interval rule.
     """
     sigma, nu, theta = p.sigma, p.nu, p.theta

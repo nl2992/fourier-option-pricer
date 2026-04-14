@@ -1,6 +1,6 @@
 # Adaptive Filtered-COS Extension
 
-This document describes the adaptive filtered-COS layer — the primary **research extension**
+This document describes the adaptive filtered-COS layer  -  the primary **research extension**
 in this project, going beyond the baseline Junike truncation policy.
 
 **Demo notebook:** [`notebooks/research/adaptive_cos.ipynb`](../notebooks/research/adaptive_cos.ipynb)  
@@ -17,12 +17,12 @@ accuracy but not sufficient.
 
 Two additional sources of error remain after interval selection is resolved:
 
-1. **Finite-series truncation** — the COS expansion uses N terms.
+1. **Finite-series truncation**  -  the COS expansion uses N terms.
    If the characteristic function decays slowly (heavy-tailed models, short maturities) or
    the payoff density has sharp features, the N-term series may carry visible Gibbs-like
    oscillations even when `[a, b]` is correctly chosen.
 
-2. **Nonsmoothness at the truncation boundary** — the artificial periodisation introduced by
+2. **Nonsmoothness at the truncation boundary**  -  the artificial periodisation introduced by
    COS creates a discontinuity at `a` and `b`. For models with non-Gaussian densities the
    boundary effect persists at moderate N.
 
@@ -152,8 +152,8 @@ The demo notebook and `scripts/run_filtered_cos_extension.py` write:
 
 ## Related documents
 
-- [fo2008_replication.md](fo2008_replication.md) — where the improved COS beats the naive
+- [fo2008_replication.md](fo2008_replication.md)  -  where the improved COS beats the naive
   paper-grid replay
-- [validation_hierarchy.md](validation_hierarchy.md) — how the filtered-COS tests are
+- [validation_hierarchy.md](validation_hierarchy.md)  -  how the filtered-COS tests are
   classified (numerical_stability, no exact numeric target)
-- [appendix.md](../appendix.md) section 14 — Junike/Junike-Pankrashkin theoretical background
+- [appendix.md](../appendix.md) section 14  -  Junike/Junike-Pankrashkin theoretical background

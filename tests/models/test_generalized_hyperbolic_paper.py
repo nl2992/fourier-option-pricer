@@ -1,17 +1,17 @@
 """Tests for the Generalized Hyperbolic (GH) Lévy model (Barndorff-Nielsen 1977).
 
-Layer 1 — analytic benchmarks
+Layer 1  -  analytic benchmarks
     * phi(0)=1, phi(-i)=1 (normalization and martingale condition).
     * GH with lam=-0.5 reduces to NIG: the exponent simplifies to
       δ*(sqrt(α²-β²) - sqrt(α²-(β+iu)²)) (verified analytically).
     * lam=1 (hyperbolic distribution) also satisfies both conditions.
 
-Layer 2 — cross-engine agreement
+Layer 2  -  cross-engine agreement
     Lewis / COS / Carr-Madan / FRFT must all agree to atol=1e-4 on
     the NIG benchmark (lam=-0.5, alpha=6.1882, beta=-3.8941, delta=0.1622)
     from Eberlein & Keller (1995).
 
-Layer 3 — structural
+Layer 3  -  structural
     phi(0)=1, phi(-i)=1, |phi(u)|<=1, c2>0, no-arbitrage bounds,
     price monotone in delta (scale) and alpha (tail heaviness).
 
@@ -54,7 +54,7 @@ STRIKES = np.array([85.0, 90.0, 100.0, 110.0, 115.0])
 SPOT = 100.0
 TEXP = 1.0
 
-# NIG limit (lam=-0.5) — Eberlein & Keller (1995) DAX calibration
+# NIG limit (lam=-0.5)  -  Eberlein & Keller (1995) DAX calibration
 _P_NIG = GHParams(lam=-0.5, alpha=6.1882, beta=-3.8941, delta=0.1622)
 _FWD_BENCH = ForwardSpec(S0=SPOT, r=0.0, q=0.0, T=TEXP)
 

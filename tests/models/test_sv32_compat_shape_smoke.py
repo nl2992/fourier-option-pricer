@@ -18,7 +18,7 @@ import pytest
 
 pytestmark = [pytest.mark.derived_reference, pytest.mark.numerical_stability]
 
-pyfeng = pytest.importorskip("pyfeng", reason="pyfeng not installed — sv32 tests require it")
+pyfeng = pytest.importorskip("pyfeng", reason="pyfeng not installed  -  sv32 tests require it")
 
 import foureng as fe
 

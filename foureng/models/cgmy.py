@@ -1,4 +1,4 @@
-"""CGMY (Carr-Geman-Madan-Yor 2002) characteristic function — PyFENG-backed.
+"""CGMY (Carr-Geman-Madan-Yor 2002) characteristic function  -  PyFENG-backed.
 
 CGMY is a pure-jump, infinite-activity Lévy process whose Lévy density
 
@@ -7,12 +7,12 @@ CGMY is a pure-jump, infinite-activity Lévy process whose Lévy density
 
 gives four-parameter control over activity (C), left/right exponential
 tempering (G, M), and stability (Y in [0, 2)). This wrapper exposes
-:class:`pyfeng.CgmyFft` — the model **without** a stochastic-variance
-factor — in contrast to :mod:`.heston_cgmy` which is Heston ⊗ CGMY.
+:class:`pyfeng.CgmyFft`  -  the model **without** a stochastic-variance
+factor  -  in contrast to :mod:`.heston_cgmy` which is Heston ⊗ CGMY.
 
 Parameter conventions
 ---------------------
-CGMY's natural parameterization — ``(C, G, M, Y)`` — is exactly what
+CGMY's natural parameterization  -  ``(C, G, M, Y)``  -  is exactly what
 PyFENG's :class:`pyfeng.CgmyFft` expects, so the adapter is essentially
 a no-op translation plus ``(intr, divr)`` wiring. Martingale correction
 (the ``-i*u*psi(-i)`` compensator) is baked into PyFENG's MGF.
@@ -22,7 +22,7 @@ References
 * Carr, P., Geman, H., Madan, D., Yor, M. (2002), "The Fine Structure
   of Asset Returns: An Empirical Investigation", Journal of Business.
 * Ballotta, L., Kyriakou, I. (2014), "Monte Carlo Simulation of the
-  CGMY Process and Option Pricing", J. Futures Markets — the exact
+  CGMY Process and Option Pricing", J. Futures Markets  -  the exact
   MGF PyFENG uses.
 """
 
@@ -45,7 +45,7 @@ class CgmyParams(ModelSpec):
     C :
         Overall jump intensity / activity level. ``C > 0`` in the
         interior, ``C = 0`` reduces the Lévy measure to zero (pure drift
-        — tests/``test_cgmy_reduces_to_zero_jumps.py`` exercises this).
+         -  tests/``test_cgmy_reduces_to_zero_jumps.py`` exercises this).
     G :
         Left-tail exponential decay rate (``G > 0``). Larger ``G`` =>
         thinner left tail.
@@ -99,14 +99,14 @@ def _pyfeng_cgmy_model(fwd: ForwardSpec, p: CgmyParams):
 
 
 def cgmy_cf(u: np.ndarray, fwd: ForwardSpec, p: CgmyParams) -> np.ndarray:
-    """CF of ``X_T = log(S_T / F_0)`` under CGMY — via PyFENG's ``CgmyFft``."""
+    """CF of ``X_T = log(S_T / F_0)`` under CGMY  -  via PyFENG's ``CgmyFft``."""
     m = _pyfeng_cgmy_model(fwd, p)
     u_arr = np.asarray(u)
     return np.asarray(m.logp_cf(u_arr, texp=fwd.T), dtype=np.complex128)
 
 
 # ---------------------------------------------------------------------------
-# Cumulants — closed form from the Lévy exponent
+# Cumulants  -  closed form from the Lévy exponent
 # ---------------------------------------------------------------------------
 
 
@@ -118,7 +118,7 @@ def cgmy_cumulants(fwd: ForwardSpec, p: CgmyParams) -> tuple[float, float, float
         psi(u) = C * Gamma(-Y) * [(M - i*u)^Y - M^Y + (G + i*u)^Y - G^Y],
 
     so cumulant ``kappa_n`` of the Lévy process at time ``T`` is
-    ``T * (-i)^n * psi^{(n)}(0)`` — which simplifies to
+    ``T * (-i)^n * psi^{(n)}(0)``  -  which simplifies to
 
         kappa_n / T = C * Gamma(-Y) * Y * (Y-1) * ... * (Y-n+1)
                       * [ M^{Y-n} - (-1)^n * G^{Y-n} ]  for n >= 1.
@@ -127,7 +127,7 @@ def cgmy_cumulants(fwd: ForwardSpec, p: CgmyParams) -> tuple[float, float, float
     CF, the first cumulant shifts by ``-T * psi(-i)/i`` (purely real);
     higher cumulants are unchanged.
 
-    Returns ``(c1, c2, c4)`` — the ``c3`` slot is omitted to match the
+    Returns ``(c1, c2, c4)``  -  the ``c3`` slot is omitted to match the
     project-wide COS auto-grid signature.
     """
     from math import gamma as _gamma
@@ -140,7 +140,7 @@ def cgmy_cumulants(fwd: ForwardSpec, p: CgmyParams) -> tuple[float, float, float
         raise ValueError(f"CGMY: C, G, M must all be > 0; got C={C}, G={G}, M={M}")
 
     # Gamma(-Y) has poles at non-negative integers; CGMY's regime of
-    # interest is Y in (0, 2) \ {1}. We don't guard here — PyFENG's CF
+    # interest is Y in (0, 2) \ {1}. We don't guard here  -  PyFENG's CF
     # will itself surface a NaN if the caller picks a degenerate Y.
     gY = _gamma(-Y)
 

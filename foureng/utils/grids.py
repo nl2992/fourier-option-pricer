@@ -48,7 +48,7 @@ class FFTGrid:
 
 @dataclass(frozen=True)
 class FRFTGrid:
-    """Fractional FFT grid — eta (freq step) and lam (log-strike step) independent.
+    """Fractional FFT grid  -  eta (freq step) and lam (log-strike step) independent.
 
     Unlike :class:`FFTGrid`, the Nyquist constraint does not bind here:
     eta and lam are chosen freely, and the FRFT fraction
@@ -64,7 +64,7 @@ class FRFTGrid:
     lam : float
         Log-strike grid spacing. Choose independently of eta.
     alpha : float
-        Dampening exponent — same meaning and default guidance as in
+        Dampening exponent  -  same meaning and default guidance as in
         :class:`FFTGrid`. The standard choice **alpha = 1.5** works for
         most models; see :func:`~foureng.utils.validity.check_alpha`.
     """

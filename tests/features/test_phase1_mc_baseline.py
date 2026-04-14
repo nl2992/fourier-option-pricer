@@ -49,5 +49,5 @@ def test_heston_cond_mc_lewis_benchmark(lewis_heston):
         HestonMCScheme(n_paths=500_000, n_steps=200, seed=7, scheme="exact"),
     )
     err = np.abs(mc - d["ref_calls"]).max()
-    # MC-level tolerance — tightens Fourier methods later
+    # MC-level tolerance  -  tightens Fourier methods later
     assert err < 0.05, f"Heston MC Lewis max err = {err:.3e}"

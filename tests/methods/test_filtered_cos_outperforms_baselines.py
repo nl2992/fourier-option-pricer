@@ -4,7 +4,7 @@ Marked with ``@pytest.mark.slow``.  Run with::
 
     pytest tests/test_filtered_cos_outperforms_baselines.py -q -m slow
 
-Weak-dominance claim — what it actually means
+Weak-dominance claim  -  what it actually means
 ----------------------------------------------
 The adaptive selector is a **best-of-candidates** rule that optimises
 the joint (error, runtime) metric:
@@ -66,7 +66,7 @@ def test_adaptive_filtered_cos_on_vg_stress_case():
     """Adaptive selector on short-maturity VG: tolerance and regression checks.
 
     Uses the recommended VG policy (heuristic truncation, dx=0.003) which
-    gives N≈267 — comparable to vanilla's N=256 but with centred intervals.
+    gives N≈267  -  comparable to vanilla's N=256 but with centred intervals.
     This ensures the candidate set is competitive before filtering is applied.
 
     Assertions
@@ -275,6 +275,6 @@ def test_adaptive_selector_weak_dominance_over_fixed_policies():
     passing = df[df["passes_tol"]].copy()
     if not passing.empty:
         assert err_adaptive <= passing["max_abs_err"].max() + eps, (
-            "Selected candidate is worse than some passing candidates — "
+            "Selected candidate is worse than some passing candidates  -  "
             "this should be impossible."
         )

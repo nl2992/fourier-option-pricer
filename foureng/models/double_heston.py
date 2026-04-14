@@ -23,7 +23,7 @@ standard Heston CF assumptions.
 Parameterisation
 ----------------
 We follow the project convention of using ``nu`` for vol-of-vol (some
-sources use ``sigma``, ``gamma``, or ``vov`` — all equivalent). The
+sources use ``sigma``, ``gamma``, or ``vov``  -  all equivalent). The
 ``v0i`` parameters are initial *variances* (not volatilities).
 
 Paper benchmark
@@ -214,7 +214,7 @@ def double_heston_cf(u: np.ndarray, fwd: ForwardSpec, p: DoubleHestonParams) -> 
 
 
 # ---------------------------------------------------------------------------
-# Cumulants — numerical Cauchy integral
+# Cumulants  -  numerical Cauchy integral
 # ---------------------------------------------------------------------------
 
 

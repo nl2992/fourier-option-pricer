@@ -1,16 +1,16 @@
 """Tests for the Bilateral Gamma model (Küchler & Tappe 2008).
 
-Layer 1 — analytic benchmarks
+Layer 1  -  analytic benchmarks
     * Closed-form cumulants match formulae from Küchler & Tappe (2008).
     * Setting alpha_m=0 reduces to a pure Gamma process (one-sided).
     * phi(0)=1, phi(-i)=1 (martingale condition).
 
-Layer 2 — cross-engine agreement
+Layer 2  -  cross-engine agreement
     Lewis / COS / Carr-Madan / FRFT must all agree to atol=1e-4 on
     benchmark parameters (alpha_p=1.0, lambda_p=5.0, alpha_m=0.8,
     lambda_m=4.0).
 
-Layer 3 — structural
+Layer 3  -  structural
     phi(0)=1, phi(-i)=1, |phi(u)|<=1, c2>0, no-arbitrage bounds,
     monotone in lambda_m (bigger lambda_m → tighter/faster downward jumps
     → less downward contribution → higher call prices).

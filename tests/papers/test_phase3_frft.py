@@ -46,7 +46,7 @@ def test_frft_lewis_N128_hits_1e4(lewis_heston):
     """Lewis Heston: FRFT with N=128 should hit 1e-4.
 
     At this grid (eta=0.25 for v_max=32 and lam=0.005 for fine ATM resolution)
-    CM-FFT at the same N=128 has error O(1e-3) — FRFT decouples and wins.
+    CM-FFT at the same N=128 has error O(1e-3)  -  FRFT decouples and wins.
     """
     d = lewis_heston
     fwd, phi = _heston_lewis_phi(d)

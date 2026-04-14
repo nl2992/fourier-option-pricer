@@ -24,7 +24,7 @@ def test_cos_heston_fo2008(fo2008_heston):
 
     GATE: reproduce 5.785155450 within 1e-6 using `cos_prices` with
     CF-derived cumulants (including c4). Because c4 > 0 for Heston, the
-    truncation interval is wider than in the paper's c4=0 recipe — so we
+    truncation interval is wider than in the paper's c4=0 recipe  -  so we
     gate at N=256 instead of FO2008's N=160 at L=10.
     """
     d = fo2008_heston
@@ -75,8 +75,8 @@ def test_cos_heston_fo2008_L_sensitivity(fo2008_heston):
     spread to be tight there.
 
     (Rationale for the previous "L in {6,...}" sweep being dropped: the
-    put-then-parity pricing rewrite — which fixed the long-maturity
-    catastrophic cancellation that blew up Heston T=10 — exposed the fact
+    put-then-parity pricing rewrite  -  which fixed the long-maturity
+    catastrophic cancellation that blew up Heston T=10  -  exposed the fact
     that L=6 genuinely under-resolves the FO2008 Heston case. The old
     direct-call path's ``exp(b)`` arithmetic was incidentally masking that
     truncation deficit by up to 1e-4, giving a misleading "L-insensitive"

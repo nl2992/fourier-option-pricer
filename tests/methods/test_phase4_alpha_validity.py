@@ -29,7 +29,7 @@ def test_kou_alpha_max_analytic():
 
     Past the bound the CF formula still evaluates to a finite complex number
     (it's just the analytic continuation outside the MGF strip), so the
-    runtime phi-finiteness probe does not catch this — but the analytic
+    runtime phi-finiteness probe does not catch this  -  but the analytic
     check in assert_alpha_valid does.
     """
     fwd = ForwardSpec(S0=100.0, r=0.05, q=0.0, T=0.5)
@@ -71,7 +71,7 @@ def test_heston_alpha_generic_probe():
     fwd = ForwardSpec(S0=100.0, r=0.01, q=0.02, T=1.0)
     p = HestonParams(kappa=4.0, theta=0.25, nu=1.0, rho=-0.5, v0=0.04)
     phi = lambda u: heston_cf_form2(u, fwd, p)
-    # alpha=1.5 is a standard Carr-Madan default — must pass
+    # alpha=1.5 is a standard Carr-Madan default  -  must pass
     assert check_alpha(phi, alpha=1.5).ok
 
 
