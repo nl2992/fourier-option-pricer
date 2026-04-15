@@ -10,16 +10,19 @@ import os
 import subprocess
 import sys
 import tempfile
+import uuid
 from pathlib import Path
 
 import pytest
 
 
 def _execute_notebook_in_current_env(nb: Path, output_path: str) -> None:
-    kernel_name = "foureng-ci"
+    kernel_name = f"foureng-ci-{uuid.uuid4().hex[:8]}"
     env = dict(os.environ)
     with tempfile.TemporaryDirectory() as tmpdir:
         jupyter_path = str(Path(tmpdir) / "share" / "jupyter")
+        env["JUPYTER_DATA_DIR"] = jupyter_path
+        env["JUPYTER_PATH"] = jupyter_path
         subprocess.run(
             [
                 sys.executable,
@@ -36,7 +39,6 @@ def _execute_notebook_in_current_env(nb: Path, output_path: str) -> None:
             check=True,
             env=env,
         )
-        env["JUPYTER_PATH"] = jupyter_path
         subprocess.run(
             [
                 sys.executable,
