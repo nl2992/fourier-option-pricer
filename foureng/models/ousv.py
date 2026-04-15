@@ -16,7 +16,7 @@ payoffs. That's the reason OUSV doesn't need a Feller-type condition.
 
 PyFENG ships :class:`pyfeng.OusvFft` with the same public surface as
 :class:`pyfeng.HestonFft`: ``logp_cf``, ``price``, and
-``impvol_brentq``. Adapter conventions mirror :mod:`.heston` exactly  - 
+``impvol_brentq``. Adapter conventions mirror :mod:`.heston` exactly  -
 our param dataclass uses the academic names ``(sigma0, kappa, theta,
 nu, rho)`` and we translate to PyFENG's ``(sigma, mr, theta, vov, rho)``
 inside the model factory.
