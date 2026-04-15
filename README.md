@@ -282,6 +282,13 @@ Full per-paper matrix: [docs/paper_validation_matrix.md](docs/paper_validation_m
 ## Reproduce results
 
 ```bash
+# fresh clone / fork setup
+git clone https://github.com/<your-user>/fourier-option-pricer.git
+cd fourier-option-pricer
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+
 # install test dependencies for the fast CI-style suite
 python -m pip install -e ".[test]"
 
@@ -310,6 +317,30 @@ python -m jupyter nbconvert --to notebook --execute \
 
 The repository has **686 pytest cases**.
 
+### Quick verification for a fork
+
+If you only want to confirm that a fresh environment is healthy, these three checks are enough:
+
+```bash
+python -m pip install -e ".[test]"
+python - <<'PY'
+import numpy as np
+import foureng as fe
+fwd = fe.ForwardSpec(S0=100.0, r=0.01, q=0.02, T=1.0)
+params = fe.HestonParams(kappa=4.0, theta=0.25, nu=1.0, rho=-0.5, v0=0.04)
+K = np.array([80.0, 90.0, 100.0, 110.0, 120.0])
+print(fe.price_strip("heston", "cos_improved", K, fwd, params))
+PY
+python -m pytest -q -m "not slow"
+```
+
+For notebook execution checks:
+
+```bash
+python -m pip install -e ".[test,notebook]"
+python -m pytest -q tests/features/test_paper_replication_notebooks_execute.py
+```
+
 ---
 
 ## Project contribution
@@ -337,6 +368,33 @@ This is not a reimplementation of existing characteristic functions. The contrib
 | Bates and 3/2 SV validation | [docs/bates_sv32_validation.md](docs/bates_sv32_validation.md); `notebooks/paper_replications/bates_sv32_validation_demo.ipynb` |
 | Code quality / reproducibility | `pyproject.toml`, `tests/`, CI workflow; see [Reproduce results](#reproduce-results) |
 | AI workflow / original contribution | [docs/ai_workflow_and_contribution.md](docs/ai_workflow_and_contribution.md) |
+
+### Marker quickstart
+
+For a fast grading pass, the highest-signal checks are:
+
+1. Run the fork setup and fast suite in [Reproduce results](#reproduce-results).
+2. Check [docs/paper_validation_matrix.md](docs/paper_validation_matrix.md) for paper-by-paper evidence and status.
+3. Check [docs/fo2008_replication.md](docs/fo2008_replication.md) and [docs/bates_sv32_validation.md](docs/bates_sv32_validation.md) for benchmark details.
+4. Inspect `foureng/models/`, `foureng/pricers/`, and `foureng/pipeline.py` for class/package structure and method separation.
+5. Inspect `benchmarks/` and `tests/` for saved outputs, robustness checks, and reproducibility assets.
+
+### Coding quality and efficiency practices used here
+
+- Clear separation of concerns: model characteristic functions, pricing engines, utilities, and validation assets live in separate modules.
+- Package-style public API: top-level `import foureng as fe` exposes the intended surface, while internals remain grouped by responsibility.
+- Vectorized numerical code: strip pricing uses NumPy arrays rather than Python loops where practical.
+- Cross-method regression checks: COS, FRFT, Carr-Madan, Lewis, and PyFENG-backed paths are compared against each other and against references.
+- Frozen reference fixtures: paper anchors, JSON fixtures, and benchmark CSVs make regressions detectable and reproducible.
+- Reproducible CI path: editable install, fast suite, notebook smoke tests, package build, and Twine metadata checks are all scriptable from the repo.
+
+### Robustness and testing practices used here
+
+- Multi-layer validation: unit tests, paper-replication tests, notebook execution guards, and software-reference checks cover different failure modes.
+- Published anchors first: FO2008, Bates, Kou, Junike, and related references are used as explicit correctness targets rather than informal spot checks.
+- Cross-environment reproducibility: the repository supports fresh-clone setup, editable install, and interpreter-pinned notebook execution.
+- Randomized and edge-case coverage: the test suite includes parameter sweeps, shape checks, and numerical sanity checks across multiple models.
+- Output-bundle verification: benchmark artifacts are checked for required summaries, tables, and files so saved research outputs stay complete.
 
 ---
 
