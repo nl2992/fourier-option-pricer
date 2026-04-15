@@ -22,7 +22,7 @@ Ten times more paths gets you only ~3× better accuracy. To cut error by a facto
 
 The Heston model (covered in Module 8) makes this worse. Simulating a single path requires discretizing the variance process at each step — either via the Milstein scheme or exact noncentral chi-squared sampling. The exact approach draws from
 
-$$v_{t+h} = \frac{\nu^2(1 - e^{-\kappa h})}{4\kappa}\,\chi^2(\delta,\,\lambda)$$
+$$v_{t+h} = \frac{\nu^2(1 - e^{-\kappa h})}{4\kappa} \chi^2(\delta, \lambda)$$
 
 which is accurate but expensive when you're calling `np.random.noncentral_chisquare` at scale. The conditional MC trick from the lectures (simulate $\sigma_t$ only, apply Black-Scholes analytically given $V_T$) helps at the margin, but you're still bottlenecked by path count.
 
@@ -34,13 +34,13 @@ Deterministic lattice methods converge faster at $\varepsilon \propto n^{-2/D}$ 
 
 The characteristic function of a model is
 
-$$\varphi(u) = \mathbb{E}^{\mathbb{Q}}\!\left[e^{iu \log(S_T/F_0)}\right]$$
+$$\varphi(u) = \mathbb{E}^{\mathbb{Q}}\left[e^{iu \log(S_T/F_0)}\right]$$
 
-— the Fourier transform of the risk-neutral log-return distribution. For Heston, Variance Gamma, Kou, and several other models used in practice, this is available in closed form. And once you have it, you can write the call price as a Fourier integral and evaluate that integral without simulating a single path.
+the Fourier transform of the risk-neutral log-return distribution. For Heston, Variance Gamma, Kou, and several other models used in practice, this is available in closed form. Once you have it, you can write the call price as a Fourier integral and evaluate it without simulating a single path.
 
 Pricing $N$ strikes one at a time via numerical integration costs $O(N \cdot n)$ — $n$ quadrature points each time, repeated $N$ times. But the integral has the structure of a Fourier transform evaluated on an evenly-spaced grid, so you can compute all $N$ prices simultaneously via FFT in $O(n \log n)$, regardless of $N$.
 
-That's the entire idea. The implementation details are what this project is about.
+That's the entire idea. The implementation follows.
 
 ---
 
@@ -52,11 +52,11 @@ That's the entire idea. The implementation details are what this project is abou
 
 The call price $C_T(k)$ as a function of log-strike $k$ isn't square-integrable — it converges to the spot price as $k \to -\infty$. Carr and Madan's fix is to multiply by a damping factor $e^{\alpha k}$, after which the Fourier transform exists and equals
 
-$$\psi_T(v) = \frac{e^{-rT}\,\varphi\!\left(v - (\alpha+1)i\right)}{\alpha^2 + \alpha - v^2 + i(2\alpha+1)v}$$
+$$\psi_T(v) = \frac{e^{-rT} \varphi\left(v - (\alpha+1)i\right)}{\alpha^2 + \alpha - v^2 + i(2\alpha+1)v}$$
 
 Prices come back via inverse Fourier transform:
 
-$$C_T(k) = \frac{e^{-\alpha k}}{\pi}\int_0^\infty \text{Re}\!\left[e^{-ivk}\psi_T(v)\right]dv$$
+$$C_T(k) = \frac{e^{-\alpha k}}{\pi}\int_0^\infty \text{Re}\left[e^{-ivk}\psi_T(v)\right] dv$$
 
 Discretize on a uniform frequency grid, apply Simpson's rule weights, one FFT — and you have option prices across an entire log-strike grid. With $N = 4096$, $\eta = 0.25$, and $\alpha = 1.5$, the log-strike spacing works out to $\lambda = 2\pi/(N\eta) \approx 0.006$.
 
@@ -82,11 +82,11 @@ Chourdakis showed that a 16-point FRFT matches a 4096-point Carr-Madan FFT in ac
 
 Rather than transforming in strike-space, COS expands the risk-neutral density directly in a Fourier-cosine series on a truncated interval $[a, b]$. The cosine coefficients come from the characteristic function, so the density never needs to appear explicitly. The price becomes a finite series:
 
-$$V(x, t_0) \approx e^{-r\Delta t}\sum_{k=0}^{N-1}{}^{\prime}\,\text{Re}\!\left\{\varphi\!\left(\tfrac{k\pi}{b-a}\right)e^{-ik\pi a/(b-a)}\right\} V_k$$
+$$V(x, t_0) \approx e^{-r\Delta t} \sum_{k=0}^{N-1}{}' \text{Re}\left[\varphi\left(\frac{k\pi}{b-a}\right) e^{-ik\pi a/(b-a)}\right] V_k$$
 
 where the payoff coefficients $V_k$ have closed-form expressions. The truncation interval uses cumulants of $\log(S_T/S_0)$:
 
-$$[a, b] = \left[c_1 - L\sqrt{c_2 + \sqrt{c_4}},\;\; c_1 + L\sqrt{c_2 + \sqrt{c_4}}\right], \qquad L = 10$$
+$$[a, b] = \left[c_1 - L\sqrt{c_2 + \sqrt{c_4}},\; c_1 + L\sqrt{c_2 + \sqrt{c_4}}\right], \qquad L = 10$$
 
 For smooth densities, COS converges exponentially in $N$ and has $O(N)$ complexity per strike (implemented as a single matrix multiply in NumPy). On the Heston model, $N = 160$ achieves error around $3 \times 10^{-6}$ in about 1.2 ms. Carr-Madan needs 38 ms for comparable accuracy. COS is also simpler to implement — no damping parameter to tune, no Nyquist constraint to worry about.
 
@@ -100,7 +100,7 @@ For smooth densities, COS converges exponentially in $N$ and has $O(N)$ complexi
 
 The standard stochastic volatility model. Asset price follows geometric Brownian motion with variance $v_t$ driven by a CIR mean-reverting process:
 
-$$\frac{dS_t}{S_t} = \sqrt{v_t}\,dW_1, \qquad dv_t = \kappa(\theta - v_t)\,dt + \nu\sqrt{v_t}\,dW_2, \qquad \langle dW_1, dW_2\rangle = \rho\,dt$$
+$$\frac{dS_t}{S_t} = \sqrt{v_t} \, dW_1, \qquad dv_t = \kappa(\theta - v_t) \, dt + \nu\sqrt{v_t} \, dW_2, \qquad \langle dW_1, dW_2 \rangle = \rho \, dt$$
 
 The characteristic function has a log-affine form $\varphi(u) = \exp(C(u,T) + D(u,T)v_0 + iu\log F_0)$ where $C$ and $D$ come from Riccati ODEs solved analytically. There's a well-known numerical issue: the original Heston formulation contains a complex logarithm whose principal branch cuts incorrectly for large $u$ or long maturities, silently producing wrong prices. We use the numerically stable "Formulation 2" described in:
 
@@ -118,7 +118,7 @@ The Fourier price is the exact analogue to the conditional MC approach from Modu
 
 VG replaces Brownian motion in the log-price with a Brownian motion time-changed by a Gamma process:
 
-$$X_t = \theta G_t + \sigma W_{G_t}, \qquad G_t \sim \text{Gamma}(t/\nu,\;\nu)$$
+$$X_t = \theta G_t + \sigma W_{G_t}, \qquad G_t \sim \text{Gamma}(t/\nu, \nu)$$
 
 The result is a pure-jump process with infinite activity and finite variation. Tail thickness and skew are controlled separately through $\sigma$, $\nu$, and $\theta$.
 
@@ -126,7 +126,7 @@ The characteristic function is:
 
 $$\varphi_{\text{VG}}(u) = \left(1 - iu\theta\nu + \tfrac{1}{2}\sigma^2\nu u^2\right)^{-T/\nu}$$
 
-No ODEs, no branch cuts — a few lines of NumPy. This is one of the two models Carr and Madan use in their original paper to validate the FFT method, so we have exact reference prices to check against from day one. It's the right first test that the engine is wired up correctly.
+No ODEs, no branch cuts — a few lines of NumPy. This is one of the two models Carr and Madan use in their original paper to validate the FFT method, so we have exact reference prices to check against from day one.
 
 ---
 
@@ -136,11 +136,11 @@ No ODEs, no branch cuts — a few lines of NumPy. This is one of the two models 
 
 Kou keeps the Black-Scholes diffusion and adds a compound Poisson jump process where jump sizes follow an asymmetric double-exponential: upward jumps have rate $\eta_1$, downward jumps have rate $\eta_2$, and $p$ controls the fraction of up-jumps.
 
-$$\frac{dS}{S} = (r - \lambda\zeta)\,dt + \sigma\,dW + dJ$$
+$$\frac{dS}{S} = (r - \lambda\zeta) \, dt + \sigma \, dW + dJ$$
 
 The characteristic function is:
 
-$$\varphi_{\text{Kou}}(u) = \exp\!\left(T\!\left[iur - \tfrac{1}{2}u^2\sigma^2 + \lambda\!\left(\frac{p\eta_1}{\eta_1 - iu} + \frac{(1-p)\eta_2}{\eta_2 + iu} - 1\right)\right]\right)$$
+$$\varphi_{\text{Kou}}(u) = \exp\left(T\left[iur - \tfrac{1}{2}u^2\sigma^2 + \lambda\left(\frac{p\eta_1}{\eta_1 - iu} + \frac{(1-p)\eta_2}{\eta_2 + iu} - 1\right)\right]\right)$$
 
 The poles at $u = -i\eta_1$ and $u = i\eta_2$ sit off the real axis for physical parameters. Kou sits between Heston and VG: it has a diffusion component, but with discrete jumps. The asymmetric jump structure directly encodes the observation that equity crashes are sharper and faster than rallies.
 
@@ -217,11 +217,11 @@ fourier-option-pricer/
 │       │   └── cos.py                          # Fourier-cosine series, exponential convergence
 │       │
 │       ├── greeks/                             [orig]
-│       │   └── fourier_greeks.py               # Delta/Gamma/Vega via ∂CF/∂S — one FFT call
+│       │   └── fourier_greeks.py               # Delta/Gamma/Vega via dCF/dS — one FFT call
 │       │
 │       ├── surface/                            [new]
 │       │   ├── implied_vol.py                  # Newton/Brent IV inversion (Module 2)
-│       │   ├── vol_surface.py                  # FFT prices → IV grid → surface plot
+│       │   ├── vol_surface.py                  # FFT prices -> IV grid -> surface plot
 │       │   └── calibration.py                  # scipy minimize, fit model to market strikes
 │       │
 │       ├── exotic/                             [new]
@@ -233,7 +233,7 @@ fourier-option-pricer/
 │       │
 │       ├── market/                             [new]
 │       │   ├── loader.py                       # yfinance SPX options pull + cleaning
-│       │   └── pyfeng_adapter.py               # wrap PyFENG model → CharFunc protocol
+│       │   └── pyfeng_adapter.py               # wrap PyFENG model -> CharFunc protocol
 │       │
 │       └── utils/                              [core]
 │           ├── cumulants.py                    # COS truncation range [a,b] from cumulants
@@ -241,9 +241,9 @@ fourier-option-pricer/
 │
 ├── tests/
 │   ├── conftest.py                             # shared fixtures, reference price constants
-│   ├── test_carr_madan_vg.py                   # [paper] CM1999 Cases 1–4 exact prices
-│   ├── test_cos_heston.py                      # [paper] FO2008 Table 1, violated Feller condition
-│   ├── test_lewis_benchmark.py                 # [paper] 15-digit Heston prices, Lewis (2001)
+│   ├── test_carr_madan_vg.py                   # [paper] CM1999 Cases 1-4 exact prices
+│   ├── test_cos_heston.py                      # [paper] FO2008 Table 1, violated Feller
+│   ├── test_lewis_benchmark.py                 # [paper] 15-digit Heston prices
 │   ├── test_greeks.py                          # [orig]  analytical vs finite-difference greeks
 │   ├── test_put_call_parity.py                 # [core]  robustness: extreme strikes, short T
 │   ├── test_asian.py                           # [new]   Benhamou vs Module 6 MC pricer
@@ -252,7 +252,7 @@ fourier-option-pricer/
 ├── notebooks/
 │   ├── 01_mc_baseline.ipynb                    # [core]  course MC timing curves — the baseline
 │   ├── 02_carr_madan.ipynb                     # [paper] FFT demo + CM1999 replication
-│   ├── 03_frft_vs_fft.ipynb                    # [paper] Chourdakis accuracy/speed head-to-head
+│   ├── 03_frft_vs_fft.ipynb                    # [paper] Chourdakis accuracy/speed comparison
 │   ├── 04_cos_method.ipynb                     # [paper] FO2008 Table 1 replication
 │   ├── 05_fourier_greeks.ipynb                 # [orig]  Delta/Vega vs bump-and-reprice
 │   ├── 06_fft_control_variate.ipynb            # [orig]  MC + FFT as control variate
@@ -284,7 +284,7 @@ class CharFunc(Protocol):
         ...
 ```
 
-Any model that satisfies this gets the full engine for free. The two `[orig]` modules — `greeks/` and `control_variate/` — are where the project goes beyond replication. Fourier Greeks give you Delta, Gamma, and Vega from a single FFT call by differentiating the characteristic function analytically; the control variate module uses the FFT price as the exact control variate for the MC pricer, directly connecting Module 5 theory to the Fourier engine and yielding >0.99 correlation between the two estimators.
+Any model that satisfies this gets the full engine for free. The two `[orig]` modules — `greeks/` and `control_variate/` — are where the project goes beyond replication. Fourier Greeks give you Delta, Gamma, and Vega from a single FFT call by differentiating the characteristic function analytically; the control variate module uses the FFT price as the exact control variate for the MC pricer, directly connecting Module 5 theory to the Fourier engine.
 
 ---
 
