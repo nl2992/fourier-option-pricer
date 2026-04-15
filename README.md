@@ -1,10 +1,10 @@
 # fourier-option-pricer
 
-> Fast European and Asian option pricing via FFT, Fractional FFT, and COS, model-agnostic, benchmarked against Monte Carlo, and designed to integrate with [PyFENG](https://github.com/PyFE/PyFENG).
+> Fast European and Asian option pricing via FFT, Fractional FFT, and COS — model-agnostic, benchmarked against Monte Carlo, and designed to integrate with [PyFENG](https://github.com/PyFE/PyFENG).
 
 ---
 
-The idea is that if your model gives you a characteristic function, you shouldn't need to run tens of thousands of Monte Carlo paths every time you want to price a smile. This project implements three Fourier-based pricing methods, plugs them into three models (Heston, Variance Gamma, and Kou), and packages everything cleanly so it can work alongside PyFENG or stand alone on PyPI.
+If your model gives you a characteristic function, you shouldn't need to run tens of thousands of Monte Carlo paths every time you want to price a smile. This project implements three Fourier-based pricing methods, plugs them into three models (Heston, Variance Gamma, and Kou), and packages everything cleanly so it can work alongside PyFENG or stand alone on PyPI.
 
 The short version: $O(N \cdot n)$ for pricing $N$ strikes one-by-one becomes $O(n \log n)$ for the whole strip at once. That difference matters a lot when you're running a calibration loop.
 
@@ -12,7 +12,7 @@ The short version: $O(N \cdot n)$ for pricing $N$ strikes one-by-one becomes $O(
 
 ## Why Monte Carlo isn't enough for calibration
 
-On a trading desk, you're not pricing a single option in isolation, you're fitting a model to a strip of 50–200 strikes across multiple maturities, and you're doing that fit hundreds of times as the calibration iterates. MC works fine for a one-off price, but its convergence rate creates a compounding problem.
+On a trading desk, you're not pricing a single option in isolation — you're fitting a model to a strip of 50–200 strikes across multiple maturities, and you're doing that fit hundreds of times as the calibration iterates. MC works fine for a one-off price, but its convergence rate creates a compounding problem.
 
 The fundamental result from MATH5030 Module 5: the MC estimator satisfies
 
@@ -34,13 +34,14 @@ Deterministic lattice methods converge faster at $\varepsilon \propto n^{-2/D}$ 
 
 The characteristic function of a model is
 
-$$\varphi(u) = \mathbb{E}^{\mathbb{Q}}\!\left[e^{iu \log(S_T/F_0)}\right]$$,
+$$\varphi(u) = \mathbb{E}^{\mathbb{Q}}\!\left[e^{iu \log(S_T/F_0)}\right]$$
 
- the Fourier transform of the risk-neutral log-return distribution. For Heston, Variance Gamma, Kou, and several other models used in practice, this is available in closed form. And once you have it, you can write the call price as a Fourier integral and evaluate that integral without simulating a single path.
+— the Fourier transform of the risk-neutral log-return distribution. For Heston, Variance Gamma, Kou, and several other models used in practice, this is available in closed form. And once you have it, you can write the call price as a Fourier integral and evaluate that integral without simulating a single path.
 
 Pricing $N$ strikes one at a time via numerical integration costs $O(N \cdot n)$ — $n$ quadrature points each time, repeated $N$ times. But the integral has the structure of a Fourier transform evaluated on an evenly-spaced grid, so you can compute all $N$ prices simultaneously via FFT in $O(n \log n)$, regardless of $N$.
 
-That's the entire idea. The implementation follows.
+That's the entire idea. The implementation details are what this project is about.
+
 ---
 
 ## Methods
@@ -196,35 +197,78 @@ Target: COS within $10^{-6}$, Carr-Madan within $10^{-4}$.
 
 ## Architecture
 
+> `[paper]` direct replication &nbsp;&nbsp;·&nbsp;&nbsp; `[core]` engine scaffolding &nbsp;&nbsp;·&nbsp;&nbsp; `[new]` beyond the papers &nbsp;&nbsp;·&nbsp;&nbsp; `[orig]` original contribution
+
 ```
 fourier-option-pricer/
+│
 ├── src/
 │   └── foureng/
-│       ├── char_func/
-│       │   ├── base.py              # CharFunc protocol
-│       │   ├── heston.py            # Albrecher Formulation 2
-│       │   ├── variance_gamma.py
-│       │   └── kou.py
-│       ├── pricers/
-│       │   ├── carr_madan.py        # FFT, Simpson weights
-│       │   ├── frft.py              # Fractional FFT via Bluestein
-│       │   └── cos.py               # Fourier-cosine series
-│       ├── asian/
-│       │   └── benhamou.py          # FFT convolution, discrete Asian
-│       └── utils/
-│           ├── implied_vol.py       # Newton/Brent inversion (Module 2)
-│           └── cumulants.py         # COS truncation range from cumulants
+│       │
+│       ├── char_func/                          [paper]
+│       │   ├── base.py                         # CharFunc protocol — the only public contract
+│       │   ├── heston.py                       # Albrecher Formulation 2, branch-cut safe
+│       │   ├── variance_gamma.py               # 3 params, no ODEs, no branch cuts
+│       │   └── kou.py                          # double-exponential jump diffusion
+│       │
+│       ├── pricers/                            [paper]
+│       │   ├── carr_madan.py                   # FFT + Simpson weights, Nyquist constraint
+│       │   ├── frft.py                         # Bluestein chirp-z, decouples η and λ
+│       │   └── cos.py                          # Fourier-cosine series, exponential convergence
+│       │
+│       ├── greeks/                             [orig]
+│       │   └── fourier_greeks.py               # Delta/Gamma/Vega via ∂CF/∂S — one FFT call
+│       │
+│       ├── surface/                            [new]
+│       │   ├── implied_vol.py                  # Newton/Brent IV inversion (Module 2)
+│       │   ├── vol_surface.py                  # FFT prices → IV grid → surface plot
+│       │   └── calibration.py                  # scipy minimize, fit model to market strikes
+│       │
+│       ├── exotic/                             [new]
+│       │   ├── asian_fft.py                    # Benhamou 2002 convolution — O(N·n log n)
+│       │   └── variance_swap.py                # fair strike via CF second moment (Module 8)
+│       │
+│       ├── control_variate/                    [orig]
+│       │   └── fft_cv.py                       # FFT price as MC control variate (Module 5)
+│       │
+│       ├── market/                             [new]
+│       │   ├── loader.py                       # yfinance SPX options pull + cleaning
+│       │   └── pyfeng_adapter.py               # wrap PyFENG model → CharFunc protocol
+│       │
+│       └── utils/                              [core]
+│           ├── cumulants.py                    # COS truncation range [a,b] from cumulants
+│           └── grid.py                         # FFT/FRFT grid construction helpers
+│
 ├── tests/
-│   ├── test_carr_madan_vg.py        # CM1999 table replication
-│   ├── test_cos_heston.py           # FO2008 Table 1 replication
-│   └── test_lewis_benchmark.py      # 15-digit Heston prices
+│   ├── conftest.py                             # shared fixtures, reference price constants
+│   ├── test_carr_madan_vg.py                   # [paper] CM1999 Cases 1–4 exact prices
+│   ├── test_cos_heston.py                      # [paper] FO2008 Table 1, violated Feller condition
+│   ├── test_lewis_benchmark.py                 # [paper] 15-digit Heston prices, Lewis (2001)
+│   ├── test_greeks.py                          # [orig]  analytical vs finite-difference greeks
+│   ├── test_put_call_parity.py                 # [core]  robustness: extreme strikes, short T
+│   ├── test_asian.py                           # [new]   Benhamou vs Module 6 MC pricer
+│   └── test_variance_swap.py                   # [new]   CF fair strike vs Module 8 formula
+│
 ├── notebooks/
-│   ├── 01_mc_baseline.ipynb         # Course MC code + timing curves
-│   ├── 02_carr_madan.ipynb
-│   ├── 03_frft_vs_fft.ipynb         # Accuracy/speed comparison
-│   ├── 04_cos_method.ipynb
-│   └── 05_full_benchmark.ipynb      # Final comparison table
+│   ├── 01_mc_baseline.ipynb                    # [core]  course MC timing curves — the baseline
+│   ├── 02_carr_madan.ipynb                     # [paper] FFT demo + CM1999 replication
+│   ├── 03_frft_vs_fft.ipynb                    # [paper] Chourdakis accuracy/speed head-to-head
+│   ├── 04_cos_method.ipynb                     # [paper] FO2008 Table 1 replication
+│   ├── 05_fourier_greeks.ipynb                 # [orig]  Delta/Vega vs bump-and-reprice
+│   ├── 06_fft_control_variate.ipynb            # [orig]  MC + FFT as control variate
+│   ├── 07_spx_calibration.ipynb                # [new]   real market data, Heston + VG fit
+│   ├── 08_asian_options.ipynb                  # [new]   Benhamou convolution vs course MC
+│   └── 09_full_benchmark.ipynb                 # [core]  final comparison table
+│
+├── benchmarks/
+│   ├── time_strikes.py                         # wall-clock vs N strikes for all methods
+│   └── error_vs_n.py                           # max abs error vs N grid points
+│
+├── data/
+│   └── spx_sample.csv                          # cached SPX option chain for reproducibility
+│
 ├── pyproject.toml
+├── CONTRIBUTING.md                             # how to add a model + PyFENG PR guidelines
 └── README.md
 ```
 
@@ -240,7 +284,7 @@ class CharFunc(Protocol):
         ...
 ```
 
-Any model that satisfies this gets the full engine for free.
+Any model that satisfies this gets the full engine for free. The two `[orig]` modules — `greeks/` and `control_variate/` — are where the project goes beyond replication. Fourier Greeks give you Delta, Gamma, and Vega from a single FFT call by differentiating the characteristic function analytically; the control variate module uses the FFT price as the exact control variate for the MC pricer, directly connecting Module 5 theory to the Fourier engine and yielding >0.99 correlation between the two estimators.
 
 ---
 
