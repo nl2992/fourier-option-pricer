@@ -21,24 +21,23 @@ References
   processes in financial mathematics", *Stochastic Processes and their
   Applications*, 118(2), 261–283.
 """
+
 from __future__ import annotations
 
 import numpy as np
 import pytest
 
+from foureng.models.base import ForwardSpec
 from foureng.models.bilateral_gamma import (
     BilateralGammaParams,
     bilateral_gamma_cf,
     bilateral_gamma_cumulants,
-    _bg_omega,
 )
-from foureng.models.base import ForwardSpec
-from foureng.pricers.lewis import lewis_call_prices
+from foureng.pricers.carr_madan import carr_madan_price_at_strikes
 from foureng.pricers.cos import cos_auto_grid, cos_prices
 from foureng.pricers.frft import frft_price_at_strikes
-from foureng.pricers.carr_madan import carr_madan_price_at_strikes
+from foureng.pricers.lewis import lewis_call_prices
 from foureng.utils.grids import FFTGrid, FRFTGrid
-
 
 pytestmark = [pytest.mark.paper, pytest.mark.derived_reference]
 
@@ -64,13 +63,13 @@ def bench():
 def lewis_ref(bench):
     p, fwd = bench
     phi = lambda u: bilateral_gamma_cf(u, fwd, p)
-    return lewis_call_prices(phi, STRIKES, spot=fwd.S0, texp=fwd.T,
-                             intr=fwd.r, divr=fwd.q)
+    return lewis_call_prices(phi, STRIKES, spot=fwd.S0, texp=fwd.T, intr=fwd.r, divr=fwd.q)
 
 
 # ---------------------------------------------------------------------------
 # Layer 1: Analytic benchmarks
 # ---------------------------------------------------------------------------
+
 
 class TestBGAnalyticBenchmarks:
     """Closed-form properties of the BG CF."""
@@ -85,8 +84,9 @@ class TestBGAnalyticBenchmarks:
         """phi(-i) = 1, i.e. E[S_T/F_0] = 1."""
         p, fwd = bench
         phi_neg_i = bilateral_gamma_cf(np.array([-1j]), fwd, p)
-        np.testing.assert_allclose(abs(phi_neg_i[0] - 1.0), 0.0, atol=1e-12,
-                                   err_msg="BG martingale phi(-i)=1")
+        np.testing.assert_allclose(
+            abs(phi_neg_i[0] - 1.0), 0.0, atol=1e-12, err_msg="BG martingale phi(-i)=1"
+        )
 
     def test_cumulant_c2_formula(self, bench):
         """c2 = T*(alpha_p/lambda_p^2 + alpha_m/lambda_m^2)."""
@@ -113,13 +113,15 @@ class TestBGAnalyticBenchmarks:
         fwd = _FWD_BENCH
         # With equal params, the process is symmetric: upward and downward are mirror
         phi_neg_i = bilateral_gamma_cf(np.array([-1j]), fwd, p)
-        np.testing.assert_allclose(abs(phi_neg_i[0] - 1.0), 0.0, atol=1e-12,
-                                   err_msg="Symmetric BG: phi(-i)=1")
+        np.testing.assert_allclose(
+            abs(phi_neg_i[0] - 1.0), 0.0, atol=1e-12, err_msg="Symmetric BG: phi(-i)=1"
+        )
 
 
 # ---------------------------------------------------------------------------
 # Layer 2: Cross-engine agreement
 # ---------------------------------------------------------------------------
+
 
 class TestBGCrossEngine:
     """All pricers must agree with the Lewis reference to atol=1e-4."""
@@ -130,24 +132,21 @@ class TestBGCrossEngine:
         cums = bilateral_gamma_cumulants(fwd, p)
         grid = cos_auto_grid(cums, N=512, L=12.0)
         res = cos_prices(phi, fwd, STRIKES, grid)
-        np.testing.assert_allclose(res.call_prices, lewis_ref, atol=1e-4,
-                                   err_msg="COS vs Lewis")
+        np.testing.assert_allclose(res.call_prices, lewis_ref, atol=1e-4, err_msg="COS vs Lewis")
 
     def test_carr_madan_vs_lewis(self, bench, lewis_ref):
         p, fwd = bench
         phi = lambda u: bilateral_gamma_cf(u, fwd, p)
         grid = FFTGrid(N=4096, eta=0.25, alpha=1.5)
         prices = carr_madan_price_at_strikes(phi, fwd, grid, STRIKES)
-        np.testing.assert_allclose(prices, lewis_ref, atol=1e-4,
-                                   err_msg="Carr-Madan vs Lewis")
+        np.testing.assert_allclose(prices, lewis_ref, atol=1e-4, err_msg="Carr-Madan vs Lewis")
 
     def test_frft_vs_lewis(self, bench, lewis_ref):
         p, fwd = bench
         phi = lambda u: bilateral_gamma_cf(u, fwd, p)
         grid = FRFTGrid(N=4096, eta=0.25, alpha=1.5, lam=0.01)
         prices = frft_price_at_strikes(phi, fwd, grid, STRIKES)
-        np.testing.assert_allclose(prices, lewis_ref, atol=1e-4,
-                                   err_msg="FRFT vs Lewis")
+        np.testing.assert_allclose(prices, lewis_ref, atol=1e-4, err_msg="FRFT vs Lewis")
 
     @pytest.mark.parametrize("K", [85.0, 90.0, 100.0, 110.0, 115.0])
     def test_cos_vs_lewis_per_strike(self, K):
@@ -155,18 +154,19 @@ class TestBGCrossEngine:
         fwd = _FWD_BENCH
         phi = lambda u: bilateral_gamma_cf(u, fwd, p)
         strikes = np.array([K])
-        lewis = lewis_call_prices(phi, strikes, spot=fwd.S0, texp=fwd.T,
-                                  intr=fwd.r, divr=fwd.q)
+        lewis = lewis_call_prices(phi, strikes, spot=fwd.S0, texp=fwd.T, intr=fwd.r, divr=fwd.q)
         cums = bilateral_gamma_cumulants(fwd, p)
         grid = cos_auto_grid(cums, N=512, L=12.0)
         res = cos_prices(phi, fwd, strikes, grid)
-        np.testing.assert_allclose(res.call_prices, lewis, atol=1e-4,
-                                   err_msg=f"COS vs Lewis at K={K}")
+        np.testing.assert_allclose(
+            res.call_prices, lewis, atol=1e-4, err_msg=f"COS vs Lewis at K={K}"
+        )
 
 
 # ---------------------------------------------------------------------------
 # Layer 3: Structural tests
 # ---------------------------------------------------------------------------
+
 
 class TestBGStructural:
     """CF properties and no-arbitrage bounds."""
@@ -176,8 +176,9 @@ class TestBGStructural:
         p, fwd = bench
         u_grid = np.linspace(-20, 20, 401)
         phi = bilateral_gamma_cf(u_grid, fwd, p)
-        assert np.all(np.abs(phi) <= 1.0 + 1e-12), \
+        assert np.all(np.abs(phi) <= 1.0 + 1e-12), (
             f"|phi|>1 at some u: max={np.max(np.abs(phi)):.6f}"
+        )
 
     def test_cumulants_positive_variance(self, bench):
         """Second cumulant (variance) must be positive."""
@@ -190,8 +191,7 @@ class TestBGStructural:
         """Call prices >= max(F-K, 0)."""
         p, fwd = bench
         intrinsic = np.maximum(fwd.F0 - STRIKES, 0.0)
-        assert np.all(lewis_ref >= intrinsic - 1e-6), \
-            "Call price below intrinsic value"
+        assert np.all(lewis_ref >= intrinsic - 1e-6), "Call price below intrinsic value"
 
     def test_call_le_spot(self, bench, lewis_ref):
         """Call prices <= spot."""
@@ -204,8 +204,7 @@ class TestBGStructural:
 
     def test_prices_monotone_decreasing(self, lewis_ref):
         """Calls are monotone decreasing in strike."""
-        assert np.all(np.diff(lewis_ref) < 0), \
-            f"Call prices not monotone in strike: {lewis_ref}"
+        assert np.all(np.diff(lewis_ref) < 0), f"Call prices not monotone in strike: {lewis_ref}"
 
     def test_price_increases_with_alpha_p(self):
         """Higher alpha_p (more upward jump intensity) → higher ATM prices."""
@@ -221,8 +220,9 @@ class TestBGStructural:
 
         p_lo = price_at_ap(0.5)
         p_hi = price_at_ap(2.0)
-        assert p_hi > p_lo, \
+        assert p_hi > p_lo, (
             f"ATM price should increase with alpha_p: 0.5→{p_lo:.4f}, 2.0→{p_hi:.4f}"
+        )
 
     def test_price_increases_with_alpha_m(self):
         """Higher alpha_m (more downward jump intensity) → higher ATM prices.
@@ -242,5 +242,6 @@ class TestBGStructural:
 
         p_lo = price_at_am(0.3)
         p_hi = price_at_am(1.5)
-        assert p_hi > p_lo, \
+        assert p_hi > p_lo, (
             f"ATM price should increase with alpha_m: 0.3→{p_lo:.4f}, 1.5→{p_hi:.4f}"
+        )

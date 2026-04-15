@@ -10,6 +10,7 @@ Covers:
 - N=1 edge case: returns [1.0] for any filter.
 - sigma[0] = 1 for every filter.
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -17,13 +18,13 @@ import pytest
 
 from foureng.utils.spectral_filters import COSFilterSpec, cos_filter_weights
 
-
 pytestmark = [pytest.mark.numerical_stability]
 
 
 # ---------------------------------------------------------------------------
 # Parametrised shape / finiteness / sigma_0 = 1
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.parametrize("name", ["none", "fejer", "lanczos", "raised_cosine", "exponential"])
 def test_cos_filter_weights_shape_and_finiteness(name):
@@ -46,6 +47,7 @@ def test_filter_sigma0_exactly_one(name):
 # None → identity
 # ---------------------------------------------------------------------------
 
+
 def test_none_filter_is_identity():
     """COSFilterSpec('none') must return np.ones(N)."""
     w = cos_filter_weights(32, COSFilterSpec("none"))
@@ -63,6 +65,7 @@ def test_none_filter_via_spec_none():
 # Exponential filter properties
 # ---------------------------------------------------------------------------
 
+
 def test_exponential_filter_damps_high_frequency_terms():
     """Exponential filter: w[0]=1, w[-1]<1e-8, all values in [0,1]."""
     w = cos_filter_weights(128, COSFilterSpec("exponential", order=8))
@@ -74,7 +77,7 @@ def test_exponential_filter_damps_high_frequency_terms():
 
 def test_exponential_filter_order_4_less_aggressive_than_order_12():
     """Higher order → more aggressive high-frequency damping."""
-    w4  = cos_filter_weights(128, COSFilterSpec("exponential", order=4))
+    w4 = cos_filter_weights(128, COSFilterSpec("exponential", order=4))
     w12 = cos_filter_weights(128, COSFilterSpec("exponential", order=12))
     # At mid-range frequency (k≈N//2), higher order should damp less
     mid = 128 // 2
@@ -104,13 +107,12 @@ def test_exponential_filter_bad_order_raises():
 # Fejér filter properties
 # ---------------------------------------------------------------------------
 
+
 def test_fejer_filter_is_monotone_decreasing():
     """Fejér (first-order Cesàro) weights are non-increasing."""
     w = cos_filter_weights(128, COSFilterSpec("fejer"))
     diffs = np.diff(w)
-    assert np.all(diffs <= 1e-15), (
-        f"Fejér weights not monotone: max diff = {diffs.max():.3e}"
-    )
+    assert np.all(diffs <= 1e-15), f"Fejér weights not monotone: max diff = {diffs.max():.3e}"
 
 
 def test_fejer_filter_last_value():
@@ -122,6 +124,7 @@ def test_fejer_filter_last_value():
 # ---------------------------------------------------------------------------
 # Lanczos filter properties
 # ---------------------------------------------------------------------------
+
 
 def test_lanczos_filter_first_few_values():
     """Lanczos filter: w[0]=1, w[1]=sinc(1/(N-1)) close to 1."""
@@ -136,6 +139,7 @@ def test_lanczos_filter_first_few_values():
 # Raised-cosine filter properties
 # ---------------------------------------------------------------------------
 
+
 def test_raised_cosine_filter_endpoints():
     """Raised-cosine: w[0] = 1, w[-1] = 0."""
     w = cos_filter_weights(64, COSFilterSpec("raised_cosine"))
@@ -146,6 +150,7 @@ def test_raised_cosine_filter_endpoints():
 # ---------------------------------------------------------------------------
 # N=1 edge case
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.parametrize("name", ["none", "fejer", "lanczos", "raised_cosine", "exponential"])
 def test_n1_returns_one(name):
@@ -158,6 +163,7 @@ def test_n1_returns_one(name):
 # ---------------------------------------------------------------------------
 # Invalid N
 # ---------------------------------------------------------------------------
+
 
 def test_invalid_N_raises():
     """N=0 and N<0 must raise ValueError."""
@@ -172,6 +178,7 @@ def test_invalid_N_raises():
 # Unknown filter name
 # ---------------------------------------------------------------------------
 
+
 def test_unknown_filter_name_raises():
     """Unrecognised filter name must raise ValueError."""
     spec = COSFilterSpec(name="butterworth")  # type: ignore[arg-type]
@@ -182,6 +189,7 @@ def test_unknown_filter_name_raises():
 # ---------------------------------------------------------------------------
 # Large N stability
 # ---------------------------------------------------------------------------
+
 
 def test_large_N_no_overflow():
     """Filter weights for large N should remain finite."""

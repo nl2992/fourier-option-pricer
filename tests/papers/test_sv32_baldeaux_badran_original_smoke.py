@@ -16,6 +16,7 @@ Baldeaux, J. & Badran, A. (2012), "Consistent Modelling of VIX and Equity
 Derivatives Using a 3/2 plus Jumps Model", working paper. Figure parameters:
 v0=0.0016, kappa=19.45, theta=0.04, nu=0.28, rho=-0.72, T=9/365.
 """
+
 from __future__ import annotations
 
 import warnings
@@ -57,9 +58,7 @@ def test_sv32_baldeaux_badran_original_params_shape():
             "short-maturity parameters: prices are NaN or negative."
         )
 
-    assert np.all(np.diff(prices) <= 1e-8), (
-        f"Call prices not monotone decreasing: {prices}"
-    )
+    assert np.all(np.diff(prices) <= 1e-8), f"Call prices not monotone decreasing: {prices}"
     assert np.all(prices[:-2] - 2 * prices[1:-1] + prices[2:] >= -1e-8), (
         f"Call prices not convex in strike: {prices}"
     )

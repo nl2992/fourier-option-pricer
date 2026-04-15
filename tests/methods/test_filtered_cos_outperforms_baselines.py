@@ -30,22 +30,23 @@ Stress cases
 - VG at T=0.1  (infinite-activity jumps, short maturity)
 - CGMY Y=0.5 at T=0.25  (semi-heavy tails)
 """
+
 from __future__ import annotations
 
 import numpy as np
 import pytest
 
+from foureng.experiments.cos_filter_grid_search import (
+    FilterGridCandidate,
+    run_filtered_cos_grid_search,
+    select_fastest_under_tolerance,
+)
 from foureng.models.base import ForwardSpec
 from foureng.models.variance_gamma import VGParams
 from foureng.pipeline import price_strip
 from foureng.pricers.cos import recommended_cos_policy
 from foureng.utils.grids import COSGridPolicy
 from foureng.utils.spectral_filters import COSFilterSpec
-from foureng.experiments.cos_filter_grid_search import (
-    FilterGridCandidate,
-    run_filtered_cos_grid_search,
-    select_fastest_under_tolerance,
-)
 
 pytestmark = [pytest.mark.numerical_stability]
 
@@ -53,11 +54,11 @@ pytestmark = [pytest.mark.numerical_stability]
 def _make_candidate_set(policy: COSGridPolicy) -> list[FilterGridCandidate]:
     """Standard candidate set: Junike-no-filter + four filter variants."""
     return [
-        FilterGridCandidate("junike_no_filter",    policy, None),
-        FilterGridCandidate("junike_exp_p4",        policy, COSFilterSpec("exponential", order=4)),
-        FilterGridCandidate("junike_exp_p8",        policy, COSFilterSpec("exponential", order=8)),
-        FilterGridCandidate("junike_lanczos",       policy, COSFilterSpec("lanczos")),
-        FilterGridCandidate("junike_fejer",         policy, COSFilterSpec("fejer")),
+        FilterGridCandidate("junike_no_filter", policy, None),
+        FilterGridCandidate("junike_exp_p4", policy, COSFilterSpec("exponential", order=4)),
+        FilterGridCandidate("junike_exp_p8", policy, COSFilterSpec("exponential", order=8)),
+        FilterGridCandidate("junike_lanczos", policy, COSFilterSpec("lanczos")),
+        FilterGridCandidate("junike_fejer", policy, COSFilterSpec("fejer")),
     ]
 
 
@@ -77,8 +78,8 @@ def test_adaptive_filtered_cos_on_vg_stress_case():
         (selector falls back to lowest-error; Junike-no-filter is a candidate).
     (c) All 5 candidates produced finite, non-negative prices (sanity).
     """
-    fwd    = ForwardSpec(S0=100.0, r=0.1, q=0.0, T=0.1)
-    p      = VGParams(sigma=0.12, nu=0.2, theta=-0.14)
+    fwd = ForwardSpec(S0=100.0, r=0.1, q=0.0, T=0.1)
+    p = VGParams(sigma=0.12, nu=0.2, theta=-0.14)
     strikes = np.linspace(70.0, 130.0, 25)
 
     # ── High-resolution oracle ─────────────────────────────────────────────────
@@ -102,7 +103,7 @@ def test_adaptive_filtered_cos_on_vg_stress_case():
     err_junike = float(np.max(np.abs(junike - ref)))
 
     # ── Grid search ───────────────────────────────────────────────────────────
-    tol = max(err_junike * 10.0, 1e-5)   # tolerance relative to Junike quality
+    tol = max(err_junike * 10.0, 1e-5)  # tolerance relative to Junike quality
     candidates = _make_candidate_set(rec_policy)
 
     df = run_filtered_cos_grid_search(
@@ -116,10 +117,10 @@ def test_adaptive_filtered_cos_on_vg_stress_case():
         n_repeat=1,
     )
 
-    best         = select_fastest_under_tolerance(df, tol=tol)
+    best = select_fastest_under_tolerance(df, tol=tol)
     err_adaptive = float(best["max_abs_err"])
-    any_pass     = df["passes_tol"].any()
-    eps          = 1e-12
+    any_pass = df["passes_tol"].any()
+    eps = 1e-12
 
     # (a) tolerance guarantee
     if any_pass:
@@ -150,8 +151,8 @@ def test_adaptive_filtered_cos_on_cgmy_stress_case():
     """
     from foureng.models.cgmy import CgmyParams
 
-    fwd    = ForwardSpec(S0=100.0, r=0.04, q=0.0, T=0.25)
-    p      = CgmyParams(C=1.0, G=5.0, M=10.0, Y=0.5)
+    fwd = ForwardSpec(S0=100.0, r=0.04, q=0.0, T=0.25)
+    p = CgmyParams(C=1.0, G=5.0, M=10.0, Y=0.5)
     strikes = np.linspace(80.0, 120.0, 13)
 
     oracle_policy = COSGridPolicy(
@@ -168,10 +169,10 @@ def test_adaptive_filtered_cos_on_cgmy_stress_case():
 
     # Recommended policy for CGMY (Y<1 → tolerance, dx=0.03)
     rec_policy = recommended_cos_policy("cgmy", p, mode="benchmark")
-    junike     = price_strip("cgmy", "cos_improved", strikes, fwd, p, grid=rec_policy)
+    junike = price_strip("cgmy", "cos_improved", strikes, fwd, p, grid=rec_policy)
     err_junike = float(np.max(np.abs(junike - ref)))
 
-    tol        = max(err_junike * 10.0, 1e-5)
+    tol = max(err_junike * 10.0, 1e-5)
     candidates = _make_candidate_set(rec_policy)
 
     df = run_filtered_cos_grid_search(
@@ -185,10 +186,10 @@ def test_adaptive_filtered_cos_on_cgmy_stress_case():
         n_repeat=1,
     )
 
-    best         = select_fastest_under_tolerance(df, tol=tol)
+    best = select_fastest_under_tolerance(df, tol=tol)
     err_adaptive = float(best["max_abs_err"])
-    any_pass     = df["passes_tol"].any()
-    eps          = 1e-12
+    any_pass = df["passes_tol"].any()
+    eps = 1e-12
 
     if any_pass:
         assert err_adaptive <= tol + eps, (
@@ -217,8 +218,8 @@ def test_adaptive_selector_weak_dominance_over_fixed_policies():
     """
     from foureng.models.bsm import BsmParams
 
-    fwd    = ForwardSpec(S0=100.0, r=0.05, q=0.02, T=0.5)
-    p      = BsmParams(sigma=0.25)
+    fwd = ForwardSpec(S0=100.0, r=0.05, q=0.02, T=0.5)
+    p = BsmParams(sigma=0.25)
     strikes = np.linspace(85.0, 115.0, 13)
 
     # Oracle: tight tolerance, large N
@@ -246,7 +247,7 @@ def test_adaptive_selector_weak_dominance_over_fixed_policies():
     )
 
     candidates = _make_candidate_set(policy)
-    tol        = 1e-7
+    tol = 1e-7
 
     df = run_filtered_cos_grid_search(
         model="bsm",
@@ -259,10 +260,10 @@ def test_adaptive_selector_weak_dominance_over_fixed_policies():
         n_repeat=1,
     )
 
-    best         = select_fastest_under_tolerance(df, tol=tol)
+    best = select_fastest_under_tolerance(df, tol=tol)
     err_adaptive = float(best["max_abs_err"])
-    any_pass     = df["passes_tol"].any()
-    eps          = 1e-12
+    any_pass = df["passes_tol"].any()
+    eps = 1e-12
 
     # Tolerance guarantee
     if any_pass:

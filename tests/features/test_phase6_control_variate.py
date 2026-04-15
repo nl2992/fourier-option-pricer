@@ -8,15 +8,16 @@ Demonstrate:
   - Heston CV price agrees with the COS reference (the truth for Heston under
     our validation stack) to MC tolerance at 100k paths.
 """
-from __future__ import annotations
-import numpy as np
-import pytest
 
+from __future__ import annotations
+
+import numpy as np
+
+from foureng.iv.implied_vol import BSInputs, bs_price_from_fwd
+from foureng.mc.control_variate import bs_call_cv, heston_call_bs_control
 from foureng.models.base import ForwardSpec
 from foureng.models.heston import HestonParams, heston_cf_form2, heston_cumulants
-from foureng.pricers.cos import cos_prices, cos_auto_grid
-from foureng.iv.implied_vol import bs_price_from_fwd, BSInputs
-from foureng.mc.control_variate import bs_call_cv, heston_call_bs_control
+from foureng.pricers.cos import cos_auto_grid, cos_prices
 
 
 def test_bs_cv_reduces_variance():
@@ -41,8 +42,7 @@ def test_heston_bs_control_variance_reduction():
     S0, K, T, r, q = 100.0, 100.0, 0.5, 0.02, 0.0
     # Low vol-of-vol: Heston ~ BS, control correlation should be ~1.
     p = HestonParams(kappa=2.0, theta=0.04, nu=0.10, rho=-0.3, v0=0.04)
-    res = heston_call_bs_control(S0, K, T, r, q, p, n_paths=50_000,
-                                  n_steps=50, seed=7)
+    res = heston_call_bs_control(S0, K, T, r, q, p, n_paths=50_000, n_steps=50, seed=7)
     assert res.var_reduction >= 2.0, (
         f"Expected >=2x on low-vov Heston, got {res.var_reduction:.2f}x"
     )

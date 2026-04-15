@@ -1,10 +1,8 @@
 """Fang & Oosterlee (2008) paper-facing tests and replication assets."""
+
 from __future__ import annotations
 
-from pathlib import Path
-
 import numpy as np
-import pandas as pd
 import pytest
 
 from benchmarks.paper_replications.fo2008_cos.params import CASES
@@ -19,14 +17,13 @@ from foureng.models.heston import HestonParams, heston_cf_form2, heston_cumulant
 from foureng.pricers.cos import cos_auto_grid, cos_prices
 from foureng.refs.paper_refs import PAPER_ANCHORS
 from tests._paper_test_support import (
-    ROOT,
     FO2008_REPLAY_DF,
+    ROOT,
     assert_close,
     assert_valid_png,
     fo2008_row_error,
     row_id,
 )
-
 
 pytestmark = [pytest.mark.paper, pytest.mark.external_reference]
 
@@ -44,9 +41,7 @@ def test_cos_heston_fo2008(fo2008_heston):
     """FO2008 Table 1 Heston ATM call."""
     d = fo2008_heston
     fwd = ForwardSpec(S0=d["S0"], r=d["r"], q=d["q"], T=d["T"])
-    params = HestonParams(
-        kappa=d["kappa"], theta=d["theta"], nu=d["nu"], rho=d["rho"], v0=d["v0"]
-    )
+    params = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"], rho=d["rho"], v0=d["v0"])
     phi = lambda u: heston_cf_form2(u, fwd, params)
 
     grid = cos_auto_grid(heston_cumulants(fwd, params), N=256, L=10.0)
@@ -59,15 +54,15 @@ def test_cos_heston_fo2008_n_convergence(fo2008_heston):
     """FO2008 Heston case should show monotone N-convergence."""
     d = fo2008_heston
     fwd = ForwardSpec(S0=d["S0"], r=d["r"], q=d["q"], T=d["T"])
-    params = HestonParams(
-        kappa=d["kappa"], theta=d["theta"], nu=d["nu"], rho=d["rho"], v0=d["v0"]
-    )
+    params = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"], rho=d["rho"], v0=d["v0"])
     phi = lambda u: heston_cf_form2(u, fwd, params)
 
     errs = {}
     cums = heston_cumulants(fwd, params)
     for N in (64, 128, 192, 256):
-        price = cos_prices(phi, fwd, np.array([d["K"]]), cos_auto_grid(cums, N=N, L=10.0)).call_prices[0]
+        price = cos_prices(
+            phi, fwd, np.array([d["K"]]), cos_auto_grid(cums, N=N, L=10.0)
+        ).call_prices[0]
         errs[N] = abs(price - d["ref_call"])
 
     assert errs[128] < errs[64], f"not monotone: {errs}"
@@ -80,9 +75,7 @@ def test_cos_heston_fo2008_L_sensitivity(fo2008_heston):
     """FO2008 recommends L=10; the recommended-or-wider band should be stable."""
     d = fo2008_heston
     fwd = ForwardSpec(S0=d["S0"], r=d["r"], q=d["q"], T=d["T"])
-    params = HestonParams(
-        kappa=d["kappa"], theta=d["theta"], nu=d["nu"], rho=d["rho"], v0=d["v0"]
-    )
+    params = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"], rho=d["rho"], v0=d["v0"])
     phi = lambda u: heston_cf_form2(u, fwd, params)
 
     cums = heston_cumulants(fwd, params)

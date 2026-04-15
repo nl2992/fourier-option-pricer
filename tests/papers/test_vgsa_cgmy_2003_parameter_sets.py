@@ -31,6 +31,7 @@ FRFT reference calls (6 d.p.)
 
 Tolerance: 1e-3 (Carr-Madan FFT vs FRFT reference).
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -54,29 +55,30 @@ _TOL = 1e-3
 _SETS = {
     "set1": (
         VGSAParams(C=0.4, G=4.0, M=15.0, kappa=1.5, eta=0.9, lam=0.8),
-        np.array([11.867905,  7.315162,  3.012896,  0.375016,  0.135240]),
+        np.array([11.867905, 7.315162, 3.012896, 0.375016, 0.135240]),
     ),
     "set2": (
         VGSAParams(C=0.6, G=6.0, M=12.0, kappa=2.0, eta=1.2, lam=1.2),
-        np.array([11.676740,  7.134971,  2.935046,  0.698175,  0.320330]),
+        np.array([11.676740, 7.134971, 2.935046, 0.698175, 0.320330]),
     ),
     "set3": (
         VGSAParams(C=1.0, G=5.0, M=10.0, kappa=1.5, eta=1.0, lam=1.0),
-        np.array([12.177284,  7.840511,  3.894353,  1.350993,  0.706396]),
+        np.array([12.177284, 7.840511, 3.894353, 1.350993, 0.706396]),
     ),
     "set4": (
         VGSAParams(C=0.8, G=7.0, M=20.0, kappa=1.0, eta=0.8, lam=0.5),
-        np.array([11.558081,  6.980102,  2.749104,  0.356768,  0.102587]),
+        np.array([11.558081, 6.980102, 2.749104, 0.356768, 0.102587]),
     ),
 }
 
 _GRID_FRFT = FRFTGrid(N=4096, eta=0.25, lam=0.005, alpha=1.5)
-_GRID_CM   = FFTGrid(N=4096, eta=0.25, alpha=1.5)
+_GRID_CM = FFTGrid(N=4096, eta=0.25, alpha=1.5)
 
 
 # ---------------------------------------------------------------------------
 # Tests  -  one parametrized test per method per set
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.parametrize("name", list(_SETS.keys()))
 def test_vgsa_frft_calls(name):
@@ -84,8 +86,7 @@ def test_vgsa_frft_calls(name):
     calls = price_strip("vgsa", "frft", _STRIKES, _FWD, params, grid=_GRID_FRFT)
     err = float(np.max(np.abs(calls - ref)))
     assert err < _TOL, (
-        f"VGSA FRFT {name}: max|err| = {err:.3e} > {_TOL:.3e}\n"
-        f"  calls = {calls}\n  ref   = {ref}"
+        f"VGSA FRFT {name}: max|err| = {err:.3e} > {_TOL:.3e}\n  calls = {calls}\n  ref   = {ref}"
     )
 
 
@@ -96,8 +97,7 @@ def test_vgsa_carr_madan_calls(name):
     calls = price_strip("vgsa", "carr_madan", _STRIKES, _FWD, params, grid=_GRID_CM)
     err = float(np.max(np.abs(calls - ref)))
     assert err < _TOL, (
-        f"VGSA CM {name}: max|err| = {err:.3e} > {_TOL:.3e}\n"
-        f"  calls = {calls}\n  ref   = {ref}"
+        f"VGSA CM {name}: max|err| = {err:.3e} > {_TOL:.3e}\n  calls = {calls}\n  ref   = {ref}"
     )
 
 

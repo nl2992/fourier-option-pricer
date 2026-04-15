@@ -17,14 +17,16 @@ FRFT in as a second witness. Useful because Kou has a rational-CF pole
 structure that can bite damping-based methods but not COS, so disagreement
 patterns localise whether a bug is in the CF, the damping, or the truncation.
 """
+
 from __future__ import annotations
+
 import numpy as np
 import pytest
 
 from foureng.models.base import ForwardSpec
 from foureng.models.kou import KouParams, kou_cf, kou_cumulants
-from foureng.pricers.cos import cos_prices, cos_auto_grid
 from foureng.pricers.carr_madan import carr_madan_price_at_strikes
+from foureng.pricers.cos import cos_auto_grid, cos_prices
 from foureng.pricers.frft import frft_price_at_strikes
 from foureng.utils.grids import FFTGrid, FRFTGrid
 
@@ -37,21 +39,22 @@ def _strikes_around_forward(fwd: ForwardSpec, kmin: float, kmax: float, n: int) 
 # Eight regimes: low/moderate/high jump intensity plus a crash-heavy case,
 # each at two maturities. All satisfy eta1 > 1, eta2 > 0, so kou_cf accepts.
 KOU_CASES = [
-    dict(name="lowjump_T0p5",  T=0.5, sigma=0.20, lam=0.05, p=0.40, eta1=10.0, eta2=6.0),
-    dict(name="lowjump_T1",    T=1.0, sigma=0.20, lam=0.05, p=0.40, eta1=10.0, eta2=6.0),
-    dict(name="modjump_T0p5",  T=0.5, sigma=0.18, lam=0.30, p=0.40, eta1=10.0, eta2=6.0),
-    dict(name="modjump_T1",    T=1.0, sigma=0.18, lam=0.30, p=0.40, eta1=10.0, eta2=6.0),
+    dict(name="lowjump_T0p5", T=0.5, sigma=0.20, lam=0.05, p=0.40, eta1=10.0, eta2=6.0),
+    dict(name="lowjump_T1", T=1.0, sigma=0.20, lam=0.05, p=0.40, eta1=10.0, eta2=6.0),
+    dict(name="modjump_T0p5", T=0.5, sigma=0.18, lam=0.30, p=0.40, eta1=10.0, eta2=6.0),
+    dict(name="modjump_T1", T=1.0, sigma=0.18, lam=0.30, p=0.40, eta1=10.0, eta2=6.0),
     dict(name="highjump_T0p5", T=0.5, sigma=0.12, lam=0.80, p=0.40, eta1=12.0, eta2=7.0),
-    dict(name="highjump_T1",   T=1.0, sigma=0.12, lam=0.80, p=0.40, eta1=12.0, eta2=7.0),
-    dict(name="crash_T0p5",    T=0.5, sigma=0.15, lam=0.40, p=0.25, eta1=14.0, eta2=5.0),
-    dict(name="crash_T1",      T=1.0, sigma=0.15, lam=0.40, p=0.25, eta1=14.0, eta2=5.0),
+    dict(name="highjump_T1", T=1.0, sigma=0.12, lam=0.80, p=0.40, eta1=12.0, eta2=7.0),
+    dict(name="crash_T0p5", T=0.5, sigma=0.15, lam=0.40, p=0.25, eta1=14.0, eta2=5.0),
+    dict(name="crash_T1", T=1.0, sigma=0.15, lam=0.40, p=0.25, eta1=14.0, eta2=5.0),
 ]
 
 
 def _setup(case: dict):
     fwd = ForwardSpec(S0=100.0, r=0.02, q=0.0, T=case["T"])
-    p = KouParams(sigma=case["sigma"], lam=case["lam"], p=case["p"],
-                  eta1=case["eta1"], eta2=case["eta2"])
+    p = KouParams(
+        sigma=case["sigma"], lam=case["lam"], p=case["p"], eta1=case["eta1"], eta2=case["eta2"]
+    )
     phi = lambda u: kou_cf(u, fwd, p)
     return fwd, p, phi
 

@@ -3,24 +3,25 @@
 Every constructor that documents constraints must enforce them by raising
 ValueError on invalid inputs.
 """
+
 from __future__ import annotations
 
 import math
+
 import pytest
 
-from foureng.models.fmls import FMLSParams
-from foureng.models.meixner import MeixnerParams
 from foureng.models.bilateral_gamma import BilateralGammaParams
+from foureng.models.fmls import FMLSParams
 from foureng.models.generalized_hyperbolic import GHParams
+from foureng.models.meixner import MeixnerParams
 from foureng.models.merton_jd import MertonJDParams
-
 
 # ---------------------------------------------------------------------------
 # FMLSParams
 # ---------------------------------------------------------------------------
 
-class TestFMLSValidation:
 
+class TestFMLSValidation:
     def test_valid_params_accepted(self):
         p = FMLSParams(alpha=1.7, sigma=0.3)
         assert p.alpha == 1.7
@@ -44,8 +45,8 @@ class TestFMLSValidation:
 # MeixnerParams
 # ---------------------------------------------------------------------------
 
-class TestMeixnerValidation:
 
+class TestMeixnerValidation:
     def test_valid_params_accepted(self):
         p = MeixnerParams(a=0.4, b=-1.1, delta=0.35)
         assert p.a == 0.4
@@ -70,8 +71,8 @@ class TestMeixnerValidation:
 # BilateralGammaParams
 # ---------------------------------------------------------------------------
 
-class TestBilateralGammaValidation:
 
+class TestBilateralGammaValidation:
     def test_valid_params_accepted(self):
         p = BilateralGammaParams(alpha_p=1.0, lambda_p=5.0, alpha_m=0.8, lambda_m=4.0)
         assert p.alpha_p == 1.0
@@ -101,8 +102,8 @@ class TestBilateralGammaValidation:
 # GHParams
 # ---------------------------------------------------------------------------
 
-class TestGHValidation:
 
+class TestGHValidation:
     def test_valid_nig_params_accepted(self):
         p = GHParams(lam=-0.5, alpha=6.1882, beta=-3.8941, delta=0.1622)
         assert p.lam == -0.5
@@ -135,8 +136,8 @@ class TestGHValidation:
 # MertonJDParams
 # ---------------------------------------------------------------------------
 
-class TestMertonJDValidation:
 
+class TestMertonJDValidation:
     def test_valid_params_accepted(self):
         p = MertonJDParams(sigma=0.2, lam=0.5, muj=-0.1, sigj=0.15)
         assert p.sigma == 0.2

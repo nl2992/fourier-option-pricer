@@ -1,4 +1,5 @@
 """Lewis (2001) paper-facing tests."""
+
 from __future__ import annotations
 
 import numpy as np
@@ -10,16 +11,13 @@ from foureng.pricers.carr_madan import carr_madan_price_at_strikes
 from foureng.pricers.cos import cos_auto_grid, cos_prices
 from foureng.utils.grids import FFTGrid
 
-
 pytestmark = [pytest.mark.paper, pytest.mark.external_reference]
 
 
 def test_heston_carr_madan_lewis(lewis_heston):
     d = lewis_heston
     fwd = ForwardSpec(S0=d["S0"], r=d["r"], q=d["q"], T=d["T"])
-    params = HestonParams(
-        kappa=d["kappa"], theta=d["theta"], nu=d["nu"], rho=d["rho"], v0=d["v0"]
-    )
+    params = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"], rho=d["rho"], v0=d["v0"])
     phi = lambda u: heston_cf_form2(u, fwd, params)
 
     grid = FFTGrid(N=4096, eta=0.25, alpha=1.5)
@@ -32,9 +30,7 @@ def test_heston_atm_put_call_parity(lewis_heston):
     """Robustness: the Lewis strip should produce a sane ATM Heston price."""
     d = lewis_heston
     fwd = ForwardSpec(S0=d["S0"], r=d["r"], q=d["q"], T=d["T"])
-    params = HestonParams(
-        kappa=d["kappa"], theta=d["theta"], nu=d["nu"], rho=d["rho"], v0=d["v0"]
-    )
+    params = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"], rho=d["rho"], v0=d["v0"])
     phi = lambda u: heston_cf_form2(u, fwd, params)
 
     grid = FFTGrid(N=4096, eta=0.25, alpha=1.5)
@@ -46,9 +42,7 @@ def test_carr_madan_fft_grid_sensitivity(lewis_heston):
     """Minimum N to hit 1e-3 should stay at or below N=4096."""
     d = lewis_heston
     fwd = ForwardSpec(S0=d["S0"], r=d["r"], q=d["q"], T=d["T"])
-    params = HestonParams(
-        kappa=d["kappa"], theta=d["theta"], nu=d["nu"], rho=d["rho"], v0=d["v0"]
-    )
+    params = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"], rho=d["rho"], v0=d["v0"])
     phi = lambda u: heston_cf_form2(u, fwd, params)
 
     ok = False
@@ -65,9 +59,7 @@ def test_cos_lewis_heston(lewis_heston):
     """COS should hit the Lewis Heston strip to 1e-6 by N=128."""
     d = lewis_heston
     fwd = ForwardSpec(S0=d["S0"], r=d["r"], q=d["q"], T=d["T"])
-    params = HestonParams(
-        kappa=d["kappa"], theta=d["theta"], nu=d["nu"], rho=d["rho"], v0=d["v0"]
-    )
+    params = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"], rho=d["rho"], v0=d["v0"])
     phi = lambda u: heston_cf_form2(u, fwd, params)
 
     grid = cos_auto_grid(heston_cumulants(fwd, params), N=128, L=10.0)
@@ -80,9 +72,7 @@ def test_cos_heston_exponential_convergence(lewis_heston):
     """COS on the Lewis strip should show fast N-convergence."""
     d = lewis_heston
     fwd = ForwardSpec(S0=d["S0"], r=d["r"], q=d["q"], T=d["T"])
-    params = HestonParams(
-        kappa=d["kappa"], theta=d["theta"], nu=d["nu"], rho=d["rho"], v0=d["v0"]
-    )
+    params = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"], rho=d["rho"], v0=d["v0"])
     phi = lambda u: heston_cf_form2(u, fwd, params)
 
     errs = {}
@@ -98,9 +88,7 @@ def test_cos_matches_carr_madan(lewis_heston):
     """COS and Carr-Madan should agree on the Lewis Heston strip."""
     d = lewis_heston
     fwd = ForwardSpec(S0=d["S0"], r=d["r"], q=d["q"], T=d["T"])
-    params = HestonParams(
-        kappa=d["kappa"], theta=d["theta"], nu=d["nu"], rho=d["rho"], v0=d["v0"]
-    )
+    params = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"], rho=d["rho"], v0=d["v0"])
     phi = lambda u: heston_cf_form2(u, fwd, params)
 
     cm_calls = carr_madan_price_at_strikes(phi, fwd, FFTGrid(4096, 0.25, 1.5), d["strikes"])

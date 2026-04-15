@@ -1,4 +1,5 @@
 """Chourdakis (2004) fractional-FFT tests."""
+
 from __future__ import annotations
 
 import numpy as np
@@ -11,15 +12,12 @@ from foureng.pricers.carr_madan import carr_madan_price_at_strikes
 from foureng.pricers.frft import frft_price_at_strikes
 from foureng.utils.grids import FFTGrid, FRFTGrid
 
-
 pytestmark = [pytest.mark.paper, pytest.mark.derived_reference, pytest.mark.numerical_stability]
 
 
 def _heston_lewis_phi(d):
     fwd = ForwardSpec(S0=d["S0"], r=d["r"], q=d["q"], T=d["T"])
-    params = HestonParams(
-        kappa=d["kappa"], theta=d["theta"], nu=d["nu"], rho=d["rho"], v0=d["v0"]
-    )
+    params = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"], rho=d["rho"], v0=d["v0"])
     return fwd, lambda u: heston_cf_form2(u, fwd, params)
 
 

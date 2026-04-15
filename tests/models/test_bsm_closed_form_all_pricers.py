@@ -11,6 +11,7 @@ Tolerances (single-maturity, 7-strike strip, no stress parameters):
     frft                 1e-4
     pyfeng_fft           1e-5
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -32,10 +33,12 @@ def _bs_reference():
     F0 = _FWD.F0
     r, T = _FWD.r, _FWD.T
     sigma = _PARAMS.sigma
-    return np.array([
-        bs_price_from_fwd(sigma, BSInputs(F0=F0, K=float(K), T=T, r=r, q=_FWD.q))
-        for K in _STRIKES
-    ])
+    return np.array(
+        [
+            bs_price_from_fwd(sigma, BSInputs(F0=F0, K=float(K), T=T, r=r, q=_FWD.q))
+            for K in _STRIKES
+        ]
+    )
 
 
 _REF = _bs_reference()

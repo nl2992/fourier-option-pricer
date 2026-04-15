@@ -11,7 +11,9 @@ against, so the gates are:
   4. A frozen 41-strike regression strip pins prices against any
      future refactor (see :data:`OUSV_REGRESSION_STRIP_V1`).
 """
+
 from __future__ import annotations
+
 import numpy as np
 import pytest
 
@@ -20,12 +22,11 @@ from foureng.models.ousv import OusvParams, ousv_cf
 from foureng.pipeline import price_strip
 from foureng.utils.grids import FFTGrid, FRFTGrid
 
-
 pyfeng = pytest.importorskip("pyfeng", reason="OUSV adapter is PyFENG-backed")
 
 
 # -- Canonical test params (shared with OUSV_REGRESSION_STRIP_V1) -----------
-_FWD    = ForwardSpec(S0=100.0, r=0.03, q=0.0, T=1.0)
+_FWD = ForwardSpec(S0=100.0, r=0.03, q=0.0, T=1.0)
 _PARAMS = OusvParams(sigma0=0.2, kappa=2.0, theta=0.2, nu=0.3, rho=-0.5)
 
 
@@ -35,11 +36,15 @@ def test_ousv_cf_matches_pyfeng_charfunc_logprice():
     phi_ours = ousv_cf(u, _FWD, _PARAMS)
 
     m = pyfeng.OusvFft(
-        sigma=_PARAMS.sigma0, mr=_PARAMS.kappa, theta=_PARAMS.theta,
-        vov=_PARAMS.nu, rho=_PARAMS.rho, intr=_FWD.r, divr=_FWD.q,
+        sigma=_PARAMS.sigma0,
+        mr=_PARAMS.kappa,
+        theta=_PARAMS.theta,
+        vov=_PARAMS.nu,
+        rho=_PARAMS.rho,
+        intr=_FWD.r,
+        divr=_FWD.q,
     )
-    phi_pf = np.asarray(m.logp_cf(u, texp=_FWD.T),
-                        dtype=np.complex128)
+    phi_pf = np.asarray(m.logp_cf(u, texp=_FWD.T), dtype=np.complex128)
     err = float(np.max(np.abs(phi_ours - phi_pf)))
     assert err < 1e-14, f"OUSV CF wrapper vs PyFENG: max|err| = {err:.3e}"
 
@@ -53,24 +58,33 @@ def test_ousv_prices_match_pyfeng_fft_across_methods():
     K = np.linspace(80.0, 120.0, 21)
     C_pf = price_strip("ousv", "pyfeng_fft", K, _FWD, _PARAMS)
 
-    C_cos  = price_strip("ousv", "cos", K, _FWD, _PARAMS)
-    C_frft = price_strip("ousv", "frft", K, _FWD, _PARAMS,
-                          grid=FRFTGrid(N=4096, eta=0.25, lam=0.005, alpha=1.5))
-    C_cm   = price_strip("ousv", "carr_madan", K, _FWD, _PARAMS,
-                          grid=FFTGrid(N=4096, eta=0.25, alpha=1.5))
+    C_cos = price_strip("ousv", "cos", K, _FWD, _PARAMS)
+    C_frft = price_strip(
+        "ousv", "frft", K, _FWD, _PARAMS, grid=FRFTGrid(N=4096, eta=0.25, lam=0.005, alpha=1.5)
+    )
+    C_cm = price_strip(
+        "ousv", "carr_madan", K, _FWD, _PARAMS, grid=FFTGrid(N=4096, eta=0.25, alpha=1.5)
+    )
 
     # pyfeng ≥0.4.0 updated OusvFft's internal algorithm; allow 1e-4.
-    assert np.max(np.abs(C_cos  - C_pf)) < 1e-4, \
+    assert np.max(np.abs(C_cos - C_pf)) < 1e-4, (
         f"OUSV COS vs pyfeng_fft: {np.max(np.abs(C_cos - C_pf)):.3e}"
+    )
     assert np.max(np.abs(C_frft - C_pf)) < 1e-4
-    assert np.max(np.abs(C_cm   - C_pf)) < 1e-4
+    assert np.max(np.abs(C_cm - C_pf)) < 1e-4
 
 
 def test_ousv_regression_cm_oracle_grid(ousv_regression_v1):
     """CM at the oracle grid  -  numerical identity with the frozen array."""
     ref = ousv_regression_v1
-    C = price_strip(ref.model, "carr_madan", ref.strikes, ref.fwd, ref.params,
-                    grid=FFTGrid(N=32768, eta=0.10, alpha=1.5))
+    C = price_strip(
+        ref.model,
+        "carr_madan",
+        ref.strikes,
+        ref.fwd,
+        ref.params,
+        grid=FFTGrid(N=32768, eta=0.10, alpha=1.5),
+    )
     err = float(np.max(np.abs(C - ref.prices)))
     assert err < 1e-12, f"{ref.name}: CM@oracle max|err| = {err:.3e}"
 
@@ -84,8 +98,14 @@ def test_ousv_regression_cos(ousv_regression_v1):
 
 def test_ousv_regression_frft(ousv_regression_v1):
     ref = ousv_regression_v1
-    C = price_strip(ref.model, "frft", ref.strikes, ref.fwd, ref.params,
-                    grid=FRFTGrid(N=16384, eta=0.10, lam=0.0025, alpha=1.5))
+    C = price_strip(
+        ref.model,
+        "frft",
+        ref.strikes,
+        ref.fwd,
+        ref.params,
+        grid=FRFTGrid(N=16384, eta=0.10, lam=0.0025, alpha=1.5),
+    )
     err = float(np.max(np.abs(C - ref.prices)))
     assert err < 1e-7, f"{ref.name}: FRFT max|err| = {err:.3e}"
 

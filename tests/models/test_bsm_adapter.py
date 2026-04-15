@@ -13,7 +13,9 @@ four hard gates for the price of one:
 If any of these breaks, something is wrong at a level below any of the
 SV/SVJ models. They are the "if-BSM-fails, nothing-else-matters" gates.
 """
+
 from __future__ import annotations
+
 import numpy as np
 import pytest
 
@@ -23,13 +25,13 @@ from foureng.pipeline import price_strip
 from foureng.utils.grids import FFTGrid, FRFTGrid
 from foureng.utils.implied_vol import implied_vol_from_prices
 
-
 pyfeng = pytest.importorskip("pyfeng", reason="BSM adapter is PyFENG-backed")
 
 
 def _bs_call(S, K, r, q, T, sigma):
     """Black-Scholes call  -  closed form, hand-rolled to stay PyFENG-free."""
     from scipy.stats import norm
+
     F = S * np.exp((r - q) * T)
     d1 = (np.log(F / K) + 0.5 * sigma * sigma * T) / (sigma * np.sqrt(T))
     d2 = d1 - sigma * np.sqrt(T)
@@ -76,20 +78,22 @@ def test_bsm_prices_match_black_scholes_closed_form():
     bs_ref = _bs_call(fwd.S0, K, fwd.r, fwd.q, fwd.T, p.sigma)
 
     C_cos = price_strip("bsm", "cos", K, fwd, p)
-    C_frft = price_strip("bsm", "frft", K, fwd, p,
-                          grid=FRFTGrid(N=4096, eta=0.25, lam=0.005, alpha=1.5))
-    C_cm = price_strip("bsm", "carr_madan", K, fwd, p,
-                        grid=FFTGrid(N=4096, eta=0.25, alpha=1.5))
+    C_frft = price_strip(
+        "bsm", "frft", K, fwd, p, grid=FRFTGrid(N=4096, eta=0.25, lam=0.005, alpha=1.5)
+    )
+    C_cm = price_strip("bsm", "carr_madan", K, fwd, p, grid=FFTGrid(N=4096, eta=0.25, alpha=1.5))
     C_pf = price_strip("bsm", "pyfeng_fft", K, fwd, p)
 
     # COS on a Gaussian is essentially exact; FFT engines are near their
     # default-grid error floor (~1e-7). Tolerances chosen to catch real
     # regressions without flaking.
-    assert np.max(np.abs(C_cos  - bs_ref)) < 1e-10, f"COS vs BS: {np.max(np.abs(C_cos - bs_ref)):.3e}"
+    assert np.max(np.abs(C_cos - bs_ref)) < 1e-10, (
+        f"COS vs BS: {np.max(np.abs(C_cos - bs_ref)):.3e}"
+    )
     assert np.max(np.abs(C_frft - bs_ref)) < 1e-6
-    assert np.max(np.abs(C_cm   - bs_ref)) < 1e-6
+    assert np.max(np.abs(C_cm - bs_ref)) < 1e-6
     # pyfeng ≥0.4.0 uses a coarser default FFT grid for BsmFft; allow 1e-4.
-    assert np.max(np.abs(C_pf   - bs_ref)) < 1e-4
+    assert np.max(np.abs(C_pf - bs_ref)) < 1e-4
 
 
 def test_bsm_implied_vol_roundtrip():

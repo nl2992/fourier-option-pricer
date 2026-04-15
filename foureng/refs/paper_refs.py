@@ -40,6 +40,7 @@ from dataclasses import dataclass
 from typing import Any
 
 import numpy as np
+from numpy.typing import ArrayLike
 
 from ..models.base import ForwardSpec
 from ..models.bates import BatesParams
@@ -52,7 +53,7 @@ from ..models.ousv import OusvParams
 from ..models.variance_gamma import VGParams
 
 
-def _frozen_array(values) -> np.ndarray:
+def _frozen_array(values: ArrayLike) -> np.ndarray:
     arr = np.asarray(values, dtype=np.float64)
     arr.setflags(write=False)
     return arr
@@ -94,18 +95,19 @@ class PaperAnchor:
     source: str
     fwd: ForwardSpec
     params: Any
-    strikes: np.ndarray
-    prices: np.ndarray
+    strikes: ArrayLike
+    prices: ArrayLike
     is_call: bool = True
     notes: str = ""
 
     def __post_init__(self) -> None:
-        object.__setattr__(self, "strikes", _frozen_array(self.strikes))
-        object.__setattr__(self, "prices", _frozen_array(self.prices))
-        if self.strikes.shape != self.prices.shape:
+        strikes = _frozen_array(self.strikes)
+        prices = _frozen_array(self.prices)
+        object.__setattr__(self, "strikes", strikes)
+        object.__setattr__(self, "prices", prices)
+        if strikes.shape != prices.shape:
             raise ValueError(
-                f"{self.name}: strikes {self.strikes.shape} and prices "
-                f"{self.prices.shape} must match"
+                f"{self.name}: strikes {strikes.shape} and prices {prices.shape} must match"
             )
 
 
@@ -209,19 +211,20 @@ class RegressionStrip:
     model: str
     fwd: ForwardSpec
     params: Any
-    strikes: np.ndarray
-    prices: np.ndarray
+    strikes: ArrayLike
+    prices: ArrayLike
     ref_method: str
     version: int = 1
     notes: str = ""
 
     def __post_init__(self) -> None:
-        object.__setattr__(self, "strikes", _frozen_array(self.strikes))
-        object.__setattr__(self, "prices", _frozen_array(self.prices))
-        if self.strikes.shape != self.prices.shape:
+        strikes = _frozen_array(self.strikes)
+        prices = _frozen_array(self.prices)
+        object.__setattr__(self, "strikes", strikes)
+        object.__setattr__(self, "prices", prices)
+        if strikes.shape != prices.shape:
             raise ValueError(
-                f"{self.name}: strikes {self.strikes.shape} and prices "
-                f"{self.prices.shape} must match"
+                f"{self.name}: strikes {strikes.shape} and prices {prices.shape} must match"
             )
 
 

@@ -15,40 +15,42 @@ Covers three axes the per-model tests do not sweep:
      (call ≤ spot, put ≤ strike) across a grid of (kappa, theta, nu, rho)
      combinations including the Feller-violated region (2κθ < ν²).
 """
+
 from __future__ import annotations
+
 import numpy as np
 import pytest
 
 from foureng.models.base import ForwardSpec
 from foureng.models.bsm import BsmParams, bsm_cf, bsm_cumulants
-from foureng.models.heston import HestonParams
-from foureng.models.variance_gamma import VGParams, vg_cf, vg_cumulants
-from foureng.models.kou import KouParams, kou_cf, kou_cumulants
 from foureng.models.cgmy import CgmyParams, cgmy_cf, cgmy_cumulants
-from foureng.pricers.cos import cos_prices, cos_auto_grid
-from foureng.pricers.carr_madan import carr_madan_price_at_strikes
-from foureng.pricers.frft import frft_price_at_strikes
+from foureng.models.heston import HestonParams
+from foureng.models.kou import KouParams, kou_cf, kou_cumulants
+from foureng.models.variance_gamma import VGParams, vg_cf, vg_cumulants
 from foureng.pipeline import price_strip
+from foureng.pricers.cos import cos_auto_grid, cos_prices
 from foureng.utils.grids import FFTGrid, FRFTGrid
-
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _bs_call(S, K, r, q, T, sigma):
     """Black-Scholes call, no external dependencies."""
     from scipy.stats import norm
+
     F = S * np.exp((r - q) * T)
-    d1 = (np.log(F / K) + 0.5 * sigma ** 2 * T) / (sigma * np.sqrt(T))
+    d1 = (np.log(F / K) + 0.5 * sigma**2 * T) / (sigma * np.sqrt(T))
     d2 = d1 - sigma * np.sqrt(T)
     return np.exp(-r * T) * (F * norm.cdf(d1) - K * norm.cdf(d2))
 
 
 def _bs_put(S, K, r, q, T, sigma):
     from scipy.stats import norm
+
     F = S * np.exp((r - q) * T)
-    d1 = (np.log(F / K) + 0.5 * sigma ** 2 * T) / (sigma * np.sqrt(T))
+    d1 = (np.log(F / K) + 0.5 * sigma**2 * T) / (sigma * np.sqrt(T))
     d2 = d1 - sigma * np.sqrt(T)
     return np.exp(-r * T) * (K * norm.cdf(-d2) - F * norm.cdf(-d1))
 
@@ -58,6 +60,7 @@ def _bs_put(S, K, r, q, T, sigma):
 # ---------------------------------------------------------------------------
 
 BSM_SIGMAS = [0.05, 0.10, 0.20, 0.30, 0.40, 0.60, 0.80]
+
 
 @pytest.mark.parametrize("sigma", BSM_SIGMAS)
 def test_bsm_cos_tracks_black_scholes(sigma):
@@ -78,8 +81,7 @@ def test_bsm_carr_madan_tracks_black_scholes(sigma):
     p = BsmParams(sigma=sigma)
     K = np.linspace(80.0, 120.0, 9)
     ref = _bs_call(fwd.S0, K, fwd.r, fwd.q, fwd.T, sigma)
-    C = price_strip("bsm", "carr_madan", K, fwd, p,
-                    grid=FFTGrid(N=4096, eta=0.25, alpha=1.5))
+    C = price_strip("bsm", "carr_madan", K, fwd, p, grid=FFTGrid(N=4096, eta=0.25, alpha=1.5))
     err = float(np.max(np.abs(C - ref)))
     assert err < 1e-5, f"sigma={sigma}: CM vs BS max|err|={err:.3e}"
 
@@ -91,8 +93,7 @@ def test_bsm_frft_tracks_black_scholes(sigma):
     p = BsmParams(sigma=sigma)
     K = np.linspace(80.0, 120.0, 9)
     ref = _bs_call(fwd.S0, K, fwd.r, fwd.q, fwd.T, sigma)
-    C = price_strip("bsm", "frft", K, fwd, p,
-                    grid=FRFTGrid(N=4096, eta=0.25, lam=0.005, alpha=1.5))
+    C = price_strip("bsm", "frft", K, fwd, p, grid=FRFTGrid(N=4096, eta=0.25, lam=0.005, alpha=1.5))
     err = float(np.max(np.abs(C - ref)))
     assert err < 1e-5, f"sigma={sigma}: FRFT vs BS max|err|={err:.3e}"
 
@@ -100,6 +101,7 @@ def test_bsm_frft_tracks_black_scholes(sigma):
 # ---------------------------------------------------------------------------
 # 2. Put-call parity  -  C - P = disc*(F - K)  for multiple models
 # ---------------------------------------------------------------------------
+
 
 def _cos_two_path_error(phi_fn, fwd, cumulants, strikes, N=512, L=10.0):
     """Return max|C_put_parity - C_call_direct| over near-ATM strikes via COS.
@@ -120,6 +122,7 @@ def _cos_two_path_error(phi_fn, fwd, cumulants, strikes, N=512, L=10.0):
 
 # Near-ATM short/medium maturities only  -  call_direct blows up at long T
 TWO_PATH_MATURITIES = [0.25, 1.0]
+
 
 @pytest.mark.parametrize("T", TWO_PATH_MATURITIES)
 def test_two_path_consistency_bsm(T):
@@ -179,15 +182,15 @@ def test_two_path_consistency_cgmy(T):
 # (kappa, theta, nu, rho, v0)  -  includes Feller-satisfied and Feller-violated
 HESTON_CASES = [
     # Feller satisfied: 2*kappa*theta >= nu^2
-    dict(name="feller_ok_low_vol",   kappa=4.0, theta=0.04, nu=0.5,  rho=-0.7, v0=0.04),
-    dict(name="feller_ok_high_vol",  kappa=2.0, theta=0.25, nu=0.8,  rho=-0.5, v0=0.20),
-    dict(name="feller_ok_slow_mr",   kappa=0.5, theta=0.10, nu=0.3,  rho=0.0,  v0=0.10),
+    dict(name="feller_ok_low_vol", kappa=4.0, theta=0.04, nu=0.5, rho=-0.7, v0=0.04),
+    dict(name="feller_ok_high_vol", kappa=2.0, theta=0.25, nu=0.8, rho=-0.5, v0=0.20),
+    dict(name="feller_ok_slow_mr", kappa=0.5, theta=0.10, nu=0.3, rho=0.0, v0=0.10),
     # Feller violated: 2*kappa*theta < nu^2
-    dict(name="feller_viol_mild",    kappa=1.0, theta=0.04, nu=0.5,  rho=-0.6, v0=0.06),
-    dict(name="feller_viol_severe",  kappa=0.5, theta=0.02, nu=1.0,  rho=-0.8, v0=0.10),
+    dict(name="feller_viol_mild", kappa=1.0, theta=0.04, nu=0.5, rho=-0.6, v0=0.06),
+    dict(name="feller_viol_severe", kappa=0.5, theta=0.02, nu=1.0, rho=-0.8, v0=0.10),
     # Extreme rho
-    dict(name="extreme_rho_pos",     kappa=2.0, theta=0.08, nu=0.6,  rho=+0.9, v0=0.08),
-    dict(name="extreme_rho_neg",     kappa=2.0, theta=0.08, nu=0.6,  rho=-0.9, v0=0.08),
+    dict(name="extreme_rho_pos", kappa=2.0, theta=0.08, nu=0.6, rho=+0.9, v0=0.08),
+    dict(name="extreme_rho_neg", kappa=2.0, theta=0.08, nu=0.6, rho=-0.9, v0=0.08),
     # Short and long maturity handled via T in ForwardSpec below
 ]
 
@@ -202,8 +205,10 @@ def test_heston_cos_prices_are_finite_and_bounded(case, T):
     """
     fwd = ForwardSpec(S0=100.0, r=0.03, q=0.01, T=T)
     p = HestonParams(
-        kappa=case["kappa"], theta=case["theta"],
-        nu=case["nu"],       rho=case["rho"],
+        kappa=case["kappa"],
+        theta=case["theta"],
+        nu=case["nu"],
+        rho=case["rho"],
         v0=case["v0"],
     )
     K = np.linspace(70.0, 130.0, 13)
@@ -211,12 +216,9 @@ def test_heston_cos_prices_are_finite_and_bounded(case, T):
     # Use the pipeline (picks COS with adaptive grid automatically)
     C = price_strip("heston", "cos", K, fwd, p)
 
-    assert np.all(np.isfinite(C)), \
-        f"[{case['name']} T={T}] Non-finite prices: {C}"
-    assert np.all(C >= -1e-8), \
-        f"[{case['name']} T={T}] Negative call prices: {C.min():.4f}"
-    assert np.all(C <= fwd.S0 + 1e-8), \
-        f"[{case['name']} T={T}] Call exceeds spot: {C.max():.4f}"
+    assert np.all(np.isfinite(C)), f"[{case['name']} T={T}] Non-finite prices: {C}"
+    assert np.all(C >= -1e-8), f"[{case['name']} T={T}] Negative call prices: {C.min():.4f}"
+    assert np.all(C <= fwd.S0 + 1e-8), f"[{case['name']} T={T}] Call exceeds spot: {C.max():.4f}"
 
 
 @pytest.mark.parametrize("case", HESTON_CASES[:4], ids=[c["name"] for c in HESTON_CASES[:4]])
@@ -224,14 +226,17 @@ def test_heston_cos_vs_frft_agree(case):
     """COS and FRFT must agree to 5e-4 across the standard Heston parameter range."""
     fwd = ForwardSpec(S0=100.0, r=0.03, q=0.01, T=1.0)
     p = HestonParams(
-        kappa=case["kappa"], theta=case["theta"],
-        nu=case["nu"],       rho=case["rho"],
+        kappa=case["kappa"],
+        theta=case["theta"],
+        nu=case["nu"],
+        rho=case["rho"],
         v0=case["v0"],
     )
     K = np.linspace(80.0, 120.0, 9)
 
-    C_cos  = price_strip("heston", "cos", K, fwd, p)
-    C_frft = price_strip("heston", "frft", K, fwd, p,
-                          grid=FRFTGrid(N=4096, eta=0.02, lam=0.002, alpha=1.5))
+    C_cos = price_strip("heston", "cos", K, fwd, p)
+    C_frft = price_strip(
+        "heston", "frft", K, fwd, p, grid=FRFTGrid(N=4096, eta=0.02, lam=0.002, alpha=1.5)
+    )
     err = float(np.max(np.abs(C_cos - C_frft)))
     assert err < 5e-4, f"[{case['name']}] COS vs FRFT: {err:.3e}"

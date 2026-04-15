@@ -22,3 +22,17 @@ Reference categories used by pytest markers:
 
 `conftest.py` remains at the root so fixtures and reference data are shared by
 all groups.
+
+## Numerical invariants matrix
+
+| Invariant / property | Where it is checked |
+| --- | --- |
+| `phi(0) = 1` normalization | `tests/models/test_*_paper.py`, `tests/models/test_sv32_pyfeng_reference.py`, `tests/features/test_property_invariants.py` |
+| Martingale / `phi(-i)` checks | `tests/models/test_*_paper.py`, `tests/models/test_vgsa_model.py` |
+| Put-call parity / internal consistency | `tests/methods/test_robustness_parametrize.py`, `tests/papers/test_phase2_carr_madan_vg.py`, `tests/features/test_property_invariants.py` |
+| No-arbitrage bounds | `tests/models/test_*_paper.py`, `tests/models/test_sv32_compat_shape_smoke.py`, `tests/features/test_property_invariants.py` |
+| Monotone-decreasing in strike | `tests/models/test_sv32_compat_shape_smoke.py`, `tests/papers/test_sv32_baldeaux_badran_original_smoke.py`, `tests/features/test_property_invariants.py` |
+| Convex in strike | `tests/models/test_sv32_compat_shape_smoke.py`, `tests/papers/test_sv32_baldeaux_badran_original_smoke.py`, `tests/features/test_property_invariants.py` |
+| Model reductions | `tests/models/test_bates_reductions.py`, `tests/models/test_bates_reduces_to_heston.py`, `tests/models/test_heston_*_reduces_to_heston.py`, `tests/features/test_property_invariants.py` |
+| Stress / parameter sweeps | `tests/methods/test_robustness_parametrize.py`, `tests/test_paper_junike_2022_2024.py` |
+| Frozen output-bundle completeness | `tests/test_paper_fang_oosterlee_2008.py`, `tests/test_paper_junike_2022_2024.py` |

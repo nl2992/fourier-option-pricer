@@ -9,25 +9,28 @@ Validation strategy:
   - Parameter sensitivity (dC/dv0 under Heston) must match central FD of
     the COS price to 1e-5.
 """
+
 from __future__ import annotations
+
 import numpy as np
-import pytest
 from scipy.stats import norm
 
+from foureng.greeks.cos_greeks import (
+    cos_parameter_sensitivity,
+    cos_price_and_greeks,
+)
 from foureng.models.base import ForwardSpec
 from foureng.models.heston import HestonParams, heston_cf_form2, heston_cumulants
-from foureng.pricers.cos import cos_prices, cos_auto_grid
-from foureng.greeks.cos_greeks import (
-    cos_price_and_greeks,
-    cos_parameter_sensitivity,
-)
+from foureng.pricers.cos import cos_auto_grid, cos_prices
 
 
 def _bs_cf_factory(sigma: float, T: float):
     """CF of log(S_T/F_0) under BS with total vol sigma over [0, T]."""
+
     def phi(u):
         u = np.asarray(u, dtype=np.complex128)
         return np.exp(-0.5 * sigma * sigma * T * (u * u + 1j * u))
+
     return phi
 
 
@@ -49,8 +52,10 @@ def test_cos_greeks_match_black_scholes():
     c1, c2, c4 = -0.5 * sigma * sigma * T, sigma * sigma * T, 0.0
 
     from foureng.utils.cumulants import Cumulants, cos_truncation_interval
+
     a, b = cos_truncation_interval(Cumulants(c1=c1, c2=c2, c4=c4), L=10.0)
     from foureng.utils.grids import COSGrid
+
     grid = COSGrid(N=256, a=a, b=b)
 
     K = np.array([80.0, 100.0, 120.0])
@@ -58,20 +63,15 @@ def test_cos_greeks_match_black_scholes():
 
     for i, Ki in enumerate(K):
         d_ref, g_ref = _bs_delta_gamma(S0, Ki, T, r, q, sigma)
-        assert abs(out.delta[i] - d_ref) < 1e-6, (
-            f"K={Ki}: delta err = {out.delta[i] - d_ref:.3e}"
-        )
-        assert abs(out.gamma[i] - g_ref) < 1e-6, (
-            f"K={Ki}: gamma err = {out.gamma[i] - g_ref:.3e}"
-        )
+        assert abs(out.delta[i] - d_ref) < 1e-6, f"K={Ki}: delta err = {out.delta[i] - d_ref:.3e}"
+        assert abs(out.gamma[i] - g_ref) < 1e-6, f"K={Ki}: gamma err = {out.gamma[i] - g_ref:.3e}"
 
 
 def test_cos_greeks_match_fd_on_heston(lewis_heston):
     """On Heston-Lewis: COS Greeks match central FD to 1e-5."""
     d = lewis_heston
     fwd = ForwardSpec(S0=d["S0"], r=d["r"], q=d["q"], T=d["T"])
-    p = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"],
-                     rho=d["rho"], v0=d["v0"])
+    p = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"], rho=d["rho"], v0=d["v0"])
     K = d["strikes"]
 
     cums = heston_cumulants(fwd, p)
@@ -106,8 +106,7 @@ def test_cos_parameter_sensitivity_v0_matches_fd(lewis_heston):
     """dC/dv0 via CF differentiation agrees with FD on the COS price."""
     d = lewis_heston
     fwd = ForwardSpec(S0=d["S0"], r=d["r"], q=d["q"], T=d["T"])
-    p = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"],
-                     rho=d["rho"], v0=d["v0"])
+    p = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"], rho=d["rho"], v0=d["v0"])
     K = d["strikes"]
 
     # dphi/dv0 for Heston Formulation 2.
@@ -147,8 +146,7 @@ def test_cos_greeks_price_matches_standard_cos(lewis_heston):
     """Price returned by cos_price_and_greeks matches the standalone COS pricer."""
     d = lewis_heston
     fwd = ForwardSpec(S0=d["S0"], r=d["r"], q=d["q"], T=d["T"])
-    p = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"],
-                     rho=d["rho"], v0=d["v0"])
+    p = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"], rho=d["rho"], v0=d["v0"])
     cums = heston_cumulants(fwd, p)
     grid = cos_auto_grid(cums, N=256, L=10.0)
     phi = lambda u: heston_cf_form2(u, fwd, p)

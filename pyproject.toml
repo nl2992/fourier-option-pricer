@@ -35,9 +35,11 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
-test = ["pytest>=7.4", "pytest-cov>=4.0"]
+test = ["pytest>=7.4", "pytest-cov>=4.0", "hypothesis>=6.112"]
 notebook = ["jupyter>=1.0", "nbformat>=5.10", "ipykernel>=6.0"]
-dev  = ["pytest>=7.4", "pytest-cov>=4.0", "nbmake>=1.5", "jupyter>=1.0", "nbformat>=5.10", "ipykernel>=6.0", "build", "twine", "ruff"]
+typecheck = ["mypy>=1.10"]
+bench = ["pyperf>=2.7"]
+dev  = ["pytest>=7.4", "pytest-cov>=4.0", "hypothesis>=6.112", "nbmake>=1.5", "jupyter>=1.0", "nbformat>=5.10", "ipykernel>=6.0", "build", "twine", "ruff", "mypy>=1.10", "pyperf>=2.7"]
 
 [project.urls]
 Homepage   = "https://github.com/nl2992/fourier-option-pricer"
@@ -83,3 +85,14 @@ target-version = "py310"
 [tool.ruff.lint]
 select = ["E", "F", "W", "I"]
 ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["E402", "E731"]
+
+[tool.mypy]
+python_version = "3.10"
+files = ["foureng"]
+exclude = "(^foureng/experiments/|^foureng/viz/)"
+ignore_missing_imports = true
+check_untyped_defs = true
+warn_unused_configs = true

@@ -1,4 +1,5 @@
 """Kou (2002) paper-facing COS tests."""
+
 from __future__ import annotations
 
 import numpy as np
@@ -9,7 +10,6 @@ from foureng.models.kou import KouParams, kou_cf, kou_cumulants
 from foureng.pricers.carr_madan import carr_madan_price_at_strikes
 from foureng.pricers.cos import cos_auto_grid, cos_prices
 from foureng.utils.grids import FFTGrid
-
 
 pytestmark = [pytest.mark.paper, pytest.mark.derived_reference]
 
@@ -28,7 +28,9 @@ def test_cos_kou_vs_carr_madan(kou_setup):
     """COS at N=128 should match the high-N Carr-Madan reference."""
     d = kou_setup
     cums = kou_cumulants(d["fwd"], d["params"])
-    calls = cos_prices(d["phi"], d["fwd"], d["strikes"], cos_auto_grid(cums, N=128, L=10.0)).call_prices
+    calls = cos_prices(
+        d["phi"], d["fwd"], d["strikes"], cos_auto_grid(cums, N=128, L=10.0)
+    ).call_prices
     err = np.abs(calls - d["ref"]).max()
     assert err < 1e-6, f"COS-Kou N=128 err = {err:.3e}"
 
@@ -39,7 +41,9 @@ def test_cos_kou_n_convergence(kou_setup):
     cums = kou_cumulants(d["fwd"], d["params"])
     errs = {}
     for N in (32, 64, 128):
-        calls = cos_prices(d["phi"], d["fwd"], d["strikes"], cos_auto_grid(cums, N=N, L=10.0)).call_prices
+        calls = cos_prices(
+            d["phi"], d["fwd"], d["strikes"], cos_auto_grid(cums, N=N, L=10.0)
+        ).call_prices
         errs[N] = np.abs(calls - d["ref"]).max()
     assert errs[64] < errs[32], f"not monotone: {errs}"
     assert errs[128] < errs[64], f"not monotone: {errs}"

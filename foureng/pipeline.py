@@ -278,12 +278,12 @@ def price_strip(
 
     if method == "cos_improved":
         cums_fn = MODEL_REGISTRY[model].cumulants
-        policy = (
+        policy: COSGridPolicy = (
             grid
             if isinstance(grid, COSGridPolicy)
             else recommended_cos_policy(model, params, mode="benchmark")
         )
-        decision = (
+        improved_decision: Any | None = (
             None
             if isinstance(grid, COSGrid)
             else cos_adaptive_decision(
@@ -299,13 +299,13 @@ def price_strip(
             res = cos_prices(phi, fwd, K, grid, payoff_mode=payoff_mode)
             return np.asarray(res.call_prices, dtype=np.float64)
 
-        if decision is None:
+        if improved_decision is None:
             raise RuntimeError("internal error: decision unexpectedly None after policy resolution")
-        if decision.method == "cos":
-            payoff_mode = _improved_cos_payoff_mode(model, decision.grid)
-            res = cos_prices(phi, fwd, K, decision.grid, payoff_mode=payoff_mode)
+        if improved_decision.method == "cos":
+            payoff_mode = _improved_cos_payoff_mode(model, improved_decision.grid)
+            res = cos_prices(phi, fwd, K, improved_decision.grid, payoff_mode=payoff_mode)
             return np.asarray(res.call_prices, dtype=np.float64)
-        if decision.method == "lewis":
+        if improved_decision.method == "lewis":
             return np.asarray(
                 lewis_call_prices(
                     phi,
@@ -316,13 +316,13 @@ def price_strip(
                     divr=fwd.q,
                     method="trapz",
                     u_max=200.0,
-                    n_u=max(4096, decision.grid.N),
+                    n_u=max(4096, improved_decision.grid.N),
                 ),
                 dtype=np.float64,
             )
-        if decision.method == "carr_madan":
-            eta = 0.10 if decision.grid.width > 48.0 else 0.25
-            cm_grid = FFTGrid(N=max(4096, decision.grid.N), eta=eta, alpha=1.5)
+        if improved_decision.method == "carr_madan":
+            eta = 0.10 if improved_decision.grid.width > 48.0 else 0.25
+            cm_grid = FFTGrid(N=max(4096, improved_decision.grid.N), eta=eta, alpha=1.5)
             return np.asarray(carr_madan_price_at_strikes(phi, fwd, cm_grid, K), dtype=np.float64)
         raise ValueError(f"unsupported cos_improved fallback method {decision.method!r}")
 

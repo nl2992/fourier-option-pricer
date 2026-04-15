@@ -1,4 +1,5 @@
 """Shared helpers for paper-backed regression tests."""
+
 from __future__ import annotations
 
 from functools import lru_cache
@@ -15,12 +16,10 @@ from foureng.models.bsm import BsmParams, bsm_cf, bsm_cumulants
 from foureng.models.cgmy import CgmyParams, cgmy_cf, cgmy_cumulants
 from foureng.models.heston import HestonParams, heston_cf, heston_cumulants
 from foureng.models.variance_gamma import VGParams, vg_cf, vg_cumulants
-from foureng.pipeline import price_strip
 from foureng.pricers.carr_madan import carr_madan_price_at_strikes
 from foureng.pricers.cos import cos_auto_grid, cos_prices
 from foureng.pricers.lewis import lewis_call_prices
 from foureng.utils.grids import COSGrid, FFTGrid
-
 
 pytest.importorskip(
     "pyfeng",
@@ -165,8 +164,7 @@ def fo2008_row_error(case_id: str, method: str, n_terms: int) -> float:
 
 def assert_close(actual: float, expected: float, *, rtol: float, atol: float, label: str) -> None:
     assert np.isclose(actual, expected, rtol=rtol, atol=atol), (
-        f"{label}: got {actual:.12e}, expected {expected:.12e}, "
-        f"diff={abs(actual - expected):.3e}"
+        f"{label}: got {actual:.12e}, expected {expected:.12e}, diff={abs(actual - expected):.3e}"
     )
 
 

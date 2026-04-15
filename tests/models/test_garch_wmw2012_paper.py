@@ -36,23 +36,23 @@ copy-paste error in PyFENG; those are the Sv32 prices. The GARCH diffusion
 model (nu*v diffusion) gives different prices from the 3/2 SV model
 (nu*v^(3/2) diffusion).
 """
+
 from __future__ import annotations
 
 import numpy as np
 import pytest
 
+from foureng.models.base import ForwardSpec
 from foureng.models.garch_wmw2012 import (
     GarchWMW2012Params,
+    _garch_mgf,
     garch_wmw2012_cf,
     garch_wmw2012_cumulants,
-    _garch_mgf,
 )
-from foureng.models.base import ForwardSpec
-from foureng.pricers.lewis import lewis_call_prices
-from foureng.pricers.cos import cos_auto_grid, cos_prices
 from foureng.pricers.carr_madan import carr_madan_price_at_strikes
+from foureng.pricers.cos import cos_auto_grid, cos_prices
+from foureng.pricers.lewis import lewis_call_prices
 from foureng.utils.grids import FFTGrid
-
 
 pytestmark = [pytest.mark.paper, pytest.mark.derived_reference]
 
@@ -83,25 +83,30 @@ def bench():
 def lewis_ref(bench):
     p, fwd = bench
     phi = lambda u: garch_wmw2012_cf(u, fwd, p)
-    return lewis_call_prices(phi, STRIKES, spot=fwd.S0, texp=fwd.T,
-                             intr=fwd.r, divr=fwd.q)
+    return lewis_call_prices(phi, STRIKES, spot=fwd.S0, texp=fwd.T, intr=fwd.r, divr=fwd.q)
 
 
 # ---------------------------------------------------------------------------
 # Layer 1: Cross-check native MGF vs PyFENG's mgf_logprice_old
 # ---------------------------------------------------------------------------
 
+
 class TestGarchMGFFormula:
     """Our native MGF must agree with PyFENG's mgf_logprice_old to 1e-12."""
 
     @pytest.fixture(autouse=True)
     def _pyfeng_old_model(self):
-        pf = pytest.importorskip("pyfeng",
-            reason="pyfeng not installed  -  GARCH MGF cross-check requires it")
+        pf = pytest.importorskip(
+            "pyfeng", reason="pyfeng not installed  -  GARCH MGF cross-check requires it"
+        )
         if not hasattr(pf, "GarchFftWuMaWang2012"):
             pytest.skip("pyfeng.GarchFftWuMaWang2012 not available in this pyfeng version")
         self._pf_model = pf.GarchFftWuMaWang2012(
-            sigma=0.06, vov=3.20, mr=20.48, rho=-0.99, theta=0.218,
+            sigma=0.06,
+            vov=3.20,
+            mr=20.48,
+            rho=-0.99,
+            theta=0.218,
         )
         if not hasattr(self._pf_model, "mgf_logprice_old"):
             pytest.skip("pyfeng.GarchFftWuMaWang2012.mgf_logprice_old removed in pyfeng>=0.4.0")
@@ -114,13 +119,22 @@ class TestGarchMGFFormula:
         native = _garch_mgf(uu, p, TEXP)[0]
         pyfeng = self._pf_model.mgf_logprice_old(uu, TEXP)[0]
         np.testing.assert_allclose(
-            native.real, pyfeng.real, rtol=1e-12,
+            native.real,
+            pyfeng.real,
+            rtol=1e-12,
             err_msg=f"MGF real part differs at uu={uu_real}",
         )
 
-    @pytest.mark.parametrize("uu_re,uu_im", [
-        (0.5, 0.0), (0.5, 1.0), (0.5, 2.0), (0.5, 5.0), (1.0, 3.0),
-    ])
+    @pytest.mark.parametrize(
+        "uu_re,uu_im",
+        [
+            (0.5, 0.0),
+            (0.5, 1.0),
+            (0.5, 2.0),
+            (0.5, 5.0),
+            (1.0, 3.0),
+        ],
+    )
     def test_mgf_complex_arg_matches_pyfeng_old(self, uu_re, uu_im):
         """MGF at complex uu must match mgf_logprice_old (which handles complex)."""
         p = _P_BENCH
@@ -128,11 +142,15 @@ class TestGarchMGFFormula:
         native = _garch_mgf(uu, p, TEXP)[0]
         pyfeng = self._pf_model.mgf_logprice_old(uu, TEXP)[0]
         np.testing.assert_allclose(
-            abs(native), abs(pyfeng), rtol=1e-12,
+            abs(native),
+            abs(pyfeng),
+            rtol=1e-12,
             err_msg=f"MGF modulus differs at uu={uu_re}+{uu_im}j",
         )
         np.testing.assert_allclose(
-            native.real, pyfeng.real, rtol=1e-12,
+            native.real,
+            pyfeng.real,
+            rtol=1e-12,
             err_msg=f"MGF real part differs at uu={uu_re}+{uu_im}j",
         )
 
@@ -149,12 +167,14 @@ class TestGarchMGFFormula:
 # Layer 2: Cross-engine agreement
 # ---------------------------------------------------------------------------
 
+
 class TestGarchCrossEngine:
     """All Fourier pricers using our CF must agree to 1e-4."""
 
     def test_lewis_matches_ref(self, lewis_ref):
-        np.testing.assert_allclose(lewis_ref, _REF_PRICES, atol=1e-3,
-                                   err_msg="Lewis vs benchmark prices")
+        np.testing.assert_allclose(
+            lewis_ref, _REF_PRICES, atol=1e-3, err_msg="Lewis vs benchmark prices"
+        )
 
     def test_cos_vs_lewis(self, bench, lewis_ref):
         p, fwd = bench
@@ -162,16 +182,14 @@ class TestGarchCrossEngine:
         cums = garch_wmw2012_cumulants(fwd, p)
         grid = cos_auto_grid(cums, N=256, L=10.0)
         res = cos_prices(phi, fwd, STRIKES, grid)
-        np.testing.assert_allclose(res.call_prices, lewis_ref, atol=1e-4,
-                                   err_msg="COS vs Lewis")
+        np.testing.assert_allclose(res.call_prices, lewis_ref, atol=1e-4, err_msg="COS vs Lewis")
 
     def test_carr_madan_vs_lewis(self, bench, lewis_ref):
         p, fwd = bench
         phi = lambda u: garch_wmw2012_cf(u, fwd, p)
         grid = FFTGrid(N=4096, eta=0.25, alpha=1.5)
         prices = carr_madan_price_at_strikes(phi, fwd, grid, STRIKES)
-        np.testing.assert_allclose(prices, lewis_ref, atol=1e-4,
-                                   err_msg="Carr-Madan vs Lewis")
+        np.testing.assert_allclose(prices, lewis_ref, atol=1e-4, err_msg="Carr-Madan vs Lewis")
 
     @pytest.mark.parametrize("K", [85.0, 90.0, 95.0, 100.0, 105.0, 110.0, 115.0])
     def test_cos_vs_lewis_wider_strikes(self, K):
@@ -180,18 +198,19 @@ class TestGarchCrossEngine:
         fwd = _FWD_BENCH
         phi = lambda u: garch_wmw2012_cf(u, fwd, p)
         strikes = np.array([K])
-        lewis = lewis_call_prices(phi, strikes, spot=fwd.S0, texp=fwd.T,
-                                  intr=fwd.r, divr=fwd.q)
+        lewis = lewis_call_prices(phi, strikes, spot=fwd.S0, texp=fwd.T, intr=fwd.r, divr=fwd.q)
         cums = garch_wmw2012_cumulants(fwd, p)
         grid = cos_auto_grid(cums, N=512, L=12.0)
         cos_res = cos_prices(phi, fwd, strikes, grid)
-        np.testing.assert_allclose(cos_res.call_prices, lewis, atol=1e-3,
-                                   err_msg=f"COS vs Lewis at K={K}")
+        np.testing.assert_allclose(
+            cos_res.call_prices, lewis, atol=1e-3, err_msg=f"COS vs Lewis at K={K}"
+        )
 
 
 # ---------------------------------------------------------------------------
 # Layer 3: Structural tests
 # ---------------------------------------------------------------------------
+
 
 class TestGarchStructural:
     """CF normalization and no-arbitrage bounds."""
@@ -206,16 +225,18 @@ class TestGarchStructural:
         """phi(-i) = 1 (E[S_T/F_0] = 1)."""
         p, fwd = bench
         phi_neg_i = garch_wmw2012_cf(np.array([-1j]), fwd, p)
-        np.testing.assert_allclose(abs(phi_neg_i[0] - 1.0), 0.0, atol=1e-10,
-                                   err_msg="GARCH martingale phi(-i)=1")
+        np.testing.assert_allclose(
+            abs(phi_neg_i[0] - 1.0), 0.0, atol=1e-10, err_msg="GARCH martingale phi(-i)=1"
+        )
 
     def test_cf_modulus_le_one(self, bench):
         """|phi(u)| <= 1 for real u."""
         p, fwd = bench
         u = np.linspace(-20, 20, 401)
         phi = garch_wmw2012_cf(u, fwd, p)
-        assert np.all(np.abs(phi) <= 1.0 + 1e-12), \
+        assert np.all(np.abs(phi) <= 1.0 + 1e-12), (
             f"|phi|>1 at some u: max={np.max(np.abs(phi)):.6f}"
+        )
 
     def test_cumulants_positive_variance(self, bench):
         p, fwd = bench
@@ -227,8 +248,7 @@ class TestGarchStructural:
         """Call prices must be above intrinsic."""
         p, fwd = bench
         intrinsic = np.maximum(fwd.F0 - STRIKES, 0.0)
-        assert np.all(lewis_ref >= intrinsic - 1e-6), \
-            "Call prices below intrinsic"
+        assert np.all(lewis_ref >= intrinsic - 1e-6), "Call prices below intrinsic"
 
     def test_call_le_spot(self, bench, lewis_ref):
         """Call prices must not exceed spot."""
@@ -248,8 +268,7 @@ class TestGarchStructural:
             res = cos_prices(phi, fwd, K_atm, grid)
             prices.append(float(res.call_prices[0]))
         for i in range(len(prices) - 1):
-            assert prices[i] < prices[i + 1], \
-                f"ATM call not increasing in v0: {prices}"
+            assert prices[i] < prices[i + 1], f"ATM call not increasing in v0: {prices}"
 
     def test_garch_vs_sv32_prices_differ(self):
         """GARCH diffusion and 3/2 SV must give different prices with same params.

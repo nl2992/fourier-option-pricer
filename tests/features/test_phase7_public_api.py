@@ -6,13 +6,17 @@ Purpose:
     Delta/Gamma, invert to IV) works through the top-level imports alone.
   - ``foureng.__version__`` is a PEP-440-ish string.
 """
+
 from __future__ import annotations
+
 import re
+
 import numpy as np
 
 
 def test_public_symbols_importable():
     import foureng
+
     for name in foureng.__all__:
         assert hasattr(foureng, name), f"public API missing: {name}"
 
@@ -22,11 +26,24 @@ def test_public_api_exports_all_documented_models():
     import foureng as fe
 
     expected = [
-        "BsmParams", "HestonParams", "OusvParams", "VGParams", "CgmyParams",
-        "NigParams", "KouParams", "BatesParams", "HestonKouParams",
-        "HestonCGMYParams", "Sv32Params", "GarchWMW2012Params",
-        "RoughHestonParams", "MertonJDParams", "MeixnerParams",
-        "BilateralGammaParams", "GHParams", "FMLSParams",
+        "BsmParams",
+        "HestonParams",
+        "OusvParams",
+        "VGParams",
+        "CgmyParams",
+        "NigParams",
+        "KouParams",
+        "BatesParams",
+        "HestonKouParams",
+        "HestonCGMYParams",
+        "Sv32Params",
+        "GarchWMW2012Params",
+        "RoughHestonParams",
+        "MertonJDParams",
+        "MeixnerParams",
+        "BilateralGammaParams",
+        "GHParams",
+        "FMLSParams",
     ]
     missing = [name for name in expected if not hasattr(fe, name)]
     assert not missing, f"foureng missing model exports: {missing}"
@@ -35,11 +52,13 @@ def test_public_api_exports_all_documented_models():
 def test_price_strip_importable():
     """price_strip must be importable from the top-level package."""
     import foureng as fe
+
     assert callable(fe.price_strip)
 
 
 def test_version_string():
     import foureng
+
     assert isinstance(foureng.__version__, str)
     assert re.match(r"^\d+\.\d+\.\d+", foureng.__version__), foureng.__version__
 
@@ -79,6 +98,7 @@ def test_end_to_end_via_public_api():
 def test_control_variate_api():
     """Smoke: the Phase 6 CV routines work via the top-level import."""
     import foureng as fe
+
     r = fe.bs_call_cv(100.0, 100.0, 1.0, 0.03, 0.0, 0.2, 20_000, seed=1)
     assert r.se_cv < r.se_plain
     assert r.var_reduction > 1.0

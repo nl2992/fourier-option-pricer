@@ -1,18 +1,19 @@
 """Additional small edge-case tests for project robustness."""
+
 from __future__ import annotations
 
 import numpy as np
 import pytest
 
-from foureng.models.base import ForwardSpec
-from foureng.models.bsm import BsmParams
 from foureng.iv.implied_vol import BSInputs, implied_vol_newton_safeguarded
 from foureng.mc.black_scholes_mc import MCSpec, european_call_mc
-from foureng.pipeline import price_strip
+from foureng.models.base import ForwardSpec
 from foureng.models.bates import BatesParams, bates_cf, bates_cumulants
+from foureng.models.bsm import BsmParams
 from foureng.models.heston import HestonParams, heston_cf, heston_cumulants
 from foureng.models.heston_cgmy import HestonCGMYParams, heston_cgmy_cf
 from foureng.models.heston_kou import HestonKouParams, heston_kou_cf, heston_kou_cumulants
+from foureng.pipeline import price_strip
 from foureng.utils.grids import FFTGrid, FRFTGrid
 
 
@@ -135,7 +136,9 @@ def test_bates_zero_jump_intensity_cumulants_reduce_to_heston():
     fwd, heston, _ = _heston_base_case()
     bates = _bates_no_jump_params(heston)
 
-    assert np.allclose(bates_cumulants(fwd, bates), heston_cumulants(fwd, heston), atol=1e-12, rtol=1e-12)
+    assert np.allclose(
+        bates_cumulants(fwd, bates), heston_cumulants(fwd, heston), atol=1e-12, rtol=1e-12
+    )
 
 
 def test_bates_zero_jump_intensity_cos_prices_match_heston():
@@ -175,14 +178,18 @@ def test_heston_kou_zero_jump_intensity_cf_reduces_to_heston():
     heston_kou = _heston_kou_no_jump_params(heston)
     u = np.array([-4.0, -1.5, 0.0, 1.25, 3.0], dtype=float)
 
-    assert np.allclose(heston_kou_cf(u, fwd, heston_kou), heston_cf(u, fwd, heston), atol=1e-13, rtol=1e-13)
+    assert np.allclose(
+        heston_kou_cf(u, fwd, heston_kou), heston_cf(u, fwd, heston), atol=1e-13, rtol=1e-13
+    )
 
 
 def test_heston_kou_zero_jump_intensity_cumulants_reduce_to_heston():
     fwd, heston, _ = _heston_base_case()
     heston_kou = _heston_kou_no_jump_params(heston)
 
-    assert np.allclose(heston_kou_cumulants(fwd, heston_kou), heston_cumulants(fwd, heston), atol=1e-12, rtol=1e-12)
+    assert np.allclose(
+        heston_kou_cumulants(fwd, heston_kou), heston_cumulants(fwd, heston), atol=1e-12, rtol=1e-12
+    )
 
 
 def test_heston_kou_zero_jump_intensity_cos_prices_match_heston():
@@ -200,7 +207,9 @@ def test_heston_cgmy_zero_activity_cf_reduces_to_heston():
     heston_cgmy = _heston_cgmy_no_jump_params(heston)
     u = np.array([-2.5, -0.5, 0.0, 1.0, 3.5], dtype=float)
 
-    assert np.allclose(heston_cgmy_cf(u, fwd, heston_cgmy), heston_cf(u, fwd, heston), atol=1e-13, rtol=1e-13)
+    assert np.allclose(
+        heston_cgmy_cf(u, fwd, heston_cgmy), heston_cf(u, fwd, heston), atol=1e-13, rtol=1e-13
+    )
 
 
 def test_heston_cgmy_zero_activity_carr_madan_prices_match_heston():
@@ -208,7 +217,9 @@ def test_heston_cgmy_zero_activity_carr_madan_prices_match_heston():
     heston_cgmy = _heston_cgmy_no_jump_params(heston)
     grid = FFTGrid(N=4096, eta=0.25, alpha=1.5)
 
-    heston_cgmy_prices = price_strip("heston_cgmy", "carr_madan", strikes, fwd, heston_cgmy, grid=grid)
+    heston_cgmy_prices = price_strip(
+        "heston_cgmy", "carr_madan", strikes, fwd, heston_cgmy, grid=grid
+    )
     heston_prices = price_strip("heston", "carr_madan", strikes, fwd, heston, grid=grid)
 
     assert np.allclose(heston_cgmy_prices, heston_prices, atol=1e-12, rtol=1e-12)

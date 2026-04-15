@@ -5,16 +5,16 @@ Three replication targets:
   - Lewis (2001) 15-digit Heston: within 1e-6 at N<=160
   - CM1999 Case 4 VG (heavy tails): within 1e-3 at N=1024
 """
+
 from __future__ import annotations
+
 import numpy as np
 import pytest
 
 from foureng.models.base import ForwardSpec
 from foureng.models.heston import HestonParams, heston_cf_form2, heston_cumulants
 from foureng.models.variance_gamma import VGParams, vg_cf, vg_cumulants
-from foureng.pricers.cos import cos_prices, cos_auto_grid
-from foureng.utils.grids import COSGrid
-
+from foureng.pricers.cos import cos_auto_grid, cos_prices
 
 pytestmark = [pytest.mark.paper, pytest.mark.external_reference]
 
@@ -29,8 +29,7 @@ def test_cos_heston_fo2008(fo2008_heston):
     """
     d = fo2008_heston
     fwd = ForwardSpec(S0=d["S0"], r=d["r"], q=d["q"], T=d["T"])
-    p = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"],
-                     rho=d["rho"], v0=d["v0"])
+    p = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"], rho=d["rho"], v0=d["v0"])
     phi = lambda u: heston_cf_form2(u, fwd, p)
 
     grid = cos_auto_grid(heston_cumulants(fwd, p), N=256, L=10.0)
@@ -47,8 +46,7 @@ def test_cos_heston_fo2008_n_convergence(fo2008_heston):
     """
     d = fo2008_heston
     fwd = ForwardSpec(S0=d["S0"], r=d["r"], q=d["q"], T=d["T"])
-    p = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"],
-                     rho=d["rho"], v0=d["v0"])
+    p = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"], rho=d["rho"], v0=d["v0"])
     phi = lambda u: heston_cf_form2(u, fwd, p)
 
     cums = heston_cumulants(fwd, p)
@@ -84,8 +82,7 @@ def test_cos_heston_fo2008_L_sensitivity(fo2008_heston):
     """
     d = fo2008_heston
     fwd = ForwardSpec(S0=d["S0"], r=d["r"], q=d["q"], T=d["T"])
-    p = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"],
-                     rho=d["rho"], v0=d["v0"])
+    p = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"], rho=d["rho"], v0=d["v0"])
     phi = lambda u: heston_cf_form2(u, fwd, p)
 
     cums = heston_cumulants(fwd, p)
@@ -102,8 +99,7 @@ def test_cos_lewis_heston(lewis_heston):
     """Lewis (2001) 15-digit Heston: COS hits machine-precision by N=128."""
     d = lewis_heston
     fwd = ForwardSpec(S0=d["S0"], r=d["r"], q=d["q"], T=d["T"])
-    p = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"],
-                     rho=d["rho"], v0=d["v0"])
+    p = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"], rho=d["rho"], v0=d["v0"])
     phi = lambda u: heston_cf_form2(u, fwd, p)
 
     grid = cos_auto_grid(heston_cumulants(fwd, p), N=128, L=10.0)
@@ -116,8 +112,7 @@ def test_cos_heston_exponential_convergence(lewis_heston):
     """COS on Heston: error should drop by many orders of magnitude doubling N."""
     d = lewis_heston
     fwd = ForwardSpec(S0=d["S0"], r=d["r"], q=d["q"], T=d["T"])
-    p = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"],
-                     rho=d["rho"], v0=d["v0"])
+    p = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"], rho=d["rho"], v0=d["v0"])
     phi = lambda u: heston_cf_form2(u, fwd, p)
 
     errs = {}
@@ -144,7 +139,11 @@ def test_cos_cm1999_vg_case4(cm1999_vg):
 
     grid = cos_auto_grid(vg_cumulants(fwd, p), N=2048, L=10.0)
     res = cos_prices(phi, fwd, d["strikes"], grid)
-    P = res.call_prices - d["S0"] * np.exp(-d["q"] * d["T"]) + d["strikes"] * np.exp(-d["r"] * d["T"])
+    P = (
+        res.call_prices
+        - d["S0"] * np.exp(-d["q"] * d["T"])
+        + d["strikes"] * np.exp(-d["r"] * d["T"])
+    )
     err = np.abs(P - d["ref_puts"]).max()
     assert err < 1e-3, f"CM1999 VG COS N=2048 max err = {err:.3e}"
 
@@ -156,8 +155,7 @@ def test_cos_matches_carr_madan(lewis_heston):
 
     d = lewis_heston
     fwd = ForwardSpec(S0=d["S0"], r=d["r"], q=d["q"], T=d["T"])
-    p = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"],
-                     rho=d["rho"], v0=d["v0"])
+    p = HestonParams(kappa=d["kappa"], theta=d["theta"], nu=d["nu"], rho=d["rho"], v0=d["v0"])
     phi = lambda u: heston_cf_form2(u, fwd, p)
 
     C_cm = carr_madan_price_at_strikes(phi, fwd, FFTGrid(4096, 0.25, 1.5), d["strikes"])

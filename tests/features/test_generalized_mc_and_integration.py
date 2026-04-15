@@ -4,6 +4,7 @@ These tests are deliberately broad rather than razor-thin: they exercise the
 course rubric's themes of validation, robustness, and numerical sanity across
 multiple parameter regimes while keeping seeded Monte Carlo checks reproducible.
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -16,7 +17,7 @@ from foureng.mc.black_scholes_mc import MCSpec, european_call_mc
 from foureng.mc.heston_conditional_mc import HestonMCScheme, heston_conditional_mc_calls
 from foureng.models.base import ForwardSpec
 from foureng.models.bsm import BsmParams, bsm_cf, bsm_cumulants
-from foureng.models.heston import HestonParams, heston_cf_form2, heston_cumulants
+from foureng.models.heston import HestonParams
 from foureng.pipeline import price_strip
 from foureng.surface.vol_surface import SurfaceSpec, model_iv_surface, model_price_surface
 from foureng.utils.grids import FFTGrid, FRFTGrid
@@ -43,8 +44,7 @@ def _assert_mc_close(actual, expected, *, rel=0.10, abs_floor=0.15):
     allowed = np.maximum(abs_floor, rel * np.maximum(np.abs(expected), 1.0))
     err = np.abs(actual - expected)
     assert np.all(err <= allowed), (
-        f"MC mismatch\nactual={actual}\nexpected={expected}\n"
-        f"abs_err={err}\nallowed={allowed}"
+        f"MC mismatch\nactual={actual}\nexpected={expected}\nabs_err={err}\nallowed={allowed}"
     )
 
 

@@ -6,19 +6,20 @@ Verify:
   - Generic runtime check flags bad alphas with NaN/inf phi.
   - assert_alpha_valid raises for bad alpha, passes for good.
 """
+
 from __future__ import annotations
-import numpy as np
+
 import pytest
 
 from foureng.models.base import ForwardSpec
+from foureng.models.heston import HestonParams, heston_cf_form2
 from foureng.models.kou import KouParams, kou_cf
 from foureng.models.variance_gamma import VGParams, vg_cf
-from foureng.models.heston import HestonParams, heston_cf_form2
 from foureng.utils.validity import (
+    assert_alpha_valid,
     check_alpha,
     kou_alpha_max,
     vg_alpha_max,
-    assert_alpha_valid,
 )
 
 pytestmark = [pytest.mark.numerical_stability]

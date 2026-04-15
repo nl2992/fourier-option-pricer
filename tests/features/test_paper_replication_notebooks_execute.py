@@ -3,6 +3,7 @@
 Both tests are marked @pytest.mark.slow and are skipped in the default
 fast-CI matrix. Run them explicitly with ``pytest -m slow``.
 """
+
 from __future__ import annotations
 
 import os
