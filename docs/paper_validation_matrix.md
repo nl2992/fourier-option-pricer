@@ -6,6 +6,24 @@ Every result claim in the README and APPENDIX can be traced back to a row here.
 Evidence-level definitions are in [validation_hierarchy.md](validation_hierarchy.md).
 Quick key:
 
+## Validation snapshot
+
+| Summary item | Count / note |
+| --- | --- |
+| Total tracked validation rows | 27 |
+| `done` | 13 |
+| `partial` | 13 |
+| `xfail-if-unstable` | 1 |
+| Exact published-paper anchors | Carr-Madan (1999), Lewis (2001), FO2008 Heston ATM, Kelly (2025) |
+| Exact software anchors | MathWorks Bates price, surface, FFT/FRFT, and delta references |
+| Derived / internal anchors | Frozen regression strips, high-resolution Fourier oracles, improved-COS comparison outputs |
+
+## Status guide
+
+- `done`: the repo has strong evidence for the stated claim and the linked tests or artifacts are current.
+- `partial`: the implementation is validated, but the evidence is more structural, derived, or incomplete than a direct paper-table replay.
+- `xfail-if-unstable`: the case is retained intentionally as a documented known-instability or figure-only regime.
+
 | Tag | Meaning |
 |-----|---------|
 | `external_reference` | Exact price from a published paper table |
