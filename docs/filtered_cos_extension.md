@@ -3,6 +3,10 @@
 This document describes the adaptive filtered-COS layer  -  the primary **research extension**
 in this project, going beyond the baseline Junike truncation policy.
 
+**Important framing:** this is an **original project extension** inspired by prior spectral-filter
+ideas. It is **not** presented as a direct replication of a single published adaptive
+filtered-COS paper.
+
 **Demo notebook:** [`notebooks/research/adaptive_cos.ipynb`](../notebooks/research/adaptive_cos.ipynb)  
 **Improved-truncation notebook:** [`notebooks/research/cos_method_improved.ipynb`](../notebooks/research/cos_method_improved.ipynb)
 
