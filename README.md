@@ -1,57 +1,70 @@
 # fourier-option-pricer
 
-If your model gives you a characteristic function, you shouldn’t be simulating tens of thousands of Monte Carlo paths to price (or calibrate to) an implied-vol surface. This repo implements three Fourier-based European pricers—Carr–Madan FFT, FRFT, and COS—behind a single `CharFunc` protocol, wires them to Heston / Variance Gamma / Kou, and validates everything against published reference tables before claiming anything works. Monte Carlo stays in the repo, but only as the baseline you benchmark against.
+If your model has a characteristic function, you usually do not want to price or calibrate a European implied-vol surface by simulating huge Monte Carlo path sets. This repo implements three Fourier-based European pricers, Carr-Madan FFT, FRFT, and COS, behind a single `CharFunc` protocol. It wires those pricers to Heston, Variance Gamma, and Kou, and it only treats a method as "working" once it matches published reference values. Monte Carlo remains in the repo, but as a baseline for timing and error comparisons.
 
 ---
 
-## What’s in scope
+## What is in scope
 
-We’re building a small, validation-first pricing stack:
+This project builds a small pricing stack with four parts.
 
-- Models (characteristic functions):
-  - Heston (stochastic volatility)
-  - Variance Gamma (pure-jump Lévy)
-  - Kou (double-exponential jump diffusion)
+- **Models**
+  - Heston
+  - Variance Gamma
+  - Kou
 
-- European pricers (three ways):
-  - Carr–Madan FFT (1999)
-  - Fractional FFT / FRFT (2004)
-  - COS (2008)
+- **European pricers**
+  - Carr-Madan FFT
+  - FRFT
+  - COS
 
-- Glue:
-  - robust implied-vol inversion (price → IV)
-  - a benchmark harness (speed + accuracy)
-  - tests/notebooks that replicate paper tables before we trust anything
+- **Numerical utilities**
+  - implied-vol inversion
+  - interpolation
+  - cumulant and truncation helpers
+  - benchmark harnesses
 
----
-
-## The workflow (end-to-end)
-
-1) Implement the model characteristic function  
-   \(\varphi_T(u) = \mathbb{E}^\mathbb{Q}[e^{iuX_T}]\) for \(X_T = \log(S_T/F_0)\) (we work in log-forward space).
-
-2) Price a *strip of strikes* using one of:
-- Carr–Madan FFT (fixed log-strike grid, fast strip pricing)
-- FRFT (decouples frequency/strike grid choices)
-- COS (cosine-series expansion on a truncation range from cumulants)
-
-3) Convert prices to implied vols (robust root-finding).
-
-4) Validate against published reference tables (this is the gate).
-
-5) Benchmark scaling (runtime vs strikes, runtime vs tolerance, accuracy vs references).
+- **Validation**
+  - tests and notebooks that reproduce published tables before any performance claims are made
 
 ---
 
-## Why Monte Carlo is only the baseline here
+## End-to-end workflow
 
-Monte Carlo is fine for one-off pricing; it’s a bad default for calibration loops.
+1. Implement the model characteristic function
+   $$
+   \varphi_T(u)=\mathbb{E}^{\mathbb{Q}}\!\left[e^{iuX_T}\right]
+   $$
+   where
+   $$
+   X_T=\log\!\left(\frac{S_T}{F_0}\right), \qquad F_0=S_0 e^{(r-q)T}.
+   $$
 
-- Convergence is slow: \(\varepsilon_{MC} \propto 1/\sqrt{n}\). Reducing error by 10× costs ~100× more paths.
-- Calibration is repeated strip pricing (50–200 strikes across maturities, many optimizer iterations). Sampling noise becomes a bottleneck.
-- Even conditional MC for Heston (where you reduce variance by conditioning) still pays the path-count tax and still carries sampling noise.
+2. Price a strip of strikes with one of the three Fourier pricers.
 
-For European options under CF models, Fourier inversion replaces sampling with deterministic numerics and gives a clean speed/accuracy frontier.
+3. Convert prices to implied vols with a robust root finder.
+
+4. Check prices against published reference tables.
+
+5. Benchmark runtime and error only after the validation step passes.
+
+---
+
+## Why Monte Carlo is only the baseline
+
+Monte Carlo is useful, but for European calibration it is usually the wrong default.
+
+- The standard error decays like
+  $$
+  \varepsilon_{\mathrm{MC}} = O\!\left(n^{-1/2}\right).
+  $$
+  Cutting error by a factor of 10 usually needs about 100 times as many paths.
+
+- Calibration means repeated strip pricing across strikes, maturities, and optimizer iterations. That makes Monte Carlo noise and runtime expensive.
+
+- Even variance-reduced or conditional Monte Carlo still pays the path-count cost.
+
+For European options under characteristic-function models, Fourier inversion gives deterministic prices and a much better speed versus accuracy trade-off.
 
 ---
 
@@ -65,189 +78,302 @@ import numpy as np
 
 class CharFunc(Protocol):
     def __call__(self, u: np.ndarray) -> np.ndarray:
-        """Return phi_T(u) = E^Q[exp(i u X_T)] for X_T = log(S_T / F0)."""
+        \"\"\"Return phi_T(u) = E^Q[exp(i u X_T)] for X_T = log(S_T / F0).\"\"\"
         ...
 ```
 
-Once a model implements `phi(u)`, it plugs into FFT / FRFT / COS without changing the pricer.
+Once a model exposes $\varphi_T(u)$, the same model can be passed into FFT, FRFT, or COS without rewriting the pricer.
 
 ---
 
-## Methods (pricers)
+## Pricers
 
-### Carr–Madan FFT (1999)
-Paper (PDF): https://engineering.nyu.edu/sites/default/files/2018-08/CarrMadan2_0.pdf
+### 1. Carr-Madan FFT
 
-We implement the damped call transform and invert it on a uniform frequency grid with Simpson weights. Core knobs:
-- damping \(\alpha\)
-- grid size \(N\)
-- frequency step \(\eta\)
-- log-strike step \(\lambda = 2\pi/(N\eta)\)
-- interpolation to off-grid strikes (important for table replication)
+Carr-Madan prices a damped call transform on a uniform frequency grid and then uses the FFT to recover prices across a log-strike grid.
 
-Limitation:
-- the FFT grid couples \(\eta\) and \(\lambda\) (you trade strike resolution for integration resolution).
+Key parameters:
 
-### FRFT (Chourdakis, 2004)
-Reference page: https://www.semanticscholar.org/paper/Option-Pricing-Using-the-Fractional-FFT-Chourdakis/6bdf4696312d37427eda2740137650c09deacda7
+- damping parameter $\alpha$
+- grid size $N$
+- frequency spacing $\eta$
+- strike spacing
+  $$
+  \lambda=\frac{2\pi}{N\eta}
+  $$
 
-FRFT breaks the FFT grid coupling by allowing an arbitrary fractional parameter. Implemented via a Bluestein / chirp-z style decomposition (three FFTs). The point is practical: it often reaches the same tolerance with much smaller \(N\).
+Main practical issue:
 
-### COS (Fang & Oosterlee, 2008)
-Preprint (PDF): http://ta.twi.tudelft.nl/mf/users/oosterle/oosterlee/COS.pdf
+- the FFT grid ties together frequency resolution and strike resolution, so you cannot choose them independently
 
-COS expands the density on \([a,b]\) as a cosine series. The coefficients come from the CF; you never need the density explicitly. The truncation interval is set from cumulants \(c_1,c_2,c_4\) and a scale \(L\).
+### 2. FRFT
 
-Scope note for Kou:
-- COS is always conceptually applicable to CF models, but for Kou you must ensure the required moments exist and choose \([a,b]\) carefully (jump models tighten the strip of analyticity). In the current plan, COS is validated first on Heston (FO2008 table) and then extended to other models once the truncation/cumulant machinery is stable.
+FRFT relaxes that grid coupling. It lets you keep the Fourier acceleration while giving more flexibility over the strike grid and integration grid. In practice, that often means you can hit the same tolerance with a smaller grid than plain FFT.
+
+### 3. COS
+
+COS expands the density on a finite interval $[a,b]$ using a cosine series. The density itself never needs to be written down explicitly because the coefficients are recovered from the characteristic function.
+
+A standard truncation rule uses cumulants:
+$$
+[a,b] = \left[c_1 - L\sqrt{c_2 + \sqrt{c_4}},\; c_1 + L\sqrt{c_2 + \sqrt{c_4}}\right].
+$$
+
+For Kou, COS is not ruled out in principle. If it misbehaves, the usual cause is the truncation interval or the implementation details, not the fact that Kou is a jump model.
 
 ---
 
-## Models + characteristic functions (log-forward conventions)
+## Model conventions
 
-We define the forward \(F_0 = S_0 e^{(r-q)T}\) and work with  
-\(X_T = \log(S_T/F_0)\). Under this convention, the CFs below are for \(X_T\).
+We work in **log-forward space**:
+$$
+X_T=\log\!\left(\frac{S_T}{F_0}\right), \qquad F_0=S_0 e^{(r-q)T}.
+$$
 
-### Heston (1993) — stochastic volatility
-Paper (PDF): https://www.ma.imperial.ac.uk/~ajacquie/IC_Num_Methods/IC_Num_Methods_Docs/Literature/Heston.pdf
+So every characteristic function below is the characteristic function of $X_T$, not of $\log S_T$ itself.
 
-Implementation note (non-negotiable):
-- the Heston CF contains a complex logarithm; naive evaluation (“Form 1”) can silently break due to branch cuts.
-- we implement the numerically stable “Formulation 2” (Little Heston Trap) and keep a small test demonstrating the failure case.
+If you want the characteristic function of $\log S_T$, multiply by
+$$
+e^{iu\log F_0}.
+$$
 
-References:
-- Albrecher et al. (2007) “The little Heston trap” (PDF): https://perswww.kuleuven.be/~u0009713/HestonTrap.pdf
-- Kahl & Jäckel (2005) (PDF): http://www2.math.uni-wuppertal.de/~kahl/publications/NotSoComplexLogarithmsInTheHestonModel.pdf
+---
 
-**Characteristic function (stable Formulation 2)**
+## Characteristic functions
 
-Let \(i = \sqrt{-1}\). Parameters: \(\kappa,\theta,\nu,\rho,v_0\). Define
-\[
-b(u) = \kappa - \rho\nu i u
-\]
-\[
-d(u) = \sqrt{b(u)^2 + \nu^2\,(u^2 + i u)}
-\]
-\[
-g(u) = \frac{b(u) - d(u)}{b(u) + d(u)}
-\]
+### Heston
 
-Formulation 2 uses \(e^{-dT}\) (not \(e^{+dT}\)):
+Parameters:
+$$
+\kappa,\theta,\nu,\rho,v_0.
+$$
 
-\[
-D(u,T) = \frac{b(u) - d(u)}{\nu^2}\,\frac{1 - e^{-d(u)T}}{1 - g(u)e^{-d(u)T}}
-\]
-\[
-C(u,T) = \frac{\kappa\theta}{\nu^2}\left((b(u) - d(u))T - 2\ln\left(\frac{1 - g(u)e^{-d(u)T}}{1 - g(u)}\right)\right)
-\]
-Then
-\[
-\varphi_{H}(u) = \exp\left(C(u,T) + D(u,T)v_0\right)
-\]
-If you prefer the log-price CF instead of log-forward CF, multiply by \(e^{iu\log F_0}\).
+Define
+$$
+b(u)=\kappa-\rho\nu i u,
+$$
+$$
+d(u)=\sqrt{b(u)^2+\nu^2\left(u^2+iu\right)},
+$$
+$$
+g(u)=\frac{b(u)-d(u)}{b(u)+d(u)}.
+$$
 
-### Variance Gamma (Madan–Carr–Chang, 1998) — pure jump Lévy
-Paper PDF (common lecture copy): https://engineering.nyu.edu/sites/default/files/2018-09/CarrEuropeanFinReview1998.pdf
+Using the stable "Formulation 2" or "Little Heston Trap" form, with $e^{-dT}$, define
+$$
+D(u,T)=\frac{b(u)-d(u)}{\nu^2}\,
+\frac{1-e^{-d(u)T}}{1-g(u)e^{-d(u)T}},
+$$
+$$
+C(u,T)=\frac{\kappa\theta}{\nu^2}
+\left[
+\left(b(u)-d(u)\right)T
+-2\log\!\left(\frac{1-g(u)e^{-d(u)T}}{1-g(u)}\right)
+\right].
+$$
 
-Parameters: \(\sigma,\nu,\theta\). The VG “martingale correction” is
-\[
-\omega = \frac{1}{\nu}\ln\left(1 - \theta\nu - \tfrac{1}{2}\sigma^2\nu\right)
-\]
+Then the log-forward characteristic function is
+$$
+\varphi_H(u)=\exp\!\left(C(u,T)+D(u,T)v_0\right).
+$$
+
+This is the version you want in code. The original "Form 1" representation is mathematically equivalent, but numerically it can cross the wrong complex-log branch and quietly return bad prices.
+
+---
+
+### Variance Gamma
+
+Parameters:
+$$
+\sigma,\nu,\theta.
+$$
+
+The martingale correction is
+$$
+\omega=\frac{1}{\nu}\log\!\left(1-\theta\nu-\frac{1}{2}\sigma^2\nu\right),
+$$
+which requires
+$$
+1-\theta\nu-\frac{1}{2}\sigma^2\nu>0.
+$$
+
 Under the log-forward convention,
-\[
-\varphi_{VG}(u) = \exp(iu\omega T)\left(1 - i\theta\nu u + \tfrac{1}{2}\sigma^2\nu u^2\right)^{-T/\nu}
-\]
-
-### Kou (2002) — double-exponential jump diffusion
-Paper (PDF): https://www.columbia.edu/~sk75/MagSci02.pdf
-
-Jump size CF (double-exponential):
-\[
-\varphi_Y(u) = \frac{p\eta_1}{\eta_1 - i u} + \frac{(1-p)\eta_2}{\eta_2 + i u}
-\]
-Let \(\lambda\) be jump intensity and \(\sigma\) diffusion vol. The compensator uses
-\[
-\zeta = \mathbb{E}[e^Y] - 1 = \frac{p\eta_1}{\eta_1 - 1} + \frac{(1-p)\eta_2}{\eta_2 + 1} - 1
-\]
-(Requires \(\eta_1 > 1\).)
-
-Under the log-forward convention, the CF of \(X_T\) is
-\[
-\varphi_{Kou}(u) = \exp\left(iu(-\tfrac{1}{2}\sigma^2 - \lambda\zeta)T - \tfrac{1}{2}\sigma^2 u^2 T + \lambda T(\varphi_Y(u) - 1)\right)
-\]
-
-Implementation note:
-- \(\varphi_Y(u)\) has poles at \(u = -i\eta_1\) and \(u = +i\eta_2\). Carr–Madan damping/contours must stay inside the strip of analyticity for the parameter sets you use.
+$$
+\varphi_{VG}(u)
+=
+\exp(iu\omega T)
+\left(1-i\theta\nu u+\frac{1}{2}\sigma^2\nu u^2\right)^{-T/\nu}.
+$$
 
 ---
 
-## Validation gates (what “working” means)
+### Kou
 
-We do not claim correctness until we replicate published tables within stated tolerances. These replications live as notebooks + `pytest` tests.
+Parameters:
+$$
+\sigma,\lambda,p,\eta_1,\eta_2,
+$$
+with jump-size density
+$$
+f_Y(y)=
+p\eta_1 e^{-\eta_1 y}\mathbf{1}_{\{y\ge 0\}}
++
+(1-p)\eta_2 e^{\eta_2 y}\mathbf{1}_{\{y<0\}}.
+$$
 
-- Carr–Madan (1999) VG cases (reference tables): https://engineering.nyu.edu/sites/default/files/2018-08/CarrMadan2_0.pdf
-- Fang–Oosterlee (2008) COS table (Heston): http://ta.twi.tudelft.nl/mf/users/oosterle/oosterlee/COS.pdf
-- Kou (2002) Table 1: https://www.columbia.edu/~sk75/MagSci02.pdf
-- Lewis (2001) high-precision benchmark (independent cross-check):
-  - SSRN: https://papers.ssrn.com/sol3/papers.cfm?abstract_id=282110
-  - PDF mirror often used in implementations: https://www.maths.univ-evry.fr/pages_perso/crepey/Finance/ExpLevy.pdf
+The jump characteristic function is
+$$
+\varphi_Y(u)=\frac{p\eta_1}{\eta_1-iu}+\frac{(1-p)\eta_2}{\eta_2+iu}.
+$$
+
+The exponential-jump compensator is
+$$
+\zeta=\mathbb{E}[e^Y]-1
+=
+\frac{p\eta_1}{\eta_1-1}
++
+\frac{(1-p)\eta_2}{\eta_2+1}
+-1,
+$$
+which requires
+$$
+\eta_1>1.
+$$
+
+Under the log-forward convention,
+$$
+X_T=
+\left(-\frac{1}{2}\sigma^2-\lambda\zeta\right)T
++\sigma W_T
++\sum_{j=1}^{N_T} Y_j,
+$$
+so the characteristic function is
+$$
+\varphi_{Kou}(u)
+=
+\exp\!\left(
+iu\left(-\frac{1}{2}\sigma^2-\lambda\zeta\right)T
+-\frac{1}{2}\sigma^2u^2T
++\lambda T\left(\varphi_Y(u)-1\right)
+\right).
+$$
+
+That is the correct log-forward version. If you see an extra factor $e^{iu\log F_0}$, you are no longer in normalized forward coordinates.
 
 ---
 
-## Benchmarks (what we measure)
+## Validation gate
 
-- runtime vs number of strikes (strip pricing)
-- runtime vs tolerance (error target)
-- accuracy vs reference prices
-- scaling comparisons: FFT vs FRFT vs COS
-- MC baseline runtime/error (including conditional MC where applicable)
+Nothing should be called correct until it reproduces published reference results within a stated tolerance.
 
-We do not publish placeholder speedups here. Measured results live in notebooks and get copied into the README only after they’re reproducible.
+Suggested validation order:
+
+1. **Carr-Madan FFT**
+   - replicate benchmark prices from Carr-Madan style test cases, especially Variance Gamma examples
+
+2. **Heston**
+   - compare against high-precision Heston benchmarks and include at least one branch-cut stress test
+
+3. **COS**
+   - replicate published Heston COS tables first
+
+4. **Kou**
+   - replicate Kou reference prices only after the Fourier engine is already stable
+
+This keeps the debugging order sensible. First get one method working on one model. Then widen coverage.
 
 ---
 
-## Repository layout (high level)
+## Benchmarks to report
+
+Only publish benchmark numbers after the validation tests are passing.
+
+Measure:
+
+- runtime versus number of strikes
+- runtime versus grid size
+- error versus reference prices
+- FFT versus FRFT versus COS
+- Monte Carlo baseline runtime and error
+
+Do not put placeholder speedups in the README.
+
+---
+
+## Repository layout
 
 ```text
 src/foureng/
-  char_func/        # base protocol + heston/vg/kou
+  char_func/        # heston / vg / kou
   pricers/          # carr_madan / frft / cos
-  iv/               # implied-vol inversion (robust solvers)
-  mc/               # MC baselines (incl conditional MC where relevant)
+  iv/               # implied-vol inversion
+  mc/               # Monte Carlo baselines
   utils/            # grids, interpolation, cumulants, numerics
 
 tests/              # paper-table replication tests
-notebooks/          # narrative: MC baseline -> FFT -> FRFT -> COS -> full benchmark
+notebooks/          # validation and benchmark notebooks
 ```
 
 ---
 
-## Extensions (only after validations are green)
+## Extensions after validation
 
-- Fourier Greeks (differentiate under the integral sign; avoid bump-and-reprice)
-- FFT price as a control variate for MC (variance reduction)
-- Discrete Asian pricing via FFT convolution (Benhamou, 2002)
+Only add these once the core pricing stack is already validated.
 
-Benhamou (2002) SSRN: https://papers.ssrn.com/sol3/papers.cfm?abstract_id=269491
+- Fourier Greeks
+- FFT price as a control variate for Monte Carlo
+- calibration routines
+- packaged API or external-library adapter
 
 ---
 
 ## PyFENG integration
 
-PyFENG: https://github.com/PyFE/PyFENG (docs: https://pyfeng.readthedocs.io/en/latest/)
+PyFENG already has useful option-pricing components in pure Python. The goal here is not to duplicate Heston pricing for its own sake. The useful angle is:
 
-PyFENG already includes Heston FFT pricing in pure Python. The integration goal here is not “rewrite Heston”; it’s:
-- unify FFT/FRFT/COS behind a model-agnostic CF interface
-- provide an adapter (or PR) so PyFENG models can plug into FRFT/COS and our validation/benchmark harness
+- one common characteristic-function interface
+- one validation harness
+- multiple Fourier pricers behind the same API
+
+That makes the repo cleaner and makes cross-method comparisons straightforward.
 
 ---
 
 ## Roadmap
 
-- Phase 1 — MC baseline: conditional MC timing vs strike count (10 / 100 / 1000)
-- Phase 2 — Carr–Madan FFT: VG + Heston, validate vs CM1999 + Lewis
-- Phase 3 — FRFT: implement + speed/accuracy frontier vs FFT
-- Phase 4 — COS: validate vs FO2008; extend as appropriate
-- Phase 5 — Kou replication: validate vs Kou Table 1
-- Phase 6 — Extensions (Greeks / control variate / Asian convolution)
-- Phase 7 — Packaging + adapter (PyFENG integration or PyPI-ready standalone)
+1. **Phase 1**
+   - Monte Carlo baseline
+   - timing versus strike count
+   - error decay checks
+
+2. **Phase 2**
+   - Carr-Madan FFT for Variance Gamma and Heston
+   - validation against published benchmarks
+
+3. **Phase 3**
+   - FRFT implementation
+   - FFT versus FRFT benchmark study
+
+4. **Phase 4**
+   - COS implementation
+   - validation on Heston, then extension to Kou if the truncation setup is stable
+
+5. **Phase 5**
+   - Kou replication tests
+
+6. **Phase 6**
+   - optional extensions such as Greeks or control variates
+
+7. **Phase 7**
+   - packaging and library integration
+
+---
+
+## Practical notes
+
+A few details matter enough that they should be stated explicitly.
+
+- **Heston branch handling matters.** Use the stable logarithm formulation in code.
+- **Interpolation matters.** FFT prices live on a grid, but your benchmark strikes usually do not.
+- **Convention mistakes are common.** Always check whether a paper is using log-spot or log-forward variables.
+- **Validation comes before speed claims.** A fast wrong price is still wrong.
