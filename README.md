@@ -1,6 +1,6 @@
 # fourier-option-pricer
 
-If your model gives you a characteristic function, you shouldn’t be simulating tens of thousands of Monte Carlo paths to price (or calibrate to) an implied-vol surface. This repo implements three Fourier-based European pricers—Carr–Madan FFT, FRFT, and COS—behind a single CharFunc protocol, wires them to Heston / Variance Gamma / Kou, and validates everything against published reference tables before claiming anything works. Monte Carlo stays in the repo, but only as the baseline you benchmark against.
+If your model gives you a characteristic function, you shouldn’t be simulating tens of thousands of Monte Carlo paths to price (or calibrate to) an implied-vol surface. This repo implements three Fourier-based European pricers Carr–Madan FFT, FRFT, and COS behind a single CharFunc protocol, wires them to Heston / Variance Gamma / Kou, and validates everything against published reference tables before claiming anything works. Monte Carlo stays in the repo, but only as the baseline you benchmark against.
 
 ## What we are building
 
@@ -182,10 +182,10 @@ PyFENG already includes Heston FFT pricing in pure Python. The integration goal 
 
 ## Roadmap
 
-- Phase 1 — MC baseline: conditional MC timing vs strike count (10 / 100 / 1000)
-- Phase 2 — Carr–Madan FFT: VG + Heston, validate against CM1999 + Lewis
-- Phase 3 — FRFT: implement + speed/accuracy frontier vs FFT
-- Phase 4 — COS: validate vs FO2008; extend as appropriate
-- Phase 5 — Kou replication: validate vs Kou Table 1
-- Phase 6 — Extensions (Greeks / control variate / Asian convolution)
-- Phase 7 — Packaging + adapter (PyFENG integration or PyPI-ready standalone)
+- Phase 1   MC baseline: conditional MC timing vs strike count (10 / 100 / 1000)
+- Phase 2   Carr–Madan FFT: VG + Heston, validate against CM1999 + Lewis
+- Phase 3   FRFT: implement + speed/accuracy frontier vs FFT
+- Phase 4   COS: validate vs FO2008; extend as appropriate
+- Phase 5   Kou replication: validate vs Kou Table 1
+- Phase 6   Extensions (Greeks / control variate / Asian convolution)
+- Phase 7   Packaging + adapter (PyFENG integration or PyPI-ready standalone)
