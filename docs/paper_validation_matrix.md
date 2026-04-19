@@ -1,7 +1,7 @@
 # Paper Validation Matrix
 
 This matrix is the single source of truth for what is validated, at what level, and where the evidence lives.
-Every result claim in the README and APPENDIX can be traced back to a row here.
+Every reported result in the README and APPENDIX can be traced back to a row here.
 
 Evidence-level definitions are in [validation_hierarchy.md](validation_hierarchy.md).
 Quick key:
@@ -20,7 +20,7 @@ Quick key:
 
 ## Status guide
 
-- `done`: the repo has strong evidence for the stated claim and the linked tests or artifacts are current.
+- `done`: the repo has strong evidence for the stated result and the linked tests or artifacts are current.
 - `partial`: the implementation is validated, but the evidence is more structural, derived, or incomplete than a direct paper-table replay.
 - `xfail-if-unstable`: the case is retained intentionally as a documented known-instability or figure-only regime.
 

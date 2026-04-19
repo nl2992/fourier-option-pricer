@@ -586,7 +586,7 @@ The "ugly rows" are not a single COS failure.
   reference-rounding rather than series-resolution failure.
 - Heston Table 5: the long-maturity / wide-interval case needs interval and term count
   chosen jointly  -  increasing N alone cannot recover mass discarded by a too-narrow interval.
-- Paper timings are 2008 hardware measurements and are not portable runtime claims.
+- Paper timings are 2008 hardware measurements and are not directly portable runtime comparisons.
 
 This motivates the improved COS policy described in section 14.
 
@@ -635,7 +635,7 @@ This is why the improved method should be described as a robustness and policy i
 
 ## 15. Results for the Junike-style fix
 
-The improved notebook does not claim that COS dominates every case. It shows where the adaptive policy helps, where it merely matches, and where another method is the honest fallback.
+The improved notebook shows where the adaptive policy helps, where it matches existing methods, and where another method remains the more appropriate fallback.
 
 | Case | Paper best N | Paper best max error | Old default error | Our paper-grid replay | Improved method | Improved N | Improved error | Vs default | Vs paper | Vs paper-grid |
 |---|---:|---:|---:|---:|---|---:|---:|---|---|---|
@@ -694,7 +694,7 @@ The adaptive selector builds a candidate set of `(COSGridPolicy, COSFilterSpec)`
 returns the fastest candidate satisfying the user's error tolerance  -  with the no-filter
 Junike candidate always in the pool, so the selector weakly dominates fixed Junike-COS.
 
-The correct claim is: *"Junike helps truncation. Filtering helps residual finite-series /
+The key interpretation is: *"Junike helps truncation. Filtering helps residual finite-series /
 nonsmoothness cases. The adaptive selector chooses among vanilla COS, Junike-COS, and
 filtered Junike-COS."*
 

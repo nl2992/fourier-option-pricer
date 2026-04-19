@@ -22,7 +22,7 @@ these levels via the `reference_type` field in the corresponding JSON fixture or
 ## Validation matrix
 
 See [paper_validation_matrix.md](paper_validation_matrix.md) for the complete per-model table
-linking each paper claim to its test file, reference type, and numeric target.
+linking each paper-backed result to its test file, reference type, and numeric target.
 
 ---
 

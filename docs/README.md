@@ -20,7 +20,7 @@ Start at [README.md](../README.md) for the project overview; come here for depth
 | Document | Contents |
 |----------|----------|
 | [validation_hierarchy.md](validation_hierarchy.md) | The five evidence levels (`external_reference` → `qualitative_figure`), current status summary, and instructions for adding a new validation case. |
-| [paper_validation_matrix.md](paper_validation_matrix.md) | Per-paper validation matrix: every claim linked to its test file, reference type, and numeric target. |
+| [paper_validation_matrix.md](paper_validation_matrix.md) | Per-paper validation matrix: every reported result linked to its test file, reference type, and numeric target. |
 | [fo2008_replication.md](fo2008_replication.md) | Paper-faithful Fang & Oosterlee (2008) replication tables (Tables 1–10), interpretation notes, and improved-COS summary with benchmark CSV links. |
 | [bates_sv32_validation.md](bates_sv32_validation.md) | Detailed validation record for Bates (BATES-01–07) and 3/2 SV (SV32-01–05): parameters, mu_j formula, reference types, tolerances, and test-file links. |
 

@@ -10,7 +10,7 @@ This document answers the marker's three assessment questions about AI use in th
 2. **How existing libraries and code were reused**  -  which mature packages were used as-is rather than reimplemented.
 3. **What was added beyond the reference papers**  -  the original work that goes beyond reproducing existing results.
 
-It also records human review and control points, validation gates, and the things the project does not claim.
+It also records human review and control points, validation gates, and the project's scope and evidence boundaries.
 
 ---
 
@@ -23,7 +23,7 @@ AI tools were used at four distinct stages:
 | Research | Deep Research (GPT-based) | Identify academic papers, extract formulas, find exact benchmark numbers, locate official software examples |
 | Planning | Reasoning LLM | Convert research reports into self-contained implementation TODOs with file names, expected outputs, and tolerances |
 | Implementation | AI coding agent / implementation model | First-pass code generation, test writing, notebook authoring, documentation restructuring |
-| Review | Human | Check sources, remove overclaims, verify conventions, run tests, approve or revise |
+| Review | Human | Check sources, tighten wording, verify conventions, run tests, approve or revise |
 
 The AI workflow was **iterative and source-driven**, not one-shot or freeform. At no stage was AI output accepted without human checking.
 
@@ -37,7 +37,7 @@ flowchart TD
     B --> C[Deep Research prompt: find papers, formulas, test cases, exact benchmark numbers]
     C --> D[Deep Research report: sources, formulas, Bates/3-2 targets, validation plan]
     D --> E[Reasoning LLM: convert research into self-contained TODOs]
-    E --> F[Human review: remove overclaims, check references, decide priorities]
+    E --> F[Human review: tighten wording, check references, decide priorities]
     F --> G[AI coding agent / implementation model implementation pass]
     G --> H[Repo changes: models, pricers, tests, notebooks, docs]
     H --> I[pytest, notebooks, CI, benchmark CSVs]
@@ -48,7 +48,7 @@ flowchart TD
     L --> M[Final project report and package release]
 ```
 
-The AI workflow was iterative rather than one-shot. Deep Research was used to identify sources and benchmark targets. Reasoning models were then used to turn the research into implementation TODOs. AI coding agent / implementation model was used for coding and restructuring passes. Human review sat between each stage: we checked whether sources had exact numerical values, whether claims were overstated, whether the implementation matched the repo convention, and whether tests passed.
+The AI workflow was iterative rather than one-shot. Deep Research was used to identify sources and benchmark targets. Reasoning models were then used to turn the research into implementation TODOs. AI coding agent / implementation model was used for coding and restructuring passes. Human review sat between each stage: we checked whether sources had exact numerical values, whether wording stayed proportionate to the evidence, whether the implementation matched the repo convention, and whether tests passed.
 
 ---
 
@@ -95,17 +95,17 @@ problem-solved section, innovation section, and links to all new docs files.
 
 AI outputs were manually reviewed before implementation. The human checks were:
 
-- whether a claimed source actually contained exact numerical values;
+- whether a cited source actually contained exact numerical values;
 - whether a paper only had plotted figures rather than tables;
 - whether the model convention matched the repo convention `X_T = log(S_T / F0)`;
 - whether a reference was a paper reference, official software reference, adapter reference, derived reference, or qualitative figure check;
 - whether the proposed test tolerance matched the precision of the source;
 - whether a task was already completed in the repo;
-- whether a claim would be defensible to a marker.
+- whether the final wording would be defensible to a marker.
 
 **Concrete examples of human review decisions:**
 
-- Bates was **not** claimed as a native PyFENG model because `price_strip(..., method="pyfeng_fft")` does not support Bates. It is described as an in-house implementation validated against official MathWorks examples.
+- Bates was not presented as a native PyFENG model because `price_strip(..., method="pyfeng_fft")` does not support Bates. It is described as an in-house implementation validated against official MathWorks examples.
 - 3/2 SV was described as PyFENG-backed rather than fully in-house, because the characteristic function comes from `pyfeng.sv_fft`.
 - Baldeaux-Badran 3/2 parameters were kept as qualitative figure checks (`xfail-if-unstable`) because the paper does not provide exact vanilla option price tables.
 - MathWorks tolerances were set to `atol=1e-2` (not 1e-4) after diagnosing a ~7.6e-3 grid-convention gap between the repo's `log(F0)`-centred grid and the MathWorks FFT convention, plus 4-decimal truncation in the published values.
@@ -222,9 +222,8 @@ metric under the tested grid.
 **Result:** on the FO2008 test suite the adaptive selector beats the naive paper-grid replay
 in 7/8 cases and beats the paper's best reported error in 6/8 cases.
 
-> We do not claim filtered COS universally dominates unfiltered COS. The correct claim is
-> narrower: filtered COS gives an additional stability control, and the adaptive selector
-> chooses the best candidate within a defined candidate set and tolerance rule.
+> Filtered COS is best interpreted as an additional stability control. The adaptive selector
+> then chooses the best candidate within a defined candidate set and tolerance rule.
 
 ### 8.6 Five-level validation hierarchy
 
@@ -234,7 +233,7 @@ The project formalises a five-level evidence classification for all test cases:
 
 This makes explicit what "validated" means for each model and method combination, and
 allows the project to distinguish between "we matched a published table" and "we matched
-a frozen internal reference"  -  a distinction that matters when evaluating claims.
+a frozen internal reference"  -  a distinction that matters when evaluating evidence.
 
 ---
 
@@ -260,19 +259,19 @@ Tests that check these gates live in `tests/models/` (model-structural tests),
 
 ---
 
-## 10. What we do not claim
+## 10. Scope and evidence boundaries
 
-The project does not claim:
+The project is framed with the following scope and evidence boundaries:
 
-- that AI independently verified all mathematical results;
-- that AI-generated citations or numbers were accepted without cross-checking;
-- that Bates is natively supported by PyFENG FFT (`method="pyfeng_fft"` does not support Bates);
-- that Bates (1996) provides the exact vanilla price tables used in tests (it does not);
-- that Baldeaux-Badran gives exact vanilla price tables for 3/2 SV (it does not  -  those tests are `qualitative_figure` and `xfail-if-unstable`);
-- that 3/2 plus jumps is a fully registered model in this repo;
-- that filtered COS universally dominates standard COS;
-- that every model in the zoo has a true published-paper price table;
-- that AI-generated first-pass code was production-ready before human review and test gating.
+- AI served as a research and implementation assistant; mathematical verification still passed through human review and test gating.
+- AI-generated citations and benchmark numbers were cross-checked before being accepted into the repo.
+- Bates is validated through the repo's Fourier implementations and official external examples rather than through native PyFENG FFT support, since `method="pyfeng_fft"` does not cover Bates.
+- Bates (1996) is used for model specification and background, while the exact vanilla price tables in the tests come from later benchmark sources.
+- Baldeaux-Badran supports the 3/2 SV discussion primarily at the qualitative-figure level in this repo, so those checks remain `qualitative_figure` and `xfail-if-unstable`.
+- 3/2 plus jumps is discussed as a potential extension but is not yet a fully registered model in the current package.
+- Filtered COS is presented as a complementary stability tool rather than a universal replacement for standard COS.
+- Some model-method combinations are validated against software references or frozen internal references because an exact published-paper price table is not available in matching form.
+- AI-generated first-pass code entered the project only after human revision, source checks, and automated validation.
 
 ---
 

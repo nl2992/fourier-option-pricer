@@ -4,8 +4,8 @@ This document describes the adaptive filtered-COS layer  -  the primary **resear
 in this project, going beyond the baseline Junike truncation policy.
 
 **Important framing:** this is an **original project extension** inspired by prior spectral-filter
-ideas. It is **not** presented as a direct replication of a single published adaptive
-filtered-COS paper.
+ideas. It is presented here as an in-house adaptive filtered-COS workflow motivated by the
+literature rather than as a line-by-line replication of a single published paper.
 
 **Demo notebook:** [`notebooks/research/adaptive_cos.ipynb`](../notebooks/research/adaptive_cos.ipynb)  
 **Improved-truncation notebook:** [`notebooks/research/cos_method_improved.ipynb`](../notebooks/research/cos_method_improved.ipynb)
@@ -85,9 +85,9 @@ It cannot pick a result worse than the best candidate in its set.
 
 ---
 
-## Conservative framing
+## Appropriate interpretation
 
-The correct claim for this extension is:
+The key interpretation for this extension is:
 
 > *"Junike helps truncation. Filtering helps residual finite-series / nonsmoothness cases.
 > The adaptive selector chooses among vanilla COS, Junike-COS, and filtered Junike-COS."*
@@ -96,10 +96,10 @@ On the FO2008 test suite the adaptive selector beats the naive paper-grid replay
 and beats the paper's best reported error in **6/8 cases**.
 Full per-case data: [`benchmarks/cos_method_improved/outputs/cos_method_improved_paper_compare.csv`](../benchmarks/cos_method_improved/outputs/cos_method_improved_paper_compare.csv).
 See also [fo2008_replication.md](fo2008_replication.md) for the table of paper-grid vs. improved-COS errors.
-We do **not** claim:
-- Filtered COS universally dominates Junike COS.
-- The extension is a black-box learned model.
-- The extension removes the need for the Junike interval selection.
+Appropriate scope for the extension:
+- Filtered COS serves as a complementary stability control alongside Junike COS.
+- The extension is a deterministic policy layer over explicit candidate methods and filters.
+- Junike interval selection remains part of the overall method design.
 
 The extension is best understood as a second control layer that can improve pricing speed or
 accuracy in cases where the Junike truncation is adequate but the finite-series resolution

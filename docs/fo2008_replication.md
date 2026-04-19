@@ -180,7 +180,7 @@ The "ugly rows" are not a single COS failure:
   A wide interval needs enough cosine terms to resolve it.
 - **Heston Table 6**  -  harder because a single interval is used across a 21-strike strip.
 - **Paper timings** are historical 2008 hardware measurements and should not be treated as
-  directly portable runtime claims.
+  directly portable runtime comparisons.
 - **COS accuracy depends on two choices at once**: support interval and number of cosine terms.
 
 This motivates the improved COS policy described in

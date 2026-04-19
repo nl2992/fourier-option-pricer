@@ -277,7 +277,7 @@ Junike (2024) adds a companion result for how many terms N are needed to resolve
 Even with a well-chosen `[a, b]`, the finite COS series can still show oscillation when the density has sharp features, the model is short-maturity and jump-heavy, or the characteristic function decays slowly.
 
 **This is an original project extension, not a paper replication.**
-The idea is **inspired by** spectral-filter work such as Ruijter, Versteegh and Oosterlee (2015), but this repo does **not** claim to reproduce a published adaptive filtered-COS paper. The project contribution is the combination of:
+The idea is **inspired by** spectral-filter work such as Ruijter, Versteegh and Oosterlee (2015). In this repo, it appears as an original adaptive filtered-COS extension rather than a direct replication of a published adaptive filtered-COS workflow. The project contribution is the combination of:
 
 1. a filtered-COS pricing layer on top of the standard COS machinery,
 2. a deterministic search across filter and grid-policy candidates,
