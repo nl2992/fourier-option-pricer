@@ -46,7 +46,7 @@ $$
 where
 
 $$
-X_T = \log\!\left(\frac{S_T}{F_0}\right), \qquad F_0 = S_0 e^{(r-q)T}.
+X_T = \log\left(\frac{S_T}{F_0}\right), \qquad F_0 = S_0 e^{(r-q)T}.
 $$
 
 2. Price a strip of strikes with FFT, FRFT, or COS.
@@ -63,7 +63,7 @@ Monte Carlo is flexible, but it is generally not the right primary tool for Euro
 Its standard error scales as
 
 $$
-\varepsilon_{\mathrm{MC}} = O\!\left(n^{-1/2}\right),
+\varepsilon_{\mathrm{MC}} = O\left(n^{-1/2}\right),
 $$
 
 so reducing error by one order of magnitude typically requires roughly two orders of magnitude more paths. In a calibration setting — where prices must be computed repeatedly across strikes, maturities, and optimizer iterations — that trade-off is expensive.
@@ -135,7 +135,7 @@ For Kou, COS remains feasible in principle. When performance deteriorates, the i
 The repository works in **log-forward coordinates**:
 
 $$
-X_T = \log\!\left(\frac{S_T}{F_0}\right), \qquad F_0 = S_0 e^{(r-q)T}.
+X_T = \log\left(\frac{S_T}{F_0}\right), \qquad F_0 = S_0 e^{(r-q)T}.
 $$
 
 All characteristic functions below are therefore characteristic functions of $X_T$, not of $\log S_T$.
@@ -177,13 +177,13 @@ D(u,T) = \frac{b(u) - d(u)}{\nu^2} \cdot \frac{1 - e^{-d(u)T}}{1 - g(u)e^{-d(u)T
 $$
 
 $$
-C(u,T) = \frac{\kappa\theta}{\nu^2}\left[(b(u) - d(u))T - 2\log\!\left(\frac{1 - g(u)e^{-d(u)T}}{1 - g(u)}\right)\right].
+C(u,T) = \frac{\kappa\theta}{\nu^2}\left[(b(u) - d(u))T - 2\log\left(\frac{1 - g(u)e^{-d(u)T}}{1 - g(u)}\right)\right].
 $$
 
 The log-forward characteristic function is then
 
 $$
-\varphi_H(u) = \exp\!\left(C(u,T) + D(u,T)v_0\right).
+\varphi_H(u) = \exp\left(C(u,T) + D(u,T)v_0\right).
 $$
 
 This formulation is preferred numerically because the original algebraically equivalent representation can cross an undesirable complex-log branch and produce unstable prices.
@@ -195,7 +195,7 @@ Parameters: $\sigma, \nu, \theta$, where $\nu$ is the variance rate of the gamma
 The martingale correction is
 
 $$
-\omega = \frac{1}{\nu}\log\!\left(1 - \theta\nu - \tfrac{1}{2}\sigma^2\nu\right),
+\omega = \frac{1}{\nu}\log\left(1 - \theta\nu - \tfrac{1}{2}\sigma^2\nu\right),
 $$
 
 which requires
@@ -241,7 +241,7 @@ $$
 so the characteristic function is
 
 $$
-\varphi_{Kou}(u) = \exp\!\left(iu\left(-\tfrac{1}{2}\sigma^2 - \lambda\zeta\right)T - \tfrac{1}{2}\sigma^2 u^2 T + \lambda T(\varphi_Y(u) - 1)\right).
+\varphi_{Kou}(u) = \exp\left(iu\left(-\tfrac{1}{2}\sigma^2 - \lambda\zeta\right)T - \tfrac{1}{2}\sigma^2 u^2 T + \lambda T(\varphi_Y(u) - 1)\right).
 $$
 
 ---
