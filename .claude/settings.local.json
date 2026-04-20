@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -c 'import json,sys:*)",
+      "Bash(python3 -c 'import json:*)",
+      "Bash(python3 -m pytest tests/ -x -v --tb=short)",
+      "Read(//opt/homebrew/bin/**)",
+      "Bash(command -v conda)",
+      "Bash(conda env:*)",
+      "Bash(/opt/anaconda3/bin/python -c \"import pytest, numpy, scipy; print\\(pytest.__version__, numpy.__version__, scipy.__version__\\)\")",
+      "Bash(/opt/anaconda3/bin/python -m pytest tests/ -v --tb=short)",
+      "Bash(/opt/anaconda3/bin/python -c ':*)",
+      "Bash(/opt/anaconda3/bin/python -m pytest tests/ -v --tb=short -m \"not slow\")",
+      "Bash(/opt/anaconda3/bin/python -m pytest tests/test_phase1_mc_baseline.py::test_heston_cond_mc_lewis_benchmark -v --tb=short)",
+      "Bash(/opt/anaconda3/bin/python -m pytest tests/ -v)",
+      "Bash(/opt/anaconda3/bin/python -m pytest tests/test_phase3_frft.py -v --tb=short)",
+      "Bash(python -m pytest tests/test_phase4_cos_heston_fo2008.py -x -q)",
+      "Bash(python -c ':*)",
+      "Bash(python -m pytest tests/test_phase4_cos_heston_fo2008.py -q)",
+      "Bash(python -m pytest tests/test_phase4_cos_heston_fo2008.py -v)",
+      "Bash(python -m pytest tests/ -q)",
+      "Bash(python -m pytest tests/test_phase4_cos_kou.py -v)",
+      "Bash(python -m pytest tests/test_phase4_alpha_validity.py -v)",
+      "Bash(python benchmarks/phase1_mc_baseline.py)",
+      "Bash(python benchmarks/phase3_frft_vs_cm.py)",
+      "Bash(python -m pytest tests/test_phase5_calibration.py -v)",
+      "Bash(python benchmarks/phase5_calibration.py)",
+      "Bash(python -m pytest tests/test_phase5_calibration.py -q)",
+      "Bash(python -c ' *)"
+    ]
+  }
+}
