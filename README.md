@@ -31,6 +31,8 @@ This project builds a small pricing stack with four parts.
 
 ## End-to-end workflow
 
+![Fourier option pricer workflow](images/fourier_option_pricer_workflow.svg)
+
 1. Implement the model characteristic function
 
 $$
