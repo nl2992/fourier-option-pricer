@@ -31,9 +31,6 @@ This project builds a small pricing stack with four parts.
 
 ## End-to-end workflow
 
-![Fourier option pricer workflow](images/workflow.svg)
-
-
 1. Implement the model characteristic function
 
 $$
@@ -252,7 +249,6 @@ That is the correct log-forward version. If you see an extra factor $e^{iu\log F
 ---
 
 ## Validation gate
-<<<<<<< HEAD
 
 Nothing should be called correct until it reproduces published reference results within a stated tolerance.
 
@@ -263,24 +259,11 @@ Suggested validation order:
 3. **COS** — replicate published Heston COS tables first.
 4. **Kou** — replicate Kou reference prices only after the Fourier engine is already stable.
 
-=======
-
-Nothing should be called correct until it reproduces published reference results within a stated tolerance.
-
-Suggested validation order:
-
-1. **Carr–Madan FFT** — replicate benchmark prices from Carr–Madan style test cases, especially Variance Gamma examples.
-2. **Heston** — compare against high-precision Heston benchmarks and include at least one branch-cut stress test.
-3. **COS** — replicate published Heston COS tables first.
-4. **Kou** — replicate Kou reference prices only after the Fourier engine is already stable.
-
->>>>>>> Phase1-4
 This keeps the debugging order sensible. First get one method working on one model. Then widen coverage.
 
 ---
 
 ## Benchmarks to report
-<<<<<<< HEAD
 
 Only publish benchmark numbers after the validation tests are passing.
 
@@ -359,106 +342,34 @@ That makes the repo cleaner and makes cross-method comparisons straightforward.
 
 ---
 
-## Practical notes
+## References
 
-A few details matter enough that they should be stated explicitly.
+Albrecher, H., Mayer, P., Schoutens, W. and Tistaert, J. (2007). The little Heston trap. *Wilmott Magazine*, January, 83–92. [[PDF](https://perswww.kuleuven.be/~u0009713/HestonTrap.pdf)]
 
-- **Heston branch handling matters.** Use the stable logarithm formulation in code.
-- **Interpolation matters.** FFT prices live on a grid, but your benchmark strikes usually do not.
-- **Convention mistakes are common.** Always check whether a paper is using log-spot or log-forward variables.
-- **Validation comes before speed claims.** A fast wrong price is still wrong.
-=======
+Benhamou, E. (2002). Fast Fourier transform for discrete Asian options. *Journal of Computational Finance*, 6(1), 49–68. [[SSRN](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=269491)]
 
-Only publish benchmark numbers after the validation tests are passing.
+Carr, P. and Madan, D.B. (1999). Option valuation using the fast Fourier transform. *Journal of Computational Finance*, 2(4), 61–73. [[PDF](https://engineering.nyu.edu/sites/default/files/2018-08/CarrMadan2_0.pdf)]
 
-Measure:
+Chourdakis, K. (2004). Option pricing using the fractional FFT. *Journal of Computational Finance*, 8(2), 1–18. [[CiteSeer](https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=6bdf4696312d37427eda2740137650c09deacda7)]
 
-- runtime versus number of strikes
-- runtime versus grid size
-- error versus reference prices
-- FFT versus FRFT versus COS
-- Monte Carlo baseline runtime and error
+Choi, J. and Wu, L. (2021). The equivalent constant-elasticity-of-variance (CEV) volatility of the stochastic-alpha-beta-rho (SABR) model. *Journal of Economic Dynamics and Control*, 128, 104143.
 
-Do not put placeholder speedups in the README.
+Fang, F. and Oosterlee, C.W. (2008). A novel pricing method for European options based on Fourier-cosine series expansions. *SIAM Journal on Scientific Computing*, 31(2), 826–848. [[Preprint](http://ta.twi.tudelft.nl/mf/users/oosterle/oosterlee/COS.pdf)] [[SIAM](https://epubs.siam.org/doi/10.1137/080718061)]
 
----
+Hagan, P.S., Kumar, D., Lesniewski, A.S. and Woodward, D.E. (2002). Managing smile risk. *Wilmott Magazine*, September, 84–108. [[PDF](http://www.deriscope.com/docs/Hagan_2002.pdf)]
 
-## Repository layout
+Heston, S.L. (1993). A closed-form solution for options with stochastic volatility. *Review of Financial Studies*, 6(2), 327–343. [[PDF](https://www.ma.imperial.ac.uk/~ajacquie/IC_Num_Methods/IC_Num_Methods_Docs/Literature/Heston.pdf)]
 
-```text
-src/foureng/
-  char_func/        # heston / vg / kou
-  pricers/          # carr_madan / frft / cos
-  iv/               # implied-vol inversion
-  mc/               # Monte Carlo baselines
-  utils/            # grids, interpolation, cumulants, numerics
+Kahl, C. and Jäckel, P. (2005). Not-so-complex logarithms in the Heston model. *Wilmott Magazine*, September, 94–103. [[PDF](http://www2.math.uni-wuppertal.de/~kahl/publications/NotSoComplexLogarithmsInTheHestonModel.pdf)]
 
-tests/              # paper-table replication tests
-notebooks/          # validation and benchmark notebooks
-```
+Kou, S.G. (2002). A jump-diffusion model for option pricing. *Management Science*, 48(8), 1086–1101.
+
+Lewis, A.L. (2001). A simple option formula for general jump-diffusion and other exponential Lévy processes. *Envision Financial Systems working paper*. [[SSRN](https://www.researchgate.net/publication/2499800_A_Simple_Option_Formula_for_General_Jump-Diffusion_and_Other_Exponential_Levy_Processes)]
+
+Lord, R. and Kahl, C. (2010). Complex logarithms in Heston-like models. *Mathematical Finance*, 20(4), 671–694. [[Wiley](https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1467-9965.2010.00416.x)]
+
+Madan, D.B., Carr, P. and Chang, E.C. (1998). The Variance Gamma process and option pricing. *European Finance Review*, 2(1), 79–105.
 
 ---
 
-## Extensions after validation
-
-Only add these once the core pricing stack is already validated.
-
-- Fourier Greeks
-- FFT price as a control variate for Monte Carlo
-- calibration routines
-- packaged API or external-library adapter
-
----
-
-## PyFENG integration
-
-PyFENG already has useful option-pricing components in pure Python. The goal here is not to duplicate Heston pricing for its own sake. The useful angle is:
-
-- one common characteristic-function interface
-- one validation harness
-- multiple Fourier pricers behind the same API
-
-That makes the repo cleaner and makes cross-method comparisons straightforward.
-
----
-
-## Roadmap
-
-1. **Phase 1**
-   - Monte Carlo baseline
-   - timing versus strike count
-   - error decay checks
-2. **Phase 2**
-   - Carr–Madan FFT for Variance Gamma and Heston
-   - validation against published benchmarks
-3. **Phase 3**
-   - FRFT implementation
-   - FFT versus FRFT benchmark study
-4. **Phase 4**
-   - COS implementation
-   - validation on Heston, then extension to Kou if the truncation setup is stable
-5. **Phase 5**
-   - Kou replication tests
-6. **Phase 6**
-   - optional extensions such as Greeks or control variates
-7. **Phase 7**
-   - packaging and library integration
-
----
-
-## Practical notes
-
-A few details matter enough that they should be stated explicitly.
->>>>>>> Phase1-4
-
-- **Heston branch handling matters.** Use the stable logarithm formulation in code.
-- **Interpolation matters.** FFT prices live on a grid, but your benchmark strikes usually do not.
-- **Convention mistakes are common.** Always check whether a paper is using log-spot or log-forward variables.
-- **Validation comes before speed claims.** A fast wrong price is still wrong.
-
-<<<<<<< HEAD
-## Math rendering
-
-All formulas use KaTeX/MathJax-compatible LaTeX inside `$…$` (inline) and `$$…$$` (display) delimiters. This renders correctly on GitHub, GitLab, Obsidian, and most Markdown previewers. It does **not** render on PyPI — if you publish this package, either strip the math section from the long description or link to the GitHub-hosted README.
-=======
->>>>>>> Phase1-4
+*MATH5030 Numerical Methods in Finance — Columbia University MAFN, Spring 2026. Instructor: Prof. Jaehyuk Choi.*
