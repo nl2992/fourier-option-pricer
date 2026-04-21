@@ -13,8 +13,14 @@ class Cumulants:
 
 
 def cos_truncation_interval(c: Cumulants, L: float = 10.0) -> tuple[float, float]:
-    """Fang-Oosterlee truncation [a,b] = c1 +/- L*sqrt(c2 + sqrt(|c4|))."""
-    width = L * np.sqrt(c.c2 + np.sqrt(max(c.c4, 0.0)))
+    """Fang-Oosterlee truncation [a,b] = c1 +/- L*sqrt(c2 + sqrt(|c4|)).
+
+    Uses |c4| (not max(c4, 0)) so that small-negative c4 from numerical noise
+    can't silently shrink the interval below what the distribution actually
+    needs. For a genuine distribution c4 >= 0 but the FFT-on-circle Cauchy
+    estimate can give -1e-13 at the noise floor.
+    """
+    width = L * np.sqrt(c.c2 + np.sqrt(abs(c.c4)))
     return (c.c1 - width, c.c1 + width)
 
 
