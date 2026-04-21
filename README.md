@@ -2,9 +2,8 @@
 
 A compact Fourier-pricing library for European options under characteristic-function models.
 
-This repository implements three Fourier-based pricers — Carr–Madan FFT, FRFT, and COS — behind a common characteristic-function interface, with model support for Heston, Variance Gamma, and Kou. Monte Carlo is included as a baseline for comparison, but the focus of the project is deterministic pricing methods suited to surface generation, validation, and calibration workflows.
+This repository implements three Fourier-based pricers, that is, Carr–Madan FFT, FRFT, and COS, behind a common characteristic-function interface, with model support for Heston, Variance Gamma, and Kou. Monte Carlo is included as a baseline for comparison, but the focus of the project is deterministic pricing methods suited to surface generation, validation, and calibration workflows.
 
-The guiding principle is simple: a method is only treated as implemented once it reproduces published reference values within an explicit numerical tolerance.
 
 ---
 
@@ -96,6 +95,8 @@ Once a model exposes $\varphi_T(u)$, it can be priced by FFT, FRFT, or COS witho
 
 ### Carr–Madan FFT
 
+![Carr–Madan FFT flow](images/carr-madan.svg)
+
 Carr–Madan prices a damped call transform on a uniform frequency grid, then uses the FFT to recover prices across a corresponding log-strike grid.
 
 Key parameters:
@@ -114,22 +115,36 @@ Its main numerical feature is that strike resolution and frequency resolution ar
 
 ### FRFT
 
+![FRFT flow](images/frft.svg)
+
 FRFT relaxes the tight coupling between frequency and strike grids present in the plain FFT setup. In practice, this often allows comparable pricing accuracy with more flexible grid design and, in some regimes, lower computational cost than standard FFT.
 
 ### COS
+
+![COS flow](images/cos.svg)
 
 COS prices by expanding the density on a finite truncation interval $[a,b]$ using a cosine series. The density need not be written explicitly; the expansion coefficients are recovered directly from the characteristic function.
 
 A standard cumulant-based truncation rule is
 
 $$
-[a,b] = \left[c_1 - L\sqrt{c_2 + \sqrt{c_4}}, \; c_1 + L\sqrt{c_2 + \sqrt{c_4}}\right].
+[a,b] = \left[c_1 - L\sqrt{c_2 + \sqrt{|c_4|}}, \; c_1 + L\sqrt{c_2 + \sqrt{|c_4|}}\right].
 $$
+
+The absolute value on $c_4$ is a numerical safeguard — a bona-fide distribution has $c_4 \ge 0$, but the Cauchy-FFT cumulant estimator we use can return a mildly negative $c_4$ at the noise floor; $|c_4|$ prevents that from silently narrowing the interval.
 
 For Kou, COS remains feasible in principle. When performance deteriorates, the issue is usually the truncation design or implementation details rather than the jump structure itself.
 
 ---
 
+## IV inversion
+
+![IV inversion workflow](images/iv-inversion.svg)
+
+We convert model prices to Black–Scholes implied volatilities using a robust root finder (Newton with safeguards; Brent as baseline). This is used only for reporting smiles/surfaces and does not affect the core pricing validation gates.
+
+
+## Model conventions
 ## Model conventions
 
 The repository works in **log-forward coordinates**:
@@ -248,16 +263,18 @@ $$
 
 ## Validation philosophy
 
+![Validation gate](images/validation.svg)
+
 The project treats validation as a hard gate, not as a cosmetic appendix.
 
 A method is only regarded as correct once it reproduces published benchmark values within a stated tolerance. Performance comparisons are only meaningful after that step.
 
 A sensible validation sequence is:
 
-1. validate Carr–Madan FFT on published Variance Gamma benchmarks;
-2. validate Heston prices against high-precision references, including at least one branch-cut stress case;
-3. validate COS on published Heston tables;
-4. extend to Kou once the core Fourier machinery is stable.
+1. validate Carr–Madan FFT on published Variance Gamma benchmarks (CM1999 Case 4);
+2. validate Heston prices against high-precision references, including at least one branch-cut stress case (Lewis 2001 15-digit table + FO2008 Feller-violated ATM);
+3. validate COS on published Heston tables (FO2008 Table 1 to 1e-6);
+4. for Kou — where published closed-form tables are less standardised — validate COS by cross-checking against two independent Fourier inversion implementations already in this repo (FRFT and Carr–Madan FFT) driven by the same Kou characteristic function, and require stable convergence in COS $N$ and the truncation-length parameter $L$. A third-party cross-check against PyFENG's ``HestonFft`` and ``VarGammaFft`` is run opportunistically (skipped when PyFENG is unavailable).
 
 This ordering reduces debugging ambiguity by establishing one reliable method-model pair before broadening the matrix of supported methods.
 
@@ -310,10 +327,11 @@ notebooks/          # validation and benchmark notebooks
 
 ### Phase 4
 - COS implementation
-- validation on Heston, then extension to Kou subject to stable truncation design
+- validate on FO2008 / Lewis Heston first; then extend COS to Kou and enforce convergence in $N$ and stability in $L$, with FRFT and Carr–Madan FFT as internal cross-references (plus PyFENG FFT when available)
 
 ### Phase 5
 - Kou replication tests
+- IV-surface construction and model calibration (Heston / VG / Kou) on implied-vol residuals
 
 ### Phase 6
 - optional extensions such as Greeks or control variates
@@ -343,6 +361,33 @@ PyFENG already provides useful option-pricing components in pure Python. The val
 - a consistent interface across multiple Fourier pricers.
 
 That architecture makes cross-method comparison cleaner and keeps the codebase modular.
+
+---
+
+## Version PC (Post-Choi)
+
+After the initial pre-Choi iteration (Carr–Madan FFT + FRFT + paper checks), the project was realigned around Prof. Choi's feedback:
+
+- **COS is the primary pricer.** It is easier to tune than Carr–Madan (one interval $[a,b]$ chosen from cumulants, versus a coupled $(N,\eta,\alpha)$ grid), converges spectrally on smooth densities, and does not need a damping parameter.
+- **PyFENG's FFT is the third-party validator for Heston and VG.** Every published-paper check is therefore witnessed by two independent implementations: the paper table and PyFENG's `HestonFft` / `VarGammaFft`. Convention mapping was verified against our fixtures — in particular `pyfeng.HestonFft(sigma=v0, ...)` expects $v_0$, not $\sqrt{v_0}$.
+- **Kou is not in PyFENG, so COS(Kou) is validated internally.** The internal witness is a high-$N$ Carr–Madan reference (`FFTGrid(N=16384, eta=0.05, alpha=1.5)`), plus strict $N$-convergence and $L$-stability gates, plus an FRFT second-witness sweep across low / moderate / high jump regimes and a crash-heavy regime at two maturities.
+
+### Papers replicated
+
+| Source | Model | What we reproduce | Where |
+|---|---|---|---|
+| Fang & Oosterlee (2008), Table 1 | Heston (Feller violated) | ATM call = 5.78515545 to $< 10^{-6}$ at $N=256$ | `tests/test_phase4_cos_heston_fo2008.py` |
+| Lewis (2001), 15-digit Heston | Heston | 5-strike call strip to $< 10^{-6}$ at $N=128$ | `tests/test_phase4_cos_heston_fo2008.py` |
+| Carr & Madan (1999), Case 4 VG | Variance Gamma | 3-strike put strip to $< 10^{-3}$ at $N=2048$ | `tests/test_phase4_cos_heston_fo2008.py` |
+| Kou (not in PyFENG) | Kou | COS agrees with CM $N=16384$ to $< 10^{-6}$ at $N=128$; 7-order $N$-convergence from 32→128; $L$-spread $< 10^{-7}$ | `tests/test_phase4_cos_kou.py`, `tests/test_cos_kou_sweep_vs_fft_frft.py` |
+
+### Demo notebook
+
+The full story — MC → Carr–Madan/FRFT → COS — is in [`notebooks/demo_story_prechoi_to_pc.ipynb`](notebooks/demo_story_prechoi_to_pc.ipynb). Four acts: MC baseline (runtime + seed noise), pre-Choi Fourier (CM1999 VG paper check, Lewis Heston Carr–Madan vs PyFENG, FRFT vs CM frontier), Version PC COS-first (FO2008 gate, $N$-convergence, $L$-stability, VG CM1999 replication, Kou internal validation), and a one-table scoreboard. Figures exported to [`images/`](images/):
+
+![Version PC scoreboard](images/act4_scoreboard.png)
+
+Rebuild the notebook from its generator: `python scripts/build_demo_notebook.py && jupyter nbconvert --to notebook --execute notebooks/demo_story_prechoi_to_pc.ipynb --output demo_story_prechoi_to_pc.ipynb`.
 
 ---
 
