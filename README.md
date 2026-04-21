@@ -301,7 +301,9 @@ src/foureng/
   char_func/        # heston / vg / kou
   pricers/          # carr_madan / frft / cos
   iv/               # implied-vol inversion
-  mc/               # Monte Carlo baselines
+  mc/               # Monte Carlo baselines + control variates
+  surface/          # model IV-surface + calibration (Heston/VG/Kou)
+  greeks/           # analytic Delta/Gamma/parameter-sensitivity via COS
   utils/            # grids, interpolation, cumulants, numerics
 
 tests/              # replication tests against published references
@@ -312,43 +314,37 @@ notebooks/          # validation and benchmark notebooks
 
 ## Development roadmap
 
-### Phase 1
-- Monte Carlo baseline
-- timing versus strike count
-- error-decay checks
+All phases below are implemented and exercised by the test suite
+(`pytest tests/` — 71 tests green, including the PyFENG cross-checks and the
+slow MC benchmark).
 
-### Phase 2
-- Carr–Madan FFT for Variance Gamma and Heston
-- validation against published benchmarks
+### Phase 1 — done
+- Monte Carlo baseline (`foureng.mc.black_scholes_mc`, `foureng.mc.heston_conditional_mc`)
+- timing versus strike count (`benchmarks/phase1_mc_baseline.py`)
+- error-decay checks (`tests/test_phase1_mc_baseline.py`)
 
-### Phase 3
-- FRFT implementation
-- FFT versus FRFT benchmarking study
+### Phase 2 — done
+- Carr–Madan FFT for Variance Gamma and Heston (`foureng.pricers.carr_madan`)
+- validation against published benchmarks — CM1999 Case 4 VG and Lewis 2001 Heston (`tests/test_phase2_carr_madan_vg.py`)
 
-### Phase 4
-- COS implementation
-- validate on FO2008 / Lewis Heston first; then extend COS to Kou and enforce convergence in $N$ and stability in $L$, with FRFT and Carr–Madan FFT as internal cross-references (plus PyFENG FFT when available)
+### Phase 3 — done
+- FRFT implementation (`foureng.pricers.frft`, `foureng.utils.frft`)
+- FFT versus FRFT benchmarking study (`benchmarks/phase3_frft_vs_cm.py`, `tests/test_phase3_frft.py`)
 
-### Phase 5
-- Kou replication tests
-- IV-surface construction and model calibration (Heston / VG / Kou) on implied-vol residuals
+### Phase 4 — done (primary pricer, per Prof. Choi's recommendation)
+- COS implementation (`foureng.pricers.cos`)
+- validated on FO2008 Table 1 (Feller-violated Heston, ATM call to $< 10^{-6}$ at $N=256$) and Lewis 2001 (15-digit Heston strip to $< 10^{-6}$ at $N=128$); COS extended to Kou with $N$-convergence and $L$-stability gates, cross-referenced internally against FRFT and Carr–Madan FFT and externally against PyFENG's `HestonFft` / `VarGammaFft` where available (`tests/test_phase4_cos_heston_fo2008.py`, `tests/test_phase4_cos_kou.py`, `tests/test_cos_kou_sweep_vs_fft_frft.py`, `tests/test_cos_vs_pyfeng_fft_heston_vg.py`)
 
-### Phase 6
-- optional extensions such as Greeks or control variates
+### Phase 5 — done
+- Kou replication tests (internal cross-reference + convergence/stability gates, since Kou is not in PyFENG)
+- IV-surface construction (`foureng.surface.vol_surface.model_iv_surface`) and model calibration on implied-vol residuals for Heston / VG / Kou (`foureng.surface.calibrate_heston / calibrate_vg / calibrate_kou`); self-consistency recovers the truth to $\le 10^{-3}$ in each parameter, cross-model misfit (VG fit to Heston smile) is detected (`tests/test_phase5_calibration.py`, `benchmarks/phase5_calibration.py`)
 
-### Phase 7
-- packaging and library integration
+### Phase 6 — done
+- **Analytic Fourier Greeks** via closed-form differentiation of the COS payoff-coefficient expansion (`foureng.greeks.cos_greeks`). Because the COS price $C = D\sum_k{}'\text{Re}\{\varphi(\omega_k)e^{-i\omega_k a}\}V_k$ has $V_k$ depending on $S_0$ only through the forward $F_0$, the identity $\partial V_k/\partial F_0 = \tfrac{2}{b-a}\chi_k(c,b)$ gives $\Delta$ and $\Gamma$ in a single COS sweep. Matches Black-Scholes analytic Greeks to $10^{-6}$ and Heston central FD to $10^{-4}$. `cos_parameter_sensitivity` uses the same trick with $\partial\varphi/\partial\theta$ to produce Vega-style Greeks for any model parameter (`tests/test_phase6_greeks.py`).
+- **Control-variate Monte Carlo** (`foureng.mc.control_variate`): `bs_call_cv` uses the discounted terminal price $e^{-rT}S_T$ with exact mean $S_0e^{-qT}$ (textbook underlying-as-control); `heston_call_bs_control` uses the path-integrated variance $V_T$ as the control, with the closed-form CIR mean $E[V_T]=\theta T + (v_0-\theta)(1-e^{-\kappa T})/\kappa$. Both routines report the empirical variance-reduction ratio and pass unbiasedness gates (plain vs CV within 4 × CV stderr); typical reduction $\ge 2\times$ at low vol-of-vol (`tests/test_phase6_control_variate.py`).
 
----
-
-## Possible extensions
-
-After the core stack is validated, natural extensions include:
-
-- Fourier-based Greeks;
-- control-variate constructions using Fourier prices inside Monte Carlo;
-- calibration routines;
-- packaging as a reusable library or adapter layer for external tooling.
+### Phase 7 — done
+- Packaging: curated public API exported from `foureng` (`src/foureng/__init__.py`), so external use is `from foureng import cos_prices, cos_price_and_greeks, calibrate_heston, bs_call_cv, HestonParams, ForwardSpec, ...` rather than reaching into submodules. Version pinned to `0.2.0` after Phase 6. `pip install -e .` + end-to-end smoke (Heston → COS price → Δ/Γ → IV round-trip) gated by `tests/test_phase7_public_api.py`.
 
 ---
 
