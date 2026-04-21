@@ -1,0 +1,26 @@
+"""Visualisation helpers for demo notebooks and saved figures."""
+from .columbia import (
+    apply_columbia_style,
+    COLUMBIA_BLUE,
+    NAVY,
+    DARK,
+    WHITE,
+    plot_price_strip,
+    plot_error_bar,
+    plot_convergence,
+    plot_L_sensitivity,
+    plot_error_vs_runtime,
+)
+
+__all__ = [
+    "apply_columbia_style",
+    "COLUMBIA_BLUE",
+    "NAVY",
+    "DARK",
+    "WHITE",
+    "plot_price_strip",
+    "plot_error_bar",
+    "plot_convergence",
+    "plot_L_sensitivity",
+    "plot_error_vs_runtime",
+]

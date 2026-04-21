@@ -26,7 +26,13 @@
       "Bash(python -m pytest tests/test_phase5_calibration.py -v)",
       "Bash(python benchmarks/phase5_calibration.py)",
       "Bash(python -m pytest tests/test_phase5_calibration.py -q)",
-      "Bash(python -c ' *)"
+      "Bash(python -c ' *)",
+      "Bash(python -c \"import pyfeng; print\\(pyfeng.__version__\\)\")",
+      "Bash(python -c \"import pyfeng as pf; print\\([x for x in dir\\(pf\\) if 'Heston' in x or 'VG' in x or 'Vg' in x]\\)\")",
+      "Bash(python -m pytest tests/test_cos_kou_sweep_vs_fft_frft.py tests/test_cos_vs_pyfeng_fft_heston_vg.py -v)",
+      "Bash(python scripts/build_demo_notebook.py)",
+      "Bash(jupyter nbconvert *)",
+      "Bash(python scripts/build_demo_notebook_v2.py)"
     ]
   }
 }
