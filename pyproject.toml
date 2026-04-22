@@ -12,6 +12,10 @@ dependencies = [
   "numpy>=1.26",
   "scipy>=1.10",
   "matplotlib>=3.7",
+  # Heston and VG characteristic functions delegate to PyFENG
+  # (Prof. Choi's library); Bates reuses the PyFENG-backed Heston CF.
+  # Kou remains in-house (PyFENG has no Kou model).
+  "pyfeng>=0.3.0",
 ]
 
 [project.optional-dependencies]
