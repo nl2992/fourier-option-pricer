@@ -16,9 +16,9 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from foureng.char_func.base import ForwardSpec
-from foureng.char_func.heston import HestonParams, heston_cumulants
-from foureng.char_func.variance_gamma import VGParams, vg_cumulants
+from foureng.models.base import ForwardSpec
+from foureng.models.heston import HestonParams, heston_cumulants
+from foureng.models.variance_gamma import VGParams, vg_cumulants
 from foureng.pricers.carr_madan import carr_madan_price_at_strikes
 from foureng.pricers.frft import frft_price_at_strikes
 from foureng.pricers.cos import cos_prices, cos_auto_grid
