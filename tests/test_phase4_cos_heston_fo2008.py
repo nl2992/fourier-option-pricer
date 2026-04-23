@@ -8,9 +8,9 @@ Three replication targets:
 from __future__ import annotations
 import numpy as np
 
-from foureng.char_func.base import ForwardSpec
-from foureng.char_func.heston import HestonParams, heston_cf_form2, heston_cumulants
-from foureng.char_func.variance_gamma import VGParams, vg_cf, vg_cumulants
+from foureng.models.base import ForwardSpec
+from foureng.models.heston import HestonParams, heston_cf_form2, heston_cumulants
+from foureng.models.variance_gamma import VGParams, vg_cf, vg_cumulants
 from foureng.pricers.cos import cos_prices, cos_auto_grid
 from foureng.utils.grids import COSGrid
 

@@ -6,7 +6,7 @@ Normal-Inverse-Gaussian Lévy model, backed by :class:`pyfeng.ExpNigFft`:
   1. ``nig_cf`` matches :meth:`pyfeng.ExpNigFft.charfunc_logprice`
      bit-exactly (~1e-14).
   2. ``phi(u=0) = 1`` and ``phi(-i) = 1`` — the CF has the martingale
-     correction ``mu`` baked in (see :mod:`foureng.char_func.nig`).
+     correction ``mu`` baked in (see :mod:`foureng.models.nig`).
   3. COS / FRFT / CM all agree with PyFENG's :meth:`ExpNigFft.price` to
      the ~1e-7 default-grid floor.
   4. A frozen 41-strike regression strip pins prices against future
@@ -16,8 +16,8 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from foureng.char_func.base import ForwardSpec
-from foureng.char_func.nig import NigParams, nig_cf
+from foureng.models.base import ForwardSpec
+from foureng.models.nig import NigParams, nig_cf
 from foureng.pipeline import price_strip
 from foureng.utils.grids import FFTGrid, FRFTGrid
 
@@ -31,7 +31,7 @@ _PARAMS = NigParams(sigma=0.2, nu=0.5, theta=-0.10)
 
 
 def test_nig_cf_matches_pyfeng_charfunc_logprice():
-    """Bit-identity wrapper check — see char_func/nig.py for the translation."""
+    """Bit-identity wrapper check — see models/nig.py for the translation."""
     u = np.linspace(-10.0, 10.0, 41)
     phi_ours = nig_cf(u, _FWD, _PARAMS)
 

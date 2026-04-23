@@ -1,1 +1,7 @@
 .assistant-state/
+# Reference clone of upstream PyFENG — read-only, not part of foureng.
+PyFENG/
+__pycache__/
+*.pyc
+.pytest_cache/
+src/*.egg-info/
