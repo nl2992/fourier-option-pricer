@@ -21,10 +21,16 @@ from .models.heston_cgmy import (
     heston_cgmy_cf,
     heston_cgmy_cumulants,
 )
-from .utils.grids import FFTGrid, FRFTGrid, COSGrid
+from .utils.grids import FFTGrid, FRFTGrid, COSGrid, COSGridPolicy
 from .pricers.carr_madan import carr_madan_price_at_strikes
 from .pricers.frft import frft_price_at_strikes
-from .pricers.cos import cos_prices, cos_auto_grid
+from .pricers.cos import (
+    cos_adaptive_decision,
+    cos_auto_grid,
+    cos_prices,
+    recommended_cos_policy,
+)
+from .pricers.lewis import lewis_call_prices
 
 
 @dataclass(frozen=True)
@@ -81,6 +87,7 @@ _MODELS: dict[str, tuple[type, Any, Any]] = {
 # have native PyFENG FFT pricers (BsmFft / HestonFft / OusvFft /
 # VarGammaFft / CgmyFft / ExpNigFft).
 _NO_PYFENG_FFT = {"kou", "bates", "heston_kou", "heston_cgmy"}
+_DIRECT_CALL_FRIENDLY_MODELS = {"heston", "ousv", "nig"}
 
 
 def _cf_for(model: str, fwd: ForwardSpec, params):
@@ -88,6 +95,19 @@ def _cf_for(model: str, fwd: ForwardSpec, params):
         raise ValueError(f"unknown model {model!r}; choose from {sorted(_MODELS)}")
     _, cf_fn, _ = _MODELS[model]
     return lambda u: cf_fn(u, fwd, params)
+
+
+def _improved_cos_payoff_mode(model: str, grid: COSGrid) -> str:
+    """Choose the more stable coefficient side for the improved COS path.
+
+    On narrow centered intervals, Gaussian-like models are typically accurate
+    enough on the direct call coefficients that we should avoid parity-based
+    cancellation on ITM calls. For heavier-tailed models we stay with the more
+    conservative mixed/put-side logic.
+    """
+    if model in _DIRECT_CALL_FRIENDLY_MODELS and grid.width <= 8.0:
+        return "call_direct"
+    return "auto"
 
 
 def _pyfeng_fft_price(model: str, strikes, fwd: ForwardSpec, params, cp: int):
@@ -158,6 +178,8 @@ def price_strip(
         One of ``"heston"``, ``"vg"``, ``"kou"``, ``"bates"``.
     method :
         * ``"cos"`` — in-house COS (Fang-Oosterlee 2008),
+        * ``"cos_improved"`` — adaptive COS policy with centered intervals,
+          coupled N/L selection, and wide-interval fallback,
         * ``"frft"`` — in-house FRFT (Chourdakis 2004),
         * ``"carr_madan"`` — in-house Carr-Madan FFT (1999),
         * ``"pyfeng_fft"`` — PyFENG's own pricer (``HestonFft`` or
@@ -169,9 +191,9 @@ def price_strip(
     grid :
         Grid object appropriate to ``method`` — :class:`FFTGrid` for
         ``"carr_madan"``, :class:`FRFTGrid` for ``"frft"``,
-        :class:`COSGrid` for ``"cos"``. If ``None`` and ``method='cos'``,
-        an auto grid is built from the model cumulants with
-        :func:`cos_auto_grid`.
+        :class:`COSGrid` for ``"cos"``. ``method='cos_improved'`` also accepts
+        :class:`COSGridPolicy`. If ``None`` and ``method='cos'``, an auto grid
+        is built from the model cumulants with :func:`cos_auto_grid`.
     cp :
         ``+1`` calls, ``-1`` puts (consulted only by ``pyfeng_fft``; the
         in-house pricers return calls and the caller applies parity).
@@ -188,11 +210,91 @@ def price_strip(
     phi = _cf_for(model, fwd, params)
 
     if method == "cos":
+        if isinstance(grid, COSGridPolicy):
+            decision = cos_adaptive_decision(
+                _MODELS[model][2](fwd, params),
+                model=model,
+                params=params,
+                policy=grid,
+                strike_count=K.size,
+            )
+            if decision.method != "cos":
+                if decision.method == "lewis":
+                    return np.asarray(
+                        lewis_call_prices(
+                            phi,
+                            K,
+                            spot=fwd.S0,
+                            texp=fwd.T,
+                            intr=fwd.r,
+                            divr=fwd.q,
+                            method="trapz",
+                            u_max=200.0,
+                            n_u=max(4096, decision.grid.N),
+                        ),
+                        dtype=np.float64,
+                    )
+                if decision.method == "carr_madan":
+                    eta = 0.10 if decision.grid.width > 48.0 else 0.25
+                    cm_grid = FFTGrid(N=max(4096, decision.grid.N), eta=eta, alpha=1.5)
+                    return np.asarray(carr_madan_price_at_strikes(phi, fwd, cm_grid, K), dtype=np.float64)
+            payoff_mode = _improved_cos_payoff_mode(model, decision.grid)
+            res = cos_prices(phi, fwd, K, decision.grid, payoff_mode=payoff_mode)
+            return np.asarray(res.call_prices, dtype=np.float64)
         if grid is None:
             _, _, cums_fn = _MODELS[model]
             grid = cos_auto_grid(cums_fn(fwd, params), N=256, L=10.0)
         res = cos_prices(phi, fwd, K, grid)
         return np.asarray(res.call_prices, dtype=np.float64)
+
+    if method == "cos_improved":
+        _, _, cums_fn = _MODELS[model]
+        policy = (
+            grid
+            if isinstance(grid, COSGridPolicy)
+            else recommended_cos_policy(model, params, mode="benchmark")
+        )
+        decision = (
+            None
+            if isinstance(grid, COSGrid)
+            else cos_adaptive_decision(
+                cums_fn(fwd, params),
+                model=model,
+                params=params,
+                policy=policy,
+                strike_count=K.size,
+            )
+        )
+        if isinstance(grid, COSGrid):
+            payoff_mode = _improved_cos_payoff_mode(model, grid)
+            res = cos_prices(phi, fwd, K, grid, payoff_mode=payoff_mode)
+            return np.asarray(res.call_prices, dtype=np.float64)
+
+        assert decision is not None
+        if decision.method == "cos":
+            payoff_mode = _improved_cos_payoff_mode(model, decision.grid)
+            res = cos_prices(phi, fwd, K, decision.grid, payoff_mode=payoff_mode)
+            return np.asarray(res.call_prices, dtype=np.float64)
+        if decision.method == "lewis":
+            return np.asarray(
+                lewis_call_prices(
+                    phi,
+                    K,
+                    spot=fwd.S0,
+                    texp=fwd.T,
+                    intr=fwd.r,
+                    divr=fwd.q,
+                    method="trapz",
+                    u_max=200.0,
+                    n_u=max(4096, decision.grid.N),
+                ),
+                dtype=np.float64,
+            )
+        if decision.method == "carr_madan":
+            eta = 0.10 if decision.grid.width > 48.0 else 0.25
+            cm_grid = FFTGrid(N=max(4096, decision.grid.N), eta=eta, alpha=1.5)
+            return np.asarray(carr_madan_price_at_strikes(phi, fwd, cm_grid, K), dtype=np.float64)
+        raise ValueError(f"unsupported cos_improved fallback method {decision.method!r}")
 
     if method == "frft":
         if grid is None:
@@ -205,5 +307,6 @@ def price_strip(
         return np.asarray(carr_madan_price_at_strikes(phi, fwd, grid, K), dtype=np.float64)
 
     raise ValueError(
-        f"unknown method {method!r}; choose 'cos' | 'frft' | 'carr_madan' | 'pyfeng_fft'"
+        f"unknown method {method!r}; choose 'cos' | 'cos_improved' | "
+        "'frft' | 'carr_madan' | 'pyfeng_fft'"
     )
