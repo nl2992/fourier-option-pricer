@@ -76,7 +76,7 @@ All models can be priced through the same pricer layer:
 
 ## End-to-end workflow
 
-![Fourier option pricer workflow](images/fourier_option_pricer_workflow-ii.png)
+![Fourier option pricer workflow](images/fourier_option_pricer_workflow.svg)
 
 
 ---
@@ -434,6 +434,9 @@ One caveat: we route implied-vol inversion through `scipy.optimize.brentq` direc
 | Frozen oracle (Heston–CGMY) | Heston ⊗ CGMY jumps | Same oracle design; reduction-to-Heston at $C = 0$ bit-identical | `tests/test_heston_cgmy_*.py` |
 | PyFENG cross-check | BSM, Heston, OUSV, VG, CGMY, NIG | CF wrapper bit-identity ~1e-14; price parity vs `pyfeng.*Fft.price(...)` ~1e-7 on default grid; frozen 41-strike strips where the paper has no clean table at our parameterisation | `tests/test_{bsm,ousv,cgmy,nig}_adapter.py`, `tests/test_pyfeng_cf_wrappers.py`, `tests/test_fft_using_pyfeng_cf_matches_pyfeng_price.py` |
 
+---
+
+
 ### FO2008 full-paper replication
 
 Beyond the one-line test anchor, the repository now carries a **paper-faithful replication report** for Fang & Oosterlee (2008): BSM Table 2, Heston Tables 4 / 5 / 6, VG Table 7 at both maturities, and CGMY Tables 8 / 9 / 10. The canonical notebook is [`notebooks/fo2008_replication.ipynb`](notebooks/fo2008_replication.ipynb); the frozen paper registry is [`benchmarks/paper_replications/fo2008_cos/params.py`](benchmarks/paper_replications/fo2008_cos/params.py); CSVs, figures, and the generated write-up live under [`benchmarks/paper_replications/fo2008_cos/outputs/`](benchmarks/paper_replications/fo2008_cos/outputs/).
@@ -549,6 +552,8 @@ The important diagnostic is that the ugly rows are not one single COS failure. B
   <img src="images/fo2008/fig_extension_error_vs_time.png" width="49%" alt="FO2008 extension error versus time">
   <img src="images/fo2008/fig_frontier.png" width="49%" alt="FO2008 extension frontier across methods">
 </p>
+
+---
 
 ### Junike 2024 
 
