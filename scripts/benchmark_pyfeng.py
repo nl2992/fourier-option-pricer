@@ -23,13 +23,13 @@ from __future__ import annotations
 import time
 import numpy as np
 
-from foureng.char_func.base import ForwardSpec
-from foureng.char_func.bsm import BsmParams
-from foureng.char_func.heston import HestonParams
-from foureng.char_func.ousv import OusvParams
-from foureng.char_func.variance_gamma import VGParams
-from foureng.char_func.cgmy import CgmyParams
-from foureng.char_func.nig import NigParams
+from foureng.models.base import ForwardSpec
+from foureng.models.bsm import BsmParams
+from foureng.models.heston import HestonParams
+from foureng.models.ousv import OusvParams
+from foureng.models.variance_gamma import VGParams
+from foureng.models.cgmy import CgmyParams
+from foureng.models.nig import NigParams
 from foureng.pipeline import price_strip
 from foureng.utils.grids import FFTGrid, FRFTGrid
 from foureng.utils.implied_vol import implied_vol_from_prices

@@ -16,9 +16,9 @@ import numpy as np
 from dataclasses import dataclass
 from typing import Callable
 
-from ..char_func.base import CharFunc
-from ..char_func.kou import KouParams
-from ..char_func.variance_gamma import VGParams
+from ..models.base import CharFunc
+from ..models.kou import KouParams
+from ..models.variance_gamma import VGParams
 
 
 @dataclass(frozen=True)

@@ -14,9 +14,9 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from foureng.char_func.heston import HestonParams
-from foureng.char_func.variance_gamma import VGParams
-from foureng.char_func.kou import KouParams
+from foureng.models.heston import HestonParams
+from foureng.models.variance_gamma import VGParams
+from foureng.models.kou import KouParams
 from foureng.surface import (
     SurfaceSpec,
     model_iv_surface,
@@ -39,7 +39,7 @@ def _spec() -> SurfaceSpec:
 
 
 def _heston_iv_grid(params: HestonParams, spec: SurfaceSpec, N: int = 256) -> np.ndarray:
-    from foureng.char_func.heston import heston_cf_form2, heston_cumulants
+    from foureng.models.heston import heston_cf_form2, heston_cumulants
     cf = lambda fwd: (lambda u: heston_cf_form2(u, fwd, params))
     cum = lambda fwd: heston_cumulants(fwd, params)
     return model_iv_surface(spec, cf, cum, N=N, L=10.0)
@@ -84,7 +84,7 @@ def test_calibrate_vg_self_consistency():
     )
     truth = VGParams(sigma=0.20, nu=0.5, theta=-0.10)
 
-    from foureng.char_func.variance_gamma import vg_cf, vg_cumulants
+    from foureng.models.variance_gamma import vg_cf, vg_cumulants
     cf = lambda fwd: (lambda u: vg_cf(u, fwd, truth))
     cum = lambda fwd: vg_cumulants(fwd, truth)
     market = model_iv_surface(spec, cf, cum, N=512, L=10.0)
@@ -109,7 +109,7 @@ def test_calibrate_kou_self_consistency():
     )
     truth = KouParams(sigma=0.16, lam=1.0, p=0.4, eta1=10.0, eta2=5.0)
 
-    from foureng.char_func.kou import kou_cf, kou_cumulants
+    from foureng.models.kou import kou_cf, kou_cumulants
     cf = lambda fwd: (lambda u: kou_cf(u, fwd, truth))
     cum = lambda fwd: kou_cumulants(fwd, truth)
     market = model_iv_surface(spec, cf, cum, N=256, L=10.0)

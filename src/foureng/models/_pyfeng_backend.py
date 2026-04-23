@@ -33,7 +33,7 @@ from typing import Any, Callable
 def import_pyfeng():
     """Import :mod:`pyfeng` with a project-branded error message.
 
-    We defer the import so ``from foureng.char_func import ...`` stays
+    We defer the import so ``from foureng.models import ...`` stays
     cheap in environments that never touch PyFENG. When the caller does
     need it, a missing install produces a single actionable line rather
     than a generic ``ModuleNotFoundError`` stack.
