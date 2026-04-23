@@ -76,7 +76,7 @@ All models can be priced through the same pricer layer:
 
 ## End-to-end workflow
 
-![Fourier option pricer workflow](images/fourier_option_pricer_workflow.svg)
+![Fourier option pricer workflow](images/fourier_option_pricer_workflow.png)
 
 
 ---
@@ -421,21 +421,6 @@ One caveat: we route implied-vol inversion through `scipy.optimize.brentq` direc
 
 ---
 
-### Papers replicated
-
-| Source | Model | What we reproduce | Where |
-|---|---|---|---|
-| Fang & Oosterlee (2008), Table 1 | Heston (Feller violated) | ATM call = 5.78515545 to $< 10^{-6}$ at $N=256$ | `tests/test_phase4_cos_heston_fo2008.py` |
-| Lewis (2001), 15-digit Heston | Heston | 5-strike call strip to $< 10^{-6}$ at $N=128$ | `tests/test_phase4_cos_heston_fo2008.py` |
-| Carr & Madan (1999), Case 4 VG | Variance Gamma | 3-strike put strip to $< 10^{-3}$ at $N=2048$ | `tests/test_phase4_cos_heston_fo2008.py` |
-| Kou (not in PyFENG) | Kou | COS agrees with CM $N=16384$ to $< 10^{-6}$ at $N=128$; 7-order $N$-convergence from 32→128; $L$-spread $< 10^{-7}$ | `tests/test_phase4_cos_kou.py`, `tests/test_cos_kou_sweep_vs_fft_frft.py` |
-| Frozen oracle (Bates) | Heston ⊗ Merton jumps | 41-strike CM $N=32768$, cross-verified FRFT $N=16384$ + COS $N=4096$ to ~1e-10; reduction-to-Heston at $\lambda_j = 0$ bit-identical | `tests/test_bates_*.py` |
-| Frozen oracle (Heston–Kou) | Heston ⊗ Kou jumps | Same oracle design; reduction-to-Heston at $\lambda_j = 0$ bit-identical | `tests/test_heston_kou_*.py` |
-| Frozen oracle (Heston–CGMY) | Heston ⊗ CGMY jumps | Same oracle design; reduction-to-Heston at $C = 0$ bit-identical | `tests/test_heston_cgmy_*.py` |
-| PyFENG cross-check | BSM, Heston, OUSV, VG, CGMY, NIG | CF wrapper bit-identity ~1e-14; price parity vs `pyfeng.*Fft.price(...)` ~1e-7 on default grid; frozen 41-strike strips where the paper has no clean table at our parameterisation | `tests/test_{bsm,ousv,cgmy,nig}_adapter.py`, `tests/test_pyfeng_cf_wrappers.py`, `tests/test_fft_using_pyfeng_cf_matches_pyfeng_price.py` |
-
----
-
 
 ### FO2008 full-paper replication
 
@@ -553,32 +538,27 @@ The important diagnostic is that the ugly rows are not one single COS failure. B
   <img src="images/fo2008/fig_frontier.png" width="49%" alt="FO2008 extension frontier across methods">
 </p>
 
+
 ---
 
-### Junike 2024 
+## Junike Fix (Better truncation rate, via Markov's Inequality)
 
-The baseline COS implementation follows Fang & Oosterlee (2008), which provides exponential convergence in theory. However, the full-paper replication highlights that this behaviour is **not always realised numerically** under a naive implementation.
+The baseline COS implementation follows Fang & Oosterlee (2008), which gives exponential convergence in theory. However, the full-paper replication shows that this behaviour is **not always realised numerically** under a naive implementation.
 
 In particular:
 
-- BSM (Table 2) shows **flat error across N**, indicating truncation-dominated bias;
-- Heston (Table 5, long maturity) exhibits **slow convergence and large errors**;
+- BSM (Table 2) shows a **flat observed error floor across $N$** in the paper-faithful replication, which is consistent with truncation-dominated bias and, in our reproduction, is amplified further by the paper’s rounded printed reference values;
+- Heston (Table 5, long maturity) shows **slow convergence and materially larger errors** than the paper baseline when the interval is wide and the series resolution is kept too small;
+- the multi-strike Heston strip is even more sensitive, because one shared interval must serve the whole strip and the strip reference itself is a local high-resolution construction rather than a hidden paper oracle.
 
-In the baseline FO2008 implementation, the interval is typically chosen from low-order cumulants, for example through a rule of the form
+In the baseline FO2008 implementation, the truncation interval is usually built from low-order cumulants using
 
-$$
-[a,b]
-=
-\left[
-c_1 - L\sqrt{c_2 + \sqrt{|c_4|}},
-\;
-c_1 + L\sqrt{c_2 + \sqrt{|c_4|}}
-\right].
-$$
+$$[a,b]=\left[c_1-L\sqrt{c_2+\sqrt{|c_4|}},\;c_1+L\sqrt{c_2+\sqrt{|c_4|}}\right]$$
 
-This is easy to compute, but it is heuristic: if the chosen interval is too narrow, some non-negligible tail mass is simply cut off before the cosine series is even applied. In that case, increasing \(N\) only improves the approximation **inside the wrong interval**, so the total pricing error stops falling. That is the truncation-dominated regime. :contentReference[oaicite:1]{index=1}
 
-A more robust way to choose the interval is to control the tail directly. The idea in Junike–Pankrashkin is to center around a location \(m\) and choose a half-width \(M\) so that the tail outside \([m-M,m+M]\) is below a target tolerance. By Markov’s inequality, for any \(n \ge 1\),
+That rule is convenient, but it is still just a rule of thumb. If $[a,b]$ is too short, the method throws away tail mass before the cosine expansion even starts. After that, raising $N$ only gives a better approximation on the truncated support; it does not recover the missing mass. That is the truncation-dominated regime, and it is exactly the kind of behaviour we see in the flatter error curves from the naive replication.
+
+The Junike-Pankrashkin fix is to choose the interval from a tail tolerance instead of from a fixed cumulant multiplier. Pick a center $m$ and a half-width $M$, and require the tail outside $[m-M,m+M]$ to be small. By Markov’s inequality, for any $n \ge 1$,
 
 $$
 \mathbb{P}\!\left(|X-m| \ge M\right)
@@ -586,7 +566,7 @@ $$
 \frac{\mathbb{E}[|X-m|^n]}{M^n}.
 $$
 
-So if we want the tail probability to be at most \(\varepsilon\), it is sufficient to choose
+So if the target tail probability is at most $\varepsilon$, it is enough to choose
 
 $$
 M
@@ -594,28 +574,63 @@ M
 \left(\frac{\mathbb{E}[|X-m|^n]}{\varepsilon}\right)^{1/n}.
 $$
 
-Then we take
+and then set
 
 $$
 [a,b] = [m-M,\; m+M].
 $$
 
+The number-of-terms side comes from [Junike (2024)](https://arxiv.org/abs/2303.16012). The paper’s central result is that COS really has **two numerical knobs**: the truncation range and the number of cosine terms. Once the interval is chosen correctly, \(N\) should be selected to resolve that interval rather than guessed by trial and error. Junike also makes three other points that are important for this repo:
 
-A simple toy example shows why this matters. Suppose the true density has most of its mass near the center but still leaves a small amount in the tails. If the interval is too narrow, say \([a,b]\) misses just enough probability mass to create a pricing bias of size \(10^{-5}\), then no matter how much we increase \(N\), the cosine series only becomes a better approximation on that truncated interval; it cannot recover the missing tail contribution. The result is an error curve that flattens out instead of continuing to decay. That is exactly the pattern seen in our current GBM Table 2 replication: the local COS max error stays at about \(3.15\times 10^{-5}\) from \(N=32\) all the way to \(N=512\), which is a textbook sign that the dominant error is no longer the cosine discretisation error but the truncation choice. :contentReference[oaicite:3]{index=3}
+1. the total COS error splits naturally into **density truncation error, cosine-series truncation error, and coefficient-approximation error**;
+2. it is mathematically cleaner to work with **centered log-returns** \(X_T - \mathbb{E}[X_T]\), which justifies a symmetric interval around zero;
+3. for European calls, the payoff is unbounded, so it is often numerically preferable to price the bounded side and recover the call by **put-call parity**.
 
-The same mechanism explains why long-maturity Heston is much harder. When maturity increases, the distribution spreads out and the tails matter more. If the interval width grows too slowly, the method truncates relevant mass and errors remain large even when \(N\) increases. In our current replication, Heston Table 5 remains materially worse than FO2008 across all reported \(N\), which is consistent with a long-maturity, wide-support interval problem rather than a failure of the cosine expansion itself. :contentReference[oaicite:4]{index=4}
+Junike further proves that exponential convergence is **not unconditional**. It holds when the density is smooth and decays at least exponentially, but it can fail for smooth heavy-tailed densities, where convergence becomes polynomial and tail-index dependent. That is why the theory lines up much better with Black-Scholes, Heston, NIG, and benign CGMY regimes than with every Variance-Gamma parameter set.
 
-So the “Junike fix” is not a new pricer. It is a numerical correction to the two tuning knobs of COS:
+That is exactly the motivation for the improved implementation in this repo:
 
-1. choose \([a,b]\) by an explicit tail bound rather than a fragile heuristic;
-2. once \([a,b]\) is fixed correctly, choose \(N\) large enough to resolve the truncated density.
+- `COSGridPolicy` and `method="cos_improved"` choose the interval and `N` jointly instead of freezing `N=256, L=10`;
+- `COSGrid.center` supports a **centered symmetric interval** for the state variable;
+- very wide intervals are routed away from COS when the approximation geometry is unfavorable.
 
-In that sense, the improvement is:
+In repo terms, the right mental model is:
 
-> **make COS behave numerically the way the theory says it should behave.**
+> choose the support first, then choose enough cosine modes to resolve it.
+
+The new [`notebooks/cos_method_improved.ipynb`](notebooks/cos_method_improved.ipynb) notebook is built around exactly that idea.
 
 
-## TODO - results for Junike fix
+## Results for Junike Fix
+
+The improved notebook does not claim that COS suddenly dominates every case. It shows something more useful: once the interval policy and the series-resolution policy are coupled correctly, we can see exactly where the adaptive path helps, where it merely matches, and where another method is the honest fallback.
+
+| Case | Paper best \(N\) | Paper best max error | Old default error | Our paper-grid replay | Improved method | Improved \(N\) | Improved error | Vs default | Vs paper | Vs paper-grid |
+|---|---:|---:|---:|---:|---|---:|---:|---|---|---|
+| BSM Table 2 | 64 | 3.55e-15 | 1.60e-14 | 1.60e-14 | COS | 64 | 1.54e-14 | better | worse | better |
+| Heston Table 4 | 200 | 3.70e-09 | 6.10e-08 | 6.57e-07 | COS | 512 | 2.22e-11 | better | better | better |
+| Heston Table 5 | 140 | 9.88e-10 | 5.07e-12 | 4.68e-03 | COS | 1024 | 9.68e-11 | worse | better | better |
+| Heston Table 6 strip | 200 | 2.05e-08 | 6.98e-08 | 2.62e-06 | COS | 512 | 2.92e-10 | better | better | better |
+| VG Table 7, \(T=0.1\) | 2048 | 7.98e-08 | 4.44e-05 | 4.94e-08 | COS | 1024 | 1.49e-08 | better | better | better |
+| VG Table 7, \(T=1.0\) | 150 | 1.51e-09 | 1.99e-10 | 4.39e-10 | COS | 2048 | 2.00e-10 | worse | better | better |
+| CGMY Table 8, \(Y=0.5\) | 140 | 4.04e-09 | 1.19e-10 | 2.16e-10 | COS | 1024 | 1.19e-10 | worse | better | better |
+| CGMY Table 10, \(Y=1.98\) | 40 | 1.94e-15 | 2.46e-11 | 1.47e-11 | Lewis | 8192 | 6.41e-11 | worse | worse | worse |
+
+Read that table carefully:
+
+- the adaptive path beats the old default on `4/8` summary cases;
+- it beats our strict paper-grid replay on `7/8` cases;
+- it beats the paper’s best reported error on `6/8` cases.
+
+That is the right interpretation of the Junike-style fix: it is primarily a **robustness and policy improvement**, not a promise that one new static setting will dominate every old static setting.
+
+The Heston `T=10` diagnostics are especially instructive:
+
+- support-truncation error falls from about `7.00e-07` at `L=6` to `1.84e-09` at `L=8` and `5.06e-12` at `L=10`;
+- the paper-wide `L=32` interval only becomes spectacularly accurate when `N` is also made huge, which is exactly the “interval and series must be chosen jointly” lesson;
+- coefficient-side error separates cleanly from support error: on the wide paper interval, direct call coefficients become numerically unstable while put-plus-parity remains well behaved.
+
+So the “Junike fix” is not a different pricing formula. It is a better approximation policy for COS, anchored to the actual error decomposition and to the model regime. Paper milliseconds can still be shown as a historical reference, but they are not portable timing claims.
 
 
 ## References
@@ -635,6 +650,10 @@ Fang, F. and Oosterlee, C.W. (2008). A novel pricing method for European options
 Hagan, P.S., Kumar, D., Lesniewski, A.S. and Woodward, D.E. (2002). Managing smile risk. *Wilmott Magazine*, September, 84–108. [[PDF](http://www.deriscope.com/docs/Hagan_2002.pdf)]
 
 Heston, S.L. (1993). A closed-form solution for options with stochastic volatility. *Review of Financial Studies*, 6(2), 327–343. [[PDF](https://www.ma.imperial.ac.uk/~ajacquie/IC_Num_Methods/IC_Num_Methods_Docs/Literature/Heston.pdf)]
+
+Junike, G. (2024). On the number of terms in the COS method for European option pricing. *arXiv preprint arXiv:2303.16012* (revised 2024). [[arXiv](https://arxiv.org/abs/2303.16012)]
+
+Junike, G. and Pankrashkin, K. (2022). Precise option pricing by the COS method: How to choose the truncation range. *Applied Mathematics and Computation*, 421, 126935. [[arXiv](https://arxiv.org/abs/2109.01030)] [[DOI](https://doi.org/10.1016/j.amc.2022.126935)]
 
 Kahl, C. and Jäckel, P. (2005). Not-so-complex logarithms in the Heston model. *Wilmott Magazine*, September, 94–103. [[PDF](http://www2.math.uni-wuppertal.de/~kahl/publications/NotSoComplexLogarithmsInTheHestonModel.pdf)]
 
