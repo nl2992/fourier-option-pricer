@@ -3,8 +3,8 @@ import numpy as np
 from dataclasses import dataclass
 from typing import Any, Optional
 from scipy.stats import norm
-from ..char_func.base import ForwardSpec
-from ..char_func.heston import HestonParams
+from ..models.base import ForwardSpec
+from ..models.heston import HestonParams
 
 
 @dataclass(frozen=True)

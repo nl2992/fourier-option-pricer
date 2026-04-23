@@ -1,67 +1,83 @@
 # fourier-option-pricer
 
-A compact Fourier-pricing library for European options under characteristic-function models.
+This repository implements three Fourier-based pricers, that is, **Carr–Madan FFT**, **FRFT**, and **COS**,  behind a common characteristic-function interface, with support for ten models. The numerical focus is deterministic pricing for European options under models with tractable characteristic functions, with **Monte Carlo retained only as a baseline** for comparative purposes, in the form of accuracy, and speed. 
 
-This repository implements three Fourier-based pricers — Carr–Madan FFT, FRFT, and COS — behind a common characteristic-function interface, with support for ten models. The core analytical thread of the project is an expansion of Kou's jump-diffusion idea into a family of **stochastic-volatility + jump (SVJ) composites** (Bates, Heston–Kou, Heston–CGMY) built in-house on top of a PyFENG-backed Heston core. For every other model where PyFENG ships a production-quality characteristic function, we **use the PyFENG implementation directly** rather than re-derive it, and restrict this repository to the numerical-methods contribution: the common CF interface, the three Fourier pricers, and the validation harness. Monte Carlo is included as a baseline for comparison, but the focus is deterministic pricing suited to surface generation, validation, and calibration workflows.
+The main analytical thread of the project is not “implement every model from scratch, and indeed, LLMs are already so good at replicating papers.  Instead, it is:
+
+1. build a **common characteristic-function interface**;
+2. price the same model through **three different Fourier inversion methods**;
+3. validate every method against **published references or independent numerical bmks**;
+4. extend the framework to a small family of **stochastic-volatility + jump composites** built in-house.
+5. compare across the three methods, it's accuracy, and speed, compared to benchmarks developed from **pyFENG**.
+
+The in-house modelling thread expands Kou’s jump-diffusion idea into a family of **SVJ composites**:
+
+- **Bates** = Heston + Merton lognormal jumps
+- **Heston–Kou** = Heston + Kou double-exponential jumps
+- **Heston–CGMY** = Heston + CGMY tempered-stable jumps
+
+For all models where **PyFENG already provides a production-quality characteristic function**, we use the PyFENG implementation directly rather than re-derive it. This keeps the repository focused on the **numerical-methods contribution** -  the CF abstraction, the Fourier pricers, the validation logic, and the benchmarking harness.
+
 
 
 ---
 
 ## Overview
 
-The project is organized around four components:
+The project is organized around five layers.
 
-- **Models — PyFENG-backed CFs (thin adapters around `pyfeng.*Fft.charfunc_logprice`)**
-  - Black–Scholes–Merton (`pyfeng.BsmFft`)
-  - Heston (`pyfeng.HestonFft`)
-  - Schöbel–Zhu OUSV (`pyfeng.OusvFft`)
-  - Variance Gamma (`pyfeng.VarGammaFft`)
-  - CGMY (`pyfeng.CgmyFft`)
-  - Normal Inverse Gaussian (`pyfeng.ExpNigFft`)
+### 1. Models ~  PyFENG-backed characteristic functions
 
-- **Models — in-house CFs (not shipped by PyFENG)**
-  - Kou double-exponential jump diffusion — the analytical anchor of the project
-  - Bates: Heston ⊗ Merton lognormal jumps
-  - Heston–Kou: Heston ⊗ Kou double-exponential jumps
-  - Heston–CGMY: Heston ⊗ CGMY tempered-stable jumps
+These are thin adapters around `pyfeng.*Fft.charfunc_logprice`:
 
-- **European pricers**
-  - Carr–Madan FFT
-  - FRFT
-  - COS
+- Black–Scholes–Merton (`pyfeng.BsmFft`)
+- Heston (`pyfeng.HestonFft`)
+- Schöbel–Zhu OUSV (`pyfeng.OusvFft`)
+- Variance Gamma (`pyfeng.VarGammaFft`)
+- CGMY (`pyfeng.CgmyFft`)
+- Normal Inverse Gaussian (`pyfeng.ExpNigFft`)
 
-- **Numerical utilities**
-  - implied-volatility inversion (scipy Brent, not PyFENG's — see the note in `utils/implied_vol.py`)
-  - interpolation helpers
-  - cumulant and truncation utilities (closed-form where available, Cauchy-FFT otherwise)
-  - benchmarking harnesses (`scripts/benchmark_pyfeng.py`)
+**Note:** Structure may have changed across iterations, but idea remaisn fundamentally the same. 
 
-- **Validation**
-  - tests and notebooks that replicate published benchmark results before performance comparisons are reported
-  - frozen regression strips (`foureng.refs.paper_refs.REGRESSION_STRIPS`) for the six models whose papers do not ship a clean exact price table at our parameterisation
+### 2. Models ~ in-house characteristic functions
+
+These are not shipped by PyFENG and are implemented directly in this repository:
+
+- Kou double-exponential jump diffusion
+- Bates: Heston ⊗ Merton lognormal jumps
+- Heston–Kou: Heston ⊗ Kou double-exponential jumps
+- Heston–CGMY: Heston ⊗ CGMY tempered-stable jumps
+
+**Note:** Latter three works, as the characteristic function, basically has the addition of one extra factor in the exponent. 
+
+
+### 3. European pricers
+
+All models can be priced through the same pricer layer:
+
+- **Carr–Madan or Lewis FFT**
+- **FRFT**
+- **COS**
+
+### 4. Numerical utilities
+
+- implied-volatility inversion (`scipy.optimize.brentq`)
+- interpolation helpers
+- cumulant and truncation utilities
+- benchmarking harnesses
+
+### 5. Validation
+
+- published benchmark replication
+- Internal benchmarks - i.e. Using pyFENG as a benchmark for certain papers/implementations
+
 
 ---
 
 ## End-to-end workflow
 
-![Fourier option pricer workflow](images/fourier_option_pricer_workflow.svg)
+![Fourier option pricer workflow](images/fourier_option_pricer_workflow.png)
 
-1. Implement the model characteristic function
-
-$$
-\varphi_T(u) \;=\; E^{Q}\bigl[\,e^{i\,u\,X_T}\,\bigr],
-$$
-
-where
-
-$$
-X_T \;=\; \log\bigl(S_T / F_0\bigr), \qquad F_0 \;=\; S_0\,e^{(r-q)\,T}.
-$$
-
-2. Price a strip of strikes with FFT, FRFT, or COS.
-3. Convert prices to implied volatilities with a robust root finder.
-4. Validate prices against published reference tables.
-5. Run timing and accuracy comparisons once validation has passed.
 
 ---
 
@@ -82,6 +98,24 @@ For European options under models with tractable characteristic functions, Fouri
 Monte Carlo is therefore retained here as a baseline for benchmarking and error comparison rather than as the core production method.
 
 ---
+
+## What are Characteristic functions?
+
+
+Implement the model characteristic function as follows:
+
+$$
+\varphi_T(u) \;=\; E^{Q}\bigl[\,e^{i\,u\,X_T}\,\bigr],
+$$
+
+where
+
+$$
+X_T \;=\; \log\bigl(S_T / F_0\bigr), \qquad F_0 \;=\; S_0\,e^{(r-q)\,T}.
+$$
+
+2. Price a strip of strikes, or literally ONE option with FFT, FRFT, or COS.
+
 
 ## Common characteristic-function interface
 
@@ -147,13 +181,6 @@ For Kou and the Heston-jump composites (Bates, Heston–Kou, Heston–CGMY), COS
 
 ---
 
-## IV inversion
-
-![IV inversion workflow](images/iv-inversion.svg)
-
-We convert model prices to Black–Scholes implied volatilities using a robust root finder (Newton with safeguards; Brent as baseline). This is used only for reporting smiles/surfaces and does not affect the core pricing validation gates.
-
-
 ## Model conventions
 
 The repository works in **log-forward coordinates**:
@@ -176,9 +203,10 @@ A notation warning: the symbol $\nu$ is reused across models. In Heston it denot
 
 ## Characteristic functions
 
-The ten models split cleanly into two groups:
+The ten models split cleanly into main groups - 
 
-- **PyFENG-backed.** For BSM, Heston, OUSV, Variance Gamma, CGMY, and NIG we do **not** re-implement the characteristic function. Each model file in `char_func/` is a thin adapter: map our project-side parameter dataclass to PyFENG's constructor kwargs, cache the constructed `pyfeng.*Fft` instance, and route `charfunc_logprice` through it. Adapters are verified bit-exactly (~1e-14) against PyFENG's CF in `tests/test_pyfeng_cf_wrappers.py` and in each model's `test_*_adapter.py`.
+- **PyFENG-backed.** For BSM, Heston, OUSV, Variance Gamma, CGMY, and NIG we do **not** re-implement the characteristic function. Each model file in `models/` is a thin adapter: map our project-side parameter dataclass to PyFENG's constructor kwargs, cache the constructed `pyfeng.*Fft` instance, and route `charfunc_logprice` through it. Adapters are verified bit-exactly (~1e-14) against PyFENG's CF in `tests/test_pyfeng_cf_wrappers.py` and in each model's `test_*_adapter.py`.
+
 - **In-house.** Kou, Bates, Heston–Kou, and Heston–CGMY have no PyFENG FFT counterpart (PyFENG ships `HestonFft`, `VarGammaFft`, `CgmyFft`, etc., but no SVJ composites and no Kou). These are derived below and validated by (i) independence factorisation against the PyFENG-backed Heston CF, (ii) model-reduction gates (`λ_j = 0` ⟹ Bates / Heston–Kou reduce to Heston bit-identically; `C = 0` ⟹ Heston–CGMY reduces to Heston), and (iii) frozen 41-strike regression strips cross-verified between Carr–Madan FFT and FRFT at high grid resolution.
 
 Cumulants are computed in closed form where the derivation is cheap (BSM, Heston, VG, Kou, CGMY) and via a 64-point Cauchy integral on a radius-0.25 circle otherwise (OUSV, NIG, and the SVJ composites). The closed-form CGMY cumulants agree with the Cauchy-FFT reference to ~1e-13.
@@ -341,46 +369,12 @@ with compensator $\psi(-i)$ plugged into the general $\varphi_J$ formula above. 
 
 ---
 
-## Validation philosophy
-
-![Validation gate](images/validation.svg)
-
-The project treats validation as a hard gate, not as a cosmetic appendix.
-
-A method is only regarded as correct once it reproduces published benchmark values within a stated tolerance. Performance comparisons are only meaningful after that step.
-
-A sensible validation sequence is:
-
-1. validate Carr–Madan FFT on published Variance Gamma benchmarks (CM1999 Case 4);
-2. validate Heston prices against high-precision references, including at least one branch-cut stress case (Lewis 2001 15-digit table + FO2008 Feller-violated ATM);
-3. validate COS on published Heston tables (FO2008 Table 1 to 1e-6);
-4. for Kou — where published closed-form tables are less standardised — validate COS by cross-checking against two independent Fourier inversion implementations already in this repo (FRFT and Carr–Madan FFT) driven by the same Kou characteristic function, and require stable convergence in COS $N$ and the truncation-length parameter $L$;
-5. for PyFENG-backed models (BSM, Heston, OUSV, VG, CGMY, NIG), add a **CF-level bit-identity gate** against `pyfeng.*Fft.charfunc_logprice` at ~1e-14 (our adapters are thin, so this gate catches any kwarg-translation slip before it becomes a price error), plus cross-method agreement against PyFENG's own `model.price(...)` on a 21-strike strip;
-6. for the SVJ composites (Bates, Heston–Kou, Heston–CGMY), add (i) a model-reduction gate (zero-out the jump block ⟹ bit-identical Heston), (ii) a COS vs FRFT high-resolution cross-check, and (iii) a frozen 41-strike regression strip whose oracle is a high-grid Carr–Madan FFT, cross-verified against FRFT $N=16384$ and COS $N=4096$ to ~1e-10.
-
-This ordering reduces debugging ambiguity by establishing one reliable method–model pair before broadening the matrix of supported methods, and makes the Kou-expansion (Bates / Heston–Kou / Heston–CGMY) tests a strict generalisation of the Kou and Heston gates they reduce to.
-
----
-
-## Benchmarking focus
-
-Once validation passes, the main comparisons of interest are:
-
-- runtime as a function of strike count;
-- runtime as a function of grid size;
-- pricing error relative to reference values;
-- FFT versus FRFT versus COS;
-- Monte Carlo baseline runtime and error.
-
-These benchmarks are intended to quantify the runtime-accuracy trade-off across Fourier methods rather than simply report raw timings in isolation.
-
----
 
 ## Repository structure
 
 ```text
 src/foureng/
-  char_func/        # Ten models. PyFENG-backed: bsm / heston / ousv /
+  models/           # Ten models. PyFENG-backed: bsm / heston / ousv /
                     # variance_gamma / cgmy / nig — all route through
                     # _pyfeng_backend.py (shared cache + lazy import).
                     # In-house: kou / bates / heston_kou / heston_cgmy —
@@ -411,60 +405,9 @@ notebooks/          # validation and benchmark notebooks
 
 ---
 
-## Development roadmap
-
-All phases below are implemented and exercised by the test suite
-(`pytest tests/` — 71 tests green, including the PyFENG cross-checks and the
-slow MC benchmark).
-
-### Phase 1 — done
-- Monte Carlo baseline (`foureng.mc.black_scholes_mc`, `foureng.mc.heston_conditional_mc`)
-- timing versus strike count (`benchmarks/phase1_mc_baseline.py`)
-- error-decay checks (`tests/test_phase1_mc_baseline.py`)
-
-### Phase 2 — done
-- Carr–Madan FFT for Variance Gamma and Heston (`foureng.pricers.carr_madan`)
-- validation against published benchmarks — CM1999 Case 4 VG and Lewis 2001 Heston (`tests/test_phase2_carr_madan_vg.py`)
-
-### Phase 3 — done
-- FRFT implementation (`foureng.pricers.frft`, `foureng.utils.frft`)
-- FFT versus FRFT benchmarking study (`benchmarks/phase3_frft_vs_cm.py`, `tests/test_phase3_frft.py`)
-
-### Phase 4 — done (primary pricer, per Prof. Choi's recommendation)
-- COS implementation (`foureng.pricers.cos`)
-- validated on FO2008 Table 1 (Feller-violated Heston, ATM call to $< 10^{-6}$ at $N=256$) and Lewis 2001 (15-digit Heston strip to $< 10^{-6}$ at $N=128$); COS extended to Kou with $N$-convergence and $L$-stability gates, cross-referenced internally against FRFT and Carr–Madan FFT and externally against PyFENG's `HestonFft` / `VarGammaFft` where available (`tests/test_phase4_cos_heston_fo2008.py`, `tests/test_phase4_cos_kou.py`, `tests/test_cos_kou_sweep_vs_fft_frft.py`, `tests/test_cos_vs_pyfeng_fft_heston_vg.py`)
-
-### Phase 6
-- Kou expansion: in-house SVJ composites
-  - Bates (Heston + Merton jumps)
-  - Heston–Kou (Heston + Kou jumps)
-  - Heston–CGMY (Heston + CGMY jumps)
-- model-reduction bit-identity gates, frozen 41-strike regression strips
-
-### Phase 7 — PyFENG CF expansion (Part 1)
-- replace any remaining in-house Heston / VG CF code paths with `pyfeng.HestonFft` / `pyfeng.VarGammaFft` wrappers through a shared backend helper
-- add `pyfeng.BsmFft` and `pyfeng.OusvFft` adapters on the same pattern
-- scipy-Brent implied-vol utility (PyFENG's `impvol_brentq` has a known normalisation bug with non-zero rates — see `utils/implied_vol.py`)
-- benchmark harness across the four PyFENG-backed models
-
-### Phase 8 — PyFENG CF expansion (Part 2)
-- `pyfeng.CgmyFft` and `pyfeng.ExpNigFft` adapters (pure-Lévy CGMY and NIG)
-- closed-form CGMY cumulants, cross-checked vs the Cauchy-FFT reference to ~1e-13
-- frozen CGMY and NIG regression strips
-
-### Phase 9 — optional extensions
-- Greeks via Fourier
-- control-variate constructions using Fourier prices inside Monte Carlo
-- packaging and library integration
-
-### Phase 7 — done
-- Packaging: curated public API exported from `foureng` (`src/foureng/__init__.py`), so external use is `from foureng import cos_prices, cos_price_and_greeks, calibrate_heston, bs_call_cv, HestonParams, ForwardSpec, ...` rather than reaching into submodules. Version pinned to `0.2.0` after Phase 6. `pip install -e .` + end-to-end smoke (Heston → COS price → Δ/Γ → IV round-trip) gated by `tests/test_phase7_public_api.py`.
-
----
-
 ## PyFENG integration
 
-PyFENG already provides production-quality characteristic functions for a broad set of models. Rather than re-derive any of them, this repository takes the opposite stance: **use PyFENG as the CF backend wherever it exists, and restrict the in-house scope to what PyFENG does not ship**. Six of the ten supported models — BSM, Heston, OUSV, Variance Gamma, CGMY, NIG — are therefore thin adapters around `pyfeng.*Fft.charfunc_logprice`, sharing a common lazy-import and cache helper in `char_func/_pyfeng_backend.py`. The four remaining models — Kou and the three Heston-jump composites (Bates, Heston–Kou, Heston–CGMY) — are in-house because PyFENG does not expose them.
+PyFENG already provides production-quality characteristic functions for a broad set of models. Rather than re-derive any of them, this repository takes the opposite stance: **use PyFENG as the CF backend wherever it exists, and restrict the in-house scope to what PyFENG does not ship**. Six of the ten supported models — BSM, Heston, OUSV, Variance Gamma, CGMY, NIG — are therefore thin adapters around `pyfeng.*Fft.charfunc_logprice`, sharing a common lazy-import and cache helper in `models/_pyfeng_backend.py`. The four remaining models — Kou and the three Heston-jump composites (Bates, Heston–Kou, Heston–CGMY) — are in-house because PyFENG does not expose them.
 
 The value of this repository, given that policy, is in:
 
@@ -478,37 +421,217 @@ One caveat: we route implied-vol inversion through `scipy.optimize.brentq` direc
 
 ---
 
-## Version PC (Post-Choi)
 
-After the initial pre-Choi iteration (Carr–Madan FFT + FRFT + paper checks), the project was realigned around Prof. Choi's feedback and then extended in two further phases:
+### FO2008 full-paper replication
 
-- **COS is the primary pricer.** It is easier to tune than Carr–Madan (one interval $[a,b]$ chosen from cumulants, versus a coupled $(N,\eta,\alpha)$ grid), converges spectrally on smooth densities, and does not need a damping parameter.
-- **PyFENG is the CF backend, not merely a validator.** Rather than re-implement Heston / VG / OUSV / CGMY / NIG / BSM characteristic functions, we use PyFENG's `*Fft.charfunc_logprice` directly through thin adapters. Every published-paper check remains witnessed by two independent implementations — the paper table and PyFENG's own `*.price(...)` — but the CF is no longer duplicated. Convention mapping was verified against our fixtures (in particular `pyfeng.HestonFft(sigma=v0, ...)` expects $v_0$, not $\sqrt{v_0}$; `pyfeng.OusvFft(sigma=sigma0, mr=kappa, vov=nu, ...)` maps the Schöbel–Zhu academic names to PyFENG's SV-style kwargs).
-- **The Kou expansion is in-house, because PyFENG does not ship it.** Kou itself, plus the three SVJ composites (Bates, Heston–Kou, Heston–CGMY), are derived in `char_func/` and validated by (i) a Carr–Madan FFT internal witness with $N$-convergence and $L$-stability gates (Kou), (ii) model-reduction gates (zero-out the jump block ⟹ bit-identical PyFENG-Heston output), and (iii) frozen 41-strike regression strips cross-verified between three independent Fourier engines.
-- **PyFENG's implied-vol inverter is not used.** It has a normalisation bug with non-zero rates — see the PyFENG integration section above and `utils/implied_vol.py` — so we run `scipy.optimize.brentq` directly on a hand-rolled Black–Scholes formula instead. Post-fix, BSM IV round-trip recovers the input $\sigma$ to ~1e-13.
+Beyond the one-line test anchor, the repository now carries a **paper-faithful replication report** for Fang & Oosterlee (2008): BSM Table 2, Heston Tables 4 / 5 / 6, VG Table 7 at both maturities, and CGMY Tables 8 / 9 / 10. The canonical notebook is [`notebooks/fo2008_replication.ipynb`](notebooks/fo2008_replication.ipynb); the frozen paper registry is [`benchmarks/paper_replications/fo2008_cos/params.py`](benchmarks/paper_replications/fo2008_cos/params.py); CSVs, figures, and the generated write-up live under [`benchmarks/paper_replications/fo2008_cos/outputs/`](benchmarks/paper_replications/fo2008_cos/outputs/).
 
-### Papers replicated
+The README uses the same horizontal, paper-style tables as FO2008: $N$ across columns, error/time down rows. Tables 1 and 3 are paper-only anchors included for context; the automated replication CSV starts at Table 2 and then covers Tables 4-10.
 
-| Source | Model | What we reproduce | Where |
-|---|---|---|---|
-| Fang & Oosterlee (2008), Table 1 | Heston (Feller violated) | ATM call = 5.78515545 to $< 10^{-6}$ at $N=256$ | `tests/test_phase4_cos_heston_fo2008.py` |
-| Lewis (2001), 15-digit Heston | Heston | 5-strike call strip to $< 10^{-6}$ at $N=128$ | `tests/test_phase4_cos_heston_fo2008.py` |
-| Carr & Madan (1999), Case 4 VG | Variance Gamma | 3-strike put strip to $< 10^{-3}$ at $N=2048$ | `tests/test_phase4_cos_heston_fo2008.py` |
-| Kou (not in PyFENG) | Kou | COS agrees with CM $N=16384$ to $< 10^{-6}$ at $N=128$; 7-order $N$-convergence from 32→128; $L$-spread $< 10^{-7}$ | `tests/test_phase4_cos_kou.py`, `tests/test_cos_kou_sweep_vs_fft_frft.py` |
-| Frozen oracle (Bates) | Heston ⊗ Merton jumps | 41-strike CM $N=32768$, cross-verified FRFT $N=16384$ + COS $N=4096$ to ~1e-10; reduction-to-Heston at $\lambda_j = 0$ bit-identical | `tests/test_bates_*.py` |
-| Frozen oracle (Heston–Kou) | Heston ⊗ Kou jumps | Same oracle design; reduction-to-Heston at $\lambda_j = 0$ bit-identical | `tests/test_heston_kou_*.py` |
-| Frozen oracle (Heston–CGMY) | Heston ⊗ CGMY jumps | Same oracle design; reduction-to-Heston at $C = 0$ bit-identical | `tests/test_heston_cgmy_*.py` |
-| PyFENG cross-check | BSM, Heston, OUSV, VG, CGMY, NIG | CF wrapper bit-identity ~1e-14; price parity vs `pyfeng.*Fft.price(...)` ~1e-7 on default grid; frozen 41-strike strips where the paper has no clean table at our parameterisation | `tests/test_{bsm,ousv,cgmy,nig}_adapter.py`, `tests/test_pyfeng_cf_wrappers.py`, `tests/test_fft_using_pyfeng_cf_matches_pyfeng_price.py` |
+<details open>
+<summary>Paper-style FO2008 tables</summary>
 
-### Demo notebook
+#### Table 1 — GBM convergence warm-up, paper values
 
-The full story — MC → Carr–Madan/FRFT → COS — is in [`notebooks/demo_story_prechoi_to_pc.ipynb`](notebooks/demo_story_prechoi_to_pc.ipynb). Four acts: MC baseline (runtime + seed noise), pre-Choi Fourier (CM1999 VG paper check, Lewis Heston Carr–Madan vs PyFENG, FRFT vs CM frontier), Version PC COS-first (FO2008 gate, $N$-convergence, $L$-stability, VG CM1999 replication, Kou internal validation), and a one-table scoreboard. Figures exported to [`images/`](images/):
+|  | N=4 | N=8 | N=16 | N=32 | N=64 |
+|---|---:|---:|---:|---:|---:|
+| max error | 4.9999e-02 | 3.2088e-02 | 3.6067e-03 | 3.1511e-07 | 5.5040e-17 |
+| cpu time (sec) | ~0.0000 | ~0.0000 | ~0.0000 | ~0.0000 | ~0.0000 |
 
-![Version PC scoreboard](images/act4_scoreboard.png)
+#### Table 2 — GBM calls, paper vs local reproduction
 
-Rebuild the notebook from its generator: `python scripts/build_demo_notebook.py && jupyter nbconvert --to notebook --execute notebooks/demo_story_prechoi_to_pc.ipynb --output demo_story_prechoi_to_pc.ipynb`.
+|  | N=32 | N=64 | N=128 | N=256 | N=512 |
+|---|---:|---:|---:|---:|---:|
+| paper COS msec | 0.0303 | 0.0327 | 0.0349 | 0.0434 | 0.0588 |
+| paper COS max error | 2.43e-07 | 3.55e-15 | 3.55e-15 | 3.55e-15 | 3.55e-15 |
+| our COS msec | 0.0832 | 0.0841 | 0.1111 | 0.1211 | 0.1695 |
+| our COS max error | 3.15e-05 | 3.15e-05 | 3.15e-05 | 3.15e-05 | 3.15e-05 |
+| paper Carr-Madan msec | 0.0857 | 0.0791 | 0.0853 | 0.0907 | 0.1111 |
+| paper Carr-Madan max error | 9.77e-01 | 1.23e+00 | 7.84e-02 | 6.04e-04 | 4.12e-04 |
+| our Carr-Madan msec | 0.3763 | 0.1569 | 0.1730 | 0.1923 | 0.2651 |
+| our Carr-Madan max error | 1.34e+00 | 1.34e+00 | 4.58e-02 | 1.32e-02 | 4.85e-04 |
+
+#### Table 3 — Cash-or-nothing digital option under GBM, paper values
+
+Parameters: $\sigma=0.2$, $r=0.05$, $q=0$, $T=0.1$, $S_0=100$, $K=120$. FO2008's quoted reference is $0.273306496497$, corresponding to a unit-cash digital $e^{-rT}N(d_2)$.
+
+|  | N=40 | N=60 | N=80 | N=100 | N=120 | N=140 |
+|---|---:|---:|---:|---:|---:|---:|
+| error | 4.40e-09 | 2.86e-14 | 2.86e-14 | 2.86e-14 | 2.86e-14 | 2.86e-14 |
+| cpu time (msec) | 0.0165 | 0.0169 | 0.0178 | 0.0182 | 0.0190 | 0.0202 |
+
+#### Table 4 — Heston, $T=1$, ATM
+
+|  | N=40 | N=80 | N=120 | N=160 | N=200 |
+|---|---:|---:|---:|---:|---:|
+| paper max error | 4.69e-02 | 3.81e-04 | 1.17e-05 | 6.18e-07 | 3.70e-09 |
+| our max error | 2.68e-02 | 3.33e-03 | 8.25e-05 | 1.31e-05 | 6.41e-07 |
+| paper msec | 0.0607 | 0.0805 | 0.1078 | 0.1300 | 0.1539 |
+| our msec | 0.3811 | 0.1281 | 0.1138 | 0.1134 | 0.1374 |
+
+#### Table 5 — Heston, $T=10$, ATM
+
+|  | N=40 | N=65 | N=90 | N=115 | N=140 |
+|---|---:|---:|---:|---:|---:|
+| paper max error | 4.96e-01 | 4.63e-03 | 1.35e-05 | 1.08e-07 | 9.88e-10 |
+| our max error | 3.24e+00 | 7.65e-01 | 1.54e-01 | 1.97e-02 | 4.68e-03 |
+| paper msec | 0.0598 | 0.0747 | 0.0916 | 0.1038 | 0.1230 |
+| our msec | 0.1386 | 0.1040 | 0.1190 | 0.1935 | 0.1109 |
+
+#### Table 6 — Heston, $T=1$, 21-strike strip
+
+|  | N=40 | N=80 | N=160 | N=200 |
+|---|---:|---:|---:|---:|
+| paper max error | 5.19e-02 | 7.18e-04 | 6.18e-07 | 2.05e-08 |
+| our max error | 1.15e-01 | 5.46e-03 | 2.00e-05 | 2.63e-06 |
+| paper msec | 0.1015 | 0.1766 | 0.3383 | 0.4214 |
+| our msec | 0.1337 | 0.1395 | 0.2018 | 0.2347 |
+
+#### Table 7 — Variance Gamma
+
+| $T=0.1$ | N=128 | N=256 | N=512 | N=1024 | N=2048 |
+|---|---:|---:|---:|---:|---:|
+| paper max error | 6.97e-04 | 4.19e-06 | 6.80e-06 | 5.70e-07 | 7.98e-08 |
+| our max error | 4.28e-04 | 4.44e-05 | 8.97e-07 | 1.49e-08 | 4.94e-08 |
+| our msec | 0.1412 | 0.1358 | 0.1346 | 0.1734 | 0.2687 |
+
+| $T=1.0$ | N=30 | N=60 | N=90 | N=120 | N=150 |
+|---|---:|---:|---:|---:|---:|
+| paper max error | 7.06e-03 | 1.29e-05 | 2.81e-07 | 3.16e-08 | 1.51e-09 |
+| our max error | 4.57e-04 | 9.34e-06 | 1.71e-07 | 5.47e-09 | 4.39e-10 |
+| our msec | 0.1116 | 0.0779 | 0.0811 | 0.0817 | 0.0876 |
+
+#### Tables 8-10 — CGMY
+
+| $Y=0.5$ | N=40 | N=60 | N=80 | N=100 | N=120 | N=140 |
+|---|---:|---:|---:|---:|---:|---:|
+| paper max error | 3.82e-02 | 6.87e-04 | 2.11e-05 | 9.45e-07 | 5.56e-08 | 4.04e-09 |
+| our max error | 9.01e-04 | 1.68e-05 | 5.74e-07 | 2.81e-08 | 1.73e-09 | 2.16e-10 |
+| paper msec | 0.0560 | 0.0645 | 0.0844 | 0.1280 | 0.1051 | 0.1216 |
+| our msec | 0.1086 | 0.1194 | 0.1881 | 0.1084 | 0.1346 | 0.1074 |
+
+| $Y=1.5$ | N=40 | N=45 | N=50 | N=55 | N=60 | N=65 |
+|---|---:|---:|---:|---:|---:|---:|
+| paper max error | 1.38e+00 | 1.98e-02 | 4.52e-04 | 9.59e-06 | 1.22e-09 | 7.53e-10 |
+| our max error | 6.57e-07 | 8.72e-09 | 6.62e-10 | 4.79e-10 | 4.77e-10 | 4.77e-10 |
+| paper msec | 0.0545 | 0.0589 | 0.0689 | 0.0690 | 0.0732 | 0.0748 |
+| our msec | 0.1090 | 0.1559 | 0.0939 | 0.1228 | 0.0977 | 0.1340 |
+
+| $Y=1.98$ | N=20 | N=25 | N=30 | N=35 | N=40 |
+|---|---:|---:|---:|---:|---:|
+| paper max error | 4.17e-02 | 5.15e-01 | 6.54e-05 | 1.10e-09 | 1.94e-15 |
+| our max error | 1.81e-06 | 1.71e-09 | 1.48e-11 | 1.47e-11 | 1.47e-11 |
+| paper msec | 0.0463 | 0.0438 | 0.0485 | 0.0511 | 0.0538 |
+| our msec | 0.0874 | 0.0813 | 0.0871 | 0.0828 | 0.0837 |
+
+</details>
+
+The important diagnostic is that the ugly rows are not one single COS failure. BSM is dominated by rounded printed references; Heston Table 5 is a long-maturity/wide-interval resolution problem; Heston Table 6 is a local high-$N$ reference because the paper only reports max error; and paper timings are 2008 hardware measurements. The generated [`SUMMARY.md`](benchmarks/paper_replications/fo2008_cos/outputs/SUMMARY.md) carries the longer explanation.
+
+<p align="center">
+  <img src="images/fo2008/fig_family_heston.png" width="49%" alt="FO2008 Heston COS replication error curves">
+  <img src="images/fo2008/fig_family_cgmy.png" width="49%" alt="FO2008 CGMY COS replication error curves">
+</p>
+
+<p align="center">
+  <img src="images/fo2008/fig_extension_error_vs_time.png" width="49%" alt="FO2008 extension error versus time">
+  <img src="images/fo2008/fig_frontier.png" width="49%" alt="FO2008 extension frontier across methods">
+</p>
+
 
 ---
+
+## Junike Fix (Better truncation rate, via Markov's Inequality)
+
+The baseline COS implementation follows Fang & Oosterlee (2008), which gives exponential convergence in theory. However, the full-paper replication shows that this behaviour is **not always realised numerically** under a naive implementation.
+
+In particular:
+
+- BSM (Table 2) shows a **flat observed error floor across $N$** in the paper-faithful replication, which is consistent with truncation-dominated bias and, in our reproduction, is amplified further by the paper’s rounded printed reference values;
+- Heston (Table 5, long maturity) shows **slow convergence and materially larger errors** than the paper baseline when the interval is wide and the series resolution is kept too small;
+- the multi-strike Heston strip is even more sensitive, because one shared interval must serve the whole strip and the strip reference itself is a local high-resolution construction rather than a hidden paper oracle.
+
+In the baseline FO2008 implementation, the truncation interval is usually built from low-order cumulants using
+
+$$[a,b]=\left[c_1-L\sqrt{c_2+\sqrt{|c_4|}},\;c_1+L\sqrt{c_2+\sqrt{|c_4|}}\right]$$
+
+
+That rule is convenient, but it is still just a rule of thumb. If $[a,b]$ is too short, the method throws away tail mass before the cosine expansion even starts. After that, raising $N$ only gives a better approximation on the truncated support; it does not recover the missing mass. That is the truncation-dominated regime, and it is exactly the kind of behaviour we see in the flatter error curves from the naive replication.
+
+The Junike-Pankrashkin fix is to choose the interval from a tail tolerance instead of from a fixed cumulant multiplier. Pick a center $m$ and a half-width $M$, and require the tail outside $[m-M,m+M]$ to be small. By Markov’s inequality, for any $n \ge 1$,
+
+$$
+\mathbb{P}\!\left(|X-m| \ge M\right)
+\le
+\frac{\mathbb{E}[|X-m|^n]}{M^n}.
+$$
+
+So if the target tail probability is at most $\varepsilon$, it is enough to choose
+
+$$
+M
+\ge
+\left(\frac{\mathbb{E}[|X-m|^n]}{\varepsilon}\right)^{1/n}.
+$$
+
+and then set
+
+$$
+[a,b] = [m-M,\; m+M].
+$$
+
+The number-of-terms side comes from [Junike (2024)](https://arxiv.org/abs/2303.16012). The paper’s central result is that COS really has **two numerical knobs**: the truncation range and the number of cosine terms. Once the interval is chosen correctly, \(N\) should be selected to resolve that interval rather than guessed by trial and error. Junike also makes three other points that are important for this repo:
+
+1. the total COS error splits naturally into **density truncation error, cosine-series truncation error, and coefficient-approximation error**;
+2. it is mathematically cleaner to work with **centered log-returns** \(X_T - \mathbb{E}[X_T]\), which justifies a symmetric interval around zero;
+3. for European calls, the payoff is unbounded, so it is often numerically preferable to price the bounded side and recover the call by **put-call parity**.
+
+Junike further proves that exponential convergence is **not unconditional**. It holds when the density is smooth and decays at least exponentially, but it can fail for smooth heavy-tailed densities, where convergence becomes polynomial and tail-index dependent. That is why the theory lines up much better with Black-Scholes, Heston, NIG, and benign CGMY regimes than with every Variance-Gamma parameter set.
+
+That is exactly the motivation for the improved implementation in this repo:
+
+- `COSGridPolicy` and `method="cos_improved"` choose the interval and `N` jointly instead of freezing `N=256, L=10`;
+- `COSGrid.center` supports a **centered symmetric interval** for the state variable;
+- very wide intervals are routed away from COS when the approximation geometry is unfavorable.
+
+In repo terms, the right mental model is:
+
+> choose the support first, then choose enough cosine modes to resolve it.
+
+The new [`notebooks/cos_method_improved.ipynb`](notebooks/cos_method_improved.ipynb) notebook is built around exactly that idea.
+
+
+## Results for Junike Fix
+
+The improved notebook does not claim that COS suddenly dominates every case. It shows something more useful: once the interval policy and the series-resolution policy are coupled correctly, we can see exactly where the adaptive path helps, where it merely matches, and where another method is the honest fallback.
+
+| Case | Paper best \(N\) | Paper best max error | Old default error | Our paper-grid replay | Improved method | Improved \(N\) | Improved error | Vs default | Vs paper | Vs paper-grid |
+|---|---:|---:|---:|---:|---|---:|---:|---|---|---|
+| BSM Table 2 | 64 | 3.55e-15 | 1.60e-14 | 1.60e-14 | COS | 64 | 1.54e-14 | better | worse | better |
+| Heston Table 4 | 200 | 3.70e-09 | 6.10e-08 | 6.57e-07 | COS | 512 | 2.22e-11 | better | better | better |
+| Heston Table 5 | 140 | 9.88e-10 | 5.07e-12 | 4.68e-03 | COS | 1024 | 9.68e-11 | worse | better | better |
+| Heston Table 6 strip | 200 | 2.05e-08 | 6.98e-08 | 2.62e-06 | COS | 512 | 2.92e-10 | better | better | better |
+| VG Table 7, \(T=0.1\) | 2048 | 7.98e-08 | 4.44e-05 | 4.94e-08 | COS | 1024 | 1.49e-08 | better | better | better |
+| VG Table 7, \(T=1.0\) | 150 | 1.51e-09 | 1.99e-10 | 4.39e-10 | COS | 2048 | 2.00e-10 | worse | better | better |
+| CGMY Table 8, \(Y=0.5\) | 140 | 4.04e-09 | 1.19e-10 | 2.16e-10 | COS | 1024 | 1.19e-10 | worse | better | better |
+| CGMY Table 10, \(Y=1.98\) | 40 | 1.94e-15 | 2.46e-11 | 1.47e-11 | Lewis | 8192 | 6.41e-11 | worse | worse | worse |
+
+Read that table carefully:
+
+- the adaptive path beats the old default on `4/8` summary cases;
+- it beats our strict paper-grid replay on `7/8` cases;
+- it beats the paper’s best reported error on `6/8` cases.
+
+That is the right interpretation of the Junike-style fix: it is primarily a **robustness and policy improvement**, not a promise that one new static setting will dominate every old static setting.
+
+The Heston `T=10` diagnostics are especially instructive:
+
+- support-truncation error falls from about `7.00e-07` at `L=6` to `1.84e-09` at `L=8` and `5.06e-12` at `L=10`;
+- the paper-wide `L=32` interval only becomes spectacularly accurate when `N` is also made huge, which is exactly the “interval and series must be chosen jointly” lesson;
+- coefficient-side error separates cleanly from support error: on the wide paper interval, direct call coefficients become numerically unstable while put-plus-parity remains well behaved.
+
+So the “Junike fix” is not a different pricing formula. It is a better approximation policy for COS, anchored to the actual error decomposition and to the model regime. Paper milliseconds can still be shown as a historical reference, but they are not portable timing claims.
+
 
 ## References
 
@@ -527,6 +650,10 @@ Fang, F. and Oosterlee, C.W. (2008). A novel pricing method for European options
 Hagan, P.S., Kumar, D., Lesniewski, A.S. and Woodward, D.E. (2002). Managing smile risk. *Wilmott Magazine*, September, 84–108. [[PDF](http://www.deriscope.com/docs/Hagan_2002.pdf)]
 
 Heston, S.L. (1993). A closed-form solution for options with stochastic volatility. *Review of Financial Studies*, 6(2), 327–343. [[PDF](https://www.ma.imperial.ac.uk/~ajacquie/IC_Num_Methods/IC_Num_Methods_Docs/Literature/Heston.pdf)]
+
+Junike, G. (2024). On the number of terms in the COS method for European option pricing. *arXiv preprint arXiv:2303.16012* (revised 2024). [[arXiv](https://arxiv.org/abs/2303.16012)]
+
+Junike, G. and Pankrashkin, K. (2022). Precise option pricing by the COS method: How to choose the truncation range. *Applied Mathematics and Computation*, 421, 126935. [[arXiv](https://arxiv.org/abs/2109.01030)] [[DOI](https://doi.org/10.1016/j.amc.2022.126935)]
 
 Kahl, C. and Jäckel, P. (2005). Not-so-complex logarithms in the Heston model. *Wilmott Magazine*, September, 94–103. [[PDF](http://www2.math.uni-wuppertal.de/~kahl/publications/NotSoComplexLogarithmsInTheHestonModel.pdf)]
 
