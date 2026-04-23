@@ -55,22 +55,15 @@ These are not shipped by PyFENG and are implemented directly in this repository:
 
 All models can be priced through the same pricer layer:
 
-- **Carr–Madan or Lewis FFT**
+- **Carr–Madan or Lewis FFT** (Latter from pyFENG)
 - **FRFT**
 - **COS**
 
-### 4. Numerical utilities
-
-- implied-volatility inversion (`scipy.optimize.brentq`)
-- interpolation helpers
-- cumulant and truncation utilities
-- benchmarking harnesses
 
 ### 5. Validation
 
 - published benchmark replication
-- PyFENG CF-level bit-identity checks for wrapped models
-- model-reduction gates for composite models
+- verifying against existing benchmarks
 
 
 ---
@@ -79,22 +72,6 @@ All models can be priced through the same pricer layer:
 
 ![Fourier option pricer workflow](images/fourier_option_pricer_workflow.svg)
 
-1. Implement the model characteristic function
-
-$$
-\varphi_T(u) \;=\; E^{Q}\bigl[\,e^{i\,u\,X_T}\,\bigr],
-$$
-
-where
-
-$$
-X_T \;=\; \log\bigl(S_T / F_0\bigr), \qquad F_0 \;=\; S_0\,e^{(r-q)\,T}.
-$$
-
-2. Price a strip of strikes with FFT, FRFT, or COS.
-3. Convert prices to implied volatilities with a robust root finder.
-4. Validate prices against published reference tables.
-5. Run timing and accuracy comparisons once validation has passed.
 
 ---
 
@@ -113,6 +90,23 @@ so reducing error by one order of magnitude typically requires roughly two order
 For European options under models with tractable characteristic functions, Fourier inversion delivers deterministic prices and typically a materially better runtime-versus-accuracy profile.
 
 Monte Carlo is therefore retained here as a baseline for benchmarking and error comparison rather than as the core production method.
+
+
+## What is the Characateristic function?? 
+
+
+$$
+\varphi_T(u) \;=\; E^{Q}\bigl[\,e^{i\,u\,X_T}\,\bigr],
+$$
+
+where
+
+$$
+X_T \;=\; \log\bigl(S_T / F_0\bigr), \qquad F_0 \;=\; S_0\,e^{(r-q)\,T}.
+$$
+
+Then, we can price a strip of strikes, or just an option, with FFT, FRFT, or COS.
+
 
 ---
 
@@ -645,9 +639,11 @@ The important diagnostic is that the ugly rows are not one single COS failure. B
 </p>
 
 <p align="center">
-  <img src="images/fo2008/fig_extension_error_vs_time.png" width="49%" alt="FO2008 extension error versus time">
   <img src="images/fo2008/fig_frontier.png" width="49%" alt="FO2008 extension frontier across methods">
 </p>
+
+
+
 
 
 
