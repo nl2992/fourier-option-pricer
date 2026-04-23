@@ -115,13 +115,19 @@ def test_kou_cos_converges_in_N(case):
 
 @pytest.mark.parametrize("case", KOU_CASES[:4], ids=[c["name"] for c in KOU_CASES[:4]])
 def test_kou_cos_stable_in_L(case):
-    """At N=1024 the prices should not depend on L within a narrow range."""
+    """At N=1024 the prices should not depend on L within the recommended range.
+
+    FO2008 recommends ``L=10`` for Kou-like jump models; L=6 under-resolves
+    the tails (the deficit persists at N=2048 — it is pure truncation
+    error). Sweep is restricted to L in {8, 10, 12} so we measure the COS
+    numerical sensitivity rather than the FO2008 truncation rule.
+    """
     fwd, p, phi = _setup(case)
     strikes = _strikes_around_forward(fwd, -0.10, 0.10, 5)
     cums = kou_cumulants(fwd, p)
 
     prices: list[np.ndarray] = []
-    for L in (6.0, 8.0, 10.0, 12.0):
+    for L in (8.0, 10.0, 12.0):
         C = cos_prices(phi, fwd, strikes, cos_auto_grid(cums, N=1024, L=L)).call_prices
         prices.append(C)
     stack = np.vstack(prices)

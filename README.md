@@ -533,15 +533,124 @@ After the initial pre-Choi iteration (Carr–Madan FFT + FRFT + paper checks), t
 | Frozen oracle (Heston–CGMY) | Heston ⊗ CGMY jumps | Same oracle design; reduction-to-Heston at $C = 0$ bit-identical | `tests/test_heston_cgmy_*.py` |
 | PyFENG cross-check | BSM, Heston, OUSV, VG, CGMY, NIG | CF wrapper bit-identity ~1e-14; price parity vs `pyfeng.*Fft.price(...)` ~1e-7 on default grid; frozen 41-strike strips where the paper has no clean table at our parameterisation | `tests/test_{bsm,ousv,cgmy,nig}_adapter.py`, `tests/test_pyfeng_cf_wrappers.py`, `tests/test_fft_using_pyfeng_cf_matches_pyfeng_price.py` |
 
-### Demo notebook
+### FO2008 full-paper replication
 
-The full story — MC → Carr–Madan/FRFT → COS — is in [`notebooks/demo_story_prechoi_to_pc.ipynb`](notebooks/demo_story_prechoi_to_pc.ipynb). Four acts: MC baseline (runtime + seed noise), pre-Choi Fourier (CM1999 VG paper check, Lewis Heston Carr–Madan vs PyFENG, FRFT vs CM frontier), Version PC COS-first (FO2008 gate, $N$-convergence, $L$-stability, VG CM1999 replication, Kou internal validation), and a one-table scoreboard. Figures exported to [`images/`](images/):
+Beyond the one-line test anchor, the repository now carries a **paper-faithful replication report** for Fang & Oosterlee (2008): BSM Table 2, Heston Tables 4 / 5 / 6, VG Table 7 at both maturities, and CGMY Tables 8 / 9 / 10. The canonical notebook is [`notebooks/fo2008_replication.ipynb`](notebooks/fo2008_replication.ipynb); the frozen paper registry is [`benchmarks/paper_replications/fo2008_cos/params.py`](benchmarks/paper_replications/fo2008_cos/params.py); CSVs, figures, and the generated write-up live under [`benchmarks/paper_replications/fo2008_cos/outputs/`](benchmarks/paper_replications/fo2008_cos/outputs/).
 
-![Version PC scoreboard](images/act4_scoreboard.png)
+The README uses the same horizontal, paper-style tables as FO2008: $N$ across columns, error/time down rows. Tables 1 and 3 are paper-only anchors included for context; the automated replication CSV starts at Table 2 and then covers Tables 4-10.
 
-Rebuild the notebook from its generator: `python scripts/build_demo_notebook.py && jupyter nbconvert --to notebook --execute notebooks/demo_story_prechoi_to_pc.ipynb --output demo_story_prechoi_to_pc.ipynb`.
+<details open>
+<summary>Paper-style FO2008 tables</summary>
 
----
+#### Table 1 — GBM convergence warm-up, paper values
+
+|  | N=4 | N=8 | N=16 | N=32 | N=64 |
+|---|---:|---:|---:|---:|---:|
+| max error | 4.9999e-02 | 3.2088e-02 | 3.6067e-03 | 3.1511e-07 | 5.5040e-17 |
+| cpu time (sec) | ~0.0000 | ~0.0000 | ~0.0000 | ~0.0000 | ~0.0000 |
+
+#### Table 2 — GBM calls, paper vs local reproduction
+
+|  | N=32 | N=64 | N=128 | N=256 | N=512 |
+|---|---:|---:|---:|---:|---:|
+| paper COS msec | 0.0303 | 0.0327 | 0.0349 | 0.0434 | 0.0588 |
+| paper COS max error | 2.43e-07 | 3.55e-15 | 3.55e-15 | 3.55e-15 | 3.55e-15 |
+| our COS msec | 0.0832 | 0.0841 | 0.1111 | 0.1211 | 0.1695 |
+| our COS max error | 3.15e-05 | 3.15e-05 | 3.15e-05 | 3.15e-05 | 3.15e-05 |
+| paper Carr-Madan msec | 0.0857 | 0.0791 | 0.0853 | 0.0907 | 0.1111 |
+| paper Carr-Madan max error | 9.77e-01 | 1.23e+00 | 7.84e-02 | 6.04e-04 | 4.12e-04 |
+| our Carr-Madan msec | 0.3763 | 0.1569 | 0.1730 | 0.1923 | 0.2651 |
+| our Carr-Madan max error | 1.34e+00 | 1.34e+00 | 4.58e-02 | 1.32e-02 | 4.85e-04 |
+
+#### Table 3 — Cash-or-nothing digital option under GBM, paper values
+
+Parameters: $\sigma=0.2$, $r=0.05$, $q=0$, $T=0.1$, $S_0=100$, $K=120$. FO2008's quoted reference is $0.273306496497$, corresponding to a unit-cash digital $e^{-rT}N(d_2)$.
+
+|  | N=40 | N=60 | N=80 | N=100 | N=120 | N=140 |
+|---|---:|---:|---:|---:|---:|---:|
+| error | 4.40e-09 | 2.86e-14 | 2.86e-14 | 2.86e-14 | 2.86e-14 | 2.86e-14 |
+| cpu time (msec) | 0.0165 | 0.0169 | 0.0178 | 0.0182 | 0.0190 | 0.0202 |
+
+#### Table 4 — Heston, $T=1$, ATM
+
+|  | N=40 | N=80 | N=120 | N=160 | N=200 |
+|---|---:|---:|---:|---:|---:|
+| paper max error | 4.69e-02 | 3.81e-04 | 1.17e-05 | 6.18e-07 | 3.70e-09 |
+| our max error | 2.68e-02 | 3.33e-03 | 8.25e-05 | 1.31e-05 | 6.41e-07 |
+| paper msec | 0.0607 | 0.0805 | 0.1078 | 0.1300 | 0.1539 |
+| our msec | 0.3811 | 0.1281 | 0.1138 | 0.1134 | 0.1374 |
+
+#### Table 5 — Heston, $T=10$, ATM
+
+|  | N=40 | N=65 | N=90 | N=115 | N=140 |
+|---|---:|---:|---:|---:|---:|
+| paper max error | 4.96e-01 | 4.63e-03 | 1.35e-05 | 1.08e-07 | 9.88e-10 |
+| our max error | 3.24e+00 | 7.65e-01 | 1.54e-01 | 1.97e-02 | 4.68e-03 |
+| paper msec | 0.0598 | 0.0747 | 0.0916 | 0.1038 | 0.1230 |
+| our msec | 0.1386 | 0.1040 | 0.1190 | 0.1935 | 0.1109 |
+
+#### Table 6 — Heston, $T=1$, 21-strike strip
+
+|  | N=40 | N=80 | N=160 | N=200 |
+|---|---:|---:|---:|---:|
+| paper max error | 5.19e-02 | 7.18e-04 | 6.18e-07 | 2.05e-08 |
+| our max error | 1.15e-01 | 5.46e-03 | 2.00e-05 | 2.63e-06 |
+| paper msec | 0.1015 | 0.1766 | 0.3383 | 0.4214 |
+| our msec | 0.1337 | 0.1395 | 0.2018 | 0.2347 |
+
+#### Table 7 — Variance Gamma
+
+| $T=0.1$ | N=128 | N=256 | N=512 | N=1024 | N=2048 |
+|---|---:|---:|---:|---:|---:|
+| paper max error | 6.97e-04 | 4.19e-06 | 6.80e-06 | 5.70e-07 | 7.98e-08 |
+| our max error | 4.28e-04 | 4.44e-05 | 8.97e-07 | 1.49e-08 | 4.94e-08 |
+| our msec | 0.1412 | 0.1358 | 0.1346 | 0.1734 | 0.2687 |
+
+| $T=1.0$ | N=30 | N=60 | N=90 | N=120 | N=150 |
+|---|---:|---:|---:|---:|---:|
+| paper max error | 7.06e-03 | 1.29e-05 | 2.81e-07 | 3.16e-08 | 1.51e-09 |
+| our max error | 4.57e-04 | 9.34e-06 | 1.71e-07 | 5.47e-09 | 4.39e-10 |
+| our msec | 0.1116 | 0.0779 | 0.0811 | 0.0817 | 0.0876 |
+
+#### Tables 8-10 — CGMY
+
+| $Y=0.5$ | N=40 | N=60 | N=80 | N=100 | N=120 | N=140 |
+|---|---:|---:|---:|---:|---:|---:|
+| paper max error | 3.82e-02 | 6.87e-04 | 2.11e-05 | 9.45e-07 | 5.56e-08 | 4.04e-09 |
+| our max error | 9.01e-04 | 1.68e-05 | 5.74e-07 | 2.81e-08 | 1.73e-09 | 2.16e-10 |
+| paper msec | 0.0560 | 0.0645 | 0.0844 | 0.1280 | 0.1051 | 0.1216 |
+| our msec | 0.1086 | 0.1194 | 0.1881 | 0.1084 | 0.1346 | 0.1074 |
+
+| $Y=1.5$ | N=40 | N=45 | N=50 | N=55 | N=60 | N=65 |
+|---|---:|---:|---:|---:|---:|---:|
+| paper max error | 1.38e+00 | 1.98e-02 | 4.52e-04 | 9.59e-06 | 1.22e-09 | 7.53e-10 |
+| our max error | 6.57e-07 | 8.72e-09 | 6.62e-10 | 4.79e-10 | 4.77e-10 | 4.77e-10 |
+| paper msec | 0.0545 | 0.0589 | 0.0689 | 0.0690 | 0.0732 | 0.0748 |
+| our msec | 0.1090 | 0.1559 | 0.0939 | 0.1228 | 0.0977 | 0.1340 |
+
+| $Y=1.98$ | N=20 | N=25 | N=30 | N=35 | N=40 |
+|---|---:|---:|---:|---:|---:|
+| paper max error | 4.17e-02 | 5.15e-01 | 6.54e-05 | 1.10e-09 | 1.94e-15 |
+| our max error | 1.81e-06 | 1.71e-09 | 1.48e-11 | 1.47e-11 | 1.47e-11 |
+| paper msec | 0.0463 | 0.0438 | 0.0485 | 0.0511 | 0.0538 |
+| our msec | 0.0874 | 0.0813 | 0.0871 | 0.0828 | 0.0837 |
+
+</details>
+
+The important diagnostic is that the ugly rows are not one single COS failure. BSM is dominated by rounded printed references; Heston Table 5 is a long-maturity/wide-interval resolution problem; Heston Table 6 is a local high-$N$ reference because the paper only reports max error; and paper timings are 2008 hardware measurements. The generated [`SUMMARY.md`](benchmarks/paper_replications/fo2008_cos/outputs/SUMMARY.md) carries the longer explanation.
+
+<p align="center">
+  <img src="images/fo2008/fig_family_heston.png" width="49%" alt="FO2008 Heston COS replication error curves">
+  <img src="images/fo2008/fig_family_cgmy.png" width="49%" alt="FO2008 CGMY COS replication error curves">
+</p>
+
+<p align="center">
+  <img src="images/fo2008/fig_extension_error_vs_time.png" width="49%" alt="FO2008 extension error versus time">
+  <img src="images/fo2008/fig_frontier.png" width="49%" alt="FO2008 extension frontier across methods">
+</p>
+
+
+
 
 ## References
 
