@@ -30,9 +30,92 @@ Full methodology: [appendix.md](appendix.md) · Extension details: [docs/filtere
 
 ## Installation
 
-### Option A — library only (PyPI)
+Choose the path that fits your goal:
 
-Use this if you just want to import `foureng` in your own code and do not need the notebooks or tests.
+| Goal | Recommended path |
+|------|-----------------|
+| Run notebooks, reproduce results, contribute | **Option A** — fork + venv or conda |
+| Quick experiment without keeping a copy | **Option B** — direct clone + venv or conda |
+| Browser-only, no local install | **Option C** — Google Colab |
+| Import `foureng` in your own project | **Option D** — PyPI |
+
+---
+
+### Option A — fork and run everything (recommended)
+
+Forking gives you your own copy on GitHub so you can save changes and push them back.
+
+**1. Fork on GitHub**
+
+Click **Fork** at the top-right of [github.com/nl2992/fourier-option-pricer](https://github.com/nl2992/fourier-option-pricer), then clone your fork:
+
+```bash
+git clone https://github.com/YOUR-USERNAME/fourier-option-pricer.git
+cd fourier-option-pricer
+```
+
+**2a. Set up the environment — pip + venv**
+
+```bash
+python -m venv .venv
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
+pip install -r requirements.txt  # installs foureng + notebook + test deps
+```
+
+**2b. Set up the environment — conda**
+
+```bash
+conda env create -f environment.yml
+conda activate foureng
+```
+
+**3. Run the notebooks**
+
+```bash
+jupyter lab   # navigate to notebooks/demo.ipynb to start
+```
+
+**4. Run the tests**
+
+```bash
+python -m pytest -q -m "not slow"   # fast suite (~30 s)
+python -m pytest -q                  # full suite including notebook guards
+```
+
+**5. Keep your fork in sync** (optional)
+
+```bash
+git remote add upstream https://github.com/nl2992/fourier-option-pricer.git
+git fetch upstream
+git rebase upstream/main
+```
+
+---
+
+### Option B — clone without forking (pip + venv or conda)
+
+Use this if you just want to run locally and do not need your own GitHub copy.
+
+```bash
+git clone https://github.com/nl2992/fourier-option-pricer.git
+cd fourier-option-pricer
+```
+
+Then follow step 2a (venv) or 2b (conda) from Option A above.
+
+---
+
+### Option C — Google Colab (no local setup)
+
+Click the **Open in Colab** badge in the [Demo notebook](#demo-notebook) section. The first cell installs all dependencies automatically — no local Python needed.
+
+> **Note:** Colab's pre-installed numpy is compatible. The notebook does not upgrade it, so the environment loads cleanly.
+
+---
+
+### Option D — library only (PyPI)
+
+Use this if you want to `import foureng` in your own code without cloning the repo.
 
 ```bash
 pip install fourier-option-pricer          # latest
@@ -41,50 +124,18 @@ pip install "fourier-option-pricer==0.4.1" # pin to this release
 
 Requires Python 3.10+.
 
-### Option B — clone and run everything (pip + venv)
+---
 
-Use this to run all notebooks, reproduce benchmarks, and execute the test suite.
-
-```bash
-git clone https://github.com/nl2992/fourier-option-pricer.git
-cd fourier-option-pricer
-
-python -m venv .venv
-source .venv/bin/activate        # Windows: .venv\Scripts\activate
-
-pip install -r requirements.txt  # installs foureng + notebook + test deps
-```
-
-Open the notebooks:
-
-```bash
-jupyter lab                      # then navigate to notebooks/demo.ipynb
-```
-
-### Option C — clone and run everything (conda)
-
-```bash
-git clone https://github.com/nl2992/fourier-option-pricer.git
-cd fourier-option-pricer
-
-conda env create -f environment.yml
-conda activate foureng
-
-jupyter lab                      # then navigate to notebooks/demo.ipynb
-```
-
-### Option D — Google Colab (no local setup)
-
-Click the **Open in Colab** badge in the [Demo notebook](#demo-notebook) section below. The notebook installs all dependencies automatically and runs in the browser with no local setup required.
-
-### Dependencies
+### Dependencies at a glance
 
 | Group | Packages |
 |-------|----------|
 | Runtime | `numpy>=1.26`, `scipy>=1.10`, `matplotlib>=3.7`, `statsmodels>=0.14`, `pyfeng>=0.4.0` |
 | Notebooks | `pandas>=2.0`, `jupyter>=1.0`, `ipykernel>=6.0`, `nbformat>=5.10` |
 | Tests | `pytest>=7.4`, `pytest-cov>=4.0`, `hypothesis>=6.112`, `nbmake>=1.5` |
-| Dev tools | `ruff`, `mypy>=1.10`, `pyperf>=2.7` (via `pip install -e ".[dev]"`) |
+| Dev tools | `ruff`, `mypy>=1.10`, `pyperf>=2.7` — install via `pip install -e ".[dev]"` |
+
+`requirements.txt` covers runtime + notebook + test deps in one file. `environment.yml` is the conda equivalent.
 
 ---
 
