@@ -72,7 +72,7 @@ def _pyfeng_heston_model(fwd: ForwardSpec, p: HestonParams):
         import pyfeng as pf  # type: ignore
     except Exception as exc:  # pragma: no cover
         raise ImportError(
-            "foureng.char_func.heston requires pyfeng; install with "
+            "foureng.models.heston requires pyfeng; install with "
             "`pip install pyfeng`."
         ) from exc
     m = pf.HestonFft(

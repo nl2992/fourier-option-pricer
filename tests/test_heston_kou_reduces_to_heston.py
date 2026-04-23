@@ -9,9 +9,9 @@ Parallel to :mod:`test_bates_reduces_to_heston`.
 from __future__ import annotations
 import numpy as np
 
-from foureng.char_func.base import ForwardSpec
-from foureng.char_func.heston import HestonParams, heston_cf
-from foureng.char_func.heston_kou import HestonKouParams, heston_kou_cf
+from foureng.models.base import ForwardSpec
+from foureng.models.heston import HestonParams, heston_cf
+from foureng.models.heston_kou import HestonKouParams, heston_kou_cf
 from foureng.pipeline import price_strip
 from foureng.utils.grids import FFTGrid, FRFTGrid
 

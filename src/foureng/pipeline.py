@@ -2,21 +2,21 @@ from __future__ import annotations
 import numpy as np
 from dataclasses import dataclass
 from typing import Any
-from .char_func.base import ForwardSpec, CharFunc
-from .char_func.bsm import BsmParams, bsm_cf, bsm_cumulants
-from .char_func.heston import HestonParams, heston_cf, heston_cumulants
-from .char_func.ousv import OusvParams, ousv_cf, ousv_cumulants
-from .char_func.variance_gamma import VGParams, vg_cf, vg_cumulants
-from .char_func.cgmy import CgmyParams, cgmy_cf, cgmy_cumulants
-from .char_func.nig import NigParams, nig_cf, nig_cumulants
-from .char_func.kou import KouParams, kou_cf, kou_cumulants
-from .char_func.bates import BatesParams, bates_cf, bates_cumulants
-from .char_func.heston_kou import (
+from .models.base import ForwardSpec, CharFunc
+from .models.bsm import BsmParams, bsm_cf, bsm_cumulants
+from .models.heston import HestonParams, heston_cf, heston_cumulants
+from .models.ousv import OusvParams, ousv_cf, ousv_cumulants
+from .models.variance_gamma import VGParams, vg_cf, vg_cumulants
+from .models.cgmy import CgmyParams, cgmy_cf, cgmy_cumulants
+from .models.nig import NigParams, nig_cf, nig_cumulants
+from .models.kou import KouParams, kou_cf, kou_cumulants
+from .models.bates import BatesParams, bates_cf, bates_cumulants
+from .models.heston_kou import (
     HestonKouParams,
     heston_kou_cf,
     heston_kou_cumulants,
 )
-from .char_func.heston_cgmy import (
+from .models.heston_cgmy import (
     HestonCGMYParams,
     heston_cgmy_cf,
     heston_cgmy_cumulants,
@@ -121,7 +121,7 @@ def _pyfeng_fft_price(model: str, strikes, fwd: ForwardSpec, params, cp: int):
                           intr=fwd.r, divr=fwd.q)
     elif model == "ousv":
         # Mirror the OUSV CF wrapper's kwarg translation (see
-        # ``char_func/ousv.py``): our ``sigma0`` is PyFENG's ``sigma``,
+        # ``models/ousv.py``): our ``sigma0`` is PyFENG's ``sigma``,
         # our ``kappa`` is PyFENG's ``mr``, our ``nu`` is PyFENG's ``vov``.
         m = pf.OusvFft(sigma=params.sigma0, mr=params.kappa,
                         theta=params.theta, vov=params.nu, rho=params.rho,

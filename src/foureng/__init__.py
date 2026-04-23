@@ -16,18 +16,20 @@ Public API (stable surface for external use):
         bs_call_cv, heston_call_bs_control,
     )
 
-Submodules (``foureng.pricers``, ``foureng.char_func``, ``foureng.mc``,
+Submodules (``foureng.pricers``, ``foureng.models``, ``foureng.mc``,
 ``foureng.iv``, ``foureng.surface``, ``foureng.greeks``, ``foureng.utils``)
-remain importable for finer-grained access.
+remain importable for finer-grained access. ``foureng.models`` is the
+canonical location of the characteristic-function layer — this used to
+live at ``foureng.char_func`` before the Pass-1 PyFENG-compat rename.
 """
 from __future__ import annotations
 
 __version__ = "0.2.0"
 
-from .char_func.base import ForwardSpec, CharFunc, ModelSpec
-from .char_func.heston import HestonParams, heston_cf_form2, heston_cumulants
-from .char_func.variance_gamma import VGParams, vg_cf, vg_cumulants
-from .char_func.kou import KouParams, kou_cf, kou_cumulants
+from .models.base import ForwardSpec, CharFunc, ModelSpec
+from .models.heston import HestonParams, heston_cf_form2, heston_cumulants
+from .models.variance_gamma import VGParams, vg_cf, vg_cumulants
+from .models.kou import KouParams, kou_cf, kou_cumulants
 
 from .utils.grids import COSGrid, FFTGrid, FRFTGrid
 

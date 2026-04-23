@@ -15,8 +15,8 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from foureng.char_func.base import ForwardSpec
-from foureng.char_func.ousv import OusvParams, ousv_cf
+from foureng.models.base import ForwardSpec
+from foureng.models.ousv import OusvParams, ousv_cf
 from foureng.pipeline import price_strip
 from foureng.utils.grids import FFTGrid, FRFTGrid
 
@@ -30,7 +30,7 @@ _PARAMS = OusvParams(sigma0=0.2, kappa=2.0, theta=0.2, nu=0.3, rho=-0.5)
 
 
 def test_ousv_cf_matches_pyfeng_charfunc_logprice():
-    """Bit-identity wrapper check — see char_func/ousv.py for the translation."""
+    """Bit-identity wrapper check — see models/ousv.py for the translation."""
     u = np.linspace(-10.0, 10.0, 41)
     phi_ours = ousv_cf(u, _FWD, _PARAMS)
 

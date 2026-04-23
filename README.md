@@ -1,44 +1,77 @@
 # fourier-option-pricer
 
-A compact Fourier-pricing library for European options under characteristic-function models.
+This repository implements three Fourier-based pricers, that is, **Carr–Madan FFT**, **FRFT**, and **COS**,  behind a common characteristic-function interface, with support for ten models. The numerical focus is deterministic pricing for European options under models with tractable characteristic functions, with **Monte Carlo retained only as a baseline** for comparative purposes, in the form of accuracy, and speed. 
 
-This repository implements three Fourier-based pricers — Carr–Madan FFT, FRFT, and COS — behind a common characteristic-function interface, with support for ten models. The core analytical thread of the project is an expansion of Kou's jump-diffusion idea into a family of **stochastic-volatility + jump (SVJ) composites** (Bates, Heston–Kou, Heston–CGMY) built in-house on top of a PyFENG-backed Heston core. For every other model where PyFENG ships a production-quality characteristic function, we **use the PyFENG implementation directly** rather than re-derive it, and restrict this repository to the numerical-methods contribution: the common CF interface, the three Fourier pricers, and the validation harness. Monte Carlo is included as a baseline for comparison, but the focus is deterministic pricing suited to surface generation, validation, and calibration workflows.
+The main analytical thread of the project is not “implement every model from scratch, and indeed, LLMs are already so good at replicating papers.  Instead, it is:
+
+1. build a **common characteristic-function interface**;
+2. price the same model through **three different Fourier inversion methods**;
+3. validate every method against **published references or independent numerical bmks**;
+4. extend the framework to a small family of **stochastic-volatility + jump composites** built in-house.
+5. compare across the three methods, it's accuracy, and speed, compared to benchmarks developed from **pyFENG**.
+
+The in-house modelling thread expands Kou’s jump-diffusion idea into a family of **SVJ composites**:
+
+- **Bates** = Heston + Merton lognormal jumps
+- **Heston–Kou** = Heston + Kou double-exponential jumps
+- **Heston–CGMY** = Heston + CGMY tempered-stable jumps
+
+For all models where **PyFENG already provides a production-quality characteristic function**, we use the PyFENG implementation directly rather than re-derive it. This keeps the repository focused on the **numerical-methods contribution** -  the CF abstraction, the Fourier pricers, the validation logic, and the benchmarking harness.
+
 
 
 ---
 
 ## Overview
 
-The project is organized around four components:
+The project is organized around five layers.
 
-- **Models — PyFENG-backed CFs (thin adapters around `pyfeng.*Fft.charfunc_logprice`)**
-  - Black–Scholes–Merton (`pyfeng.BsmFft`)
-  - Heston (`pyfeng.HestonFft`)
-  - Schöbel–Zhu OUSV (`pyfeng.OusvFft`)
-  - Variance Gamma (`pyfeng.VarGammaFft`)
-  - CGMY (`pyfeng.CgmyFft`)
-  - Normal Inverse Gaussian (`pyfeng.ExpNigFft`)
+### 1. Models — PyFENG-backed characteristic functions
 
-- **Models — in-house CFs (not shipped by PyFENG)**
-  - Kou double-exponential jump diffusion — the analytical anchor of the project
-  - Bates: Heston ⊗ Merton lognormal jumps
-  - Heston–Kou: Heston ⊗ Kou double-exponential jumps
-  - Heston–CGMY: Heston ⊗ CGMY tempered-stable jumps
+These are thin adapters around `pyfeng.*Fft.charfunc_logprice`:
 
-- **European pricers**
-  - Carr–Madan FFT
-  - FRFT
-  - COS
+- Black–Scholes–Merton (`pyfeng.BsmFft`)
+- Heston (`pyfeng.HestonFft`)
+- Schöbel–Zhu OUSV (`pyfeng.OusvFft`)
+- Variance Gamma (`pyfeng.VarGammaFft`)
+- CGMY (`pyfeng.CgmyFft`)
+- Normal Inverse Gaussian (`pyfeng.ExpNigFft`)
 
-- **Numerical utilities**
-  - implied-volatility inversion (scipy Brent, not PyFENG's — see the note in `utils/implied_vol.py`)
-  - interpolation helpers
-  - cumulant and truncation utilities (closed-form where available, Cauchy-FFT otherwise)
-  - benchmarking harnesses (`scripts/benchmark_pyfeng.py`)
+**Note:** Structure may have changed across iterations, but idea remaisn fundamentally the same. 
 
-- **Validation**
-  - tests and notebooks that replicate published benchmark results before performance comparisons are reported
-  - frozen regression strips (`foureng.refs.paper_refs.REGRESSION_STRIPS`) for the six models whose papers do not ship a clean exact price table at our parameterisation
+### 2. Models — in-house characteristic functions
+
+These are not shipped by PyFENG and are implemented directly in this repository:
+
+- Kou double-exponential jump diffusion
+- Bates: Heston ⊗ Merton lognormal jumps
+- Heston–Kou: Heston ⊗ Kou double-exponential jumps
+- Heston–CGMY: Heston ⊗ CGMY tempered-stable jumps
+
+**Note:** Latter three works, as the characteristic function, basically has the addition of one extra factor in the exponent. 
+
+
+### 3. European pricers
+
+All models can be priced through the same pricer layer:
+
+- **Carr–Madan or Lewis FFT**
+- **FRFT**
+- **COS**
+
+### 4. Numerical utilities
+
+- implied-volatility inversion (`scipy.optimize.brentq`)
+- interpolation helpers
+- cumulant and truncation utilities
+- benchmarking harnesses
+
+### 5. Validation
+
+- published benchmark replication
+- PyFENG CF-level bit-identity checks for wrapped models
+- model-reduction gates for composite models
+
 
 ---
 
@@ -178,7 +211,7 @@ A notation warning: the symbol $\nu$ is reused across models. In Heston it denot
 
 The ten models split cleanly into two groups:
 
-- **PyFENG-backed.** For BSM, Heston, OUSV, Variance Gamma, CGMY, and NIG we do **not** re-implement the characteristic function. Each model file in `char_func/` is a thin adapter: map our project-side parameter dataclass to PyFENG's constructor kwargs, cache the constructed `pyfeng.*Fft` instance, and route `charfunc_logprice` through it. Adapters are verified bit-exactly (~1e-14) against PyFENG's CF in `tests/test_pyfeng_cf_wrappers.py` and in each model's `test_*_adapter.py`.
+- **PyFENG-backed.** For BSM, Heston, OUSV, Variance Gamma, CGMY, and NIG we do **not** re-implement the characteristic function. Each model file in `models/` is a thin adapter: map our project-side parameter dataclass to PyFENG's constructor kwargs, cache the constructed `pyfeng.*Fft` instance, and route `charfunc_logprice` through it. Adapters are verified bit-exactly (~1e-14) against PyFENG's CF in `tests/test_pyfeng_cf_wrappers.py` and in each model's `test_*_adapter.py`.
 - **In-house.** Kou, Bates, Heston–Kou, and Heston–CGMY have no PyFENG FFT counterpart (PyFENG ships `HestonFft`, `VarGammaFft`, `CgmyFft`, etc., but no SVJ composites and no Kou). These are derived below and validated by (i) independence factorisation against the PyFENG-backed Heston CF, (ii) model-reduction gates (`λ_j = 0` ⟹ Bates / Heston–Kou reduce to Heston bit-identically; `C = 0` ⟹ Heston–CGMY reduces to Heston), and (iii) frozen 41-strike regression strips cross-verified between Carr–Madan FFT and FRFT at high grid resolution.
 
 Cumulants are computed in closed form where the derivation is cheap (BSM, Heston, VG, Kou, CGMY) and via a 64-point Cauchy integral on a radius-0.25 circle otherwise (OUSV, NIG, and the SVJ composites). The closed-form CGMY cumulants agree with the Cauchy-FFT reference to ~1e-13.
@@ -380,7 +413,7 @@ These benchmarks are intended to quantify the runtime-accuracy trade-off across 
 
 ```text
 src/foureng/
-  char_func/        # Ten models. PyFENG-backed: bsm / heston / ousv /
+  models/           # Ten models. PyFENG-backed: bsm / heston / ousv /
                     # variance_gamma / cgmy / nig — all route through
                     # _pyfeng_backend.py (shared cache + lazy import).
                     # In-house: kou / bates / heston_kou / heston_cgmy —
@@ -464,7 +497,7 @@ slow MC benchmark).
 
 ## PyFENG integration
 
-PyFENG already provides production-quality characteristic functions for a broad set of models. Rather than re-derive any of them, this repository takes the opposite stance: **use PyFENG as the CF backend wherever it exists, and restrict the in-house scope to what PyFENG does not ship**. Six of the ten supported models — BSM, Heston, OUSV, Variance Gamma, CGMY, NIG — are therefore thin adapters around `pyfeng.*Fft.charfunc_logprice`, sharing a common lazy-import and cache helper in `char_func/_pyfeng_backend.py`. The four remaining models — Kou and the three Heston-jump composites (Bates, Heston–Kou, Heston–CGMY) — are in-house because PyFENG does not expose them.
+PyFENG already provides production-quality characteristic functions for a broad set of models. Rather than re-derive any of them, this repository takes the opposite stance: **use PyFENG as the CF backend wherever it exists, and restrict the in-house scope to what PyFENG does not ship**. Six of the ten supported models — BSM, Heston, OUSV, Variance Gamma, CGMY, NIG — are therefore thin adapters around `pyfeng.*Fft.charfunc_logprice`, sharing a common lazy-import and cache helper in `models/_pyfeng_backend.py`. The four remaining models — Kou and the three Heston-jump composites (Bates, Heston–Kou, Heston–CGMY) — are in-house because PyFENG does not expose them.
 
 The value of this repository, given that policy, is in:
 
@@ -484,7 +517,7 @@ After the initial pre-Choi iteration (Carr–Madan FFT + FRFT + paper checks), t
 
 - **COS is the primary pricer.** It is easier to tune than Carr–Madan (one interval $[a,b]$ chosen from cumulants, versus a coupled $(N,\eta,\alpha)$ grid), converges spectrally on smooth densities, and does not need a damping parameter.
 - **PyFENG is the CF backend, not merely a validator.** Rather than re-implement Heston / VG / OUSV / CGMY / NIG / BSM characteristic functions, we use PyFENG's `*Fft.charfunc_logprice` directly through thin adapters. Every published-paper check remains witnessed by two independent implementations — the paper table and PyFENG's own `*.price(...)` — but the CF is no longer duplicated. Convention mapping was verified against our fixtures (in particular `pyfeng.HestonFft(sigma=v0, ...)` expects $v_0$, not $\sqrt{v_0}$; `pyfeng.OusvFft(sigma=sigma0, mr=kappa, vov=nu, ...)` maps the Schöbel–Zhu academic names to PyFENG's SV-style kwargs).
-- **The Kou expansion is in-house, because PyFENG does not ship it.** Kou itself, plus the three SVJ composites (Bates, Heston–Kou, Heston–CGMY), are derived in `char_func/` and validated by (i) a Carr–Madan FFT internal witness with $N$-convergence and $L$-stability gates (Kou), (ii) model-reduction gates (zero-out the jump block ⟹ bit-identical PyFENG-Heston output), and (iii) frozen 41-strike regression strips cross-verified between three independent Fourier engines.
+- **The Kou expansion is in-house, because PyFENG does not ship it.** Kou itself, plus the three SVJ composites (Bates, Heston–Kou, Heston–CGMY), are derived in `models/` and validated by (i) a Carr–Madan FFT internal witness with $N$-convergence and $L$-stability gates (Kou), (ii) model-reduction gates (zero-out the jump block ⟹ bit-identical PyFENG-Heston output), and (iii) frozen 41-strike regression strips cross-verified between three independent Fourier engines.
 - **PyFENG's implied-vol inverter is not used.** It has a normalisation bug with non-zero rates — see the PyFENG integration section above and `utils/implied_vol.py` — so we run `scipy.optimize.brentq` directly on a hand-rolled Black–Scholes formula instead. Post-fix, BSM IV round-trip recovers the input $\sigma$ to ~1e-13.
 
 ### Papers replicated

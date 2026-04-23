@@ -8,7 +8,7 @@ import numpy as np
 from dataclasses import dataclass
 from typing import Callable
 
-from ..char_func.base import ForwardSpec
+from ..models.base import ForwardSpec
 from ..iv.implied_vol import BSInputs, implied_vol_newton_safeguarded
 from ..pricers.cos import cos_prices, cos_auto_grid
 

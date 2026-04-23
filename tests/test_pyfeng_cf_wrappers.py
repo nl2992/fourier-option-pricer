@@ -1,7 +1,7 @@
 """PyFENG CF wrappers — check our CF is exactly PyFENG's, convention-aligned.
 
 We delegate Heston and VG CFs entirely to PyFENG's ``charfunc_logprice``
-(see ``foureng/char_func/heston.py`` and ``variance_gamma.py``). That
+(see ``foureng/models/heston.py`` and ``variance_gamma.py``). That
 wrapper is supposed to be a thin adapter: our function ``heston_cf(u)``
 should return exactly what a freshly-constructed PyFENG model's
 ``charfunc_logprice(u, texp=T)`` returns.
@@ -17,9 +17,9 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from foureng.char_func.base import ForwardSpec
-from foureng.char_func.heston import HestonParams, heston_cf
-from foureng.char_func.variance_gamma import VGParams, vg_cf
+from foureng.models.base import ForwardSpec
+from foureng.models.heston import HestonParams, heston_cf
+from foureng.models.variance_gamma import VGParams, vg_cf
 
 
 pyfeng = pytest.importorskip(

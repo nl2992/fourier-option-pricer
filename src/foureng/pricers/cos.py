@@ -1,7 +1,7 @@
 from __future__ import annotations
 import numpy as np
 from dataclasses import dataclass
-from ..char_func.base import CharFunc, ForwardSpec
+from ..models.base import CharFunc, ForwardSpec
 from ..utils.grids import COSGrid
 from ..utils.cumulants import Cumulants, cos_truncation_interval
 

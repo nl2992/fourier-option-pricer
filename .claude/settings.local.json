@@ -43,7 +43,20 @@
       "Bash(python -c \"import pyfeng as pf; import inspect; names = [n for n in dir\\(pf\\) if 'Fft' in n or 'Cgmy' in n or 'Nig' in n]; print\\(names\\)\")",
       "Bash(pip install *)",
       "Bash(python -m pytest -q)",
-      "Bash(python scripts/benchmark_pyfeng.py)"
+      "Bash(python scripts/benchmark_pyfeng.py)",
+      "Bash(python3 -m pip install -e . --quiet)",
+      "Read(//Users/nigelli/.pyenv/**)",
+      "Read(//Users/nigelli/anaconda3/**)",
+      "Read(//opt/anaconda3/envs/**)",
+      "Read(//opt/miniconda3/**)",
+      "Read(//Users/nigelli/**)",
+      "Bash(/opt/homebrew/bin/python3.13 -c \"import pyfeng, numpy, scipy; print\\('pyfeng', pyfeng.__version__\\); print\\('numpy', numpy.__version__\\)\")",
+      "Bash(/opt/anaconda3/bin/python3.12 -c \"import pyfeng, foureng; print\\('pyfeng', pyfeng.__version__\\)\")",
+      "Bash(/opt/anaconda3/bin/python3.12 -m pytest -q -m \"not slow\")",
+      "Bash(/opt/anaconda3/bin/python3.12 -m compileall -q src)",
+      "Bash(/opt/anaconda3/bin/python3.12 -)",
+      "Bash(/opt/anaconda3/bin/python3.12 -m pytest tests/test_phase6_control_variate.py -v)",
+      "Bash(/opt/anaconda3/bin/python3.12 -c ' *)"
     ]
   }
 }
