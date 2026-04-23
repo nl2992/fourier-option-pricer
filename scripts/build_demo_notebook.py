@@ -152,8 +152,8 @@ For each sample size we run three seeds and report the ATM standard deviation as
 """))
 
 cells.append(code(r"""
-from foureng.char_func.base import ForwardSpec
-from foureng.char_func.heston import HestonParams, heston_cf_form2
+from foureng.models.base import ForwardSpec
+from foureng.models.heston import HestonParams, heston_cf_form2
 from foureng.iv.implied_vol import bs_price_from_fwd, BSInputs
 from foureng.mc.black_scholes_mc import european_call_mc, MCSpec
 from foureng.mc.heston_conditional_mc import heston_conditional_mc_calls, HestonMCScheme
@@ -287,7 +287,7 @@ We keep Carr–Madan as an internal cross-check and for method coverage. FRFT de
 
 cells.append(code(r"""
 # ---- 2.1 CM1999 VG Case 4: Carr-Madan PUTs vs paper ----
-from foureng.char_func.variance_gamma import VGParams, vg_cf
+from foureng.models.variance_gamma import VGParams, vg_cf
 
 fwd_vg = ForwardSpec(S0=CM1999["S0"], r=CM1999["r"], q=CM1999["q"], T=CM1999["T"])
 vg_p = VGParams(sigma=CM1999["sigma"], nu=CM1999["nu"], theta=CM1999["theta"])
@@ -439,7 +439,7 @@ For Heston and VG we validate against published tables **and** PyFENG's FFT — 
 
 cells.append(code(r"""
 # ---- 3.1 COS Heston: FO2008 gate, N-convergence, L-stability, PyFENG overlay ----
-from foureng.char_func.heston import heston_cumulants
+from foureng.models.heston import heston_cumulants
 from foureng.pricers.cos import cos_prices, cos_auto_grid
 
 # --- FO2008 gate ---
@@ -528,7 +528,7 @@ df_lewis_cos
 
 cells.append(code(r"""
 # ---- 3.2 COS VG: CM1999 replication + optional PyFENG overlay ----
-from foureng.char_func.variance_gamma import vg_cumulants
+from foureng.models.variance_gamma import vg_cumulants
 
 cums_vg = vg_cumulants(fwd_vg, vg_p)
 grid_vg_cos = cos_auto_grid(cums_vg, N=2048, L=10.0)
@@ -553,7 +553,7 @@ df_vg_cos
 
 cells.append(code(r"""
 # ---- 3.3 COS Kou: internal validation via high-N Carr-Madan ----
-from foureng.char_func.kou import KouParams, kou_cf, kou_cumulants
+from foureng.models.kou import KouParams, kou_cf, kou_cumulants
 
 fwd_k = ForwardSpec(S0=KOU["S0"], r=KOU["r"], q=KOU["q"], T=KOU["T"])
 p_k = KouParams(sigma=KOU["sigma"], lam=KOU["lam"], p=KOU["p"],

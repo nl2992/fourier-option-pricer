@@ -12,8 +12,8 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from foureng.char_func.base import ForwardSpec
-from foureng.char_func.heston import HestonParams, heston_cf_form2, heston_cumulants
+from foureng.models.base import ForwardSpec
+from foureng.models.heston import HestonParams, heston_cf_form2, heston_cumulants
 from foureng.pricers.cos import cos_prices, cos_auto_grid
 from foureng.iv.implied_vol import bs_price_from_fwd, BSInputs
 from foureng.mc.control_variate import bs_call_cv, heston_call_bs_control

@@ -1,8 +1,0 @@
-numpy>=1.26
-scipy>=1.10
-matplotlib>=3.7
-pyfeng>=0.3.0
-
-[dev]
-pytest>=7.4
-jupyter>=1.0

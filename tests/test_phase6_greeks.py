@@ -14,8 +14,8 @@ import numpy as np
 import pytest
 from scipy.stats import norm
 
-from foureng.char_func.base import ForwardSpec
-from foureng.char_func.heston import HestonParams, heston_cf_form2, heston_cumulants
+from foureng.models.base import ForwardSpec
+from foureng.models.heston import HestonParams, heston_cf_form2, heston_cumulants
 from foureng.pricers.cos import cos_prices, cos_auto_grid
 from foureng.greeks.cos_greeks import (
     cos_price_and_greeks,

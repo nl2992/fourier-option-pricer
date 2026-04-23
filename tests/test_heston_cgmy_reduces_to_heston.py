@@ -14,9 +14,9 @@ relaxed to permit ``C = 0`` specifically to enable this gate.)
 from __future__ import annotations
 import numpy as np
 
-from foureng.char_func.base import ForwardSpec
-from foureng.char_func.heston import HestonParams, heston_cf
-from foureng.char_func.heston_cgmy import HestonCGMYParams, heston_cgmy_cf
+from foureng.models.base import ForwardSpec
+from foureng.models.heston import HestonParams, heston_cf
+from foureng.models.heston_cgmy import HestonCGMYParams, heston_cgmy_cf
 from foureng.pipeline import price_strip
 from foureng.utils.grids import FFTGrid, FRFTGrid
 

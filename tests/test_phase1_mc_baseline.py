@@ -5,7 +5,7 @@ import pytest
 
 from foureng.mc.black_scholes_mc import european_call_mc, MCSpec
 from foureng.mc.heston_conditional_mc import heston_conditional_mc_calls, HestonMCScheme
-from foureng.char_func.heston import HestonParams
+from foureng.models.heston import HestonParams
 from foureng.iv.implied_vol import bs_price_from_fwd, BSInputs
 
 

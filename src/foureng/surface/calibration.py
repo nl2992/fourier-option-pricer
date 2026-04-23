@@ -28,10 +28,10 @@ from dataclasses import dataclass
 from typing import Callable
 from scipy.optimize import minimize
 
-from ..char_func.base import ForwardSpec
-from ..char_func.heston import HestonParams, heston_cf_form2, heston_cumulants
-from ..char_func.variance_gamma import VGParams, vg_cf, vg_cumulants
-from ..char_func.kou import KouParams, kou_cf, kou_cumulants
+from ..models.base import ForwardSpec
+from ..models.heston import HestonParams, heston_cf_form2, heston_cumulants
+from ..models.variance_gamma import VGParams, vg_cf, vg_cumulants
+from ..models.kou import KouParams, kou_cf, kou_cumulants
 from .vol_surface import SurfaceSpec, model_iv_surface
 
 

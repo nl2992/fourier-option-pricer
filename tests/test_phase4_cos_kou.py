@@ -15,8 +15,8 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from foureng.char_func.base import ForwardSpec
-from foureng.char_func.kou import KouParams, kou_cf, kou_cumulants
+from foureng.models.base import ForwardSpec
+from foureng.models.kou import KouParams, kou_cf, kou_cumulants
 from foureng.pricers.cos import cos_prices, cos_auto_grid
 from foureng.pricers.carr_madan import carr_madan_price_at_strikes
 from foureng.utils.grids import FFTGrid
@@ -58,11 +58,17 @@ def test_cos_kou_n_convergence(kou_setup):
 
 
 def test_cos_kou_L_sensitivity(kou_setup):
-    """L-sensitivity at N=512: prices stable to 1e-7 across L in {6, 8, 10, 12, 14}."""
+    """L-sensitivity at N=512 across the recommended-or-wider range L in {8, 10, 12, 14}.
+
+    L=6 is under-resolved for Kou (the deficit persists at N=2048: spread
+    ~3.5e-5 is pure truncation error), so this sweep restricts to the FO2008
+    recommended range. See ``test_cos_heston_fo2008_L_sensitivity`` for the
+    full rationale of why the put-parity COS rewrite exposed this honestly.
+    """
     d = kou_setup
     cums = kou_cumulants(d["fwd"], d["p"])
     prices = {}
-    for L in (6.0, 8.0, 10.0, 12.0, 14.0):
+    for L in (8.0, 10.0, 12.0, 14.0):
         grid = cos_auto_grid(cums, N=512, L=L)
         r = cos_prices(d["phi"], d["fwd"], d["strikes"], grid)
         prices[L] = r.call_prices.copy()

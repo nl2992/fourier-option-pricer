@@ -14,9 +14,9 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from foureng.char_func.base import ForwardSpec
-from foureng.char_func.bsm import BsmParams
-from foureng.char_func.heston import HestonParams
+from foureng.models.base import ForwardSpec
+from foureng.models.bsm import BsmParams
+from foureng.models.heston import HestonParams
 from foureng.pipeline import price_strip
 from foureng.utils.implied_vol import implied_vol_from_prices
 

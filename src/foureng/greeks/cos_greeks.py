@@ -1,28 +1,41 @@
 """Closed-form Delta / Gamma / parameter-sensitivity under the COS expansion.
 
-The European call price under Fang-Oosterlee (2008), with expansion variable
-y = log(S_T / F_0), is
+**Numerical convention**: the price is computed as a COS put plus put-call
+parity (``C = P + D * (F_0 - K)``). This matches :func:`foureng.pricers.cos.cos_prices`
+exactly and avoids the catastrophic cancellation that hits the direct
+COS-on-call sum for long maturities (where the truncation bound ``b`` grows
+large, making ``e^b`` O(1e15) and the ``chi_k`` payoff coefficients overflow
+float64 precision). See ``pricers/cos.py`` for the detailed argument.
 
-    C = D * sum_k' Re{ phi(omega_k) * exp(-i*omega_k*a) } * V_k
+Expansion variable y = log(S_T / F_0):
 
-where D = exp(-r*T), omega_k = k*pi/(b-a), and the payoff coefficients
+    P = D * sum_k' Re{ phi(omega_k) * exp(-i*omega_k*a) } * V_k^put
+    C = P + D * (F_0 - K)
 
-    V_k = (2/(b-a)) * [ F_0 * chi_k(c, b) - K * psi_k(c, b) ],   c = max(a, log(K/F_0))
+where D = exp(-r*T), omega_k = k*pi/(b-a), and the put payoff coefficients
+
+    V_k^put = (2/(b-a)) * [ K * psi_k(a, d) - F_0 * chi_k(a, d) ],   d = min(b, log(K/F_0))
 
 with the FO2008 Appendix A formulas for chi_k, psi_k.
 
-Delta (dC/dS_0) and Gamma (d^2C/dS_0^2) are obtained analytically from the
-F_0-dependence of V_k (the CF phi(u) of log(S_T/F_0) does not depend on S_0
-under our log-forward convention; all S_0 flow goes through F_0). After a
-short calculation the k-th payoff derivative simplifies to
+Delta (dC/dF_0) and Gamma (d^2C/dF_0^2) are obtained analytically from the
+F_0-dependence of V_k^put and the linear parity term. The parity term
+contributes D to dC/dF_0 and 0 to d^2C/dF_0^2. Applying Leibniz to the put
+coefficient (with careful bookkeeping of the moving upper limit
+d = log(K/F_0)) gives the clean result
 
-    dV_k / dF_0     = (2/(b-a)) * chi_k(c, b)
-    d^2 V_k / dF_0^2 = (2/(b-a)) * (K / F_0^2) * cos(omega_k * (c - a))    if a < log(K/F_0) < b
-                    = 0                                                    otherwise
+    dV_k^put / dF_0     = -(2/(b-a)) * chi_k(a, d)
+    d^2 V_k^put / dF_0^2 = (2/(b-a)) * (K / F_0^2) * cos(omega_k * (d - a))   if a < log(K/F_0) < b
+                        = 0                                                   otherwise
 
-The second-derivative indicator captures two degenerate cases: deep-ITM
-(c pinned to a, so V_k is linear in F_0 -> Gamma = 0) and deep-OTM
-(log(K/F_0) >= b, so V_k = 0 identically).
+so
+
+    dC/dF_0     = D * sum_k' A_k * dV_k^put/dF_0    +    D
+    d^2C/dF_0^2 = D * sum_k' A_k * d^2 V_k^put/dF_0^2
+
+The Gamma indicator mask is identical to the direct-call formulation: deep-ITM
+(y_star <= a => put worthless on [a,b] and parity gives C = D*(F_0-K), linear)
+and deep-OTM (y_star >= b => d = b constant in F_0). Gamma = 0 in both cases.
 
 Because dF_0/dS_0 = exp((r-q)T), the spot Greeks are
 
@@ -38,7 +51,7 @@ from __future__ import annotations
 import numpy as np
 from dataclasses import dataclass
 
-from ..char_func.base import CharFunc, ForwardSpec
+from ..models.base import CharFunc, ForwardSpec
 from ..utils.grids import COSGrid
 
 
@@ -50,45 +63,50 @@ class COSGreeks:
     gamma: np.ndarray
 
 
-def _chi_psi(a: float, b: float, N: int, K: np.ndarray, F0: float):
-    """Return chi_k(c,b), psi_k(c,b), omega_k, c, and the in-interval mask.
+def _chi_psi_put(a: float, b: float, N: int, K: np.ndarray, F0: float):
+    """Return put-integration chi_k(a,d), psi_k(a,d), V_k^put, omega, and masks.
 
-    All arrays broadcast to shape (N, nK) except for omega (N,) and
-    in_interval / c (nK,).
+    The put payoff is non-zero for y in [a, min(b, y*)] where y* = log(K/F0).
+    All arrays broadcast to shape (N, nK); omega is (N,); d, in_interval,
+    deep_itm, deep_otm are (nK,). ``cos_cd`` is cos(omega*(d-a)) — reused
+    for the Gamma formula.
     """
     K = np.atleast_1d(np.asarray(K, dtype=float))
     y_star = np.log(K / F0)                          # (nK,)
     in_interval = (y_star > a) & (y_star < b)
-    c = np.clip(y_star, a, b)                         # (nK,)
+    deep_itm = y_star <= a                           # put worthless on [a,b]
+    deep_otm = y_star >= b                           # d clamped to b, F0-independent
+
+    d = np.minimum(y_star, b)                        # (nK,) upper integration limit
 
     k = np.arange(N)
     omega = k * np.pi / (b - a)                       # (N,)
 
-    ca = c[None, :] - a                               # (1, nK)
-    da = b - a
-    cos_cd = np.cos(omega[:, None] * da)              # (N, 1)
+    da = d[None, :] - a                               # (1, nK)
+    # ca = 0 since c = a; cos(0)=1, sin(0)=0.
+    cos_cd = np.cos(omega[:, None] * da)              # (N, nK)
     sin_cd = np.sin(omega[:, None] * da)
-    cos_cc = np.cos(omega[:, None] * ca)              # (N, nK)
-    sin_cc = np.sin(omega[:, None] * ca)
 
-    ed = np.exp(b)
-    ec = np.exp(c)                                    # (nK,)
+    ed = np.exp(d)                                    # (nK,); bounded by K/F0
+    ec = np.exp(a)                                    # scalar
 
-    chi = (cos_cd * ed - cos_cc * ec
-           + omega[:, None] * sin_cd * ed
-           - omega[:, None] * sin_cc * ec) / (1.0 + omega[:, None] ** 2)
+    chi = (cos_cd * ed[None, :] - ec
+           + omega[:, None] * sin_cd * ed[None, :]) / (1.0 + omega[:, None] ** 2)
 
     psi = np.empty_like(chi)
-    psi[0, :] = b - c
+    psi[0, :] = d - a
     with np.errstate(divide="ignore", invalid="ignore"):
-        psi[1:, :] = (sin_cd[1:, :] - sin_cc[1:, :]) / omega[1:, None]
+        psi[1:, :] = sin_cd[1:, :] / omega[1:, None]
 
-    far_otm = y_star >= b
-    if np.any(far_otm):
-        chi[:, far_otm] = 0.0
-        psi[:, far_otm] = 0.0
+    V_put = (2.0 / (b - a)) * (K[None, :] * psi - F0 * chi)
 
-    return chi, psi, omega, c, cos_cc, in_interval, far_otm
+    # Deep-ITM put: integrand identically zero on [a,b].
+    if np.any(deep_itm):
+        chi[:, deep_itm] = 0.0
+        psi[:, deep_itm] = 0.0
+        V_put[:, deep_itm] = 0.0
+
+    return chi, psi, V_put, omega, d, cos_cd, in_interval, deep_itm, deep_otm
 
 
 def cos_price_and_greeks(
@@ -100,30 +118,42 @@ def cos_price_and_greeks(
     """Price + (Delta, Gamma) for European calls under the COS expansion.
 
     Single COS sweep: evaluates phi on the same grid used for pricing and
-    reuses the chi/psi payoff coefficients and their analytic F_0-derivatives.
+    reuses the chi/psi put payoff coefficients and their analytic
+    F_0-derivatives. The put + parity recovery avoids the ``exp(b)``
+    cancellation that would plague a direct call-coefficient sum at long
+    maturities; see this module's docstring for the full argument.
     """
     a, b, N = grid.a, grid.b, grid.N
     strikes = np.atleast_1d(np.asarray(strikes, dtype=float))
     F0 = fwd.F0
 
-    chi, psi, omega, c, cos_cc, in_interval, far_otm = _chi_psi(a, b, N, strikes, F0)
+    chi, psi, V_put, omega, d, cos_cd, in_interval, deep_itm, deep_otm = _chi_psi_put(
+        a, b, N, strikes, F0
+    )
 
     phi_vals = phi(omega)
     A = np.real(phi_vals * np.exp(-1j * omega * a))
     A[0] *= 0.5                                       # first-term prime
 
-    V = (2.0 / (b - a)) * (F0 * chi - strikes[None, :] * psi)
-    dV_dF0 = (2.0 / (b - a)) * chi                    # (N, nK)
+    # dV_k^put / dF_0 = -(2/(b-a)) * chi_k(a, d); deep-ITM has chi=0 already.
+    dV_put_dF0 = -(2.0 / (b - a)) * chi               # (N, nK)
 
-    d2V_dF02 = np.zeros_like(chi)
+    # d^2 V_k^put / dF_0^2: only in-interval contributes, same form as
+    # the direct-call derivation because parity is linear in F_0.
+    d2V_put_dF02 = np.zeros_like(chi)
     if np.any(in_interval):
-        coef = (2.0 / (b - a)) * (strikes[None, :] / (F0 * F0)) * cos_cc
-        d2V_dF02[:, in_interval] = coef[:, in_interval]
+        coef = (2.0 / (b - a)) * (strikes[None, :] / (F0 * F0)) * cos_cd
+        d2V_put_dF02[:, in_interval] = coef[:, in_interval]
 
     disc = fwd.disc
-    price = disc * (A[:, None] * V).sum(axis=0)
-    dC_dF0 = disc * (A[:, None] * dV_dF0).sum(axis=0)
-    d2C_dF02 = disc * (A[:, None] * d2V_dF02).sum(axis=0)
+    put_price = disc * (A[:, None] * V_put).sum(axis=0)
+    dP_dF0 = disc * (A[:, None] * dV_put_dF0).sum(axis=0)
+    d2P_dF02 = disc * (A[:, None] * d2V_put_dF02).sum(axis=0)
+
+    # Put-call parity: C = P + D*(F0 - K); dC/dF0 = dP/dF0 + D; d2C = d2P.
+    price = put_price + disc * (F0 - strikes)
+    dC_dF0 = dP_dF0 + disc
+    d2C_dF02 = d2P_dF02
 
     jac = np.exp((fwd.r - fwd.q) * fwd.T)
     delta = jac * dC_dF0

@@ -40,15 +40,15 @@ from typing import Any
 
 import numpy as np
 
-from ..char_func.base import ForwardSpec
-from ..char_func.heston import HestonParams
-from ..char_func.variance_gamma import VGParams
-from ..char_func.ousv import OusvParams
-from ..char_func.cgmy import CgmyParams
-from ..char_func.nig import NigParams
-from ..char_func.bates import BatesParams
-from ..char_func.heston_kou import HestonKouParams
-from ..char_func.heston_cgmy import HestonCGMYParams
+from ..models.base import ForwardSpec
+from ..models.heston import HestonParams
+from ..models.variance_gamma import VGParams
+from ..models.ousv import OusvParams
+from ..models.cgmy import CgmyParams
+from ..models.nig import NigParams
+from ..models.bates import BatesParams
+from ..models.heston_kou import HestonKouParams
+from ..models.heston_cgmy import HestonCGMYParams
 
 
 def _frozen_array(values) -> np.ndarray:

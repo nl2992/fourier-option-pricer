@@ -1,7 +1,7 @@
 from __future__ import annotations
 import numpy as np
 from dataclasses import dataclass
-from ..char_func.base import CharFunc, ForwardSpec
+from ..models.base import CharFunc, ForwardSpec
 from ..utils.grids import FRFTGrid
 from ..utils.numerics import cm_simpson_weights
 from ..utils.frft import frft
