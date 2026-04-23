@@ -1,0 +1,132 @@
+# CI for fourier-option-pricer
+#
+# Runs the pytest suite across the Python versions declared in pyproject.toml
+# (`requires-python = ">=3.10"`). Installs the project editably with the
+# ``dev`` extras (pytest + jupyter) and the runtime deps declared in
+# pyproject (numpy, scipy, matplotlib, pyfeng).
+#
+# Two jobs:
+#   * ``test``  — pytest on Ubuntu + macOS, Python 3.10 / 3.11 / 3.12.
+#                Fast tests always; ``-m 'slow'`` jobs are gated on
+#                Python 3.12 / Ubuntu only to keep the matrix cheap.
+#   * ``lint``  — a minimal compile / import smoke check so typos that
+#                don't show up as a failing unit test still break CI.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# Cancel superseded runs on the same branch/PR to save CI minutes.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: pytest (${{ matrix.os }}, py${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install project (editable) + dev extras
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: Show versions
+        run: |
+          python --version
+          python -c "import numpy, scipy, pyfeng; print('numpy', numpy.__version__); print('scipy', scipy.__version__); print('pyfeng', pyfeng.__version__)"
+
+      # Fast tests on every matrix cell. The `slow` marker is declared in
+      # pyproject.toml; deselect it here so CI stays snappy.
+      - name: Run fast tests
+        run: pytest -q -m "not slow"
+
+      # Run slow tests only once per commit (cheapest matrix cell) to keep
+      # the full coverage without multiplying wall time by 6.
+      - name: Run slow tests
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'
+        run: pytest -q -m "slow"
+
+  lint:
+    name: import / compile smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install project
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      # Byte-compile every module so a SyntaxError anywhere in ``src/``
+      # fails CI even if no test imports it.
+      - name: Byte-compile src
+        run: python -m compileall -q src
+
+      # Import the public surface — catches broken ``__init__`` wiring,
+      # missing exports, circular imports.
+      - name: Import smoke test
+        run: |
+          python - <<'PY'
+          import foureng
+          from foureng.char_func import (
+              BsmParams, bsm_cf, bsm_cumulants,
+              HestonParams, heston_cf, heston_cumulants,
+              OusvParams, ousv_cf, ousv_cumulants,
+              VGParams, vg_cf, vg_cumulants,
+              CgmyParams, cgmy_cf, cgmy_cumulants,
+              NigParams, nig_cf, nig_cumulants,
+              KouParams, kou_cf, kou_cumulants,
+              BatesParams, bates_cf, bates_cumulants,
+              HestonKouParams, heston_kou_cf, heston_kou_cumulants,
+              HestonCGMYParams, heston_cgmy_cf, heston_cgmy_cumulants,
+          )
+          from foureng.utils.implied_vol import implied_vol_from_prices  # noqa
+          from foureng.pipeline import price_strip, _MODELS, _NO_PYFENG_FFT
+          from foureng.refs.paper_refs import PAPER_ANCHORS, REGRESSION_STRIPS
+          assert set(_MODELS) == {
+              "bsm", "heston", "ousv", "vg", "cgmy", "nig",
+              "kou", "bates", "heston_kou", "heston_cgmy",
+          }, _MODELS
+          # pyfeng_fft supported for BSM/Heston/OUSV/VG/CGMY/NIG; not for the rest.
+          assert _NO_PYFENG_FFT == {
+              "kou", "bates", "heston_kou", "heston_cgmy"
+          }, _NO_PYFENG_FFT
+          assert set(PAPER_ANCHORS) == {
+              "fo2008_heston_atm", "lewis_heston_strip", "cm1999_vg_case4"
+          }, PAPER_ANCHORS
+          assert set(REGRESSION_STRIPS) == {
+              "ousv", "cgmy", "nig",
+              "bates", "heston_kou", "heston_cgmy",
+          }, REGRESSION_STRIPS
+          print("import OK; models =", sorted(_MODELS))
+          print("paper anchors   =", sorted(PAPER_ANCHORS))
+          print("regression strips =", sorted(REGRESSION_STRIPS))
+          PY
