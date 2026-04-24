@@ -731,92 +731,8 @@ The Heston `T=10` diagnostics are especially useful:
 
 Conclusion: the Junike-style fix is not a different pricing formula. It is a better approximation policy for choosing the support and series resolution in COS.
 
-## 16. PyFENG integration
 
-PyFENG provides useful FFT-style pricing and characteristic-function components. This repository uses PyFENG in two ways:
-
-1. as a characteristic-function backend for models where PyFENG already has production-quality implementations;
-2. as an independent oracle for pricing comparisons where PyFENG's own price method is available.
-
-The value of the repository is therefore:
-
-- a common characteristic-function abstraction across PyFENG-backed and in-house models;
-- a single pricer interface for Carr--Madan FFT, FRFT, and COS;
-- validation gates that catch adapter errors before they become price errors;
-- model-reduction tests for jump composites;
-- benchmark tables comparing method accuracy and runtime.
-
-Implementation note: implied-volatility inversion is routed through a project-side Brent / safeguarded Newton implementation rather than relying blindly on any external wrapper. This keeps price-to-IV conversion consistent across methods.
-
-## 17. Demo notebook workflow
-
-The demo notebook should be results-led rather than method-led. The recommended sequence is:
-
-1. install `fourier-option-pricer`;
-2. import NumPy, pandas, plotting utilities, and `foureng`;
-3. set a clean market configuration;
-4. show one simple Heston or BSM option strip;
-5. price the same strip using Carr--Madan FFT, FRFT, and COS;
-6. compute absolute errors against a benchmark;
-7. compute Black--Scholes implied volatilities;
-8. time each method;
-9. display a runtime table and an error table;
-10. plot price error against runtime;
-11. show one implied-volatility smile or surface;
-12. close with the numerical lesson: Fourier methods are fast, but grid design determines reliability.
-
-The notebook should not only explain methods. It should print the actual tables used in the report.
-
-## 18. How to report the results
-
-Use careful wording.
-
-Correct:
-
-- "COS reaches the best accuracy in this case once the interval and `N` are chosen jointly."
-- "The naive paper-grid replay is truncation- or resolution-dominated."
-- "The improved policy is a robustness improvement, not a universal dominance claim."
-- "Paper timings are shown for historical comparison; local timings should be interpreted relative to the local machine."
-
-Avoid:
-
-- "COS failed."
-- "Junike fixes COS everywhere."
-- "Our runtime is faster than the paper" without specifying machine, implementation, and whether timings are comparable.
-- "The method is validated" unless the relevant test gate passes.
-
-## 19. Reproducibility checklist
-
-For every reported result, include:
-
-- repository commit hash;
-- Python version;
-- package version;
-- notebook or script path;
-- random seed if Monte Carlo is used;
-- benchmark source;
-- exact model parameters;
-- pricing grid parameters;
-- whether the price is one strike or a full strip;
-- whether setup time is included;
-- generated output path.
-
-Recommended commands:
-
-```bash
-pytest
-python benchmarks/run_all.py
-```
-
-Recommended report outputs:
-
-```text
-benchmarks/paper_replications/fo2008_cos/outputs/SUMMARY.md
-benchmarks/paper_replications/fo2008_cos/outputs/*.csv
-benchmarks/paper_replications/fo2008_cos/outputs/*.png
-```
-
-## 20. Final project narrative
+## 16. Final project narrative
 
 The final narrative should be:
 
@@ -830,7 +746,7 @@ The final narrative should be:
 8. PyFENG integration lets the project focus on the numerical-methods layer rather than re-implementing every characteristic function.
 9. In-house jump composites demonstrate that the common characteristic-function interface extends naturally beyond the PyFENG model set.
 
-## 21. References
+## 17. References
 
 Albrecher, H., Mayer, P., Schoutens, W. and Tistaert, J. (2007). *The Little Heston Trap*. Wilmott Magazine, January, 83--92.  
 https://perswww.kuleuven.be/~u0009713/HestonTrap.pdf
