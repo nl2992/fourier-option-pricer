@@ -139,8 +139,9 @@ def bates_cf(u: np.ndarray, fwd: ForwardSpec, p: BatesParams) -> np.ndarray:
     phi_H = heston_cf(u_c, fwd, p.heston_params)
 
     # Jump part  -  Merton-style compound Poisson, log-forward convention.
+    # Use expm1 to avoid cancellation when mu_j + 0.5*sig_j^2 is close to 0.
     lam_j, mu_j, sig_j = p.lam_j, p.mu_j, p.sigma_j
-    zeta = np.exp(mu_j + 0.5 * sig_j * sig_j) - 1.0
+    zeta = np.expm1(mu_j + 0.5 * sig_j * sig_j)
     omega_j = -lam_j * zeta
     phi_Y = np.exp(1j * u_c * mu_j - 0.5 * sig_j * sig_j * u_c * u_c)
     phi_jump = np.exp(T * (1j * u_c * omega_j + lam_j * (phi_Y - 1.0)))
@@ -181,7 +182,8 @@ def bates_cumulants(fwd: ForwardSpec, p: BatesParams) -> tuple[float, float, flo
     c1_H, c2_H, c4_H = heston_cumulants(fwd, p.heston_params)
 
     # Jump raw moments and compensator.
-    zeta = float(np.exp(mu_j + 0.5 * sig_j * sig_j) - 1.0)
+    # Use expm1 to avoid cancellation when mu_j + 0.5*sig_j^2 is close to 0.
+    zeta = float(np.expm1(mu_j + 0.5 * sig_j * sig_j))
     EY2 = mu_j * mu_j + sig_j * sig_j
     EY4 = mu_j**4 + 6.0 * mu_j * mu_j * sig_j * sig_j + 3.0 * sig_j**4
 
