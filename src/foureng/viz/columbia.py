@@ -22,11 +22,16 @@ COLUMBIA_BLUE = "#B9D9EB"
 NAVY = "#0B3D91"
 DARK = "#0B1F3A"
 WHITE = "#FFFFFF"
+SLATE = "#5E6B7A"
+ORANGE = "#D9622C"
+GREEN = "#2E7D5B"
+PANEL = "#F4F8FC"
+CLOUD = "#EAF0F8"
 
 # Ordered cycle used when multiple series share a panel. Keeps the first two
 # series in the "brand" colours; the later ones are tonal variations that
 # still read clearly against a white chart background.
-_COLOR_CYCLE = [NAVY, COLUMBIA_BLUE, "#5B8FB9", "#08306B", "#7FA3C7", "#1F5CA6"]
+_COLOR_CYCLE = [NAVY, ORANGE, COLUMBIA_BLUE, GREEN, "#5B8FB9", "#08306B", "#7FA3C7", "#1F5CA6"]
 
 
 def apply_columbia_style() -> None:
@@ -44,9 +49,13 @@ def apply_columbia_style() -> None:
         "ytick.color": DARK,
         "axes.edgecolor": DARK,
         "text.color": DARK,
+        "figure.titleweight": "semibold",
+        "axes.titlelocation": "left",
+        "axes.titlepad": 10.0,
         # layout
         "axes.spines.top": False,
         "axes.spines.right": False,
+        "axes.linewidth": 1.1,
         "axes.grid": True,
         "grid.linestyle": ":",
         "grid.color": "#B8BDC4",
@@ -54,6 +63,9 @@ def apply_columbia_style() -> None:
         # lines
         "lines.linewidth": 2.0,
         "lines.markersize": 6.0,
+        "lines.solid_capstyle": "round",
+        "lines.solid_joinstyle": "round",
+        "patch.edgecolor": WHITE,
         # font sizes
         "axes.titlesize": 12,
         "axes.labelsize": 10,
@@ -61,6 +73,14 @@ def apply_columbia_style() -> None:
         "ytick.labelsize": 9,
         "legend.fontsize": 9,
         "figure.titlesize": 13,
+        # typography
+        "font.family": "sans-serif",
+        "font.sans-serif": [
+            "Avenir Next",
+            "Helvetica Neue",
+            "Arial",
+            "DejaVu Sans",
+        ],
         # color cycle
         "axes.prop_cycle": plt.cycler(color=_COLOR_CYCLE),
         # dpi for crisp savefigs
