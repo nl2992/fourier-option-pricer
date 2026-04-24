@@ -55,7 +55,12 @@ jobs:
       - name: Show versions
         run: |
           python --version
-          python -c "import numpy, scipy, pyfeng; print('numpy', numpy.__version__); print('scipy', scipy.__version__); print('pyfeng', pyfeng.__version__)"
+          python - <<'PY'
+          from importlib.metadata import version
+
+          for pkg in ("numpy", "scipy", "pyfeng"):
+              print(f"{pkg} {version(pkg)}")
+          PY
 
       # Fast tests on every matrix cell. The `slow` marker is declared in
       # pyproject.toml; deselect it here so CI stays snappy.

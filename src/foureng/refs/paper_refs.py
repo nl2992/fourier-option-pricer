@@ -143,6 +143,8 @@ LEWIS_HESTON_STRIP = PaperAnchor(
     is_call=True,
 )
 
+HESTON_PUBLISHED_STRIP = LEWIS_HESTON_STRIP
+
 
 CM1999_VG_CASE4 = PaperAnchor(
     name="CM1999 VG Case 4",
@@ -163,6 +165,7 @@ CM1999_VG_CASE4 = PaperAnchor(
 PAPER_ANCHORS: dict[str, PaperAnchor] = {
     "fo2008_heston_atm":  FO2008_HESTON_ATM,
     "lewis_heston_strip": LEWIS_HESTON_STRIP,
+    "heston_published_strip": HESTON_PUBLISHED_STRIP,
     "cm1999_vg_case4":    CM1999_VG_CASE4,
 }
 
