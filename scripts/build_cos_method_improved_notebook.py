@@ -169,7 +169,7 @@ def _iter_repo_candidates():
 
 REPO_ROOT = None
 for candidate in _iter_repo_candidates():
-    if (candidate / "src" / "foureng").exists() and (candidate / "benchmarks").exists():
+    if (candidate / "foureng").exists() and (candidate / "benchmarks").exists():
         REPO_ROOT = candidate
         break
 if REPO_ROOT is None:
@@ -177,7 +177,7 @@ if REPO_ROOT is None:
         if not base.exists():
             continue
         try:
-            for match in base.rglob("src/foureng"):
+            for match in base.rglob("foureng/__init__.py"):
                 candidate = match.parent.parent
                 if (candidate / "benchmarks").exists():
                     REPO_ROOT = candidate
@@ -192,7 +192,7 @@ if REPO_ROOT is None:
         "or set PWD to the repo path."
     )
 
-for path in (REPO_ROOT, REPO_ROOT / "src"):
+for path in (REPO_ROOT,):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 

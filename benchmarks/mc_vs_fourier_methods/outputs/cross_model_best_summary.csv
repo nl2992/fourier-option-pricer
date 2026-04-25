@@ -1,10 +1,10 @@
-model,best by error,best error,fastest,fastest runtime_ms
-BSM,COS classic,2.842170943040401e-14,COS improved,0.15895898104645312
-Bates,COS classic,3.133990844617074e-10,COS classic,0.26266698841936886
-CGMY,PyFENG Lewis,5.766942479112913e-11,COS classic,0.2364999963901937
-Heston,PyFENG Lewis,3.8153791237505175e-10,COS improved,0.17516702064312994
-Heston-CGMY,COS improved,3.368683110238635e-11,COS classic,0.28737500542774796
-Heston-Kou,COS classic,9.416853963273297e-10,COS classic,0.24983298499137163
-NIG,PyFENG Lewis,3.6843417206000595e-10,COS improved,0.1500419748481363
-OUSV,PyFENG Lewis,4.1094683211895244e-10,COS improved,0.19808299839496613
-VG,COS classic,9.557072910837405e-10,COS classic,0.19883300410583615
+model,benchmark source,best by error,best error,fastest,fastest runtime_ms
+BSM,PyFENG FFT benchmark,COS classic,8.886225089099753e-13,COS improved,0.13616698561236262
+Bates,Frozen hi-res Fourier oracle: CM FFT N=32768 eta=0.10 alpha=1.5 (cross-verified vs FRFT N=16384 and COS N=4096 to ~1e-10),COS classic,3.133990844617074e-10,COS classic,0.26974998763762414
+CGMY,PyFENG FFT benchmark,COS classic,2.752464922650688e-12,COS classic,0.19474999862723053
+Heston,PyFENG FFT benchmark,COS improved,9.672262990534364e-13,COS improved,0.15075001283548772
+Heston-CGMY,Frozen hi-res Fourier oracle: CM FFT N=32768 eta=0.10 alpha=1.5 (cross-verified vs FRFT N=16384 and COS N=4096 to ~1e-10),COS improved,3.368683110238635e-11,COS classic,0.2905000001192093
+Heston-Kou,Frozen hi-res Fourier oracle: CM FFT N=32768 eta=0.10 alpha=1.5 (cross-verified vs FRFT N=16384 and COS N=4096 to ~1e-10),COS classic,9.416853963273297e-10,COS classic,0.25887502124533057
+NIG,PyFENG FFT benchmark,COS classic,2.8403226437490048e-09,COS improved,0.13466700329445302
+OUSV,PyFENG FFT benchmark,COS classic,1.6036993955026446e-10,COS improved,0.17770897829905152
+VG,PyFENG FFT benchmark,COS classic,1.48903112062726e-11,COS classic,0.18695800099521875
