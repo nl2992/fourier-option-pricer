@@ -24,7 +24,8 @@
       "Bash(du -sh PyFENG/)",
       "Bash(ls Papers/)",
       "Bash(/usr/local/bin/python3 -m pytest tests/ -q --tb=short -m \"not slow\")",
-      "Bash(/usr/local/bin/python3 -m pip install -e \".[test]\" -q)"
+      "Bash(/usr/local/bin/python3 -m pip install -e \".[test]\" -q)",
+      "WebFetch(domain:raw.githubusercontent.com)"
     ]
   }
 }
