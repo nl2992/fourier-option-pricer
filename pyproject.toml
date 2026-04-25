@@ -8,7 +8,7 @@ version = "0.2.0"
 description = "Fourier-based European option pricing with Carr-Madan FFT, FRFT, and COS under characteristic-function models."
 readme = "README.md"
 license = { text = "MIT" }
-authors = [{ name = "Nigel Li", email = "nl2992@columbia.edu" }]
+authors = [{ name = "Nigel Li", email = "nigelli676@gmail.com" }]
 requires-python = ">=3.10"
 dependencies = [
   "numpy>=1.26",
