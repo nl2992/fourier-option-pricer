@@ -1,21 +1,62 @@
 # fourier-option-pricer
 
-Fourier pricing toolkit for fast European option pricing under characteristic-function models.
+Fast European option pricing via Fourier transform methods under **characteristic-function models**.
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/nl2992/fourier-option-pricer/blob/main/notebooks/demo.ipynb)
+> Carr, P., & Madan, D. (1999). Option valuation using the fast Fourier transform.
+> *Journal of Computational Finance*, 2(4), 61–73.
+> https://doi.org/10.21314/JCF.1999.043
 
-## What problem does this solve?
+> Lewis, A. L. (2001). A simple option formula for general jump-diffusion and other
+> exponential Lévy processes. *SSRN Working Paper*.
+> https://ssrn.com/abstract=282110
+> *(Heston and Variance Gamma characteristic functions are provided by
+> [PyFENG](https://github.com/PyFENG/PyFENG), Prof. Jaehyuk Choi's library.)*
 
-Monte Carlo option pricing is flexible, but it can be slow when pricing many strikes, maturities, or implied-volatility surfaces. This package provides faster Fourier-based pricing methods for vanilla European options.
+> Fang, F., & Oosterlee, C. W. (2008). A novel pricing method for European options
+> based on Fourier-cosine series expansions.
+> *SIAM Journal on Scientific Computing*, 31(2), 826–848.
+> https://doi.org/10.1137/080718061
 
-The toolkit supports Carr-Madan FFT, fractional FFT, and COS pricing under models with known characteristic functions, including Heston, Variance Gamma, Kou, and related extensions. It is designed for reproducible numerical experiments, benchmarking, implied-volatility inversion, and model comparison.
+> Junike, G., & Pankrashkin, K. (2022). Precise option pricing by the COS method —
+> how to choose the truncation range.
+> *Applied Mathematics and Computation*, 421, 126935.
+> https://doi.org/10.1016/j.amc.2022.126935
 
-PyPI distribution name: `fourier-option-pricer`  
-Python import name: `foureng`
+## Core concept
+
+Fourier pricing exploits the fact that, for most asset models, the **characteristic function**
+
+$$\phi(u) = \mathbb{E}\!\left[e^{iu \ln S_T}\right]$$
+
+is known in closed form even when the option price integral has no analytic solution.
+Given $\phi$, a European call can be priced by a single numerical integral.
+The three methods implemented here differ in how they discretise that integral:
+
+| Method | Key idea |
+|--------|----------|
+| Carr–Madan FFT | Damp the payoff, apply FFT to price a whole strike grid at once |
+| Lewis single-integral | Parseval identity; avoids the dampening parameter entirely |
+| COS (Fang–Oosterlee) | Expand the risk-neutral density in a cosine series on $[a, b]$ |
+
+## Truncation
+
+The COS method requires choosing a truncation interval $[a, b]$ for the log-price density.
+Two strategies are implemented:
+
+- **Cumulant rule** (Fang & Oosterlee 2008) — sets $[a,b]$ from the first four cumulants of $\ln S_T$.
+- **Tolerance rule** (Junike & Pankrashkin 2022) — widens $[a,b]$ iteratively until the tail-mass proxy falls below a user-specified tolerance. Handles stress cases (e.g. CGMY with $Y \to 2$) where the cumulant rule diverges.
+
+## Models
+
+| Family | Models |
+|--------|--------|
+| Pure diffusion | Black–Scholes–Merton |
+| Stochastic volatility | Heston, OU-SV |
+| Pure jump / Lévy | Variance Gamma, NIG, CGMY |
+| Jump diffusion | Kou double-exponential |
+| SV + jumps | Bates, Heston–Kou, Heston–CGMY |
 
 ## Installation
-
-Install the package from PyPI:
 
 ```bash
 pip install fourier-option-pricer
@@ -27,38 +68,20 @@ For local development:
 git clone https://github.com/nl2992/fourier-option-pricer.git
 cd fourier-option-pricer
 pip install -e ".[test]"
-```
-
-Run the test suite:
-
-```bash
 pytest
 ```
 
 ## Quick start
-
-The example below prices European call options under the Heston model using the COS method.
 
 ```python
 import numpy as np
 import foureng as fe
 
 # Market inputs
-fwd = fe.ForwardSpec(
-    S0=100.0,
-    r=0.01,
-    q=0.02,
-    T=1.0,
-)
+fwd = fe.ForwardSpec(S0=100.0, r=0.01, q=0.02, T=1.0)
 
 # Heston model parameters
-params = fe.HestonParams(
-    kappa=4.0,
-    theta=0.25,
-    nu=1.0,
-    rho=-0.5,
-    v0=0.04,
-)
+params = fe.HestonParams(kappa=4.0, theta=0.25, nu=1.0, rho=-0.5, v0=0.04)
 
 # Characteristic function
 phi = lambda u: fe.heston_cf_form2(u, fwd, params)
@@ -66,294 +89,105 @@ phi = lambda u: fe.heston_cf_form2(u, fwd, params)
 # Strike grid
 strikes = np.array([80.0, 90.0, 100.0, 110.0, 120.0])
 
-# COS truncation grid
+# Price with COS (standard truncation)
 cumulants = fe.heston_cumulants(fwd, params)
 grid = fe.cos_auto_grid(cumulants, N=256, L=10.0)
-
-# Price European calls
 result = fe.cos_prices(phi, fwd, strikes, grid)
-
 print(result.call_prices)
 
-# Convert the ATM call price to Black-Scholes implied volatility
+# Price with Carr–Madan FFT
+cm_grid = fe.FFTGrid(N=4096, eta=0.25, alpha=1.5)
+cm_prices = fe.carr_madan_price_at_strikes(phi, fwd, cm_grid, strikes)
+print(cm_prices)
+
+# Implied volatility
 atm_iv = fe.implied_vol_newton_safeguarded(
     price=float(result.call_prices[2]),
-    inputs=fe.BSInputs(
-        F0=fwd.F0,
-        K=100.0,
-        T=fwd.T,
-        r=fwd.r,
-        q=fwd.q,
-        is_call=True,
-    ),
+    inputs=fe.BSInputs(F0=fwd.F0, K=100.0, T=fwd.T, r=fwd.r, q=fwd.q, is_call=True),
 )
-
 print(atm_iv)
 ```
 
-## Main features
-
-- Carr-Madan FFT pricing for European calls.
-- Fractional FFT pricing for flexible strike grids.
-- COS pricing with automatic and improved truncation grids.
-- Characteristic-function models including Heston, Variance Gamma, and Kou.
-- Black-Scholes implied-volatility inversion with safeguarded Newton iteration.
-- Price and implied-volatility surface generation.
-- COS-based Greeks.
-- Calibration helpers for Heston, Variance Gamma, and Kou.
-- Benchmarking workflow for comparing pricing accuracy and runtime.
-
-## API reference
-
-### Market inputs
-
-#### `ForwardSpec(S0, r, q, T)`
-
-Container for deterministic market inputs.
-
-Parameters:
-
-- `S0`: spot price.
-- `r`: continuously compounded risk-free rate.
-- `q`: continuously compounded dividend yield or foreign interest rate.
-- `T`: time to maturity in years.
-
-Provides:
-
-- `F0`: forward price.
-- `disc`: discount factor.
-
-### Model parameter classes
-
-#### `HestonParams(kappa, theta, nu, rho, v0)`
-
-Parameter container for the Heston stochastic-volatility model.
-
-#### `VGParams(...)`
-
-Parameter container for the Variance Gamma model.
-
-#### `KouParams(...)`
-
-Parameter container for the Kou double-exponential jump-diffusion model.
-
-### Characteristic functions
-
-#### `heston_cf_form2(u, fwd, params)`
-
-Heston characteristic function using the numerically stable Form 2 representation.
-
-Parameters:
-
-- `u`: NumPy array of Fourier frequencies.
-- `fwd`: `ForwardSpec` object.
-- `params`: `HestonParams` object.
-
-Returns:
-
-- Complex NumPy array of characteristic-function values.
-
-#### `vg_cf(u, fwd, params)`
-
-Variance Gamma characteristic function.
-
-Returns:
-
-- Complex NumPy array of characteristic-function values.
-
-#### `kou_cf(u, fwd, params)`
-
-Kou double-exponential jump-diffusion characteristic function.
-
-Returns:
-
-- Complex NumPy array of characteristic-function values.
-
-### Cumulants and COS grids
-
-#### `heston_cumulants(fwd, params)`
-
-Computes Heston cumulants used to construct COS truncation intervals.
-
-Returns:
-
-- Model cumulants for grid construction.
-
-#### `vg_cumulants(fwd, params)`
-
-Computes Variance Gamma cumulants.
-
-#### `kou_cumulants(fwd, params)`
-
-Computes Kou model cumulants.
-
-#### `cos_auto_grid(cumulants, N, L)`
-
-Constructs the standard Fang-Oosterlee COS truncation grid.
-
-Parameters:
-
-- `cumulants`: model cumulants.
-- `N`: number of COS expansion terms.
-- `L`: truncation-width parameter.
-
-Returns:
-
-- `COSGrid`.
-
-#### `cos_improved_grid(cumulants, model=..., params=...)`
-
-Constructs an improved COS truncation grid for more stable numerical pricing.
-
-Returns:
-
-- `COSGrid`.
-
-### Pricing methods
-
-#### `cos_prices(phi, fwd, strikes, grid)`
-
-Prices European calls using the COS method.
-
-Parameters:
-
-- `phi`: characteristic function.
-- `fwd`: `ForwardSpec` object.
-- `strikes`: NumPy array of strikes.
-- `grid`: `COSGrid` object.
-
-Returns:
-
-- `COSResult`, containing `strikes` and `call_prices`.
-
-#### `carr_madan_price_at_strikes(phi, fwd, grid, strikes)`
-
-Prices European calls using the Carr-Madan FFT method.
-
-Returns:
-
-- NumPy array of call prices.
-
-#### `frft_price_at_strikes(phi, fwd, grid, strikes)`
-
-Prices European calls using the fractional FFT method.
-
-Returns:
-
-- NumPy array of call prices.
-
-### Greeks
-
-#### `cos_price_and_greeks(phi, fwd, strikes, grid)`
-
-Computes COS prices and sensitivities.
-
-Returns:
-
-- `COSGreeks`.
-
-#### `cos_delta_gamma(phi, fwd, strikes, grid)`
-
-Computes COS delta and gamma.
-
-Returns:
-
-- Tuple of NumPy arrays: `(delta, gamma)`.
-
-### Implied volatility
-
-#### `implied_vol_newton_safeguarded(price, inputs)`
-
-Computes Black-Scholes implied volatility using a safeguarded Newton method.
-
-Parameters:
-
-- `price`: option price.
-- `inputs`: `BSInputs` object.
-
-Returns:
-
-- Implied volatility as a `float`.
-
-### Higher-level helpers
-
-#### `model_price_surface(...)`
-
-Builds a model price surface across strikes and maturities.
-
-Returns:
-
-- Price-surface output.
-
-#### `model_iv_surface(...)`
-
-Builds an implied-volatility surface from model prices.
-
-Returns:
-
-- Implied-volatility surface output.
-
-#### `calibrate_heston(...)`
-
-Calibrates Heston parameters to market or synthetic option prices.
-
-Returns:
-
-- Calibration result.
-
-#### `calibrate_vg(...)`
-
-Calibrates Variance Gamma parameters.
-
-Returns:
-
-- Calibration result.
-
-#### `calibrate_kou(...)`
-
-Calibrates Kou model parameters.
-
-Returns:
-
-- Calibration result.
+### Improved COS truncation (Junike rule)
+
+```python
+grid = fe.cos_improved_grid(cumulants, model="heston", params=params)
+result = fe.cos_prices(phi, fwd, strikes, grid)
+```
 
 ## Demo notebook
 
-A Colab-ready demo notebook is available here:
+An interactive demo is available at [`notebooks/demo.ipynb`](notebooks/demo.ipynb):
 
-[notebooks/demo.ipynb](notebooks/demo.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/nl2992/fourier-option-pricer/blob/main/notebooks/demo.ipynb)
 
-The notebook demonstrates:
+## API reference
 
-- installing the package in Google Colab;
-- pricing European options with Fourier methods;
-- comparing COS, Carr-Madan FFT, and Monte Carlo baselines;
-- computing pricing errors against benchmark values;
-- measuring runtime differences across methods;
-- generating plots suitable for the final project report.
+### `ForwardSpec(S0, r, q, T)`
 
-## Extended methodology and results
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `S0` | `float` | Spot price |
+| `r` | `float` | Continuously compounded risk-free rate |
+| `q` | `float` | Dividend yield or foreign rate |
+| `T` | `float` | Time to maturity in years |
 
-Detailed numerical experiments, replication notes, runtime benchmarks, and implementation commentary are kept outside the README to keep this page concise.
+Provides `F0` (forward price) and `disc` (discount factor).
 
-See:
+### Model parameter classes
 
-```text
-docs/methodology_and_results.md
-```
+| Class | Model |
+|-------|-------|
+| `HestonParams(kappa, theta, nu, rho, v0)` | Heston stochastic volatility |
+| `VGParams(sigma, nu, theta)` | Variance Gamma |
+| `KouParams(sigma, lam, p, eta1, eta2)` | Kou double-exponential jump diffusion |
+| `BatesParams(...)` | Bates (Heston + Poisson jumps) |
+| `CGMYParams(C, G, M, Y)` | CGMY pure-jump Lévy |
+| `NIGParams(alpha, beta, delta)` | Normal Inverse Gaussian |
 
-This document records:
+### `cos_prices(phi, fwd, strikes, grid)`
 
-- the Fang-Oosterlee COS replication workflow;
-- the Carr-Madan benchmark setup;
-- the Monte Carlo comparison setup;
-- COS truncation-interval behaviour;
-- improved COS grid logic;
-- runtime and error reporting rules;
-- model-by-model observations;
-- known numerical limitations.
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `phi` | callable | Characteristic function `phi(u)` |
+| `fwd` | `ForwardSpec` | Market inputs |
+| `strikes` | `(K,)` array | Strike prices |
+| `grid` | `COSGrid` | Truncation grid from `cos_auto_grid` or `cos_improved_grid` |
+
+Returns a `COSResult` with fields `strikes` and `call_prices`.
+
+### `carr_madan_price_at_strikes(phi, fwd, grid, strikes)`
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `phi` | callable | Characteristic function |
+| `fwd` | `ForwardSpec` | Market inputs |
+| `grid` | `FFTGrid(N, eta, alpha)` | FFT grid |
+| `strikes` | `(K,)` array | Strike prices |
+
+Returns `(K,)` array of call prices.
+
+### `cos_auto_grid(cumulants, N, L)` / `cos_improved_grid(cumulants, model, params)`
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `cumulants` | cumulant object | From `heston_cumulants`, `vg_cumulants`, etc. |
+| `N` | `int` | Number of COS expansion terms |
+| `L` | `float` | Truncation multiplier (standard rule only) |
+| `model` | `str` | Model name, e.g. `"heston"` (improved rule only) |
+| `params` | param dataclass | Model parameters (improved rule only) |
+
+Returns a `COSGrid`.
+
+### `implied_vol_newton_safeguarded(price, inputs)`
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `price` | `float` | Option price |
+| `inputs` | `BSInputs` | `BSInputs(F0, K, T, r, q, is_call)` |
+
+Returns implied volatility as `float`.
 
 ## License
 
 MIT. See [LICENSE](LICENSE).
-
