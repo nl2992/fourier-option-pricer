@@ -45,7 +45,7 @@ def check_alpha(phi: CharFunc, alpha: float) -> AlphaCheck:
     probes = np.array([u0 - 0.5, u0, u0 + 0.5], dtype=np.complex128)
     try:
         vals = phi(probes)
-    except Exception as exc:  # pragma: no cover
+    except (ValueError, TypeError, FloatingPointError, OverflowError, ZeroDivisionError) as exc:  # pragma: no cover
         return AlphaCheck(False, f"phi raised at u=-i(alpha+1): {exc!r}")
 
     if not np.all(np.isfinite(vals.real)) or not np.all(np.isfinite(vals.imag)):

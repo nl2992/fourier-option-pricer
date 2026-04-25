@@ -25,7 +25,9 @@
       "Bash(ls Papers/)",
       "Bash(/usr/local/bin/python3 -m pytest tests/ -q --tb=short -m \"not slow\")",
       "Bash(/usr/local/bin/python3 -m pip install -e \".[test]\" -q)",
-      "WebFetch(domain:raw.githubusercontent.com)"
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(/usr/local/bin/python3 -m pytest tests/test_robustness_parametrize.py -v --tb=short)",
+      "Bash(/usr/local/bin/python3 -)"
     ]
   }
 }

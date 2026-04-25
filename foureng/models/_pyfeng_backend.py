@@ -40,7 +40,7 @@ def import_pyfeng():
     """
     try:
         import pyfeng as pf  # type: ignore
-    except Exception as exc:  # pragma: no cover
+    except (ImportError, ModuleNotFoundError) as exc:  # pragma: no cover
         raise ImportError(
             "foureng requires pyfeng for this model's CF; install with "
             "`pip install pyfeng`."
