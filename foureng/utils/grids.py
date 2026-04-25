@@ -5,7 +5,23 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class FFTGrid:
-    """Carr-Madan FFT grid. Nyquist binds eta and lam: eta*lam = 2*pi/N."""
+    """Carr-Madan FFT grid. Nyquist binds eta and lam: eta*lam = 2*pi/N.
+
+    Parameters
+    ----------
+    N : int
+        Number of FFT points (power of 2 recommended, e.g. 4096).
+    eta : float
+        Frequency-domain step size. Smaller eta → finer frequency resolution
+        but coarser log-strike spacing (lam = 2π / (N·η)).
+    alpha : float
+        Carr-Madan dampening exponent. Requires E[S_T^{alpha+1}] < ∞.
+        The standard choice **alpha = 1.5** (from CM1999) is valid for
+        BSM, Heston, VG, and most common models at typical maturities.
+        For Kou, the hard upper bound is alpha < eta1 - 1; for VG it
+        depends on the parametrisation. Use
+        :func:`~foureng.utils.validity.check_alpha` to verify.
+    """
     N: int
     eta: float
     alpha: float
@@ -29,7 +45,26 @@ class FFTGrid:
 
 @dataclass(frozen=True)
 class FRFTGrid:
-    """Fractional FFT grid — eta (freq step) and lam (log-strike step) independent."""
+    """Fractional FFT grid — eta (freq step) and lam (log-strike step) independent.
+
+    Unlike :class:`FFTGrid`, the Nyquist constraint does not bind here:
+    eta and lam are chosen freely, and the FRFT fraction
+    ``zeta = eta·lam / (2π)`` need not equal ``1/N``. This decoupling
+    lets you tune frequency resolution and strike spacing independently.
+
+    Parameters
+    ----------
+    N : int
+        Number of FRFT points (power of 2 recommended).
+    eta : float
+        Frequency-domain step size (same role as in :class:`FFTGrid`).
+    lam : float
+        Log-strike grid spacing. Choose independently of eta.
+    alpha : float
+        Dampening exponent — same meaning and default guidance as in
+        :class:`FFTGrid`. The standard choice **alpha = 1.5** works for
+        most models; see :func:`~foureng.utils.validity.check_alpha`.
+    """
     N: int
     eta: float
     lam: float
