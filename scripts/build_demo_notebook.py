@@ -51,6 +51,8 @@ cells.append(md("## Cell group 0 — Imports and style"))
 
 cells.append(code(r"""
 from __future__ import annotations
+import importlib.util
+import os
 import sys, time
 from pathlib import Path
 
@@ -58,17 +60,72 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# Make the in-repo src/foureng importable without an install step.
-REPO = Path.cwd()
-if (REPO / "src").exists():
-    sys.path.insert(0, str(REPO / "src"))
-else:
-    # notebook launched from notebooks/ directory
-    sys.path.insert(0, str(REPO.parent / "src"))
+# Make the in-repo source tree importable without an install step.
+def _iter_repo_candidates():
+    seen = set()
+
+    def _expand(pathlike):
+        if not pathlike:
+            return []
+        p = Path(pathlike).expanduser()
+        try:
+            p = p.resolve()
+        except Exception:
+            pass
+        return [p, *p.parents]
+
+    candidates = []
+    for raw in (os.environ.get("PWD"), os.environ.get("OLDPWD")):
+        candidates.extend(_expand(raw))
+    try:
+        candidates.extend(_expand(Path.cwd()))
+    except FileNotFoundError:
+        pass
+    for raw in sys.path:
+        if raw:
+            candidates.extend(_expand(raw))
+    spec = importlib.util.find_spec("foureng")
+    if spec is not None and spec.origin:
+        candidates.extend(_expand(spec.origin))
+
+    for candidate in candidates:
+        key = str(candidate)
+        if key in seen:
+            continue
+        seen.add(key)
+        yield candidate
+
+
+REPO = None
+for candidate in _iter_repo_candidates():
+    if (candidate / "src" / "foureng").exists() and (candidate / "benchmarks").exists():
+        REPO = candidate
+        break
+if REPO is None:
+    for base in [Path.home() / name for name in ("Desktop", "Documents", "Projects", "Code")]:
+        if not base.exists():
+            continue
+        try:
+            for match in base.rglob("src/foureng"):
+                candidate = match.parent.parent
+                if (candidate / "benchmarks").exists():
+                    REPO = candidate
+                    break
+        except Exception:
+            continue
+        if REPO is not None:
+            break
+if REPO is None:
+    raise RuntimeError(
+        "Could not locate repo root. Launch the notebook from inside the project "
+        "or set PWD to the repo path."
+    )
+
+for path in (REPO, REPO / "src"):
+    if str(path) not in sys.path:
+        sys.path.insert(0, str(path))
 
 IMAGES = REPO / "images"
-if not IMAGES.exists():
-    IMAGES = REPO.parent / "images"
 IMAGES.mkdir(exist_ok=True)
 
 from foureng.viz.columbia import (
