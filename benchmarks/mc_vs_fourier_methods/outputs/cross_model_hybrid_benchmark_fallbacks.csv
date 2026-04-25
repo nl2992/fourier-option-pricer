@@ -1,0 +1,4 @@
+model,jump structure,benchmark source
+Bates,Finite activity,Frozen hi-res Fourier oracle: CM FFT N=32768 eta=0.10 alpha=1.5 (cross-verified vs FRFT N=16384 and COS N=4096 to ~1e-10)
+Heston-Kou,Finite activity (double-exp),Frozen hi-res Fourier oracle: CM FFT N=32768 eta=0.10 alpha=1.5 (cross-verified vs FRFT N=16384 and COS N=4096 to ~1e-10)
+Heston-CGMY,Infinite activity,Frozen hi-res Fourier oracle: CM FFT N=32768 eta=0.10 alpha=1.5 (cross-verified vs FRFT N=16384 and COS N=4096 to ~1e-10)

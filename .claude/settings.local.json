@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(/usr/local/bin/python3 -c ' *)",
+      "Bash(/usr/local/bin/python3 -c \"from foureng import viz; print\\([x for x in dir\\(viz\\) if not x.startswith\\('_'\\)]\\)\")",
+      "Bash(/usr/local/bin/python3 scripts/build_cos_method_improved_notebook.py)",
+      "Bash(/usr/local/bin/python3 -m jupyter nbconvert --to notebook --execute notebooks/cos_method_improved.ipynb --output cos_method_improved.ipynb --ExecutePreprocessor.timeout=600)",
+      "Bash(python3 -c ' *)",
+      "Bash(/usr/local/bin/python3 scripts/strip_html_from_notebooks.py)",
+      "Bash(echo \"EXIT_CODE: $?\")",
+      "Bash(/usr/local/bin/python3 scripts/build_presentation_notebook.py)",
+      "Bash(/usr/local/bin/python3 scripts/build_demo_notebook.py)",
+      "Bash(/usr/local/bin/python3 -m jupyter nbconvert --to notebook --execute notebooks/cos_method_improved.ipynb --output /tmp/test_cos_improved.ipynb --ExecutePreprocessor.timeout=120)",
+      "Bash(/usr/local/bin/python3 -m pip install -q -e .)",
+      "Bash(/usr/local/bin/python3 -c \"import foureng; print\\('foureng from:', foureng.__file__\\)\")",
+      "Bash(/usr/local/bin/python3)",
+      "Bash(rm -rf src/)",
+      "Bash(/usr/local/bin/python3 -c \"import foureng; print\\('foureng OK from:', foureng.__file__\\)\")",
+      "Bash(/usr/local/bin/python3 -m pytest tests/ -q --tb=short -m \"not slow\" -x)",
+      "Bash(/usr/local/bin/python3 -m pip install -q pytest)",
+      "Bash(ls -la benchmarks/*.py)",
+      "Bash(ls -la *.md *.yml)",
+      "Bash(du -sh _local_backup/)",
+      "Bash(du -sh PyFENG/)",
+      "Bash(ls Papers/)",
+      "Bash(/usr/local/bin/python3 -m pytest tests/ -q --tb=short -m \"not slow\")"
+    ]
+  }
+}

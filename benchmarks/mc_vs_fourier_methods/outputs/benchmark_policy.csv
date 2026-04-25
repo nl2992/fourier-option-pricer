@@ -3,4 +3,4 @@ MC vs Carr-Madan,41-strike BSM call strip,Black-Scholes closed form,max abs erro
 Carr-Madan vs PyFENG Lewis,published Heston 5-strike strip,published 15-digit Heston prices,max abs error across strip,best strip runtime (ms)
 Plain COS replication,same published Heston 5-strike strip,same published Heston strip,max abs error across strip,best strip runtime (ms)
 COS truncation stress test,"FO2008 Heston ATM, T=10",FO2008 Table 5 reference price,abs error at K=100,best price runtime (ms)
-Cross-model diagnostics,canonical 41-strike strips by model family,closed form or high-precision oracle per model,max abs error on canonical strip,best strip runtime (ms)
+Cross-model diagnostics,canonical 41-strike strips by model family,PyFENG FFT for supported models; frozen hi-res Fourier oracle for unsupported hybrids,max abs error on canonical strip,best strip runtime (ms)
