@@ -27,7 +27,27 @@
       "Bash(/usr/local/bin/python3 -m pip install -e \".[test]\" -q)",
       "WebFetch(domain:raw.githubusercontent.com)",
       "Bash(/usr/local/bin/python3 -m pytest tests/test_robustness_parametrize.py -v --tb=short)",
-      "Bash(/usr/local/bin/python3 -)"
+      "Bash(/usr/local/bin/python3 -)",
+      "Bash(/usr/local/bin/python3 scripts/build_demo_mk2_notebook.py)",
+      "Bash(/usr/local/bin/python3 -m jupyter nbconvert --to notebook --execute --ExecutePreprocessor.timeout=300 --ExecutePreprocessor.kernel_name=python3 --output notebooks/demo_mk2.ipynb notebooks/demo_mk2.ipynb)",
+      "Bash(/usr/local/bin/python3 -m jupyter nbconvert --to notebook --execute --ExecutePreprocessor.timeout=300 --ExecutePreprocessor.kernel_name=python3 --output demo_mk2.ipynb notebooks/demo_mk2.ipynb)",
+      "Bash(python3 scripts/build_demo_mk2_notebook.py)",
+      "Bash(python3 -c \"from foureng.iv.implied_vol import BSInputs, bs_price_from_fwd; print\\('OK'\\)\")",
+      "Bash(pip show *)",
+      "Bash(python3 -m pip show fourier-option-pricer)",
+      "Bash(python3 -m pip show scipy numpy pyfeng)",
+      "Bash(python3 -m jupyter --version)",
+      "Bash(python3 -m jupyter nbconvert --version)",
+      "Bash(python3 -m nbconvert --version)",
+      "Bash(jupyter nbconvert *)",
+      "Bash(/opt/anaconda3/envs/MATH5300/bin/python -m pip show fourier-option-pricer scipy pyfeng)",
+      "Bash(/opt/anaconda3/envs/MATH5300/bin/python -c \"import foureng; print\\('foureng OK, version', foureng.__version__\\)\")",
+      "Bash(/opt/anaconda3/bin/python -m pip show fourier-option-pricer)",
+      "Bash(/opt/anaconda3/bin/python -c \"import foureng; print\\('foureng OK'\\)\")",
+      "Bash(/opt/anaconda3/envs/MATH5300/bin/jupyter nbconvert *)",
+      "Bash(/opt/anaconda3/bin/python -c ' *)",
+      "Bash(/opt/anaconda3/bin/python -m pip show -f fourier-option-pricer)",
+      "Bash(/opt/anaconda3/envs/MATH5300/bin/python scripts/build_demo_mk2_notebook.py)"
     ]
   }
 }
