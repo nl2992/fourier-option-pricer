@@ -115,6 +115,81 @@ grid = fe.cos_improved_grid(cumulants, model="heston", params=params)
 result = fe.cos_prices(phi, fwd, strikes, grid)
 ```
 
+### Extension: adaptive filtered-COS policy layer
+
+The Junike-style COS policy improves truncation-range selection, but COS accuracy
+is controlled by both the truncation interval and the finite cosine expansion.
+As an extension, this repo adds an **adaptive filtered-COS overlay** inspired by
+Ruijter, Versteegh and Oosterlee's spectral-filtering work for Fourier option
+pricing.
+
+The filter is applied to the COS expansion coefficients and is tested as one
+candidate inside a **deterministic numerical-policy search**.  The adaptive
+selector compares vanilla COS, Junike-COS, and filtered Junike-COS, then selects
+the fastest candidate satisfying a target error tolerance.
+
+> **This extension does not claim filtered-COS universally dominates Junike-COS.**
+> The intended object is the adaptive selector, which can choose no filter where
+> filtering is unnecessary.
+
+**Usage:**
+
+```python
+from foureng.pipeline import price_strip
+from foureng.utils.spectral_filters import COSFilterSpec
+from foureng.utils.grids import COSGridPolicy
+
+policy = COSGridPolicy(
+    mode="benchmark",
+    truncation="tolerance",
+    centered=True,
+    dx_target=0.01,
+    L=10.0,
+    eps_trunc=1e-10,
+    max_N=8192,
+    width_fallback=0.0,
+)
+
+prices = price_strip(
+    "vg",
+    "cos_filtered",
+    strikes,
+    fwd,
+    params,
+    grid=(policy, COSFilterSpec("exponential", order=8)),
+)
+```
+
+For the full adaptive grid-search selector (comparing vanilla, Junike, and
+filtered candidates):
+
+```python
+from foureng.experiments.cos_filter_grid_search import (
+    default_filtered_cos_candidates,
+    run_filtered_cos_grid_search,
+    select_fastest_under_tolerance,
+)
+
+df = run_filtered_cos_grid_search(
+    model="vg", strikes=strikes, fwd=fwd, params=params,
+    reference=reference_prices, tol=1e-6,
+)
+best = select_fastest_under_tolerance(df, tol=1e-6)
+```
+
+**References:**
+- Junike, G. and Pankrashkin, K. (2022), "Precise option pricing by the COS
+  method — How to choose the truncation range," *Applied Mathematics and
+  Computation*, 421, 126935.
+- Ruijter, M. J., Versteegh, M. and Oosterlee, C. W. (2015), "On the application
+  of spectral filters in a Fourier option pricing technique," *Journal of
+  Computational Finance*.
+- Junike, G. (2024), "On the number of terms in the COS method for European
+  option pricing," *Numerische Mathematik*.
+
+**Available spectral filters:** `"none"` (identity), `"fejer"`, `"lanczos"`,
+`"raised_cosine"`, `"exponential"` (order-*p* tunable).
+
 ## Demo notebook
 
 An interactive demo is available at [`notebooks/demo.ipynb`](notebooks/demo.ipynb):
@@ -207,7 +282,8 @@ This document records:
 - improved COS grid logic;
 - runtime and error reporting rules;
 - model-by-model observations;
-- known numerical limitations.
+- known numerical limitations;
+- adaptive filtered-COS extension (spectral filters + policy grid-search selector).
 
 ## License
 

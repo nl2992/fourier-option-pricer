@@ -745,8 +745,122 @@ The final narrative should be:
 7. Junike-style interval and term selection improves robustness and makes the COS behaviour easier to diagnose.
 8. PyFENG integration lets the project focus on the numerical-methods layer rather than re-implementing every characteristic function.
 9. In-house jump composites demonstrate that the common characteristic-function interface extends naturally beyond the PyFENG model set.
+10. The adaptive filtered-COS layer adds a second control dimension (spectral filtering of the finite series) and a deterministic policy-search selector, giving the pricing pipeline a principled response to slow convergence without overriding the Junike interval selection.
 
-## 17. References
+## 17. Adaptive filtered-COS extension
+
+### 17.1 Motivation
+
+Junike-style truncation addresses the *interval-selection* component of COS
+pricing: given the model's cumulants, it adaptively widens the integration
+domain `[a, b]` until the tail-mass proxy falls below a user threshold
+`eps_trunc`.  This is a necessary condition for accuracy but not sufficient.
+
+Two additional sources of error remain after interval selection is resolved:
+
+1. **Finite-series truncation** — the COS expansion uses `N` terms.  If the
+   characteristic function decays slowly (heavy-tailed models, short maturities)
+   or the payoff density has sharp features, the `N`-term series may carry
+   visible Gibbs-like oscillations even when `[a, b]` is correctly chosen.
+
+2. **Nonsmoothness at the truncation boundary** — the artificial periodisation
+   introduced by COS creates a discontinuity at `a` and `b`.  For models with
+   non-Gaussian densities the boundary effect persists at moderate `N`.
+
+Spectral filtering addresses both by damping the high-frequency COS coefficients
+before the payoff dot product.  The extension is *additive*: the filter is
+applied only when requested; `filter_spec=None` reproduces the old output
+exactly.
+
+**Inspiration:**
+Ruijter, Versteegh and Oosterlee (2015) applied spectral filters to a Fourier
+option pricing technique and showed that exponential and raised-cosine filters
+significantly reduce residual oscillation errors.  Our extension follows their
+approach but wraps it inside a deterministic policy-search selector rather than
+hard-coding a specific filter.
+
+### 17.2 Spectral filter implementations
+
+All filters are implemented in `foureng/utils/spectral_filters.py`.
+Weight vector `σ` has length `N`; it is applied as `A[k] ← σ[k] · A[k]` to
+the characteristic-function samples before the payoff sum.  `σ[0] = 1` always.
+
+| Filter | `σ_k` formula | Notes |
+|--------|--------------|-------|
+| `"none"` | `1` | Identity; default (no-op) |
+| `"fejer"` | `1 - k/(N-1)` | First-order Cesàro summation |
+| `"lanczos"` | `sinc(k/(N-1))` | `sinc` in the `np.sinc` sense |
+| `"raised_cosine"` | `½(1 + cos(πk/(N-1)))` | Hann window |
+| `"exponential"` | `exp(−α·(k/(N-1))^p)` | Order-`p`; default `α = −ln(ε_mach)` |
+
+The exponential filter with `p = 8` is the default in `cos_filtered`.  It
+keeps the low-frequency terms effectively unchanged while sending the
+highest-frequency weight to machine-ε.
+
+### 17.3 Adaptive COS policy grid-search selector
+
+`foureng/experiments/cos_filter_grid_search.py` implements a deterministic
+selector that:
+
+1. Builds a candidate set of `(COSGridPolicy, COSFilterSpec)` pairs.
+2. Prices with each candidate and measures error against a high-resolution
+   reference.
+3. Returns the **fastest candidate satisfying the error tolerance** (or the
+   lowest-error candidate if none satisfies it).
+
+The selector cannot pick a result worse than the best candidate in its set.
+Because the no-filter Junike candidate is always included, the selector weakly
+dominates fixed Junike-COS in the joint (error, runtime) metric under the
+tested grid.
+
+**Selection rule:**
+```
+if any candidate has max_abs_err ≤ tol and status == "ok":
+    pick the one with lowest runtime_ms
+else:
+    pick the one with lowest max_abs_err (among status == "ok")
+```
+
+### 17.4 Conservative framing
+
+The correct claim for this extension is:
+
+> *"Junike helps truncation.  Filtering helps residual finite-series /
+> nonsmoothness cases.  The adaptive selector chooses among vanilla COS,
+> Junike-COS, and filtered Junike-COS."*
+
+We do **not** claim:
+- filtered COS universally dominates Junike COS;
+- the extension is a black-box learned model;
+- the extension removes the need for the Junike interval selection.
+
+The extension is best understood as a second control layer that can improve
+pricing speed or accuracy in cases where the Junike truncation is adequate but
+the finite-series resolution is still the bottleneck.
+
+### 17.5 Output files
+
+The demo notebook and the standalone script
+`scripts/run_filtered_cos_extension.py` write:
+
+| File | Description |
+|------|-------------|
+| `benchmarks/mc_vs_fourier_methods/outputs/cos_policy_search_showcase.csv` | Per-case grid-search results and adaptive result label |
+| `benchmarks/mc_vs_fourier_methods/outputs/adaptive_filtered_cos_model_zoo.csv` | Model-zoo rerun summary |
+| `benchmarks/mc_vs_fourier_methods/outputs/figures/cos_policy_search_showcase.png` | Showcase scatter (runtime vs error) |
+| `benchmarks/mc_vs_fourier_methods/outputs/figures/adaptive_filtered_cos_model_zoo_errors.png` | Model-zoo error grouped bar chart |
+| `benchmarks/mc_vs_fourier_methods/outputs/figures/adaptive_filtered_cos_model_zoo_runtime.png` | Model-zoo runtime grouped bar chart |
+
+### 17.6 New tests added
+
+| Test file | What it covers |
+|-----------|---------------|
+| `tests/test_cos_spectral_filters.py` | Shape, finiteness, monotonicity, edge cases for all 5 filter types |
+| `tests/test_filtered_cos_pricing.py` | Backward compat (no-filter exact match), BSM accuracy, pipeline integration |
+| `tests/test_filtered_cos_grid_search.py` | DataFrame structure, selector logic, tolerance boundary |
+| `tests/test_filtered_cos_outperforms_baselines.py` | Slow stress tests: VG T=0.1, CGMY T=0.25, BSM weak-dominance |
+
+## 18. References
 
 Albrecher, H., Mayer, P., Schoutens, W. and Tistaert, J. (2007). *The Little Heston Trap*. Wilmott Magazine, January, 83--92.  
 https://perswww.kuleuven.be/~u0009713/HestonTrap.pdf
@@ -776,6 +890,9 @@ https://arxiv.org/abs/2303.16012
 Junike, G. and Pankrashkin, K. (2022). *Precise Option Pricing by the COS Method: How to Choose the Truncation Range*. Applied Mathematics and Computation, 421, 126935.  
 https://arxiv.org/abs/2109.01030  
 https://doi.org/10.1016/j.amc.2022.126935
+
+Ruijter, M. J., Versteegh, M. and Oosterlee, C. W. (2015). *On the Application of Spectral Filters in a Fourier Option Pricing Technique*. Journal of Computational Finance.  
+https://doi.org/10.21314/JCF.2015.314
 
 Kahl, C. and Jackel, P. (2005). *Not-so-complex Logarithms in the Heston Model*. Wilmott Magazine, September, 94--103.  
 http://www2.math.uni-wuppertal.de/~kahl/publications/NotSoComplexLogarithmsInTheHestonModel.pdf
