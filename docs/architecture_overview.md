@@ -4,6 +4,48 @@
 
 This diagram shows how the package is organised from user-facing entry points down to pricing kernels, model characteristic functions, and validation outputs.
 
+## Systems View
+
+The image above is the visual package map. The flow below complements it with a cleaner system-level view of how information moves through the repo.
+
+```mermaid
+flowchart LR
+    subgraph entry["Entry Surfaces"]
+        readme["README / quick start"]
+        notebooks["notebooks/"]
+        tests["tests/"]
+        benchmarks["benchmarks/"]
+        docs["docs / appendix"]
+    end
+
+    subgraph pkg["fourier-option-pricer package"]
+        api["Public API<br/>import foureng as fe<br/>price_strip(...)"]
+        dispatch["Dispatch + registry<br/>pipeline.py<br/>models/registry.py"]
+        models["Model layer<br/>in-house CFs + PyFENG adapters"]
+        engines["Pricing stack<br/>COS / FFT / FRFT / Lewis / filters"]
+        features["Higher-level modules<br/>iv / greeks / surface / mc"]
+    end
+
+    subgraph outputs["Evidence and Delivery"]
+        validation["Validation outputs<br/>tests, paper replications, runtime CSVs"]
+        reporting["Reporting outputs<br/>docs, notebooks, README, appendix"]
+    end
+
+    readme --> api
+    notebooks --> api
+    tests --> api
+    benchmarks --> api
+    docs --> api
+
+    api --> dispatch
+    dispatch --> models
+    dispatch --> engines
+    models --> engines
+    engines --> features
+    features --> validation
+    features --> reporting
+```
+
 ## Reading the layers
 
 - `README`, notebooks, benchmarks, and tests all meet the same public API surface exposed through `import foureng as fe`.
