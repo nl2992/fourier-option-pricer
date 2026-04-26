@@ -1,28 +1,28 @@
 model,family,jumps,benchmark type,benchmark source,method,runtime_ms,max_abs_err
-BSM,Diffusion,No,External PyFENG FFT,PyFENG FFT benchmark,Carr-Madan FFT,0.21141598699614406,1.126847817634058e-05
-BSM,Diffusion,No,External PyFENG FFT,PyFENG FFT benchmark,COS classic,0.18854200607165694,8.886225089099753e-13
-BSM,Diffusion,No,External PyFENG FFT,PyFENG FFT benchmark,COS improved,0.12966699432581663,1.6391563661954933e-09
-Heston,Stochastic vol,No,External PyFENG FFT,PyFENG FFT benchmark,Carr-Madan FFT,0.2985419996548444,2.652709600514669e-05
-Heston,Stochastic vol,No,External PyFENG FFT,PyFENG FFT benchmark,COS classic,0.2282499917782843,3.204281284752142e-11
-Heston,Stochastic vol,No,External PyFENG FFT,PyFENG FFT benchmark,COS improved,0.20291598048061132,9.672262990534364e-13
-VG,Pure jump,Infinite activity,External PyFENG FFT,PyFENG FFT benchmark,Carr-Madan FFT,0.2948750043287873,6.682537061486471e-05
-VG,Pure jump,Infinite activity,External PyFENG FFT,PyFENG FFT benchmark,COS classic,0.18433399964123964,1.48903112062726e-11
-VG,Pure jump,Infinite activity,External PyFENG FFT,PyFENG FFT benchmark,COS improved,0.6263329996727407,1.6135146552187507e-09
-OUSV,Stochastic vol,No,External PyFENG FFT,PyFENG FFT benchmark,Carr-Madan FFT,0.3161249915137887,2.912938983978819e-05
-OUSV,Stochastic vol,No,External PyFENG FFT,PyFENG FFT benchmark,COS classic,0.23329199757426977,1.6036993955026446e-10
-OUSV,Stochastic vol,No,External PyFENG FFT,PyFENG FFT benchmark,COS improved,0.16812499961815774,2.805005472339417e-08
-CGMY,Pure jump,Infinite activity,External PyFENG FFT,PyFENG FFT benchmark,Carr-Madan FFT,0.30704200617037714,3.887690029458213e-06
-CGMY,Pure jump,Infinite activity,External PyFENG FFT,PyFENG FFT benchmark,COS classic,0.19537500338628888,2.752464922650688e-12
-CGMY,Pure jump,Infinite activity,External PyFENG FFT,PyFENG FFT benchmark,COS improved,0.3725420101545751,6.156852805361268e-10
-NIG,Pure jump,Infinite activity,External PyFENG FFT,PyFENG FFT benchmark,Carr-Madan FFT,0.21033297525718808,2.4290793430914448e-05
-NIG,Pure jump,Infinite activity,External PyFENG FFT,PyFENG FFT benchmark,COS classic,0.2608330105431378,2.8403226437490048e-09
-NIG,Pure jump,Infinite activity,External PyFENG FFT,PyFENG FFT benchmark,COS improved,0.11749999248422682,1.4497550715475427e-08
-Bates,SV + jumps,Finite activity,Internal hi-res oracle,Frozen hi-res Fourier oracle: CM FFT N=32768 eta=0.10 alpha=1.5 (cross-verified vs FRFT N=16384 and COS N=4096 to ~1e-10),Carr-Madan FFT,0.33195901778526604,1.9977281228822363e-05
-Bates,SV + jumps,Finite activity,Internal hi-res oracle,Frozen hi-res Fourier oracle: CM FFT N=32768 eta=0.10 alpha=1.5 (cross-verified vs FRFT N=16384 and COS N=4096 to ~1e-10),COS classic,0.215750013012439,3.133990844617074e-10
-Bates,SV + jumps,Finite activity,Internal hi-res oracle,Frozen hi-res Fourier oracle: CM FFT N=32768 eta=0.10 alpha=1.5 (cross-verified vs FRFT N=16384 and COS N=4096 to ~1e-10),COS improved,0.23508298909291625,6.99253755120921e-05
-Heston-Kou,SV + jumps,Finite activity (double-exp),Internal hi-res oracle,Frozen hi-res Fourier oracle: CM FFT N=32768 eta=0.10 alpha=1.5 (cross-verified vs FRFT N=16384 and COS N=4096 to ~1e-10),Carr-Madan FFT,0.3157090104650706,1.879241340629889e-05
-Heston-Kou,SV + jumps,Finite activity (double-exp),Internal hi-res oracle,Frozen hi-res Fourier oracle: CM FFT N=32768 eta=0.10 alpha=1.5 (cross-verified vs FRFT N=16384 and COS N=4096 to ~1e-10),COS classic,0.2209999947808683,9.416853963273297e-10
-Heston-Kou,SV + jumps,Finite activity (double-exp),Internal hi-res oracle,Frozen hi-res Fourier oracle: CM FFT N=32768 eta=0.10 alpha=1.5 (cross-verified vs FRFT N=16384 and COS N=4096 to ~1e-10),COS improved,0.37033300031907856,1.2161052782566628e-06
-Heston-CGMY,SV + jumps,Infinite activity,Internal hi-res oracle,Frozen hi-res Fourier oracle: CM FFT N=32768 eta=0.10 alpha=1.5 (cross-verified vs FRFT N=16384 and COS N=4096 to ~1e-10),Carr-Madan FFT,0.4081249935552478,2.1363515223526974e-06
-Heston-CGMY,SV + jumps,Infinite activity,Internal hi-res oracle,Frozen hi-res Fourier oracle: CM FFT N=32768 eta=0.10 alpha=1.5 (cross-verified vs FRFT N=16384 and COS N=4096 to ~1e-10),COS classic,0.2775409957394004,3.3722358239174355e-11
-Heston-CGMY,SV + jumps,Infinite activity,Internal hi-res oracle,Frozen hi-res Fourier oracle: CM FFT N=32768 eta=0.10 alpha=1.5 (cross-verified vs FRFT N=16384 and COS N=4096 to ~1e-10),COS improved,0.2709580003283918,3.368683110238635e-11
+BSM,Diffusion,No,External PyFENG FFT,PyFENG FFT benchmark,Carr-Madan FFT,0.44895801693201065,1.126847817634058e-05
+BSM,Diffusion,No,External PyFENG FFT,PyFENG FFT benchmark,COS classic,0.34991701249964535,8.886225089099753e-13
+BSM,Diffusion,No,External PyFENG FFT,PyFENG FFT benchmark,COS improved,0.24945801123976707,1.6391563661954933e-09
+Heston,Stochastic vol,No,External PyFENG FFT,PyFENG FFT benchmark,Carr-Madan FFT,0.5856660136487335,2.652709600514669e-05
+Heston,Stochastic vol,No,External PyFENG FFT,PyFENG FFT benchmark,COS classic,0.4228340112604201,3.204281284752142e-11
+Heston,Stochastic vol,No,External PyFENG FFT,PyFENG FFT benchmark,COS improved,0.27904199669137597,9.672262990534364e-13
+VG,Pure jump,Infinite activity,External PyFENG FFT,PyFENG FFT benchmark,Carr-Madan FFT,0.47825000365264714,6.682537061486471e-05
+VG,Pure jump,Infinite activity,External PyFENG FFT,PyFENG FFT benchmark,COS classic,0.35129202296957374,1.48903112062726e-11
+VG,Pure jump,Infinite activity,External PyFENG FFT,PyFENG FFT benchmark,COS improved,1.4751249982509762,1.6135146552187507e-09
+OUSV,Stochastic vol,No,External PyFENG FFT,PyFENG FFT benchmark,Carr-Madan FFT,0.645707972580567,2.912938983978819e-05
+OUSV,Stochastic vol,No,External PyFENG FFT,PyFENG FFT benchmark,COS classic,0.5209999799262732,1.6036993955026446e-10
+OUSV,Stochastic vol,No,External PyFENG FFT,PyFENG FFT benchmark,COS improved,0.3320409741718322,2.805005472339417e-08
+CGMY,Pure jump,Infinite activity,External PyFENG FFT,PyFENG FFT benchmark,Carr-Madan FFT,0.6215829926077276,3.887690029458213e-06
+CGMY,Pure jump,Infinite activity,External PyFENG FFT,PyFENG FFT benchmark,COS classic,0.44091700692661107,2.752464922650688e-12
+CGMY,Pure jump,Infinite activity,External PyFENG FFT,PyFENG FFT benchmark,COS improved,0.7482090150006115,6.156852805361268e-10
+NIG,Pure jump,Infinite activity,External PyFENG FFT,PyFENG FFT benchmark,Carr-Madan FFT,0.4512089944910258,2.4290793430914448e-05
+NIG,Pure jump,Infinite activity,External PyFENG FFT,PyFENG FFT benchmark,COS classic,0.436875008745119,2.8403226437490048e-09
+NIG,Pure jump,Infinite activity,External PyFENG FFT,PyFENG FFT benchmark,COS improved,0.2937090175691992,1.4497550715475427e-08
+Bates,SV + jumps,Finite activity,Internal hi-res oracle,Frozen hi-res Fourier oracle: CM FFT N=32768 eta=0.10 alpha=1.5 (cross-verified vs FRFT N=16384 and COS N=4096 to ~1e-10),Carr-Madan FFT,0.6470829830504954,1.9977281228822363e-05
+Bates,SV + jumps,Finite activity,Internal hi-res oracle,Frozen hi-res Fourier oracle: CM FFT N=32768 eta=0.10 alpha=1.5 (cross-verified vs FRFT N=16384 and COS N=4096 to ~1e-10),COS classic,0.5192079988773912,3.133990844617074e-10
+Bates,SV + jumps,Finite activity,Internal hi-res oracle,Frozen hi-res Fourier oracle: CM FFT N=32768 eta=0.10 alpha=1.5 (cross-verified vs FRFT N=16384 and COS N=4096 to ~1e-10),COS improved,0.5182079912628978,6.99253755120921e-05
+Heston-Kou,SV + jumps,Finite activity (double-exp),Internal hi-res oracle,Frozen hi-res Fourier oracle: CM FFT N=32768 eta=0.10 alpha=1.5 (cross-verified vs FRFT N=16384 and COS N=4096 to ~1e-10),Carr-Madan FFT,0.6181250209920108,1.879241340629889e-05
+Heston-Kou,SV + jumps,Finite activity (double-exp),Internal hi-res oracle,Frozen hi-res Fourier oracle: CM FFT N=32768 eta=0.10 alpha=1.5 (cross-verified vs FRFT N=16384 and COS N=4096 to ~1e-10),COS classic,0.495540996780619,9.416853963273297e-10
+Heston-Kou,SV + jumps,Finite activity (double-exp),Internal hi-res oracle,Frozen hi-res Fourier oracle: CM FFT N=32768 eta=0.10 alpha=1.5 (cross-verified vs FRFT N=16384 and COS N=4096 to ~1e-10),COS improved,0.7712919905316085,1.2161052782566628e-06
+Heston-CGMY,SV + jumps,Infinite activity,Internal hi-res oracle,Frozen hi-res Fourier oracle: CM FFT N=32768 eta=0.10 alpha=1.5 (cross-verified vs FRFT N=16384 and COS N=4096 to ~1e-10),Carr-Madan FFT,0.842333014588803,2.1363515223526974e-06
+Heston-CGMY,SV + jumps,Infinite activity,Internal hi-res oracle,Frozen hi-res Fourier oracle: CM FFT N=32768 eta=0.10 alpha=1.5 (cross-verified vs FRFT N=16384 and COS N=4096 to ~1e-10),COS classic,0.5626250058412552,3.3722358239174355e-11
+Heston-CGMY,SV + jumps,Infinite activity,Internal hi-res oracle,Frozen hi-res Fourier oracle: CM FFT N=32768 eta=0.10 alpha=1.5 (cross-verified vs FRFT N=16384 and COS N=4096 to ~1e-10),COS improved,0.5587920022662729,3.368683110238635e-11
