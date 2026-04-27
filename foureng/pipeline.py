@@ -30,7 +30,9 @@ from .pricers.cos import (
     cos_prices,
     recommended_cos_policy,
 )
+from .pricers.filtered_cos import FilteredCOSDecision, filtered_cos_prices
 from .pricers.lewis import lewis_call_prices
+from .utils.spectral_filters import COSFilterSpec
 
 
 @dataclass(frozen=True)
@@ -296,6 +298,89 @@ def price_strip(
             return np.asarray(carr_madan_price_at_strikes(phi, fwd, cm_grid, K), dtype=np.float64)
         raise ValueError(f"unsupported cos_improved fallback method {decision.method!r}")
 
+    if method == "cos_filtered":
+        # ------------------------------------------------------------------
+        # Adaptive filtered-COS path (extension beyond Junike-COS).
+        #
+        # ``grid`` can be one of:
+        #   - None                         → auto policy + default exp filter
+        #   - COSGridPolicy                → explicit policy + default exp filter
+        #   - (COSGridPolicy, COSFilterSpec) → explicit policy + explicit filter
+        #   - COSGrid                       → pre-built grid + default exp filter
+        #
+        # After resolving the grid the path mirrors cos_improved but calls
+        # filtered_cos_prices (which passes filter_spec to cos_prices).
+        # ------------------------------------------------------------------
+        _, _, cums_fn = _MODELS[model]
+
+        # --- unpack grid argument ------------------------------------------
+        if isinstance(grid, tuple) and len(grid) == 2:
+            policy_or_grid, filter_spec = grid
+        else:
+            policy_or_grid = grid
+            filter_spec = COSFilterSpec("exponential", order=8)
+
+        # Ensure filter_spec is a COSFilterSpec
+        if not isinstance(filter_spec, COSFilterSpec):
+            raise TypeError(
+                f"cos_filtered: expected COSFilterSpec as second element of grid tuple, "
+                f"got {type(filter_spec)}"
+            )
+
+        if isinstance(policy_or_grid, COSGrid):
+            # Pre-built grid — use it directly
+            cos_grid = policy_or_grid
+            payoff_mode = _improved_cos_payoff_mode(model, cos_grid)
+            res = filtered_cos_prices(
+                phi, fwd, K, cos_grid,
+                filter_spec=filter_spec,
+                payoff_mode=payoff_mode,
+            )
+            return np.asarray(res.call_prices, dtype=np.float64)
+
+        # Policy-based path (None → recommended policy)
+        policy = (
+            policy_or_grid
+            if isinstance(policy_or_grid, COSGridPolicy)
+            else recommended_cos_policy(model, params, mode="benchmark")
+        )
+        decision = cos_adaptive_decision(
+            cums_fn(fwd, params),
+            model=model,
+            params=params,
+            policy=policy,
+            strike_count=K.size,
+        )
+
+        # Wide-interval fallback: route to lewis / carr_madan exactly as
+        # cos_improved does — the filter is irrelevant for these engines.
+        if decision.method == "lewis":
+            return np.asarray(
+                lewis_call_prices(
+                    phi, K,
+                    spot=fwd.S0, texp=fwd.T, intr=fwd.r, divr=fwd.q,
+                    method="trapz", u_max=200.0,
+                    n_u=max(4096, decision.grid.N),
+                ),
+                dtype=np.float64,
+            )
+        if decision.method == "carr_madan":
+            eta = 0.10 if decision.grid.width > 48.0 else 0.25
+            cm_grid = FFTGrid(N=max(4096, decision.grid.N), eta=eta, alpha=1.5)
+            return np.asarray(
+                carr_madan_price_at_strikes(phi, fwd, cm_grid, K),
+                dtype=np.float64,
+            )
+
+        # Normal COS path with spectral filter applied.
+        payoff_mode = _improved_cos_payoff_mode(model, decision.grid)
+        res = filtered_cos_prices(
+            phi, fwd, K, decision.grid,
+            filter_spec=filter_spec,
+            payoff_mode=payoff_mode,
+        )
+        return np.asarray(res.call_prices, dtype=np.float64)
+
     if method == "frft":
         if grid is None:
             raise ValueError("method='frft' requires an explicit FRFTGrid")
@@ -307,6 +392,6 @@ def price_strip(
         return np.asarray(carr_madan_price_at_strikes(phi, fwd, grid, K), dtype=np.float64)
 
     raise ValueError(
-        f"unknown method {method!r}; choose 'cos' | 'cos_improved' | "
+        f"unknown method {method!r}; choose 'cos' | 'cos_improved' | 'cos_filtered' | "
         "'frft' | 'carr_madan' | 'pyfeng_fft'"
     )

@@ -47,7 +47,20 @@
       "Bash(/opt/anaconda3/envs/MATH5300/bin/jupyter nbconvert *)",
       "Bash(/opt/anaconda3/bin/python -c ' *)",
       "Bash(/opt/anaconda3/bin/python -m pip show -f fourier-option-pricer)",
-      "Bash(/opt/anaconda3/envs/MATH5300/bin/python scripts/build_demo_mk2_notebook.py)"
+      "Bash(/opt/anaconda3/envs/MATH5300/bin/python scripts/build_demo_mk2_notebook.py)",
+      "Bash(/opt/anaconda3/envs/MATH5300/bin/python -m pytest tests/test_cos_spectral_filters.py tests/test_filtered_cos_pricing.py tests/test_filtered_cos_grid_search.py -q)",
+      "Bash(/opt/anaconda3/envs/MATH5300/bin/pip install *)",
+      "Bash(/opt/anaconda3/envs/MATH5300/bin/pytest tests/test_cos_spectral_filters.py tests/test_filtered_cos_pricing.py tests/test_filtered_cos_grid_search.py -q)",
+      "Bash(/opt/anaconda3/envs/MATH5300/bin/pytest -q -m \"not slow\")",
+      "Bash(/opt/anaconda3/envs/MATH5300/bin/pytest tests/test_filtered_cos_outperforms_baselines.py -q -m slow -v)",
+      "Bash(/opt/anaconda3/envs/MATH5300/bin/pytest -q)",
+      "Bash(/opt/anaconda3/envs/MATH5300/bin/python -c ' *)",
+      "Bash(/opt/anaconda3/envs/MATH5300/bin/python scripts/append_filtered_cos_section.py)",
+      "Bash(/opt/anaconda3/envs/MATH5300/bin/python scripts/_patch_cell24.py)",
+      "Bash(/opt/anaconda3/envs/MATH5300/bin/python scripts/_patch_cell33.py)",
+      "Bash(gh pr *)",
+      "Bash(python -)",
+      "Bash(python3 -)"
     ]
   }
 }

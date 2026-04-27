@@ -44,6 +44,8 @@ from .pricers.cos import (
 )
 from .pricers.carr_madan import carr_madan_price_at_strikes, carr_madan_fft_prices
 from .pricers.frft import frft_price_at_strikes, frft_prices
+from .pricers.filtered_cos import FilteredCOSDecision, filtered_cos_prices
+from .utils.spectral_filters import COSFilterSpec, cos_filter_weights
 
 from .iv.implied_vol import (
     BSInputs,
@@ -88,6 +90,9 @@ __all__ = [
     "COSResult", "COSPolicyDecision",
     "carr_madan_price_at_strikes", "carr_madan_fft_prices",
     "frft_price_at_strikes", "frft_prices",
+    # filtered COS extension
+    "COSFilterSpec", "cos_filter_weights",
+    "filtered_cos_prices", "FilteredCOSDecision",
     # iv
     "BSInputs", "bs_price_from_fwd",
     "implied_vol_brent", "implied_vol_newton_safeguarded",

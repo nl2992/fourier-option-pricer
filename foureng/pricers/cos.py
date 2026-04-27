@@ -14,6 +14,7 @@ from ..utils.cumulants import (
     cos_truncation_interval,
 )
 from ..utils.grids import COSGrid, COSGridPolicy
+from ..utils.spectral_filters import COSFilterSpec, cos_filter_weights
 
 
 @dataclass(frozen=True)
@@ -346,6 +347,7 @@ def cos_prices(
     *,
     payoff_mode: str = "put_parity",
     call_direct_width_max: float = 20.0,
+    filter_spec: COSFilterSpec | None = None,
 ) -> COSResult:
     """Fang-Oosterlee (2008) COS method for European calls.
 
@@ -376,6 +378,14 @@ def cos_prices(
     - ``"auto"`` : use put+parity generally, but allow direct-call pricing
       for OTM calls when the interval is narrow enough that the ``e^b`` term
       is still numerically tame.
+
+    ``filter_spec`` (optional): if not ``None`` and not ``COSFilterSpec("none")``,
+    spectral filter weights σ_k are multiplied against the CF samples A_k
+    before the payoff dot product.  This damps high-frequency oscillations
+    that can arise from payoff nonsmoothness or slow CF decay.
+
+    When ``filter_spec`` is ``None`` or ``COSFilterSpec("none")``, the output
+    is **exactly identical** to the unfiltered implementation.
     """
     a, b, N = grid.a, grid.b, grid.N
     strikes = np.atleast_1d(np.asarray(strikes, dtype=float))
@@ -390,6 +400,12 @@ def cos_prices(
         phi_vals = phi_vals * np.exp(-1j * omega * center)
     A = np.real(phi_vals * np.exp(-1j * omega * a))
     A[0] *= 0.5
+
+    # --- spectral filtering (additive extension; no-op when filter_spec is None) ---
+    if filter_spec is not None and filter_spec.name != "none":
+        sigma = cos_filter_weights(N, filter_spec)
+        A = A * sigma
+    # ------------------------------------------------------------------------------
 
     if payoff_mode == "call_direct":
         V_call = _call_payoff_coeffs(a, b, N, strikes, shifted_F0)
