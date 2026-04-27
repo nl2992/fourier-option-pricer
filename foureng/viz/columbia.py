@@ -182,7 +182,6 @@ def plot_error_vs_runtime(
     Rows with NaN in either axis are silently dropped (handy when a method,
     e.g. PyFENG, is unavailable and the row holds a sentinel NaN).
     """
-    import numpy as np  # local import so the module has no hard numpy at top
     fig, ax = _new_ax(ax, figsize=(6.8, 4.2))
     d = df[[label_col, x_col, y_col]].copy()
     d = d[np.isfinite(d[x_col]) & np.isfinite(d[y_col])]
