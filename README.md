@@ -156,7 +156,7 @@ candidate inside a **deterministic numerical-policy search**.  The adaptive
 selector compares vanilla COS, Junike-COS, and filtered Junike-COS, then selects
 the fastest candidate satisfying a target error tolerance.
 
-> **This extension does not claim filtered-COS universally dominates Junike-COS.**
+> **This extension does not necessarily improve and claim, filtered-COS universally dominates Junike-COS.**
 > The intended object is the adaptive selector, which can choose no filter where
 > filtering is unnecessary.
 
