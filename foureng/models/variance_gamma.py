@@ -92,6 +92,12 @@ def vg_cumulants(fwd: ForwardSpec, p: VGParams) -> tuple[float, float, float]:
     sigma, nu, theta = p.sigma, p.nu, p.theta
     T = fwd.T
     cond = 1.0 - theta * nu - 0.5 * sigma * sigma * nu
+    if cond <= 0.0:
+        raise ValueError(
+            f"VG existence condition violated: "
+            f"1 - θν - ½σ²ν = {cond:.6g} ≤ 0. "
+            f"Check that sigma, nu, theta satisfy the moment-generating-function condition."
+        )
     omega = np.log(cond) / nu
     c1 = (theta + omega) * T
     c2 = (sigma * sigma + nu * theta * theta) * T
