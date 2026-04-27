@@ -18,7 +18,23 @@ import numpy as np
 
 @dataclass(frozen=True)
 class ForwardSpec:
-    """Deterministic forward and discount inputs."""
+    """Market inputs for a European option in forward-measure form.
+
+    Attributes
+    ----------
+    S0 : float
+        Current spot price.
+    r : float
+        Continuously compounded risk-free rate.
+    q : float
+        Continuous dividend yield (or foreign risk-free rate for FX).
+    T : float
+        Time to maturity in years.
+    F0 : float
+        Forward price S0 * exp((r - q) * T), computed automatically.
+    disc : float
+        Discount factor exp(-r * T), computed automatically.
+    """
     S0: float
     r: float
     q: float

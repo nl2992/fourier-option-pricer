@@ -3,7 +3,7 @@ import numpy as np
 from dataclasses import dataclass
 from ..models.base import CharFunc, ForwardSpec
 from ..utils.grids import FFTGrid
-from ..utils.numerics import cm_simpson_weights
+from ..utils.numerics import cm_simpson_weights, phi_logprice
 from ..utils.interp import interp_cubic
 
 
@@ -12,12 +12,6 @@ class CarrMadanResult:
     k: np.ndarray            # log-strike grid (log K)
     call_prices: np.ndarray  # call prices on that grid
     K: np.ndarray            # strikes = exp(k)
-
-
-def _phi_logprice(phi_logret: CharFunc, fwd: ForwardSpec, v: np.ndarray) -> np.ndarray:
-    """Convert CF of log-return log(S_T/F0) to CF of log-price log(S_T)."""
-    logF0 = np.log(fwd.F0)
-    return np.exp(1j * v * logF0) * phi_logret(v)
 
 
 def carr_madan_fft_prices(
@@ -41,7 +35,7 @@ def carr_madan_fft_prices(
     b = 0.5 * N * lam
 
     v = np.arange(N) * eta
-    psi_logS = _phi_logprice(phi, fwd, v - 1j * (alpha + 1.0))
+    psi_logS = phi_logprice(phi, fwd, v - 1j * (alpha + 1.0))
     denom = alpha * alpha + alpha - v * v + 1j * (2.0 * alpha + 1.0) * v
     psi = fwd.disc * psi_logS / denom
 
@@ -72,6 +66,9 @@ def carr_madan_price_at_strikes(
     and REQUIRE queried strikes to lie inside that window (anything past it
     is a user error — make N larger or eta smaller to widen the grid).
     """
+    strikes = np.asarray(strikes, dtype=float)
+    if np.any(strikes <= 0.0):
+        raise ValueError(f"All strikes must be > 0 for Carr-Madan; got non-positive values.")
     k0 = float(np.log(fwd.F0))
     res = carr_madan_fft_prices(phi, fwd, grid, k0=k0)
 

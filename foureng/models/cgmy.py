@@ -123,8 +123,10 @@ def cgmy_cumulants(fwd: ForwardSpec, p: CgmyParams) -> tuple[float, float, float
 
     C, G, M, Y = p.C, p.G, p.M, p.Y
     T = fwd.T
-    if C == 0.0:
-        return (0.0, 0.0, 0.0)
+    if not (0.0 < Y < 2.0 and Y != 1.0):
+        raise ValueError(f"CGMY: Y must be in (0,2) \\ {{1}}; got Y={Y}")
+    if C <= 0 or G <= 0 or M <= 0:
+        raise ValueError(f"CGMY: C, G, M must all be > 0; got C={C}, G={G}, M={M}")
 
     # Gamma(-Y) has poles at non-negative integers; CGMY's regime of
     # interest is Y in (0, 2) \ {1}. We don't guard here — PyFENG's CF
@@ -148,6 +150,5 @@ def cgmy_cumulants(fwd: ForwardSpec, p: CgmyParams) -> tuple[float, float, float
     c1 = T * (psi_no - psi_comp)
     # Higher cumulants are insensitive to the drift shift.
     c2 = T * C * gY * _ff(2) * (M ** (Y - 2) + G ** (Y - 2))
-    c3 = T * C * gY * _ff(3) * (M ** (Y - 3) - G ** (Y - 3))  # noqa: F841
     c4 = T * C * gY * _ff(4) * (M ** (Y - 4) + G ** (Y - 4))
     return float(c1), float(c2), float(c4)
