@@ -27,6 +27,15 @@ class KouParams(ModelSpec):
         object.__setattr__(self, "p", p)
         object.__setattr__(self, "eta1", eta1)
         object.__setattr__(self, "eta2", eta2)
+        self.__post_init__()
+
+    def __post_init__(self) -> None:
+        if self.eta1 <= 1.0:
+            raise ValueError(f"KouParams: eta1 must be > 1 (no first moment otherwise); got {self.eta1}")
+        if self.eta2 <= 0.0:
+            raise ValueError(f"KouParams: eta2 must be > 0; got {self.eta2}")
+        if not (0.0 <= self.p <= 1.0):
+            raise ValueError(f"KouParams: p must be in [0, 1]; got {self.p}")
 
 
 def kou_cf(u: np.ndarray, fwd: ForwardSpec, p: KouParams) -> np.ndarray:
@@ -40,11 +49,6 @@ def kou_cf(u: np.ndarray, fwd: ForwardSpec, p: KouParams) -> np.ndarray:
         phi(u) = exp( T * [ i*u*omega - 0.5*sigma^2*u^2
                             + lam*( p*eta1/(eta1 - i*u) + (1-p)*eta2/(eta2 + i*u) - 1 ) ] )
     """
-    if p.eta1 <= 1.0:
-        raise ValueError(f"Kou requires eta1 > 1 for finite jump mean; got {p.eta1}")
-    if p.eta2 <= 0.0:
-        raise ValueError(f"Kou requires eta2 > 0; got {p.eta2}")
-
     T = fwd.T
     sigma, lam, pp, eta1, eta2 = p.sigma, p.lam, p.p, p.eta1, p.eta2
 

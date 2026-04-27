@@ -2,6 +2,27 @@ from __future__ import annotations
 import numpy as np
 
 
+def phi_logprice(phi_logret, fwd, v: np.ndarray) -> np.ndarray:
+    """Convert CF of log-return log(S_T/F0) to CF of log-price log(S_T).
+
+    Parameters
+    ----------
+    phi_logret :
+        Characteristic function of the log-return X_T = log(S_T / F0).
+    fwd :
+        Forward spec providing F0.
+    v : np.ndarray
+        Frequency argument.
+
+    Returns
+    -------
+    np.ndarray
+        CF of log(S_T): exp(i * v * log(F0)) * phi_logret(v).
+    """
+    logF0 = np.log(fwd.F0)
+    return np.exp(1j * v * logF0) * phi_logret(v)
+
+
 def simpson_weights(n: int) -> np.ndarray:
     """Composite Simpson's rule weights on an equally spaced grid of length n.
 
