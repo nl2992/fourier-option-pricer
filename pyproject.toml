@@ -17,7 +17,10 @@ dependencies = [
   # Heston and VG characteristic functions delegate to PyFENG
   # (Prof. Choi's library); Bates reuses the PyFENG-backed Heston CF.
   # Kou remains in-house (PyFENG has no Kou model).
-  "pyfeng>=0.3.0",
+  # 0.3.3 introduced an undeclared statsmodels dependency; exclude it.
+  "pyfeng>=0.3.0,!=0.3.3",
+  # cos_filter_grid_search.py and its tests use pandas DataFrames.
+  "pandas>=1.5",
 ]
 keywords = [
   "quant-finance",

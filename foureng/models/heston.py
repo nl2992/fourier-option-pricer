@@ -17,11 +17,12 @@ inline below.
 """
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Any
+from typing import Any  # retained for _HESTON_MODEL_CACHE type annotation
 
 import numpy as np
 
 from .base import ForwardSpec, ModelSpec
+from ._pyfeng_backend import import_pyfeng, build_cached
 
 
 @dataclass(frozen=True)
@@ -64,28 +65,19 @@ def _pyfeng_heston_model(fwd: ForwardSpec, p: HestonParams):
     the 64-point contour integral in :func:`heston_cumulants` and a
     subsequent COS/FRFT/Carr-Madan pricing pass — all hit the same model.
     """
-    key = (p, fwd)
-    m = _HESTON_MODEL_CACHE.get(key)
-    if m is not None:
-        return m
-    try:
-        import pyfeng as pf  # type: ignore
-    except Exception as exc:  # pragma: no cover
-        raise ImportError(
-            "foureng.models.heston requires pyfeng; install with "
-            "`pip install pyfeng`."
-        ) from exc
-    m = pf.HestonFft(
-        sigma=p.v0,      # PyFENG: sigma = v0 (variance, not sqrt)
-        vov=p.nu,
-        rho=p.rho,
-        mr=p.kappa,
-        theta=p.theta,
-        intr=fwd.r,
-        divr=fwd.q,
+    return build_cached(
+        _HESTON_MODEL_CACHE,
+        key=(p, fwd),
+        factory=lambda: import_pyfeng().HestonFft(
+            sigma=p.v0,      # PyFENG: sigma = v0 (variance, not sqrt)
+            vov=p.nu,
+            rho=p.rho,
+            mr=p.kappa,
+            theta=p.theta,
+            intr=fwd.r,
+            divr=fwd.q,
+        ),
     )
-    _HESTON_MODEL_CACHE[key] = m
-    return m
 
 
 def heston_cf(u: np.ndarray, fwd: ForwardSpec, p: HestonParams) -> np.ndarray:
