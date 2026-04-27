@@ -24,7 +24,7 @@ live at ``foureng.char_func`` before the Pass-1 PyFENG-compat rename.
 """
 from __future__ import annotations
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 from .models.base import ForwardSpec, CharFunc, ModelSpec
 from .models.heston import HestonParams, heston_cf_form2, heston_cumulants
