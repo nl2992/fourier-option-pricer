@@ -159,8 +159,8 @@ candidate inside a **deterministic numerical-policy search**.  The adaptive
 selector compares vanilla COS, Junike-COS, and filtered Junike-COS, then selects
 the fastest candidate satisfying a target error tolerance.
 
-> **This extension does not necessarily improve and claim, filtered-COS universally dominates Junike-COS.**
-> The intended object is the adaptive selector, which can choose no filter where
+> **This extension does not claim that filtered-COS universally dominates Junike-COS.**
+> The intended contribution is the adaptive selector, which can choose no filter where
 > filtering is unnecessary.
 
 **Usage:**
@@ -349,11 +349,7 @@ Returns implied volatility as `float`.
 
 Detailed numerical experiments, replication notes, runtime benchmarks, and implementation commentary are kept outside the README to keep this page concise.
 
-See:
-
-```text
-docs/methodology_and_results.md
-```
+See [`methodology_and_results.md`](methodology_and_results.md).
 
 This document records:
 
