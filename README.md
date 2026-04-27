@@ -60,18 +60,21 @@ density. Two truncation strategies are implemented:
   until the tail-mass proxy falls below a user-specified tolerance. This is used
   for stress cases where the cumulant rule can become unreliable or overly wide.
 
-In addition, the project implements an **adaptive filtered-COS extension**
-**"extension"** inspired by Ruijter, Versteegh and Oosterlee (2015), as the  Rather than applying one
-fixed spectral filter, we adapt the idea into a tolerance-driven selector around
-COS pricing.
+In addition, the project implements an **adaptive filtered-COS extension** inspired by
+Ruijter, Versteegh and Oosterlee (2015). Rather than applying one fixed spectral filter,
+the idea is adapted into a tolerance-driven policy selector: five candidates
+(plain Junike-COS and four filtered variants) are evaluated; the fastest that
+meets a target error tolerance is returned.
 
 - **Why filtering is added:** truncation fixes the interval, but COS can still
   show finite-series ringing near payoff kinks, short maturities, or jump-heavy
   densities.
-- **Candidate filters:** the selector keeps plain Junike-COS in the pool and
-  also tests Fejér, Lanczos, raised-cosine, and exponential filters.
-- **Selection rule:** use the cheapest candidate that meets the tolerance. If a
-  filter does not help, the method falls back to the no-filter Junike choice.
+- **Candidate filters:** Fejér, Lanczos, raised-cosine, and exponential; plain
+  Junike-COS is always kept in the pool so the selector can fall back when
+  filtering does not help.
+- **Selection rule:** use the cheapest candidate that meets the tolerance
+  (default `ε = 1 × 10⁻⁶`). Filter selection is entirely deterministic —
+  no tuning required.
 
 
 ## Models
@@ -218,9 +221,12 @@ best = select_fastest_under_tolerance(df, tol=1e-6)
 **Available spectral filters:** `"none"` (identity), `"fejer"`, `"lanczos"`,
 `"raised_cosine"`, `"exponential"` (order-*p* tunable).
 
-## Demo notebook
+## Notebooks
 
-An interactive demo is available at [`notebooks/demo.ipynb`](notebooks/demo.ipynb):
+| Notebook | Description |
+|----------|-------------|
+| [`notebooks/demo.ipynb`](notebooks/demo.ipynb) | Full walkthrough: models, pricers, IV surface, calibration, Greeks, MC, and the adaptive filtered-COS extension |
+| [`notebooks/adaptive_cos.ipynb`](notebooks/adaptive_cos.ipynb) | Standalone comparison of vanilla COS, Junike-COS, and adaptive filtered-COS on the canonical Fang–Oosterlee (2008) test cases |
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/nl2992/fourier-option-pricer/blob/main/notebooks/demo.ipynb)
 
@@ -281,6 +287,54 @@ Returns `(K,)` array of call prices.
 | `params` | param dataclass | Model parameters (improved rule only) |
 
 Returns a `COSGrid`.
+
+### `COSGridPolicy`
+
+Dataclass that controls the adaptive truncation-interval and N-selection strategy
+used by `cos_improved_grid` and `filtered_cos_prices`.
+
+| Key parameter | Default | Description |
+|---------------|---------|-------------|
+| `truncation` | `"tolerance"` | `"heuristic"` (Fang–Oosterlee L rule), `"tolerance"` (Junike iterative widening), or `"paper"` |
+| `eps_trunc` | `1e-10` | Tail-mass threshold for the tolerance rule |
+| `dx_target` | model default | Target spatial resolution `(b−a)/N`; drives adaptive N selection |
+| `fixed_N` | `None` | Hard override for N (bypasses adaptive selection) |
+| `mode` | `"benchmark"` | `"benchmark"` for tighter accuracy, `"surface"` for speed |
+| `max_N` | `16384` | Upper cap on adaptively chosen N |
+
+### `recommended_cos_policy(model, params, *, mode)`
+
+Returns the recommended `COSGridPolicy` for a given model string (e.g. `"heston"`,
+`"vg"`, `"kou"`) and parameter object. Provides sensible defaults without
+manual tuning.
+
+### `filtered_cos_prices(phi, fwd, strikes, grid, *, filter_spec)`
+
+COS pricer with a spectral filter applied to the characteristic-function samples
+before cosine inversion. Reduces finite-series oscillations (Gibbs-like ringing)
+near payoff kinks, short maturities, or jump-heavy densities.
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `phi` | callable | Characteristic function `phi(u)` |
+| `fwd` | `ForwardSpec` | Market inputs |
+| `strikes` | `(K,)` array | Strike prices |
+| `grid` | `COSGrid` | Resolved grid from `cos_improved_grid` |
+| `filter_spec` | `COSFilterSpec` | Filter to apply (default: exponential, order 8) |
+
+Returns a `COSResult`.
+
+### `COSFilterSpec(name, order, alpha)`
+
+Spectral filter specification passed to `filtered_cos_prices`.
+
+| `name` value | Description |
+|--------------|-------------|
+| `"none"` | Identity — no filtering (plain COS) |
+| `"fejer"` | Fejér averaging kernel |
+| `"lanczos"` | Lanczos (sinc) filter |
+| `"raised_cosine"` | Raised-cosine (Hann) window |
+| `"exponential"` | Order-*p* exponential; `order=8` recommended |
 
 ### `implied_vol_newton_safeguarded(price, inputs)`
 
