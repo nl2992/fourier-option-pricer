@@ -48,8 +48,6 @@ pedagogical baseline, but the control variate no longer needs it.
 from __future__ import annotations
 import numpy as np
 from dataclasses import dataclass
-from typing import Any, Tuple
-
 from ..models.base import ForwardSpec
 from ..models.heston import HestonParams
 from ..iv.implied_vol import bs_price_from_fwd, BSInputs

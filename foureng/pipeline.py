@@ -206,6 +206,8 @@ def price_strip(
         Prices at ``strikes``.
     """
     K = np.ascontiguousarray(np.asarray(strikes, dtype=np.float64))
+    if K.size == 0:
+        raise ValueError("strikes must be non-empty")
     if method == "pyfeng_fft":
         return _pyfeng_fft_price(model, K, fwd, params, cp=cp)
 
@@ -272,7 +274,8 @@ def price_strip(
             res = cos_prices(phi, fwd, K, grid, payoff_mode=payoff_mode)
             return np.asarray(res.call_prices, dtype=np.float64)
 
-        assert decision is not None
+        if decision is None:
+            raise RuntimeError("internal error: decision unexpectedly None after policy resolution")
         if decision.method == "cos":
             payoff_mode = _improved_cos_payoff_mode(model, decision.grid)
             res = cos_prices(phi, fwd, K, decision.grid, payoff_mode=payoff_mode)
