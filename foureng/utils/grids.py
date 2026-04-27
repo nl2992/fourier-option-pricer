@@ -103,6 +103,7 @@ class COSGrid:
     label: str = "manual"
 
     def u(self) -> np.ndarray:
+        """Frequency grid for the COS expansion: k * π / (b - a) for k = 0 … N-1."""
         return np.arange(self.N) * np.pi / (self.b - self.a)
 
     @property
@@ -111,6 +112,7 @@ class COSGrid:
 
     @property
     def dx(self) -> float:
+        """Effective spatial resolution (b - a) / N."""
         return self.width / float(self.N)
 
 
