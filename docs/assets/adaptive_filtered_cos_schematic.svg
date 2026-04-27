@@ -1,73 +1,75 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="360" viewBox="0 0 1200 360">
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="620" viewBox="0 0 900 620">
   <defs>
     <style>
-      .title { font: 700 28px Arial, sans-serif; fill: #1f3b64; }
-      .subtitle { font: 700 18px Arial, sans-serif; fill: #355c8a; }
-      .label { font: 16px Arial, sans-serif; fill: #314559; }
-      .small { font: 14px Arial, sans-serif; fill: #4b627b; }
-      .mono { font: 600 21px Menlo, Consolas, monospace; fill: #203245; }
+      .title { font: 700 25px Arial, sans-serif; fill: #274777; }
+      .subtitle { font: 700 17px Arial, sans-serif; fill: #355c8a; }
+      .label { font: 15px Arial, sans-serif; fill: #314559; }
+      .small { font: 13px Arial, sans-serif; fill: #516883; }
+      .formula { font: italic 24px Georgia, serif; fill: #1f2f3d; }
       .box { fill: #fbfdff; stroke: #c8d8ea; stroke-width: 2; rx: 18; }
+      .soft { fill: #f4f8fc; stroke: #d5e2ef; stroke-width: 1.5; rx: 14; }
       .grid { stroke: #e8eef5; stroke-width: 1; }
       .axis { stroke: #7e95ab; stroke-width: 2; }
       .plain { fill: none; stroke: #5a86b8; stroke-width: 4; stroke-dasharray: 10 8; }
       .filtered { fill: none; stroke: #a9d2eb; stroke-width: 5; }
       .target { fill: none; stroke: #1f2f3d; stroke-width: 4; }
       .marker { stroke: #9eb5cb; stroke-width: 2; stroke-dasharray: 4 6; }
-      .accent { fill: #eef5fb; stroke: #c8d8ea; stroke-width: 1.5; rx: 12; }
     </style>
   </defs>
 
-  <rect x="18" y="18" width="1164" height="324" fill="#ffffff" stroke="#d7e4f0" stroke-width="2" rx="20"/>
+  <rect x="20" y="20" width="860" height="580" fill="#ffffff" stroke="#d7e4f0" stroke-width="2" rx="22"/>
 
-  <text x="38" y="54" class="title">Adaptive filtered-COS: project innovation over baseline COS</text>
-  <text x="38" y="82" class="label">Literature inspiration: spectral damping can reduce residual ringing.</text>
-  <text x="38" y="106" class="label">Project extension: keep the same COS machinery, then add damping plus deterministic candidate selection.</text>
+  <text x="44" y="58" class="title">Adaptive filtered-COS: what changes</text>
+  <text x="44" y="86" class="label">Same COS ingredients, but tail modes are damped and candidate policies are selected adaptively.</text>
 
-  <rect x="38" y="128" width="540" height="154" class="box"/>
-  <rect x="622" y="128" width="540" height="154" class="box"/>
+  <rect x="44" y="112" width="812" height="200" class="box"/>
+  <text x="66" y="140" class="subtitle">1. Near the payoff kink</text>
 
-  <text x="58" y="156" class="subtitle">1. Why filtering helps near a payoff kink</text>
-  <text x="642" y="156" class="subtitle">2. What changes in the final series sum</text>
+  <line x1="110" y1="256" x2="718" y2="256" class="axis"/>
+  <line x1="110" y1="256" x2="110" y2="164" class="axis"/>
+  <line x1="408" y1="160" x2="408" y2="260" class="marker"/>
+  <line x1="110" y1="232" x2="718" y2="232" class="grid"/>
+  <line x1="110" y1="208" x2="718" y2="208" class="grid"/>
+  <line x1="110" y1="184" x2="718" y2="184" class="grid"/>
+  <text x="120" y="286" class="small">local log-moneyness</text>
+  <text x="54" y="224" transform="rotate(-90 54 224)" class="small">series contribution</text>
 
-  <line x1="88" y1="250" x2="520" y2="250" class="axis"/>
-  <line x1="88" y1="250" x2="88" y2="172" class="axis"/>
-  <line x1="302" y1="168" x2="302" y2="254" class="marker"/>
-  <line x1="88" y1="230" x2="520" y2="230" class="grid"/>
-  <line x1="88" y1="210" x2="520" y2="210" class="grid"/>
-  <line x1="88" y1="190" x2="520" y2="190" class="grid"/>
-  <text x="96" y="272" class="small">local log-moneyness</text>
-  <text x="26" y="218" transform="rotate(-90 26 218)" class="small">series contribution</text>
+  <path d="M 120 252 C 200 252, 252 252, 302 251 C 334 248, 354 240, 372 258 C 386 270, 408 212, 430 204 C 458 196, 506 172, 562 128 C 604 96, 640 69, 688 38" class="plain"/>
+  <path d="M 120 252 C 222 252, 278 252, 326 251 C 350 251, 372 246, 388 236 C 410 216, 432 198, 452 188 C 484 170, 522 150, 568 122 C 608 96, 642 70, 688 38" class="filtered"/>
+  <path d="M 120 252 L 390 252 L 408 242 L 432 214 L 456 188 L 688 38" class="target"/>
 
-  <path d="M 96 248 C 160 248, 200 248, 234 247 C 258 243, 270 236, 284 253 C 296 265, 312 214, 328 208 C 348 204, 383 185, 434 147 C 466 124, 494 103, 518 88" class="plain"/>
-  <path d="M 96 248 C 178 248, 220 248, 262 247 C 281 247, 294 245, 304 238 C 320 220, 336 206, 352 198 C 374 185, 405 168, 438 145 C 469 123, 494 103, 518 88" class="filtered"/>
-  <path d="M 96 248 L 290 248 L 302 242 L 320 220 L 340 198 L 518 88" class="target"/>
+  <line x1="594" y1="164" x2="628" y2="164" class="target"/>
+  <text x="638" y="169" class="small">target</text>
+  <line x1="594" y1="188" x2="628" y2="188" class="plain"/>
+  <text x="638" y="193" class="small">plain COS</text>
+  <line x1="594" y1="212" x2="628" y2="212" class="filtered"/>
+  <text x="638" y="217" class="small">filtered COS</text>
 
-  <line x1="352" y1="176" x2="386" y2="176" class="target"/>
-  <text x="394" y="181" class="small">target payoff shape</text>
-  <line x1="352" y1="198" x2="386" y2="198" class="plain"/>
-  <text x="394" y="203" class="small">plain COS ringing</text>
-  <line x1="352" y1="220" x2="386" y2="220" class="filtered"/>
-  <text x="394" y="225" class="small">filtered COS</text>
+  <rect x="44" y="332" width="812" height="170" class="box"/>
+  <text x="66" y="360" class="subtitle">2. In the mode weights</text>
 
-  <line x1="672" y1="250" x2="1104" y2="250" class="axis"/>
-  <line x1="672" y1="250" x2="672" y2="172" class="axis"/>
-  <line x1="672" y1="230" x2="1104" y2="230" class="grid"/>
-  <line x1="672" y1="210" x2="1104" y2="210" class="grid"/>
-  <line x1="672" y1="190" x2="1104" y2="190" class="grid"/>
-  <text x="810" y="272" class="small">COS mode k</text>
-  <text x="612" y="218" transform="rotate(-90 612 218)" class="small">relative weight</text>
+  <line x1="110" y1="456" x2="718" y2="456" class="axis"/>
+  <line x1="110" y1="456" x2="110" y2="380" class="axis"/>
+  <line x1="110" y1="432" x2="718" y2="432" class="grid"/>
+  <line x1="110" y1="408" x2="718" y2="408" class="grid"/>
+  <line x1="110" y1="384" x2="718" y2="384" class="grid"/>
+  <text x="330" y="484" class="small">COS mode k</text>
+  <text x="54" y="424" transform="rotate(-90 54 424)" class="small">relative weight</text>
 
-  <path d="M 682 182 C 730 193, 776 209, 820 223 C 862 235, 906 240, 952 239 C 992 238, 1026 220, 1054 218 C 1078 217, 1093 224, 1100 232" class="plain"/>
-  <path d="M 682 182 C 728 196, 776 212, 822 226 C 872 239, 921 246, 970 249 C 1018 250, 1060 250, 1100 250" class="filtered"/>
+  <path d="M 124 392 C 194 408, 266 430, 332 446 C 392 460, 458 468, 522 468 C 584 468, 632 444, 672 440 C 694 438, 708 442, 718 450" class="plain"/>
+  <path d="M 124 392 C 194 412, 262 432, 328 446 C 392 458, 458 468, 522 474 C 588 478, 652 480, 718 480" class="filtered"/>
 
-  <line x1="838" y1="182" x2="890" y2="182" class="plain"/>
-  <text x="898" y="187" class="small">plain COS tail modes</text>
-  <line x1="838" y1="204" x2="890" y2="204" class="filtered"/>
-  <text x="898" y="209" class="small">after spectral damping</text>
+  <line x1="580" y1="392" x2="626" y2="392" class="plain"/>
+  <text x="636" y="397" class="small">plain tail modes</text>
+  <line x1="580" y1="416" x2="626" y2="416" class="filtered"/>
+  <text x="636" y="421" class="small">after damping</text>
 
-  <rect x="38" y="296" width="1124" height="28" class="accent"/>
-  <text x="56" y="315" class="small">Project innovation = filtered COS layer + deterministic search over (grid policy, filter) candidates + guaranteed unfiltered Junike fallback.</text>
+  <rect x="44" y="524" width="390" height="50" class="soft"/>
+  <rect x="466" y="524" width="390" height="50" class="soft"/>
 
-  <text x="56" y="349" class="mono">plain COS: price ~= disc * sum_k A_k * V_k</text>
-  <text x="654" y="349" class="mono">project extension: price ~= disc * sum_k sigma_k * A_k * V_k</text>
+  <text x="66" y="546" class="subtitle">Baseline COS</text>
+  <text x="66" y="568" class="formula">price ≈ disc · Σ Aₖ Vₖ</text>
+
+  <text x="488" y="546" class="subtitle">Project extension</text>
+  <text x="488" y="568" class="formula">price ≈ disc · Σ σₖ Aₖ Vₖ</text>
 </svg>
