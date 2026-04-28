@@ -83,11 +83,10 @@ $$
 with $w_0=1/2$ and $w_j=1$ for $j\ge 1$. Under this convention, the payoff cosine coefficients are
 
 $$
-U_j
-=
+U_j =
 \frac{2}{b-a}
 \int_a^b
-g(x)\cos\left(j\pi\frac{x-a}{b-a}\right)\,dx,
+g(x)\cos\left(j\pi\frac{x-a}{b-a}\right)\,dx.
 $$
 
 where $g(x)$ is the payoff written as a function of the chosen log variable.
@@ -99,12 +98,11 @@ The COS method requires a finite interval $[a,b]$ for the log-price or log-retur
 The standard cumulant rule uses the Fang–Oosterlee interval
 
 $$
-[a,b]
-=
+[a,b] =
 \left[
  c_1 - L\sqrt{c_2 + \sqrt{c_4}},
  c_1 + L\sqrt{c_2 + \sqrt{c_4}}
-\right],
+\right].
 $$
 
 where $c_1$, $c_2$, and $c_4$ are cumulants of the log variable and $L$ is a user-chosen width multiplier.
