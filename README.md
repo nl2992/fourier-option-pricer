@@ -262,8 +262,7 @@ MIT. See [LICENSE](LICENSE).
 
 | Notebook | Paper / reference | What it shows |
 |----------|-------------------|---------------|
-| [`cosPaper_Replication.ipynb`](notebooks/cosPaper_Replication.ipynb) | Fang & Oosterlee (2008) | Table 2 BSM baseline, Heston scalar and strip cases, VG and CGMY; scoreboard and error figures. |
-| [`fo2008_replication.ipynb`](notebooks/fo2008_replication.ipynb) | Fang & Oosterlee (2008) full replay | Paper-faithful Tables 2, 5, 7, 8–10 (BSM, Heston, VG, CGMY) plus benchmark CSVs. |
+| [`fo2008_replication.ipynb`](notebooks/fo2008_replication.ipynb) | Fang & Oosterlee (2008) | Paper-faithful Tables 2, 5, 7, 8–10 (BSM, Heston, VG, CGMY); scoreboard, error figures, benchmark CSVs. |
 | [`paper_replications/bates_mathworks_replication.ipynb`](notebooks/paper_replications/bates_mathworks_replication.ipynb) | MathWorks optByBatesNI / FFT | All-engine scoreboard vs frozen MathWorks reference; error plots, assertion gate, CSV. |
 | [`paper_replications/three_halves_replication.ipynb`](notebooks/paper_replications/three_halves_replication.ipynb) | Lewis (2000); Baldeaux & Badran (2012) | 3/2 SV: PyFENG regression and qualitative IV smile shape checks. |
 | [`paper_replications/bates_sv32_validation_demo.ipynb`](notebooks/paper_replications/bates_sv32_validation_demo.ipynb) | MathWorks Bates + frozen pyfeng_fft surface | 12-section validation: BATES-01 to 07 and SV32-01 to 05; assertion gates and benchmark CSVs. |
@@ -274,8 +273,6 @@ MIT. See [LICENSE](LICENSE).
 |----------|---------------|
 | [`research/cos_method_improved.ipynb`](notebooks/research/cos_method_improved.ipynb) | Junike-Pankrashkin (2022) / Junike (2024) improved truncation: three pricing strategies, Heston T=10 stress case, visual diagnostics. |
 | [`research/adaptive_cos.ipynb`](notebooks/research/adaptive_cos.ipynb) | Adaptive filtered-COS: BSM, Heston, VG, CGMY; comparison with plain COS and filtered COS. |
-
-[`notebooks/supplementary/presentation_fourier_methods.ipynb`](notebooks/supplementary/presentation_fourier_methods.ipynb) is a lecture-style walkthrough covering Monte Carlo vs Carr-Madan, Lewis FFT parameter sensitivity, plain COS, improved COS, multi-model sweep, and conclusions.
 
 ---
 
