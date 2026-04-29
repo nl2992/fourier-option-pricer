@@ -40,11 +40,11 @@ This is the same short-maturity VG setting used in the stress tests, plotted mor
 
 
 SURFACE_CODE = """from mpl_toolkits import mplot3d
-from foureng.surface import SurfaceSpec, model_iv_surface
+import foureng.surface as fe_surface
 
 SURF_MATS = np.array([0.25, 0.50, 1.00, 1.50, 2.00])
 SURF_STRIKES = np.linspace(80.0, 120.0, 25)
-SURF_SPEC = SurfaceSpec(
+SURF_SPEC = fe_surface.SurfaceSpec(
     S0=HESTON_FWD.S0,
     r=HESTON_FWD.r,
     q=HESTON_FWD.q,
@@ -52,7 +52,7 @@ SURF_SPEC = SurfaceSpec(
     strikes=SURF_STRIKES,
 )
 
-SURF_IVS = model_iv_surface(
+SURF_IVS = fe_surface.model_iv_surface(
     SURF_SPEC,
     cf_factory=lambda fwd: (lambda u: heston_cf(u, fwd, HESTON_PARAMS)),
     cumulant_factory=lambda fwd: heston_cumulants(fwd, HESTON_PARAMS),
@@ -83,13 +83,12 @@ plt.show()
 
 
 COS_COMPARE_CODE = """try:
-    from foureng.experiments.cos_filter_grid_search import (
-        describe_filter_result,
-        filter_spec_from_result,
-        policy_filter_candidates,
-        run_filtered_cos_grid_search,
-        select_fastest_under_tolerance,
-    )
+    import foureng.experiments.cos_filter_grid_search as fe_search
+    describe_filter_result = fe_search.describe_filter_result
+    filter_spec_from_result = fe_search.filter_spec_from_result
+    policy_filter_candidates = fe_search.policy_filter_candidates
+    run_filtered_cos_grid_search = fe_search.run_filtered_cos_grid_search
+    select_fastest_under_tolerance = fe_search.select_fastest_under_tolerance
 except Exception:
     def filter_spec_from_result(row):
         filter_name = str(row["filter"])
@@ -208,7 +207,8 @@ except Exception:
             return df.sort_values("max_abs_err").iloc[0]
 
 try:
-    from foureng.viz.notebook_runtime import error_zoom_bounds
+    import foureng.viz.notebook_runtime as fe_nb_runtime
+    error_zoom_bounds = fe_nb_runtime.error_zoom_bounds
 except Exception:
     def error_zoom_bounds(*arrays, pad_frac=0.08, min_pad=5e-6):
         values = [
