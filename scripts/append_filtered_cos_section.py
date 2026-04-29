@@ -47,6 +47,48 @@ candidate set, so the filter is never forced.
   in a Fourier option pricing technique*, Journal of Computational Finance.
 """
 
+S6_FILTER_MD = """\
+### What coefficient filtering changes
+
+Filtered COS keeps the same model characteristic function, the same truncation
+interval, and the same payoff coefficients. The only change is that the
+high-frequency COS modes are damped before the final series sum:
+
+`price = disc * sum_k sigma_k A_k V_k`
+
+Here `A_k` are the CF-side COS coefficients, `V_k` are the payoff coefficients,
+and `sigma_k` are filter weights in `[0, 1]`. Low modes stay close to one; tail
+modes are shrunk to reduce finite-series ringing.
+
+The three profiles below are representative of the candidate set:
+- **Fejer**: linear taper.
+- **Lanczos**: sinc taper.
+- **Raised cosine**: smooth cosine cutoff.
+"""
+
+S6_FILTER_PLOT_CODE = """\
+_Nw = 64
+_xw = np.arange(_Nw) / (_Nw - 1)
+_profiles = [
+    ("Fejer", cos_filter_weights(_Nw, COSFilterSpec("fejer")), "darkorange"),
+    ("Lanczos", cos_filter_weights(_Nw, COSFilterSpec("lanczos")), "forestgreen"),
+    ("Raised cosine", cos_filter_weights(_Nw, COSFilterSpec("raised_cosine")), "purple"),
+]
+
+fig, ax = plt.subplots(figsize=(6.4, 3.6))
+for _label, _weights, _color in _profiles:
+    ax.plot(_xw, _weights, lw=2.0, color=_color, label=_label)
+
+ax.set_xlabel("normalised COS mode  k / (N - 1)")
+ax.set_ylabel("weight  $\\sigma_k$")
+ax.set_title("Three filter profiles on the COS coefficients")
+ax.set_ylim(-0.02, 1.05)
+ax.grid(True, ls="--", alpha=0.3)
+ax.legend(frameon=False, fontsize=9)
+fig.tight_layout()
+plt.show()
+"""
+
 # ── Section 6 imports / helpers ───────────────────────────────────────────────
 
 S6_SETUP_CODE = """\
@@ -64,6 +106,7 @@ from foureng.models.base   import ForwardSpec
 from foureng.pipeline import price_strip
 from foureng.pricers.cos import recommended_cos_policy
 from foureng.utils.grids import COSGridPolicy
+from foureng.utils.spectral_filters import COSFilterSpec, cos_filter_weights
 from foureng.experiments.cos_filter_grid_search import (
     policy_filter_candidates,
     run_filtered_cos_grid_search,
@@ -512,6 +555,8 @@ def main():
     new_cells = [
         md(S6_MD),
         code(S6_SETUP_CODE),
+        md(S6_FILTER_MD),
+        code(S6_FILTER_PLOT_CODE),
         md(S61_MD),
         code(S61_CODE),
         code(S61_PLOT_CODE),
