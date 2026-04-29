@@ -18,13 +18,9 @@ Run:
         --output presentation_fourier_methods.ipynb
 """
 from __future__ import annotations
-import json
-from itertools import count
 from pathlib import Path
-try:
-    import nbformat as nbf
-except ImportError:  # pragma: no cover - optional builder convenience only
-    nbf = None
+
+from notebook_support import code, md, notebook, write_notebook
 
 CU_BLUE = "#012169"
 CU_LIGHT = "#B9D9EB"
@@ -33,31 +29,6 @@ CU_ORANGE = "#D9622C"
 CU_ZEBRA = "#EAF0F8"
 CU_BORDER = "#CAD4E3"
 CU_INK = "#1A2230"
-CELL_IDS = count()
-
-
-def md(src: str):
-    if nbf is not None:
-        return nbf.v4.new_markdown_cell(src.strip("\n"))
-    return {
-        "cell_type": "markdown",
-        "metadata": {},
-        "id": f"cell-{next(CELL_IDS)}",
-        "source": src.strip("\n").splitlines(keepends=True),
-    }
-
-
-def code(src: str):
-    if nbf is not None:
-        return nbf.v4.new_code_cell(src.strip("\n"))
-    return {
-        "cell_type": "code",
-        "metadata": {},
-        "id": f"cell-{next(CELL_IDS)}",
-        "execution_count": None,
-        "outputs": [],
-        "source": src.strip("\n").splitlines(keepends=True),
-    }
 
 
 # ─────────────────────────────────────────────────────────────────────────
@@ -71,7 +42,7 @@ Submission notebook for project defense and review
 Engine: `foureng`  
 Instructor: Prof. Jaehyuk Choi
 
-This notebook is organized as a validation-first story for European option pricing:
+This notebook is organized around one validation workflow:
 
 1. Anchor one benchmark contract and one timing/error protocol.
 2. Show why Fourier methods matter relative to Monte Carlo.
@@ -229,6 +200,7 @@ from foureng.viz import (
     PANEL,
     CLOUD,
 )
+from foureng.viz.notebook_runtime import style_table, timed_call
 
 apply_columbia_style()
 CU_BLUE = NAVY
@@ -254,17 +226,6 @@ def bs_call(S0, K, T, r, q, sigma):
     return S0*np.exp(-q*T)*norm.cdf(d1) - K*np.exp(-r*T)*norm.cdf(d2)
 
 
-def timed(fn, repeats=5):
-    \"\"\"Return (last_value, median_wall_ms).\"\"\"
-    ts = []
-    val = None
-    for _ in range(repeats):
-        t0 = time.perf_counter()
-        val = fn()
-        ts.append((time.perf_counter() - t0) * 1e3)
-    return val, float(np.median(ts))
-
-
 def price_with(method, *, phi, fwd, strikes, cums, N, model=None, params=None,
                fft_n=None, alpha=1.5, eta_fft=0.25,
                u_max=200.0, n_u=4_096):
@@ -284,59 +245,7 @@ def price_with(method, *, phi, fwd, strikes, cums, N, model=None, params=None,
                                  u_max=u_max, n_u=n_u)
     raise ValueError(f\"unknown method {method!r}\")
 
-
-# ── Columbia-styled pandas tables ──────────────────────────────────────
-# Readable zebra: strong enough to see, light enough to print.
-
-def style_table(df, caption, *, gradient_cols=None, highlight_col=None):
-    \"\"\"Return a pandas Styler with Columbia colours and a readable zebra.\"\"\"
-    styler = (df.style
-                .format(precision=4, thousands=\",\")
-                .set_caption(caption)
-                .set_table_styles([
-                    {\"selector\":\"caption\",
-                     \"props\":[(\"color\",CU_BLUE),(\"font-weight\",\"700\"),
-                              (\"font-size\",\"13.5px\"),(\"padding\",\"4px 0 10px 0\"),
-                              (\"text-align\",\"left\"),(\"caption-side\",\"top\")]},
-                    {\"selector\":\"table\",
-                     \"props\":[(\"border-collapse\",\"separate\"),(\"border-spacing\",\"0\"),
-                              (\"margin\",\"4px 0 10px 0\"),(\"width\",\"auto\"),
-                              (\"font-size\",\"12.5px\"),(\"color\",\"#1a2230\"),
-                              (\"border\",\"1px solid #CAD4E3\"),(\"border-radius\",\"6px\"),
-                              (\"overflow\",\"hidden\")]},
-                    {\"selector\":\"thead th\",
-                     \"props\":[(\"background\",CU_BLUE),(\"color\",\"white\"),
-                              (\"font-weight\",\"700\"),(\"padding\",\"8px 12px\"),
-                              (\"border\",\"none\"),(\"text-align\",\"center\")]},
-                    {\"selector\":\"tbody th\",
-                     \"props\":[(\"background\",\"white\"),(\"color\",CU_BLUE),
-                              (\"font-weight\",\"700\"),(\"padding\",\"6px 10px\"),
-                              (\"border-right\",\"2px solid #012169\"),
-                              (\"border-bottom\",\"1px solid #E1E7EF\"),
-                              (\"text-align\",\"left\")]},
-                    {\"selector\":\"tbody td\",
-                     \"props\":[(\"padding\",\"6px 12px\"),
-                              (\"border-bottom\",\"1px solid #E1E7EF\"),
-                              (\"color\",\"#1a2230\")]},
-                    {\"selector\":\"tbody tr:nth-child(odd)  td\",
-                     \"props\":[(\"background\",\"#FFFFFF\")]},
-                    {\"selector\":\"tbody tr:nth-child(even) td\",
-                     \"props\":[(\"background\",\"#EAF0F8\")]},
-                    {\"selector\":\"tbody tr:nth-child(odd)  th\",
-                     \"props\":[(\"background\",\"#FFFFFF\")]},
-                    {\"selector\":\"tbody tr:nth-child(even) th\",
-                     \"props\":[(\"background\",\"#EAF0F8\")]},
-                    {\"selector\":\"tbody tr:hover td\",
-                     \"props\":[(\"background\",\"#D6E2F2\")]},
-                ]))
-    if gradient_cols:
-        styler = styler.background_gradient(
-            cmap=\"Blues\", subset=gradient_cols, axis=None, low=0.02, high=0.85
-        )
-    if highlight_col:
-        styler = styler.apply(lambda s: [\"font-weight:700;color:#012169\" if c==highlight_col else \"\"
-                                         for c in s.index], axis=0)
-    return styler
+timed = timed_call
 
 
 print(\"helpers ready.\")
@@ -1025,16 +934,8 @@ def build() -> None:
         md(ACT7_MD),
     ]
     out = Path(__file__).resolve().parents[1] / "notebooks" / "presentation_fourier_methods.ipynb"
-    metadata = {
-        "kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},
-        "language_info": {"name": "python", "version": "3.11"},
-    }
-    if nbf is not None:
-        nb = nbf.v4.new_notebook(cells=cells, metadata=metadata)
-        nbf.write(nb, out)
-    else:
-        nb = {"cells": cells, "metadata": metadata, "nbformat": 4, "nbformat_minor": 5}
-        out.write_text(json.dumps(nb, indent=1))
+    nb = notebook(cells, python_version="3.11")
+    write_notebook(out, nb)
     print(f"wrote {out}   ({len(cells)} cells)")
 
 

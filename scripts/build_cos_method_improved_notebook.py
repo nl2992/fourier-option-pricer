@@ -9,44 +9,13 @@ Then execute:
         --output cos_method_improved.ipynb
 """
 from __future__ import annotations
-import json
-from itertools import count
-
 from pathlib import Path
 
-try:
-    import nbformat as nbf
-except ImportError:  # pragma: no cover - optional builder convenience only
-    nbf = None
+from notebook_support import code, md, notebook, write_notebook
 
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "notebooks" / "cos_method_improved.ipynb"
-CELL_IDS = count()
-
-
-def md(text: str):
-    if nbf is not None:
-        return nbf.v4.new_markdown_cell(text.strip("\n"))
-    return {
-        "cell_type": "markdown",
-        "metadata": {},
-        "id": f"cell-{next(CELL_IDS)}",
-        "source": text.strip("\n").splitlines(keepends=True),
-    }
-
-
-def code(src: str):
-    if nbf is not None:
-        return nbf.v4.new_code_cell(src.strip("\n"))
-    return {
-        "cell_type": "code",
-        "metadata": {},
-        "id": f"cell-{next(CELL_IDS)}",
-        "execution_count": None,
-        "outputs": [],
-        "source": src.strip("\n").splitlines(keepends=True),
-    }
 
 
 INTRO_MD = r"""
@@ -54,7 +23,7 @@ INTRO_MD = r"""
 
 **Columbia University · MAFN · MATH 5030 · Spring 2026**
 
-*Fang–Oosterlee (2008) revisited through Junike–Pankrashkin (2022) and Junike (2024). Same pricing formula; *better support and series-truncation policies*.*
+*Fang–Oosterlee (2008) revisited through Junike–Pankrashkin (2022) and Junike (2024). Same pricing formula, cleaner support and series-truncation policies.*
 
 *Engine: `foureng` · Instructor: Prof. Jaehyuk Choi*
 
@@ -68,9 +37,9 @@ layer around COS:
 - better resolution selection,
 - clearer fallback logic in hostile regimes.
 
-The goal is not to claim a universally smaller benchmark error. The goal is to
-separate the numerical failure modes cleanly enough that the method is easier
-to explain, validate, and ship.
+The point is not to promise a universal accuracy gain. The point is to
+separate the failure modes cleanly enough that the method is easier to explain,
+validate, and ship.
 """
 
 
@@ -226,6 +195,7 @@ from foureng.viz import (
     PANEL,
     CLOUD,
 )
+from foureng.viz.notebook_runtime import style_table, timed_median_ms
 
 apply_columbia_style()
 CU_BLUE = NAVY
@@ -246,44 +216,6 @@ print("output dir:", OUTDIR)
 HELPERS_CODE = r"""
 # Cell 2 — Helpers
 N_REP = 5
-
-
-def timed_median_ms(fn, *args, n_rep=N_REP, **kwargs):
-    fn(*args, **kwargs)
-    times = []
-    out = None
-    for _ in range(n_rep):
-        t0 = time.perf_counter()
-        out = fn(*args, **kwargs)
-        t1 = time.perf_counter()
-        times.append((t1 - t0) * 1e3)
-    return out, float(np.median(times))
-
-
-def style_table(df, caption, *, gradient_cols=None):
-    styler = (
-        df.style
-        .format(precision=4, thousands=",")
-        .set_caption(caption)
-        .set_table_styles([
-            {"selector": "caption", "props": [("color", CU_BLUE), ("font-weight", "700"),
-                                                ("font-size", "13.5px"), ("padding", "4px 0 10px 0"),
-                                                ("text-align", "left"), ("caption-side", "top")]},
-            {"selector": "table", "props": [("border-collapse", "separate"), ("border-spacing", "0"),
-                                              ("margin", "4px 0 10px 0"), ("font-size", "12.5px"),
-                                              ("border", "1px solid #CAD4E3"), ("border-radius", "6px"),
-                                              ("overflow", "hidden")]},
-            {"selector": "thead th", "props": [("background", CU_BLUE), ("color", "white"),
-                                                 ("font-weight", "700"), ("padding", "8px 12px"),
-                                                 ("border", "none"), ("text-align", "center")]},
-            {"selector": "tbody td", "props": [("padding", "6px 12px"), ("border-bottom", "1px solid #E1E7EF")]},
-            {"selector": "tbody tr:nth-child(odd) td", "props": [("background", "#FFFFFF")]},
-            {"selector": "tbody tr:nth-child(even) td", "props": [("background", "#EAF0F8")]},
-        ])
-    )
-    if gradient_cols:
-        styler = styler.background_gradient(cmap="Blues", subset=gradient_cols, axis=None, low=0.02, high=0.85)
-    return styler
 
 
 def fwd_for(case: PaperCase) -> ForwardSpec:
@@ -771,16 +703,8 @@ def build() -> None:
         code(TAKEAWAYS_CODE),
         md(OUTRO_MD),
     ]
-    metadata = {
-        "kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},
-        "language_info": {"name": "python", "version": "3.11"},
-    }
-    if nbf is not None:
-        nb = nbf.v4.new_notebook(cells=cells, metadata=metadata)
-        nbf.write(nb, OUT)
-    else:
-        nb = {"cells": cells, "metadata": metadata, "nbformat": 4, "nbformat_minor": 5}
-        OUT.write_text(json.dumps(nb, indent=1))
+    nb = notebook(cells, python_version="3.11")
+    write_notebook(OUT, nb)
     print(f"wrote {OUT}   ({len(cells)} cells)")
 
 
