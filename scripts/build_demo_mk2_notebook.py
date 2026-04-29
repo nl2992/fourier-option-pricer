@@ -7,38 +7,12 @@ Run from repo root:
     python3 scripts/build_demo_mk2_notebook.py
 """
 from __future__ import annotations
-import json
-import uuid
 from pathlib import Path
+
+from notebook_support import code, md, notebook, write_notebook
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT  = ROOT / "notebooks" / "demo.ipynb"
-
-
-# ---------------------------------------------------------------------------
-# Notebook helpers
-# ---------------------------------------------------------------------------
-
-def _id() -> str:
-    """Short unique cell id (8 hex chars) required by nbformat >= 5.1."""
-    return uuid.uuid4().hex[:8]
-
-def md(source: str) -> dict:
-    return {"id": _id(), "cell_type": "markdown", "metadata": {}, "source": source}
-
-def code(source: str) -> dict:
-    return {"id": _id(), "cell_type": "code", "metadata": {}, "execution_count": None,
-            "outputs": [], "source": source}
-
-def nb(cells: list[dict]) -> dict:
-    return {
-        "nbformat": 4, "nbformat_minor": 5,
-        "metadata": {
-            "kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},
-            "language_info": {"name": "python", "version": "3.10.0"},
-        },
-        "cells": cells,
-    }
 
 
 # ---------------------------------------------------------------------------
@@ -49,7 +23,7 @@ TITLE_MD = r"""# Fourier Methods for European Option Pricing
 
 **Columbia University · MAFN · MATH 5030 · Spring 2026**
 
-*MC baseline → Carr–Madan FFT → PyFENG Lewis → COS → Junike-style adaptive truncation*
+*MC baseline → Carr–Madan FFT → PyFENG Lewis → COS → adaptive truncation*
 
 *Demo notebook · `foureng` package · Instructor: Prof. Jaehyuk Choi*
 
@@ -64,9 +38,9 @@ All methods share the same core input: the characteristic function of the termin
 
 $$\varphi_T(u) = \mathbb{E}^{\mathbb{Q}}\!\left[e^{iu X_T}\right], \qquad X_T = \log\!\left(\frac{S_T}{F_0}\right)$$
 
-Many models admit a closed-form $\varphi_T$ even when the density is not available in closed form. Fourier methods exploit this by recovering prices from $\varphi_T$ directly.
+Many models admit a closed-form $\varphi_T$ even when the density is not available in closed form. The notebook uses that shared input to compare five pricing routes against published or frozen references.
 
-This notebook pits five numerical engines against published references for European option pricing:
+The sections below cover:
 
 1. **Monte Carlo** — flexible baseline; shows the $O(n^{-1/2})$ convergence bottleneck.
 2. **Carr–Madan FFT** — the 1999 workhorse; damped-call transform on a uniform frequency grid.
@@ -74,7 +48,7 @@ This notebook pits five numerical engines against published references for Europ
 4. **COS (Fang–Oosterlee 2008)** — primary pricer; spectral convergence on a cumulant-truncated interval.
 5. **COS + Junike adaptive truncation** — tolerance-driven widening for long-maturity stress cases.
 
-A **cross-model diagnostic** closes the notebook, sweeping all nine supported models.
+A short cross-model diagnostic closes the notebook.
 """
 
 # ---------------------------------------------------------------------------
@@ -127,7 +101,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyBboxPatch, Patch
 from IPython.display import display
-from typing import Callable, Iterable
 warnings.filterwarnings("ignore")
 
 # ── foureng ───────────────────────────────────────────────────────────────────
@@ -151,6 +124,7 @@ from foureng.refs.paper_refs import (
 )
 from foureng.utils.grids import COSGridPolicy, FFTGrid
 from foureng.viz.columbia import apply_columbia_style, NAVY, COLUMBIA_BLUE, DARK
+from foureng.viz.notebook_runtime import night_style, sci, timeit_strip
 apply_columbia_style()
 pd.options.display.float_format = lambda x: f'{x:,.6g}'
 
@@ -174,77 +148,6 @@ CB_STEEL   = '#5B8FB9'
 CB_DEEP    = '#1F5CA6'
 CB_PALETTE = [DARK, NAVY, CB_DEEP, CB_STEEL, CB_MID, COLUMBIA_BLUE]
 PYFENG_LEWIS_LABEL = 'PyFENG Lewis'
-
-
-# ── Helper: timed strip execution ─────────────────────────────────────────────
-def timeit_strip(fn, *args, n_repeat: int = 3, warmup: bool = True, **kwargs):
-    if warmup:
-        fn(*args, **kwargs)
-    best_ms = float('inf')
-    out = None
-    for _ in range(n_repeat):
-        t0 = time.perf_counter()
-        out = fn(*args, **kwargs)
-        best_ms = min(best_ms, (time.perf_counter() - t0) * 1e3)
-    return out, best_ms
-
-
-def sci(x: float) -> str:
-    if pd.isna(x):
-        return '--'
-    return f'{x:.2e}'
-
-
-# ── Helper: dark-theme table styler ───────────────────────────────────────────
-def night_style(
-    df: pd.DataFrame,
-    *,
-    caption: str | None = None,
-    formats: dict[str, str | Callable] | None = None,
-    highlight_min: Iterable[str] | None = None,
-    highlight_max: Iterable[str] | None = None,
-    hide_index: bool = True,
-):
-    styler = df.style
-    if formats:
-        styler = styler.format(formats)
-    if highlight_min:
-        styler = styler.highlight_min(
-            subset=list(highlight_min), color=CB_SOFT,
-            props='color: #0B1F3A; font-weight: bold;')
-    if highlight_max:
-        styler = styler.highlight_max(
-            subset=list(highlight_max), color=CB_MID,
-            props='color: #0B1F3A; font-weight: bold;')
-    styler = styler.set_properties(**{
-        'background-color': DARK,
-        'color': '#F8FAFC',
-        'border': '1px solid #4B6FA8',
-        'font-size': '11px',
-    })
-    styler = styler.set_table_styles([
-        {'selector': 'table',
-         'props': [('border-collapse', 'collapse'), ('width', '100%'),
-                   ('font-family', 'Menlo, Monaco, monospace')]},
-        {'selector': 'caption',
-         'props': [('caption-side', 'top'), ('color', NAVY),
-                   ('font-size', '13px'), ('font-weight', 'bold'), ('padding', '6px 0')]},
-        {'selector': 'th',
-         'props': [('background-color', NAVY), ('color', '#F8FAFC'),
-                   ('border', '1px solid #4B6FA8'), ('padding', '6px 8px')]},
-        {'selector': 'td', 'props': [('padding', '6px 8px')]},
-        {'selector': 'tbody tr:nth-child(even)',
-         'props': [('background-color', '#10294B')]},
-        {'selector': 'tbody tr:nth-child(odd)',
-         'props': [('background-color', '#0B1F3A')]},
-        {'selector': 'tbody tr:hover',
-         'props': [('background-color', CB_DEEP)]},
-    ], overwrite=False)
-    if caption is not None:
-        styler = styler.set_caption(caption)
-    if hide_index:
-        styler = styler.hide(axis='index')
-    return styler
 
 
 # ── Helper: overview diagram ───────────────────────────────────────────────────
@@ -1175,25 +1078,23 @@ display(night_style(
 
 CONCLUSIONS_MD = r"""## General conclusions from the notebook
 
-1. **COS classic is the strongest default pricer in the demo.**
-   - On the published Heston strip, plain COS reaches reference-level accuracy quickly and remains stable as the number of terms increases.
-   - In the benchmark-aware cross-model panel, it is the most consistent method across diffusion, stochastic-volatility, pure-jump, and hybrid-jump families.
-   - The main practical result is that COS classic gives the best overall balance of accuracy, runtime, and robustness.
+1. **`COS classic` is the best default in this notebook.**
+   - On the published Heston strip it reaches reference-level accuracy quickly.
+   - In the cross-model panel it is the most even performer across diffusion, stochastic-volatility, jump, and hybrid-jump families.
 
-2. **COS improved is a robustness upgrade, not a blanket replacement.**
-   - In the long-maturity Heston stress case, the improved truncation helps when the classical interval becomes too wide and starts wasting resolution.
-   - In the cross-model panel, it is strongest in selected regimes, such as Heston and Heston-CGMY, and it often wins on speed even when it does not win on error.
-   - When the classical interval is already well calibrated, the gain from the improved policy is naturally small and can sometimes reverse.
+2. **`COS improved` is a safeguard, not a replacement.**
+   - It helps when truncation is the main issue, especially in the long-maturity Heston stress case.
+   - When the standard cumulant interval is already well tuned, the gain is small and can reverse.
 
-3. **The benchmark design supports the pricing conclusions.**
-   - Monte Carlo remains a useful baseline, but for vanilla European strips it is clearly dominated by Fourier and spectral methods.
-   - For `BSM`, `Heston`, `OUSV`, `VG`, `CGMY`, and `NIG`, the notebook compares our pricers against an external PyFENG FFT benchmark.
-   - For `Bates`, `Heston-Kou`, and `Heston-CGMY`, where PyFENG has no native pricer, the comparison falls back to the frozen high-resolution Fourier oracle already cross-verified in the tests.
+3. **The validation stack matters as much as the pricer choice.**
+   - Monte Carlo remains a useful baseline, but it is dominated here by deterministic Fourier methods.
+   - For `BSM`, `Heston`, `OUSV`, `VG`, `CGMY`, and `NIG`, the notebook checks against an external PyFENG FFT benchmark.
+   - For `Bates`, `Heston-Kou`, and `Heston-CGMY`, it falls back to the frozen high-resolution Fourier oracle already covered by the test suite.
 
-4. **The project takeaway is clear.**
-   - `COS classic` should be treated as the main production-quality pricer in this notebook.
-   - `COS improved` should be presented as a targeted safeguard for truncation-sensitive regimes rather than as a universal upgrade.
-   - `Carr-Madan FFT` remains valuable as a classical Fourier reference and validation tool, but it is more sensitive to numerical tuning than COS.
+4. **Project takeaway.**
+   - Treat `COS classic` as the main production-quality pricer in this package.
+   - Treat `COS improved` as a targeted robustness layer for truncation-sensitive regimes.
+   - Keep `Carr-Madan FFT` as a useful reference method, but not the default.
 
 ---
 *Package*: `pip install fourier-option-pricer` ·
@@ -1232,5 +1133,5 @@ cells = [
 ]
 
 OUT.parent.mkdir(parents=True, exist_ok=True)
-OUT.write_text(json.dumps(nb(cells), indent=1))
+write_notebook(OUT, notebook(cells, python_version="3.10.0"))
 print(f"Written → {OUT}  ({len(cells)} cells)")
