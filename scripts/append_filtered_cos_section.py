@@ -1,70 +1,44 @@
 #!/usr/bin/env python
 """Append the adaptive filtered-COS notebook section to notebooks/demo.ipynb.
 
-This script is additive-only: it reads the existing notebook and appends
-new cells after the current last cell.  It never modifies, removes, or
-reorders existing cells.
+This script is idempotent:
+  - if the section marker already exists, the old section is replaced;
+  - if the appendix marker exists, the section is inserted just before it.
 
 Run with:
     python scripts/append_filtered_cos_section.py
 """
 from __future__ import annotations
-import json
 import pathlib
-import uuid
+
+from notebook_support import code, md, read_notebook, write_notebook
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 NB_PATH = ROOT / "notebooks" / "demo.ipynb"
-
-
-def _id() -> str:
-    return uuid.uuid4().hex[:8]
-
-
-def md(src: str) -> dict:
-    return {
-        "cell_type": "markdown",
-        "id": _id(),
-        "metadata": {},
-        "source": src,
-    }
-
-
-def code(src: str) -> dict:
-    return {
-        "cell_type": "code",
-        "execution_count": None,
-        "id": _id(),
-        "metadata": {},
-        "outputs": [],
-        "source": src,
-    }
+MARKER = "<!-- demo-filtered-cos-section -->"
+APPENDIX_MARKER = "<!-- demo-extra-visuals -->"
 
 
 # ── Section 6 header ──────────────────────────────────────────────────────────
 
-S6_MD = """\
+S6_MD = f"""\
 ## Post-model-zoo extension: adaptive filtered-COS
 
+{MARKER}
+
 The model-zoo above shows where vanilla COS and Junike-style truncation work or
-struggle. Junike-style truncation improves one important COS weakness: choosing
-the truncation interval. However, truncation is **not the only COS weakness**.
+struggle. Junike-style truncation fixes the interval-selection problem, but it
+does not remove every remaining source of COS error.
 
-Finite-series resolution, payoff nonsmoothness, short maturities, and jump-heavy
-characteristic functions can still cause slow convergence or oscillatory errors
-even after Junike truncation is applied.
+Short maturities, jump-heavy characteristic functions, and payoff kinks can
+still leave visible oscillatory error after the interval itself is chosen well.
 
-We therefore add an **adaptive filtered-COS overlay** inspired by spectral
-filtering in Fourier option pricing (Ruijter, Versteegh and Oosterlee 2015).
+This section adds a filtered-COS overlay and then asks a narrower question:
+given a small candidate set, which policy is the cheapest one that still meets
+the target tolerance?
 
-> **Key claim** *(conservative)*: Junike helps truncation. Filtering helps
-> residual finite-series / nonsmoothness cases. The adaptive selector compares
-> vanilla COS, Junike-COS, and filtered Junike-COS, then selects the fastest
-> candidate satisfying a target error tolerance.
-
-The selector **weakly dominates every fixed policy in the candidate set** because
-no-filter and Junike-only remain as candidate policies — the filter is never
-forced.
+The selector is conservative by construction. Junike-without-filter stays in the
+candidate set, so the filter is never forced.
 
 **References**
 - Junike & Pankrashkin (2022), *Precise option pricing by the COS method*,
@@ -86,12 +60,12 @@ from foureng.models.heston import HestonParams
 from foureng.models.variance_gamma import VGParams
 from foureng.models.cgmy   import CgmyParams
 from foureng.models.kou    import KouParams
+from foureng.models.base   import ForwardSpec
 from foureng.pipeline import price_strip
 from foureng.pricers.cos import recommended_cos_policy
 from foureng.utils.grids import COSGridPolicy
-from foureng.utils.spectral_filters import COSFilterSpec
 from foureng.experiments.cos_filter_grid_search import (
-    FilterGridCandidate,
+    policy_filter_candidates,
     run_filtered_cos_grid_search,
     select_fastest_under_tolerance,
 )
@@ -142,17 +116,6 @@ def _oracle_policy(model):
         min_N=64, max_N=16384, width_fallback=0.0,
     )
 
-def _candidate_set(policy):
-    return [
-        FilterGridCandidate("junike_no_filter",    policy, None),
-        FilterGridCandidate("junike_fejer",         policy, COSFilterSpec("fejer")),
-        FilterGridCandidate("junike_lanczos",       policy, COSFilterSpec("lanczos")),
-        FilterGridCandidate("junike_raised_cos",   policy, COSFilterSpec("raised_cosine")),
-        FilterGridCandidate("junike_exp_p4",        policy, COSFilterSpec("exponential", order=4)),
-        FilterGridCandidate("junike_exp_p8",        policy, COSFilterSpec("exponential", order=8)),
-        FilterGridCandidate("junike_exp_p12",       policy, COSFilterSpec("exponential", order=12)),
-    ]
-
 print("Setup complete. Starting grid search over", len(STRESS_CASES), "stress cases …")
 """
 
@@ -197,7 +160,7 @@ for case in STRESS_CASES:
     # Adaptive filtered search
     df_srch = run_filtered_cos_grid_search(
         model=model, strikes=strikes, fwd=fwd, params=params,
-        reference=ref, candidates=_candidate_set(rec_pol),
+        reference=ref, candidates=policy_filter_candidates(rec_pol, label_prefix="junike"),
         tol=_TOL, n_repeat=3,
     )
     best     = select_fastest_under_tolerance(df_srch, tol=_TOL)
@@ -300,16 +263,16 @@ print(f"Figure saved → {fig_path}")
 """
 
 S61_INTERP_MD = """\
-**Interpretation** *(generated from computed results)*
+**Interpretation**
 
-The table above is computed — not hard-coded.  Read the `adaptive_result_label`
-column for what the selector found in each case.  The scatter plot above shows
-all candidates in (runtime, error) space.  The gold star marks the selected
-adaptive policy; dashed lines show the Junike and vanilla COS error levels.
+The table above is computed rather than hard-coded. Read the
+`adaptive_result_label` column for the outcome in each case. The scatter plot
+shows all candidates in `(runtime, error)` space. The gold star marks the
+selected policy; dashed lines show the Junike and vanilla COS error baselines.
 
 Key observations:
 - The selector can only pick a result at least as good as the best candidate in
-  its set (Junike-no-filter is always included).
+  its set (`junike_no_filter` is always included).
 - When a filtered candidate passes the tolerance **and** runs faster than
   Junike-no-filter, the selector chooses it → runtime win with no accuracy loss.
 - When no filtered candidate improves over Junike-no-filter, the selector picks
@@ -556,7 +519,31 @@ display(Markdown(_md_text))
 # ── Assemble and write ─────────────────────────────────────────────────────────
 
 def main():
-    nb = json.loads(NB_PATH.read_text())
+    nb = read_notebook(NB_PATH)
+
+    def _cell_source(cell):
+        source = cell.get("source", "")
+        if isinstance(source, list):
+            return "".join(source)
+        return source
+
+    section_start = None
+    appendix_start = None
+    for idx, cell in enumerate(nb.get("cells", [])):
+        source = _cell_source(cell)
+        if section_start is None and MARKER in source:
+            section_start = idx
+        if appendix_start is None and APPENDIX_MARKER in source:
+            appendix_start = idx
+
+    if section_start is not None:
+        section_end = appendix_start if appendix_start is not None and appendix_start > section_start else len(nb["cells"])
+        del nb["cells"][section_start:section_end]
+        insert_at = section_start
+        if appendix_start is not None and appendix_start > section_start:
+            insert_at = min(insert_at, len(nb["cells"]))
+    else:
+        insert_at = appendix_start if appendix_start is not None else len(nb["cells"])
 
     new_cells = [
         md(S6_MD),
@@ -572,9 +559,9 @@ def main():
         code(S63_CONCLUSIONS_CODE),
     ]
 
-    nb["cells"].extend(new_cells)
-    NB_PATH.write_text(json.dumps(nb, indent=1, ensure_ascii=False))
-    print(f"Appended {len(new_cells)} cells → {NB_PATH}")
+    nb["cells"][insert_at:insert_at] = new_cells
+    write_notebook(NB_PATH, nb)
+    print(f"Updated {len(new_cells)} cells → {NB_PATH}")
     print(f"Notebook now has {len(nb['cells'])} cells total")
 
 
