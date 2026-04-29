@@ -98,18 +98,24 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from foureng.models.bsm    import BsmParams
-from foureng.models.heston import HestonParams
-from foureng.models.variance_gamma import VGParams
-from foureng.models.cgmy   import CgmyParams
-from foureng.models.kou    import KouParams
-from foureng.models.base   import ForwardSpec
-from foureng.pipeline import price_strip
-from foureng.pricers.cos import recommended_cos_policy
-from foureng.utils.grids import COSGridPolicy
+import foureng as fe
+import foureng.models as fe_models
+import foureng.pipeline as fe_pipe
+
+BsmParams = fe_models.BsmParams
+HestonParams = fe_models.HestonParams
+VGParams = fe_models.VGParams
+CgmyParams = fe_models.CgmyParams
+KouParams = fe_models.KouParams
+ForwardSpec = fe.ForwardSpec
+price_strip = fe_pipe.price_strip
+recommended_cos_policy = fe.recommended_cos_policy
+COSGridPolicy = fe.COSGridPolicy
 
 try:
-    from foureng.utils.spectral_filters import COSFilterSpec, cos_filter_weights
+    import foureng.utils.spectral_filters as fe_filters
+    COSFilterSpec = fe_filters.COSFilterSpec
+    cos_filter_weights = fe_filters.cos_filter_weights
 except Exception:
     @dataclass(frozen=True)
     class COSFilterSpec:
@@ -141,11 +147,10 @@ except Exception:
         return np.asarray(w, dtype=float)
 
 try:
-    from foureng.experiments.cos_filter_grid_search import (
-        policy_filter_candidates,
-        run_filtered_cos_grid_search,
-        select_fastest_under_tolerance,
-    )
+    import foureng.experiments.cos_filter_grid_search as fe_search
+    policy_filter_candidates = fe_search.policy_filter_candidates
+    run_filtered_cos_grid_search = fe_search.run_filtered_cos_grid_search
+    select_fastest_under_tolerance = fe_search.select_fastest_under_tolerance
 except Exception:
     @dataclass(frozen=True)
     class _FilterGridCandidate:
