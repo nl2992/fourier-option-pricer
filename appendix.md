@@ -6,7 +6,7 @@ This appendix collects the extra project material that does not belong in the pa
 
 - `foureng/`: packaged pricing library and public API
 - `notebooks/demo.ipynb`: Colab-friendly quick-start walkthrough
-- `notebooks/supplementary/demo_advanced.ipynb`: **supplementary** full-feature showcase  -  all 20 models, 6 pricers, Greeks, IV surface, calibration, MC, new models, validation highlights (v0.4.1); not the recommended starting point
+- `notebooks/supplementary/demo_advanced.ipynb`: **supplementary** full-feature showcase  -  all 20 models, 6 pricers, Greeks, IV surface, calibration, MC, new models, validation highlights (v0.4.2); not the recommended starting point
 - `notebooks/fo2008_replication.ipynb`: full Fang-Oosterlee (2008) paper-faithful replication
 - `notebooks/paper_replications/bates_mathworks_replication.ipynb`: Bates all-engine scoreboard vs MathWorks frozen reference
 - `notebooks/paper_replications/three_halves_replication.ipynb`: 3/2 SV PyFENG regression + Baldeaux-Badran qualitative IV smile
