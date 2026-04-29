@@ -40,7 +40,7 @@ $$\varphi_T(u) = \mathbb{E}^{\mathbb{Q}}\!\left[e^{iu X_T}\right], \qquad X_T = 
 
 Many models admit a closed-form $\varphi_T$ even when the density is not available in closed form. The notebook uses that shared input to compare five pricing routes against published or frozen references.
 
-The sections below cover:
+Notebook layout:
 
 1. **Monte Carlo** — flexible baseline; shows the $O(n^{-1/2})$ convergence bottleneck.
 2. **Carr–Madan FFT** — the 1999 workhorse; damped-call transform on a uniform frequency grid.
@@ -48,7 +48,7 @@ The sections below cover:
 4. **COS (Fang–Oosterlee 2008)** — primary pricer; spectral convergence on a cumulant-truncated interval.
 5. **COS + Junike adaptive truncation** — tolerance-driven widening for long-maturity stress cases.
 
-A short cross-model diagnostic closes the notebook.
+The base notebook ends with a cross-model diagnostic, followed by one short extension on filtered COS.
 """
 
 # ---------------------------------------------------------------------------
@@ -62,25 +62,18 @@ INSTALL_CODE = r"""%pip install -q -U fourier-option-pricer
 # Cell 2 — Imports + inline data + colours + helpers
 # ---------------------------------------------------------------------------
 
-SETUP_CODE = r"""# ── Ensure fourier-option-pricer is installed and importable ─────────────────
-# This block is self-healing: it works whether or not the install cell above
-# has already been run, handles editable-install conflicts, and gives a clear
-# error if the package is genuinely missing after all attempts.
-import sys, importlib, importlib.util
+SETUP_CODE = r"""import sys, importlib, importlib.util
 
 if importlib.util.find_spec("foureng") is None:
-    # Not yet importable — run pip now (safe to call even if already installed)
     import subprocess
     subprocess.run(
         [sys.executable, "-m", "pip", "install", "-q", "fourier-option-pricer"],
         check=True,
     )
-    # Reload site so Python picks up packages installed in this session
     import site
     importlib.reload(site)
     importlib.invalidate_caches()
 
-    # Belt-and-suspenders: add every site-packages dir that pip knows about
     if importlib.util.find_spec("foureng") is None:
         import sysconfig
         for _p in sysconfig.get_paths().values():
@@ -94,7 +87,6 @@ if importlib.util.find_spec("foureng") is None:
         "→ Restart the kernel (Kernel ▸ Restart) and run all cells from the top."
     )
 
-# ── Standard imports ──────────────────────────────────────────────────────────
 import time, types, warnings
 import numpy as np
 import pandas as pd
@@ -103,7 +95,6 @@ from matplotlib.patches import FancyBboxPatch, Patch
 from IPython.display import display
 warnings.filterwarnings("ignore")
 
-# ── foureng ───────────────────────────────────────────────────────────────────
 from foureng.iv.implied_vol import BSInputs, bs_price_from_fwd
 from foureng.mc.black_scholes_mc import MCSpec, european_call_mc
 from foureng.mc.heston_conditional_mc import HestonMCScheme, heston_conditional_mc_calls
@@ -128,7 +119,6 @@ from foureng.viz.notebook_runtime import night_style, sci, timeit_strip
 apply_columbia_style()
 pd.options.display.float_format = lambda x: f'{x:,.6g}'
 
-# ── FO2008 Table 5 stress case — inlined, no benchmarks/ dependency ───────────
 HESTON_TABLE5_T10 = types.SimpleNamespace(
     strikes=[100.0],
     maturity=10.0,
@@ -140,7 +130,6 @@ HESTON_TABLE5_T10 = types.SimpleNamespace(
     extras={"L": 32.0},
 )
 
-# ── Colour palette ────────────────────────────────────────────────────────────
 CB_LIGHT   = '#EAF4FB'
 CB_SOFT    = '#D7EAF5'
 CB_MID     = '#7FA3C7'
@@ -150,7 +139,6 @@ CB_PALETTE = [DARK, NAVY, CB_DEEP, CB_STEEL, CB_MID, COLUMBIA_BLUE]
 PYFENG_LEWIS_LABEL = 'PyFENG Lewis'
 
 
-# ── Helper: overview diagram ───────────────────────────────────────────────────
 def draw_overview_diagram():
     fig, ax = plt.subplots(figsize=(12, 2.8))
     ax.axis('off')
@@ -180,7 +168,6 @@ def draw_overview_diagram():
     return fig
 
 
-# ── Helper: heatmap ───────────────────────────────────────────────────────────
 def heatmap(ax, pivot: pd.DataFrame, *, title: str, cmap: str,
             annotation: str = 'sci', cbar_label: str = '',
             transform: str | None = None):
@@ -214,7 +201,6 @@ def heatmap(ax, pivot: pd.DataFrame, *, title: str, cmap: str,
     cbar.ax.set_ylabel(cbar_label, rotation=90)
 
 
-# ── Helper: method frontier scatter ───────────────────────────────────────────
 def method_frontier(ax, df: pd.DataFrame, *, x: str, y: str,
                     label_col: str, title: str):
     markers = {
@@ -1076,10 +1062,10 @@ display(night_style(
 # Cell 21 — Conclusions
 # ---------------------------------------------------------------------------
 
-CONCLUSIONS_MD = r"""## General conclusions from the notebook
+CONCLUSIONS_MD = r"""## 5.1 Takeaways from sections 1–5
 
 1. **`COS classic` is the best default in this notebook.**
-   - On the published Heston strip it reaches reference-level accuracy quickly.
+   - On the published Heston strip it reaches the reference values quickly.
    - In the cross-model panel it is the most even performer across diffusion, stochastic-volatility, jump, and hybrid-jump families.
 
 2. **`COS improved` is a safeguard, not a replacement.**

@@ -19,20 +19,27 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 NB_PATH = ROOT / "notebooks" / "demo.ipynb"
 MARKER = "<!-- demo-extra-visuals -->"
 
-APPENDIX_MD = f"""## Appendix — Two extra checks
+APPENDIX_MD = f"""## Appendix A. Extra diagnostics
 
 {MARKER}
 
-Two additional plots:
+Two short add-ons:
+- a Heston implied-volatility surface built from COS prices;
+- a dense short-maturity VG strip, where the filtered-COS differences are easier to see than they are under Heston.
+"""
 
-1. A Heston implied-volatility surface built from COS prices.
-2. A dense short-maturity VG strip, which is a cleaner place to see the filter choice.
+SURFACE_MD = """### A.1 Heston implied-volatility surface
 
-The second plot is intentionally not Heston. In Heston the COS variants are already close enough that the error curves largely overlap. Short-maturity VG separates them enough to make the comparison visible.
+This surface is built from COS prices and Black-style implied-vol inversion on a small maturity/strike grid.
+"""
+
+DENSE_MD = """### A.2 Dense VG strip
+
+This is the same short-maturity VG setting used in the stress tests, plotted more densely across strikes so the COS variants separate visibly.
 """
 
 
-SURFACE_CODE = """from mpl_toolkits.mplot3d import Axes3D  # noqa: F401
+SURFACE_CODE = """from mpl_toolkits import mplot3d
 from foureng.surface import SurfaceSpec, model_iv_surface
 
 SURF_MATS = np.array([0.25, 0.50, 1.00, 1.50, 2.00])
@@ -230,12 +237,7 @@ axes[2].text(
 fig.tight_layout()
 plt.show()
 
-print('Adaptive dense-strip selection:')
-print(
-    dense_search[['method_label', 'filter', 'filter_order', 'runtime_ms', 'max_abs_err', 'passes_tol']]
-    .head(7)
-    .to_string(index=False)
-)
+dense_search[['method_label', 'filter', 'filter_order', 'runtime_ms', 'max_abs_err', 'passes_tol']].head(7)
 """
 
 
@@ -256,7 +258,9 @@ def main() -> None:
 
     nb["cells"].extend([
         md(APPENDIX_MD),
+        md(SURFACE_MD),
         code(SURFACE_CODE),
+        md(DENSE_MD),
         code(COS_COMPARE_CODE),
     ])
 
