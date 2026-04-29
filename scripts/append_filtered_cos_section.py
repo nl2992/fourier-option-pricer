@@ -80,7 +80,7 @@ for _label, _weights, _color in _profiles:
     ax.plot(_xw, _weights, lw=2.0, color=_color, label=_label)
 
 ax.set_xlabel("normalised COS mode  k / (N - 1)")
-ax.set_ylabel("weight  $\\sigma_k$")
+ax.set_ylabel(r"weight  $\\sigma_k$")
 ax.set_title("Three filter profiles on the COS coefficients")
 ax.set_ylim(-0.02, 1.05)
 ax.grid(True, ls="--", alpha=0.3)
@@ -245,9 +245,7 @@ except Exception:
         return df.sort_values("max_abs_err").iloc[0]
 
 _OUT_DIR = pathlib.Path("benchmarks/mc_vs_fourier_methods/outputs")
-_FIG_DIR = _OUT_DIR / "figures"
 _OUT_DIR.mkdir(parents=True, exist_ok=True)
-_FIG_DIR.mkdir(parents=True, exist_ok=True)
 _TOL = 1e-6
 
 STRESS_CASES = [
@@ -407,9 +405,6 @@ by_label = dict(zip(labels, handles))
 ax.legend(by_label.values(), by_label.keys(), fontsize=8, loc="upper right")
 ax.grid(True, which="both", ls="--", alpha=0.35)
 fig.tight_layout()
-
-fig_path = _FIG_DIR / "cos_policy_search_showcase.png"
-fig.savefig(fig_path, dpi=120, bbox_inches="tight")
 plt.show()
 """
 
@@ -524,10 +519,6 @@ ax2.grid(True, which="both", ls="--", alpha=0.3, axis="y")
 
 fig.suptitle("Adaptive filtered-COS: model-zoo rerun", fontsize=12, y=1.01)
 fig.tight_layout()
-
-err_fig_path = _FIG_DIR / "adaptive_filtered_cos_model_zoo_errors.png"
-rt_fig_path  = _FIG_DIR / "adaptive_filtered_cos_model_zoo_runtime.png"
-fig.savefig(err_fig_path, dpi=120, bbox_inches="tight")
 fig2, ax = plt.subplots(figsize=(max(8, len(cases)*1.5), 4.5))
 ax.bar(x - w, zoo_df["vanilla_cos_runtime_ms"],          w,
        label="Vanilla COS",       color="silver",         edgecolor="grey")
@@ -539,7 +530,6 @@ ax.set_xticks(x); ax.set_xticklabels(cases, rotation=30, ha="right")
 ax.set_ylabel("runtime (ms)"); ax.legend(fontsize=8)
 ax.grid(True, which="both", ls="--", alpha=0.3, axis="y")
 fig2.tight_layout()
-fig2.savefig(rt_fig_path, dpi=120, bbox_inches="tight")
 plt.show()
 """
 
@@ -638,20 +628,22 @@ else:
         "**No unresolved instability appeared in this model-zoo rerun** under the "
         f"selected tolerance {_TOL:.0e}.  "
         "All cases produced finite, non-negative prices.  "
-        "The main remaining challenge is choosing the cheapest policy rather than "
-        "fixing pricing failure: the adaptive selector currently uses a fixed "
-        "candidate set; a learned or model-adaptive set could further reduce "
-        "runtime in cases where the recommended policy is over-conservative."
+        "The remaining challenge is policy efficiency rather than basic numerical "
+        "stability: the current candidate set is fixed, so some smooth cases are "
+        "still paying for a broader search than they really need."
     )
 
 from IPython.display import Markdown, display
-_md_text = (
-    "\n**1.** " + _conclusion1 + "\n\n"
-    "**2.** " + _conclusion2 + "\n\n"
-    "**3.** " + _conclusion3 + "\n\n"
-    "**4.** " + _conclusion4 + "\n"
-)
-display(Markdown(_md_text))
+_takeaways = [
+    _conclusion1,
+    _conclusion2,
+    _conclusion3,
+    _conclusion4,
+]
+_md_lines = ["**Takeaways**", ""]
+for _idx, _line in enumerate(_takeaways, start=1):
+    _md_lines.append(f"{_idx}. {_line}")
+display(Markdown("\\n".join(_md_lines)))
 """
 
 # ── Assemble and write ─────────────────────────────────────────────────────────
