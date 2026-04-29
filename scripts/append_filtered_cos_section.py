@@ -22,7 +22,7 @@ APPENDIX_MARKER = "<!-- demo-extra-visuals -->"
 # ── Section 6 header ──────────────────────────────────────────────────────────
 
 S6_MD = f"""\
-## Post-model-zoo extension: adaptive filtered-COS
+## 6. Adaptive filtered-COS
 
 {MARKER}
 
@@ -76,11 +76,6 @@ _OUT_DIR.mkdir(parents=True, exist_ok=True)
 _FIG_DIR.mkdir(parents=True, exist_ok=True)
 _TOL = 1e-6
 
-# ── Stress cases ──────────────────────────────────────────────────────────────
-# We search across multiple (model, maturity) combinations and programmatically
-# identify the showcase case that best demonstrates the adaptive method.
-# No result is hard-coded; the notebook computes everything from scratch.
-
 STRESS_CASES = [
     dict(case_name="BSM_T1",       model="bsm",
          fwd=ForwardSpec(S0=100, r=0.03, q=0.01, T=1.0),
@@ -115,19 +110,17 @@ def _oracle_policy(model):
         dx_target=0.001, L=14.0, eps_trunc=1e-12,
         min_N=64, max_N=16384, width_fallback=0.0,
     )
-
-print("Setup complete. Starting grid search over", len(STRESS_CASES), "stress cases …")
 """
 
 # ── Section 6.1 header ────────────────────────────────────────────────────────
 
 S61_MD = """\
-### 6.1 Direct comparison: vanilla COS vs Junike-COS vs adaptive filtered-COS
+### 6.1 Policy search across stress cases
 
 We run a deterministic policy grid search over 7 candidate policies for each
 stress case, then programmatically select the showcase case.
 
-**Showcase selection rule** (applied in priority order):
+Case selection rule:
 1. `adaptive_error < junike_error` AND `adaptive_error < vanilla_error` → *"strictly improves error"*
 2. `adaptive_error ≤ tol` AND `runtime_adaptive < runtime_junike` → *"matches tolerance faster"*
 3. `adaptive_error ≤ tol` → *"matches Junike within tolerance"*
@@ -144,20 +137,17 @@ for case in STRESS_CASES:
     ref = price_strip(model, "cos_improved", strikes, fwd, params,
                       grid=_oracle_policy(model))
 
-    # Vanilla COS
     t0  = time.perf_counter()
     van = price_strip(model, "cos", strikes, fwd, params)
     rt_van = (time.perf_counter() - t0) * 1e3
     err_van = float(np.max(np.abs(van - ref)))
 
-    # Junike-COS (recommended policy, no filter)
     rec_pol = recommended_cos_policy(model, params)
     t0  = time.perf_counter()
     jun = price_strip(model, "cos_improved", strikes, fwd, params, grid=rec_pol)
     rt_jun = (time.perf_counter() - t0) * 1e3
     err_jun = float(np.max(np.abs(jun - ref)))
 
-    # Adaptive filtered search
     df_srch = run_filtered_cos_grid_search(
         model=model, strikes=strikes, fwd=fwd, params=params,
         reference=ref, candidates=policy_filter_candidates(rec_pol, label_prefix="junike"),
@@ -193,27 +183,17 @@ showcase_df = pd.DataFrame([{k: v for k, v in r.items() if k != "_df_srch"}
 
 csv_path = _OUT_DIR / "cos_policy_search_showcase.csv"
 showcase_df.to_csv(csv_path, index=False)
-print(f"Saved showcase → {csv_path}")
 showcase_df[["case_name","vanilla_cos_error","junike_cos_error",
              "adaptive_filtered_error","selected_filter","adaptive_result_label"]]
 """
 
 S61_PLOT_CODE = """\
-# Pick the most interesting showcase case
 _priority = ["strictly improves error", "matches tolerance faster",
              "matches Junike within tolerance", "no improvement found"]
 _best_case = min(_showcase_rows,
     key=lambda r: (_priority.index(r["adaptive_result_label"]),
                    r["adaptive_filtered_error"]))
 
-print(f"\\nShowcase case: {_best_case['case_name']}")
-print(f"  Vanilla error   : {_best_case['vanilla_cos_error']:.3e}")
-print(f"  Junike error    : {_best_case['junike_cos_error']:.3e}")
-print(f"  Adaptive error  : {_best_case['adaptive_filtered_error']:.3e}")
-print(f"  Selected filter : {_best_case['selected_filter']}")
-print(f"  Result label    : {_best_case['adaptive_result_label']}")
-
-# ── Scatter: runtime vs error for all candidates ─────────────────────────────
 _sr = _best_case["_df_srch"].copy()
 _ok = _sr[_sr["status"] == "ok"].copy()
 
@@ -232,12 +212,10 @@ for _, row in _ok.iterrows():
                if row["filter"] not in [r["filter"] for _, r in
                   list(_ok.iterrows())[:list(_ok.index).index(row.name)]] else "")
 
-# Highlight the selected adaptive result
 ax.scatter(_best_case["adaptive_filtered_runtime_ms"],
            max(_best_case["adaptive_filtered_error"], 1e-16),
            c="gold", marker="*", s=350, zorder=5, label="Selected (adaptive)")
 
-# Junike and vanilla markers
 ax.axhline(_best_case["junike_cos_error"], color="steelblue",
            ls="--", lw=1.2, alpha=0.6, label="Junike COS error")
 ax.axhline(_best_case["vanilla_cos_error"], color="grey",
@@ -259,11 +237,10 @@ fig.tight_layout()
 fig_path = _FIG_DIR / "cos_policy_search_showcase.png"
 fig.savefig(fig_path, dpi=120, bbox_inches="tight")
 plt.show()
-print(f"Figure saved → {fig_path}")
 """
 
 S61_INTERP_MD = """\
-**Interpretation**
+#### Reading the scatter
 
 The table above is computed rather than hard-coded. Read the
 `adaptive_result_label` column for the outcome in each case. The scatter plot
@@ -282,7 +259,7 @@ Key observations:
 # ── Section 6.2 ───────────────────────────────────────────────────────────────
 
 S62_MD = """\
-### 6.2 Model-zoo rerun with adaptive filtered-COS
+### 6.2 Model-zoo rerun
 
 We repeat the comparison for all stress cases and summarise the result in one table.
 """
@@ -328,7 +305,6 @@ for r in _showcase_rows:
 zoo_df = pd.DataFrame(_zoo_rows)
 zoo_csv = _OUT_DIR / "adaptive_filtered_cos_model_zoo.csv"
 zoo_df.to_csv(zoo_csv, index=False)
-print(f"Saved model-zoo → {zoo_csv}")
 
 cols = ["case_name","vanilla_cos_error","junike_cos_error",
         "adaptive_filtered_error","selected_filter","final_status"]
@@ -346,7 +322,6 @@ w     = 0.25
 
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 5))
 
-# ── Error comparison ─────────────────────────────────────────────────────────
 ax1.bar(x - w, np.clip(zoo_df["vanilla_cos_error"],          1e-16, None),
         w, label="Vanilla COS",       color="silver",  edgecolor="grey")
 ax1.bar(x,      np.clip(zoo_df["junike_cos_error"],           1e-16, None),
@@ -361,7 +336,6 @@ ax1.set_title("Error comparison by model")
 ax1.legend(fontsize=8)
 ax1.grid(True, which="both", ls="--", alpha=0.3, axis="y")
 
-# ── Runtime comparison ───────────────────────────────────────────────────────
 ax2.bar(x - w, zoo_df["vanilla_cos_runtime_ms"],           w,
         label="Vanilla COS",       color="silver",         edgecolor="grey")
 ax2.bar(x,      zoo_df["junike_cos_runtime_ms"],            w,
@@ -380,7 +354,6 @@ fig.tight_layout()
 err_fig_path = _FIG_DIR / "adaptive_filtered_cos_model_zoo_errors.png"
 rt_fig_path  = _FIG_DIR / "adaptive_filtered_cos_model_zoo_runtime.png"
 fig.savefig(err_fig_path, dpi=120, bbox_inches="tight")
-# Save runtime separately
 fig2, ax = plt.subplots(figsize=(max(8, len(cases)*1.5), 4.5))
 ax.bar(x - w, zoo_df["vanilla_cos_runtime_ms"],          w,
        label="Vanilla COS",       color="silver",         edgecolor="grey")
@@ -394,18 +367,13 @@ ax.grid(True, which="both", ls="--", alpha=0.3, axis="y")
 fig2.tight_layout()
 fig2.savefig(rt_fig_path, dpi=120, bbox_inches="tight")
 plt.show()
-print(f"Saved error figure → {err_fig_path}")
-print(f"Saved runtime figure → {rt_fig_path}")
 """
 
-# ── Section 6.3 four conclusions ─────────────────────────────────────────────
-
 S63_MD = """\
-### 6.3 Four conclusions from the adaptive rerun
+### 6.3 Takeaways from the extension
 """
 
 S63_CONCLUSIONS_CODE = """\
-# ── Generate the four evidence-backed conclusions from computed results ──────
 _statuses = zoo_df["final_status"].value_counts().to_dict()
 _any_best  = zoo_df[zoo_df["final_status"] == "adaptive best"]
 _any_junike_still = zoo_df[zoo_df["final_status"] == "Junike still best"]
@@ -414,7 +382,6 @@ _any_within = zoo_df[zoo_df["adaptive_matches_best_within_tolerance"]]
 _any_unstable = zoo_df[zoo_df["adaptive_filtered_error"].isna() |
                        zoo_df["adaptive_filtered_error"].isin([float("inf")])]
 
-# 1. Where adaptive filtered-COS works best
 if not _any_best.empty:
     _c1 = _any_best.iloc[0]
     _conclusion1 = (
@@ -441,7 +408,6 @@ else:
         f"meaning the Junike truncation was already controlling the dominant error source."
     )
 
-# 2. Where Junike truncation is enough
 if not _any_junike_still.empty:
     _c2_names = ", ".join(f"`{r}`" for r in _any_junike_still["case_name"].tolist())
     _conclusion2 = (
@@ -458,7 +424,6 @@ else:
         "This confirms Junike is effective when truncation is the dominant issue."
     )
 
-# 3. Where vanilla COS is adequate
 if not _any_vanilla_still.empty:
     _c3_names = ", ".join(f"`{r}`" for r in _any_vanilla_still["case_name"].tolist())
     _conclusion3 = (
@@ -487,7 +452,6 @@ else:
             "competitive.  The adaptive selector matched this performance without regression."
         )
 
-# 4. Where further work is needed
 if not _any_unstable.empty:
     _c4_names = ", ".join(f"`{r}`" for r in _any_unstable["case_name"].tolist())
     _conclusion4 = (
