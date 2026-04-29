@@ -93,6 +93,7 @@ plt.show()
 
 S6_SETUP_CODE = """\
 import time, pathlib
+from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -106,12 +107,142 @@ from foureng.models.base   import ForwardSpec
 from foureng.pipeline import price_strip
 from foureng.pricers.cos import recommended_cos_policy
 from foureng.utils.grids import COSGridPolicy
-from foureng.utils.spectral_filters import COSFilterSpec, cos_filter_weights
-from foureng.experiments.cos_filter_grid_search import (
-    policy_filter_candidates,
-    run_filtered_cos_grid_search,
-    select_fastest_under_tolerance,
-)
+
+try:
+    from foureng.utils.spectral_filters import COSFilterSpec, cos_filter_weights
+except Exception:
+    @dataclass(frozen=True)
+    class COSFilterSpec:
+        name: str = "none"
+        order: int = 8
+        alpha: float | None = None
+
+    def cos_filter_weights(N, spec=None):
+        if N <= 0:
+            raise ValueError(f"N must be positive (got {N})")
+        if spec is None or spec.name == "none":
+            return np.ones(N, dtype=float)
+        if N == 1:
+            return np.ones(1, dtype=float)
+        k = np.arange(N, dtype=float)
+        x = k / float(N - 1)
+        if spec.name == "fejer":
+            w = 1.0 - x
+        elif spec.name == "lanczos":
+            w = np.sinc(x)
+        elif spec.name == "raised_cosine":
+            w = 0.5 * (1.0 + np.cos(np.pi * x))
+        elif spec.name == "exponential":
+            alpha = float(spec.alpha if spec.alpha is not None else -np.log(np.finfo(float).eps))
+            w = np.exp(-alpha * x**int(spec.order))
+        else:
+            raise ValueError(f"unknown filter {spec.name!r}")
+        w[0] = 1.0
+        return np.asarray(w, dtype=float)
+
+try:
+    from foureng.experiments.cos_filter_grid_search import (
+        policy_filter_candidates,
+        run_filtered_cos_grid_search,
+        select_fastest_under_tolerance,
+    )
+except Exception:
+    @dataclass(frozen=True)
+    class _FilterGridCandidate:
+        method_label: str
+        policy: COSGridPolicy
+        filter_spec: COSFilterSpec | None
+
+    def policy_filter_candidates(policy, *, label_prefix="", no_filter_label=None):
+        prefix = f"{label_prefix}_" if label_prefix else ""
+        none_label = no_filter_label or f"{prefix}no_filter"
+        candidates = [_FilterGridCandidate(none_label, policy, None)]
+        specs = [
+            ("fejer", COSFilterSpec("fejer")),
+            ("lanczos", COSFilterSpec("lanczos")),
+            ("raised_cosine", COSFilterSpec("raised_cosine")),
+            ("exp_p4", COSFilterSpec("exponential", order=4)),
+            ("exp_p8", COSFilterSpec("exponential", order=8)),
+            ("exp_p12", COSFilterSpec("exponential", order=12)),
+        ]
+        for label, spec in specs:
+            candidates.append(_FilterGridCandidate(f"{prefix}{label}", policy, spec))
+        return candidates
+
+    def _time_call(fn, n_repeat=3):
+        best = float("inf")
+        out = None
+        for _ in range(n_repeat):
+            t0 = time.perf_counter()
+            out = fn()
+            best = min(best, (time.perf_counter() - t0) * 1e3)
+        return out, best
+
+    def run_filtered_cos_grid_search(*, model, strikes, fwd, params, reference,
+                                     candidates=None, tol=1e-8, n_repeat=3):
+        if candidates is None:
+            raise ValueError("candidates must be provided in notebook fallback mode")
+        rows = []
+        for cand in candidates:
+            try:
+                if cand.filter_spec is None:
+                    method = "cos_improved"
+                    grid_arg = cand.policy
+                else:
+                    method = "cos_filtered"
+                    grid_arg = (cand.policy, cand.filter_spec)
+                prices, runtime_ms = _time_call(
+                    lambda m=method, g=grid_arg: price_strip(model, m, strikes, fwd, params, grid=g),
+                    n_repeat=n_repeat,
+                )
+                err = np.asarray(prices, dtype=float) - np.asarray(reference, dtype=float)
+                max_abs_err = float(np.max(np.abs(err)))
+                mean_abs_err = float(np.mean(np.abs(err)))
+                rows.append({
+                    "method_label": cand.method_label,
+                    "truncation": cand.policy.truncation,
+                    "dx_target": cand.policy.dx_target,
+                    "L": cand.policy.L,
+                    "eps_trunc": cand.policy.eps_trunc,
+                    "filter": "none" if cand.filter_spec is None else cand.filter_spec.name,
+                    "filter_order": np.nan if cand.filter_spec is None else cand.filter_spec.order,
+                    "runtime_ms": runtime_ms,
+                    "max_abs_err": max_abs_err,
+                    "mean_abs_err": mean_abs_err,
+                    "passes_tol": max_abs_err <= tol,
+                    "status": "ok",
+                })
+            except Exception as exc:
+                rows.append({
+                    "method_label": cand.method_label,
+                    "truncation": getattr(cand.policy, "truncation", None),
+                    "dx_target": getattr(cand.policy, "dx_target", None),
+                    "L": getattr(cand.policy, "L", None),
+                    "eps_trunc": getattr(cand.policy, "eps_trunc", None),
+                    "filter": "none" if cand.filter_spec is None else cand.filter_spec.name,
+                    "filter_order": np.nan if cand.filter_spec is None else cand.filter_spec.order,
+                    "runtime_ms": np.nan,
+                    "max_abs_err": np.inf,
+                    "mean_abs_err": np.inf,
+                    "passes_tol": False,
+                    "status": f"fail: {type(exc).__name__}: {exc}",
+                })
+        df = pd.DataFrame(rows)
+        if df.empty:
+            return df
+        return df.sort_values(
+            ["passes_tol", "max_abs_err", "runtime_ms"],
+            ascending=[False, True, True],
+        ).reset_index(drop=True)
+
+    def select_fastest_under_tolerance(df, tol):
+        ok = df[(df["status"] == "ok") & (df["max_abs_err"] <= tol)].copy()
+        if not ok.empty:
+            return ok.sort_values(["runtime_ms", "max_abs_err"]).iloc[0]
+        valid = df[df["status"] == "ok"].copy()
+        if not valid.empty:
+            return valid.sort_values(["max_abs_err", "runtime_ms"]).iloc[0]
+        return df.sort_values("max_abs_err").iloc[0]
 
 _OUT_DIR = pathlib.Path("benchmarks/mc_vs_fourier_methods/outputs")
 _FIG_DIR = _OUT_DIR / "figures"
