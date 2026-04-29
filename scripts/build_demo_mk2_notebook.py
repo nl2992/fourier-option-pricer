@@ -115,7 +115,6 @@ from foureng.refs.paper_refs import (
 )
 from foureng.utils.grids import COSGridPolicy, FFTGrid
 from foureng.viz.columbia import apply_columbia_style, NAVY, COLUMBIA_BLUE, DARK
-from foureng.viz.notebook_runtime import night_style, sci, timeit_strip
 apply_columbia_style()
 pd.options.display.float_format = lambda x: f'{x:,.6g}'
 
@@ -137,6 +136,89 @@ CB_STEEL   = '#5B8FB9'
 CB_DEEP    = '#1F5CA6'
 CB_PALETTE = [DARK, NAVY, CB_DEEP, CB_STEEL, CB_MID, COLUMBIA_BLUE]
 PYFENG_FFT_LABEL = 'PyFENG FFT reference'
+
+
+def timeit_strip(fn, *args, n_repeat=3, warmup=True, **kwargs):
+    if warmup:
+        fn(*args, **kwargs)
+    best_ms = float('inf')
+    out = None
+    for _ in range(n_repeat):
+        t0 = time.perf_counter()
+        out = fn(*args, **kwargs)
+        best_ms = min(best_ms, (time.perf_counter() - t0) * 1e3)
+    return out, best_ms
+
+
+def sci(x):
+    if pd.isna(x):
+        return '--'
+    return f'{x:.2e}'
+
+
+def night_style(df, *, caption=None, formats=None,
+                highlight_min=None, highlight_max=None, hide_index=True):
+    soft = '#D7EAF5'
+    mid = '#7FA3C7'
+    styler = df.style
+    if formats:
+        styler = styler.format(formats)
+    if highlight_min:
+        styler = styler.highlight_min(
+            subset=list(highlight_min),
+            color=soft,
+            props='color: #0B1F3A; font-weight: bold;',
+        )
+    if highlight_max:
+        styler = styler.highlight_max(
+            subset=list(highlight_max),
+            color=mid,
+            props='color: #0B1F3A; font-weight: bold;',
+        )
+    styler = styler.set_properties(**{
+        'background-color': DARK,
+        'color': '#F8FAFC',
+        'border': '1px solid #4B6FA8',
+        'font-size': '11px',
+    })
+    styler = styler.set_table_styles([
+        {
+            'selector': 'table',
+            'props': [
+                ('border-collapse', 'collapse'),
+                ('width', '100%'),
+                ('font-family', 'Menlo, Monaco, monospace'),
+            ],
+        },
+        {
+            'selector': 'caption',
+            'props': [
+                ('caption-side', 'top'),
+                ('color', NAVY),
+                ('font-size', '13px'),
+                ('font-weight', 'bold'),
+                ('padding', '6px 0'),
+            ],
+        },
+        {
+            'selector': 'th',
+            'props': [
+                ('background-color', NAVY),
+                ('color', '#F8FAFC'),
+                ('border', '1px solid #4B6FA8'),
+                ('padding', '6px 8px'),
+            ],
+        },
+        {'selector': 'td', 'props': [('padding', '6px 8px')]},
+        {'selector': 'tbody tr:nth-child(even)', 'props': [('background-color', '#10294B')]},
+        {'selector': 'tbody tr:nth-child(odd)', 'props': [('background-color', '#0B1F3A')]},
+        {'selector': 'tbody tr:hover', 'props': [('background-color', '#1F5CA6')]},
+    ], overwrite=False)
+    if caption is not None:
+        styler = styler.set_caption(caption)
+    if hide_index:
+        styler = styler.hide(axis='index')
+    return styler
 
 
 def draw_overview_diagram():
