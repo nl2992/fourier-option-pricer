@@ -23,7 +23,7 @@ TITLE_MD = r"""# Fourier Methods for European Option Pricing
 
 **Columbia University · MAFN · MATH 5030 · Spring 2026**
 
-*MC baseline → Carr–Madan FFT → PyFENG Lewis → COS → adaptive truncation*
+*MC baseline → Carr–Madan FFT → PyFENG FFT reference → COS → adaptive truncation*
 
 *Demo notebook · `foureng` package · Instructor: Prof. Jaehyuk Choi*
 
@@ -44,7 +44,7 @@ Notebook layout:
 
 1. **Monte Carlo** — flexible baseline; shows the $O(n^{-1/2})$ convergence bottleneck.
 2. **Carr–Madan FFT** — the 1999 workhorse; damped-call transform on a uniform frequency grid.
-3. **PyFENG Lewis** — external Heston benchmark exposed through the PyFENG backend.
+3. **PyFENG FFT reference** — external Heston benchmark exposed through the PyFENG backend.
 4. **COS (Fang–Oosterlee 2008)** — primary pricer; spectral convergence on a cumulant-truncated interval.
 5. **COS + Junike adaptive truncation** — tolerance-driven widening for long-maturity stress cases.
 
@@ -136,7 +136,7 @@ CB_MID     = '#7FA3C7'
 CB_STEEL   = '#5B8FB9'
 CB_DEEP    = '#1F5CA6'
 CB_PALETTE = [DARK, NAVY, CB_DEEP, CB_STEEL, CB_MID, COLUMBIA_BLUE]
-PYFENG_LEWIS_LABEL = 'PyFENG Lewis'
+PYFENG_FFT_LABEL = 'PyFENG FFT reference'
 
 
 def draw_overview_diagram():
@@ -205,11 +205,11 @@ def method_frontier(ax, df: pd.DataFrame, *, x: str, y: str,
                     label_col: str, title: str):
     markers = {
         'Monte Carlo': 'o', 'Carr-Madan FFT': 's',
-        PYFENG_LEWIS_LABEL: 'D', 'COS classic': 'P', 'COS improved': 'X',
+        PYFENG_FFT_LABEL: 'D', 'COS classic': 'P', 'COS improved': 'X',
     }
     colors = {
         'Monte Carlo': DARK, 'Carr-Madan FFT': NAVY,
-        PYFENG_LEWIS_LABEL: COLUMBIA_BLUE,
+        PYFENG_FFT_LABEL: COLUMBIA_BLUE,
         'COS classic': CB_STEEL, 'COS improved': CB_MID,
     }
     for label, sub in df.groupby(label_col):
@@ -247,7 +247,7 @@ S0_POLICY_CODE = r"""benchmark_policy = pd.DataFrame([
         'runtime metric': 'best strip runtime (ms)',
     },
     {
-        'section': 'Carr-Madan vs PyFENG Lewis',
+        'section': 'Carr-Madan vs PyFENG FFT reference',
         'contract / model': 'published Heston 5-strike strip',
         'reference': 'published 15-digit Heston prices',
         'error metric': 'max abs error across strip',
@@ -396,9 +396,9 @@ plt.show()
 # Cell 8 — §2 intro
 # ---------------------------------------------------------------------------
 
-S2_MD = r"""## 2. Carr-Madan vs PyFENG Lewis
+S2_MD = r"""## 2. Carr-Madan vs PyFENG FFT reference
 
-From here on the contract and benchmark stay fixed: the published five-strike Heston strip. The implementation detail worth keeping explicit is that our dispatch key is still `pyfeng_fft`, but the wrapped PyFENG call is `HestonFft.price()`, so the external comparison leg shown below is labelled as `PyFENG Lewis`."""
+From here on the contract and benchmark stay fixed: the published five-strike Heston strip. The dispatch key is `pyfeng_fft`, and for Heston it routes to PyFENG's `HestonFft.price()`. The comparison leg below is labelled accordingly as a PyFENG FFT reference."""
 
 # ---------------------------------------------------------------------------
 # Cell 9 — §2 CM sweep + PyFENG + summary table
@@ -448,7 +448,7 @@ transform_summary = pd.DataFrame([
         'max_abs_err': float(cm_best_row['max_abs_err']),
     },
     {
-        'method': PYFENG_LEWIS_LABEL,
+        'method': PYFENG_FFT_LABEL,
         'configuration': 'repo backend default',
         'runtime_ms': pyfeng_runtime_ms,
         'max_abs_err': float(np.max(np.abs(pyfeng_prices - HESTON_REF))),
@@ -505,7 +505,7 @@ plt.show()
 S2_FRONTIER_CODE = r"""frontier_transform = pd.concat([
     cm_sweep[['method', 'runtime_ms', 'max_abs_err']],
     pd.DataFrame([{
-        'method': PYFENG_LEWIS_LABEL,
+        'method': PYFENG_FFT_LABEL,
         'runtime_ms': pyfeng_runtime_ms,
         'max_abs_err': float(np.max(np.abs(pyfeng_prices - HESTON_REF))),
     }]),
