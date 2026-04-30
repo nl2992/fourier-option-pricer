@@ -157,3 +157,14 @@ def test_bates_zero_jump_intensity_carr_madan_prices_match_heston():
     heston_prices = price_strip("heston", "carr_madan", strikes, fwd, heston, grid=grid)
 
     assert np.allclose(bates_prices, heston_prices, atol=1e-12, rtol=1e-12)
+
+
+def test_bates_zero_jump_intensity_frft_prices_match_heston():
+    fwd, heston, strikes = _heston_base_case()
+    bates = _bates_no_jump_params(heston)
+    grid = FRFTGrid(N=4096, eta=0.25, lam=0.005, alpha=1.5)
+
+    bates_prices = price_strip("bates", "frft", strikes, fwd, bates, grid=grid)
+    heston_prices = price_strip("heston", "frft", strikes, fwd, heston, grid=grid)
+
+    assert np.allclose(bates_prices, heston_prices, atol=1e-12, rtol=1e-12)
