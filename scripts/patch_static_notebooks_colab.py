@@ -11,7 +11,10 @@ from nbformat.v4 import new_code_cell
 ROOT = Path(__file__).resolve().parents[1]
 NB_DIR = ROOT / "notebooks"
 
-INSTALL_SOURCE = "%pip install -q -U fourier-option-pricer numpy scipy matplotlib pandas pyfeng statsmodels\n"
+INSTALL_SOURCE = (
+    "# Leave Colab's numpy/scipy/matplotlib stack alone; install notebook extras explicitly.\n"
+    "%pip install -q fourier-option-pricer pandas pyfeng statsmodels\n"
+)
 
 
 def bootstrap_source(outdir_rel: str) -> str:
@@ -26,19 +29,16 @@ import sys
 import time
 import warnings
 
-_NOTEBOOK_PIP_PACKAGES = [
-    'fourier-option-pricer',
-    'numpy',
-    'scipy',
-    'matplotlib',
-    'pandas',
-    'pyfeng',
-    'statsmodels',
-]
+_NOTEBOOK_PIP_PACKAGES = []
+if importlib.util.find_spec('foureng') is None:
+    _NOTEBOOK_PIP_PACKAGES.append('fourier-option-pricer')
+for _pkg in ('numpy', 'scipy', 'matplotlib', 'pandas', 'pyfeng', 'statsmodels'):
+    if importlib.util.find_spec(_pkg) is None:
+        _NOTEBOOK_PIP_PACKAGES.append(_pkg)
 
-if any(importlib.util.find_spec(name) is None for name in ('foureng', 'numpy', 'pandas', 'matplotlib')):
+if _NOTEBOOK_PIP_PACKAGES:
     subprocess.run(
-        [sys.executable, '-m', 'pip', 'install', '-q', '-U', *_NOTEBOOK_PIP_PACKAGES],
+        [sys.executable, '-m', 'pip', 'install', '-q', *_NOTEBOOK_PIP_PACKAGES],
         check=True,
     )
     importlib.invalidate_caches()
@@ -290,6 +290,20 @@ def patch_notebook(name: str, outdir_rel: str) -> None:
 
     bootstrap_idx = install_idx + 1
     nb.cells[bootstrap_idx].source = bootstrap_source(outdir_rel)
+    while len(nb.cells) > bootstrap_idx + 1:
+        cell = nb.cells[bootstrap_idx + 1]
+        if cell.cell_type != "code":
+            break
+        src = cell.source
+        if (
+            "from __future__ import annotations" in src
+            and "REPO_ROOT = None" in src
+            and "OUTDIR = REPO_ROOT" in src
+            and "from foureng.models.base import ForwardSpec" in src
+        ):
+            del nb.cells[bootstrap_idx + 1]
+            continue
+        break
     nbformat.write(nb, path)
     print(f"patched {path}")
 

@@ -55,7 +55,8 @@ The base notebook ends with a cross-model diagnostic, followed by one short exte
 # Cell 1 — Install (own cell so Jupyter flushes the package before imports)
 # ---------------------------------------------------------------------------
 
-INSTALL_CODE = r"""%pip install -q -U fourier-option-pricer numpy scipy matplotlib pandas pyfeng statsmodels
+INSTALL_CODE = r"""# Leave Colab's numpy/scipy/matplotlib stack alone; install notebook extras explicitly.
+%pip install -q fourier-option-pricer pandas pyfeng statsmodels
 """
 
 # ---------------------------------------------------------------------------
@@ -72,19 +73,16 @@ import time
 import types
 import warnings
 
-_NOTEBOOK_PIP_PACKAGES = [
-    "fourier-option-pricer",
-    "numpy",
-    "scipy",
-    "matplotlib",
-    "pandas",
-    "pyfeng",
-    "statsmodels",
-]
+_NOTEBOOK_PIP_PACKAGES = []
+if importlib.util.find_spec("foureng") is None:
+    _NOTEBOOK_PIP_PACKAGES.append("fourier-option-pricer")
+for _pkg in ("numpy", "scipy", "matplotlib", "pandas", "pyfeng", "statsmodels"):
+    if importlib.util.find_spec(_pkg) is None:
+        _NOTEBOOK_PIP_PACKAGES.append(_pkg)
 
-if any(importlib.util.find_spec(name) is None for name in ("foureng", "numpy", "pandas", "matplotlib")):
+if _NOTEBOOK_PIP_PACKAGES:
     subprocess.run(
-        [sys.executable, "-m", "pip", "install", "-q", "-U", *_NOTEBOOK_PIP_PACKAGES],
+        [sys.executable, "-m", "pip", "install", "-q", *_NOTEBOOK_PIP_PACKAGES],
         check=True,
     )
     import site
@@ -99,7 +97,7 @@ from IPython.display import display
 
 if importlib.util.find_spec("foureng") is None:
     subprocess.run(
-        [sys.executable, "-m", "pip", "install", "-q", "-U", *_NOTEBOOK_PIP_PACKAGES],
+        [sys.executable, "-m", "pip", "install", "-q", "fourier-option-pricer"],
         check=True,
     )
     import site
