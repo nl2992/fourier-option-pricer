@@ -79,7 +79,7 @@ The reporting rules are simple:
 # Imports + theme + helpers
 # ─────────────────────────────────────────────────────────────────────────
 
-INSTALL_CODE = "%pip install -q -U fourier-option-pricer"
+INSTALL_CODE = "%pip install -q -U fourier-option-pricer numpy scipy matplotlib pandas pyfeng statsmodels"
 
 SETUP_CODE = """# ── Run configuration ──────────────────────────────────────────────────
 # Change these and re-run from here; every section reads them.
@@ -97,6 +97,24 @@ import subprocess
 import sys
 import warnings
 import time
+
+_NOTEBOOK_PIP_PACKAGES = [
+    "fourier-option-pricer",
+    "numpy",
+    "scipy",
+    "matplotlib",
+    "pandas",
+    "pyfeng",
+    "statsmodels",
+]
+
+if any(importlib.util.find_spec(name) is None for name in ("foureng", "numpy", "pandas", "matplotlib")):
+    subprocess.run(
+        [sys.executable, "-m", "pip", "install", "-q", "-U", *_NOTEBOOK_PIP_PACKAGES],
+        check=True,
+    )
+    importlib.invalidate_caches()
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -110,13 +128,6 @@ except Exception:
         print(obj)
 
 warnings.filterwarnings(\"ignore\", category=RuntimeWarning)
-
-if importlib.util.find_spec(\"foureng\") is None:
-    subprocess.run(
-        [sys.executable, \"-m\", \"pip\", \"install\", \"-q\", \"-U\", \"fourier-option-pricer\"],
-        check=True,
-    )
-    importlib.invalidate_caches()
 
 def _iter_repo_candidates():
     seen = set()
