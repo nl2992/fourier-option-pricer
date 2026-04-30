@@ -1,0 +1,31 @@
+name: fourier-option-pricer
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  # Runtime tested for this course project.
+  - python=3.11
+  - pip>=23
+  - numpy>=1.26
+  - scipy>=1.10
+  - pandas>=1.5
+  - matplotlib>=3.7
+
+  # Testing and local development.
+  - pytest>=7.4
+  - build>=1.0
+
+  # Notebook/report workflows used by the project scripts and demos.
+  - jupyter>=1.0
+  - notebook>=7.0
+  - nbformat>=5.10
+  - nbconvert>=7.0
+  - ipykernel>=6.0
+  - ipython>=8.0
+  - ipywidgets>=8.0
+  - pyyaml>=6.0
+
+  # PyFENG is distributed through PyPI and is required by the model adapters.
+  - pip:
+      - "pyfeng>=0.3.0,!=0.3.3"
+      - "-e .[test,dev]"
