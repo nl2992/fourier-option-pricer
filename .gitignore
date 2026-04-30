@@ -17,6 +17,9 @@ env/
 /notebooks/benchmarks/
 /notebooks/*_executed.ipynb
 /notebooks/*-executed.ipynb
+/notebooks/demo-deprecated.ipynb
+/notebooks/demo_executed.ipynb
+/notebooks/presentation_fourier_methods.ipynb
 
 # ── Local notebook tooling / patch scripts ───────────────────────────────────
 /scripts/
