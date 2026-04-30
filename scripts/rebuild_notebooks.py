@@ -435,22 +435,29 @@ C_TITLE = md_cell(
     "filters in a Fourier option pricing technique*, J. Computational Finance.\n"
 )
 
-C_PIP = code_cell("%pip install -q -U fourier-option-pricer\n")
+C_PIP = code_cell(
+    "# Leave Colab's numpy/scipy/matplotlib stack alone; install notebook extras explicitly.\n"
+    "%pip install -q fourier-option-pricer pandas pyfeng statsmodels\n"
+)
 
 C_SETUP = code_cell([
+    "import os\n",
     "import pathlib, sys, importlib, importlib.util\n",
     "import subprocess\n",
     "import time\n",
+    "_NOTEBOOK_PIP_PACKAGES = []\n",
+    "if importlib.util.find_spec('foureng') is None:\n",
+    "    _NOTEBOOK_PIP_PACKAGES.append('fourier-option-pricer')\n",
+    "for _pkg in ('numpy', 'scipy', 'matplotlib', 'pandas', 'pyfeng', 'statsmodels'):\n",
+    "    if importlib.util.find_spec(_pkg) is None:\n",
+    "        _NOTEBOOK_PIP_PACKAGES.append(_pkg)\n",
+    "if _NOTEBOOK_PIP_PACKAGES:\n",
+    "    subprocess.run([sys.executable, '-m', 'pip', 'install', '-q', *_NOTEBOOK_PIP_PACKAGES], check=True)\n",
+    "    importlib.invalidate_caches()\n",
     "import numpy as np\n",
     "import pandas as pd\n",
     "import matplotlib.pyplot as plt\n",
     "from IPython.display import display\n",
-    "\n",
-    "if importlib.util.find_spec('foureng') is None:\n",
-    "    import subprocess\n",
-    "    subprocess.run([sys.executable, '-m', 'pip', 'install', '-q',\n",
-    "                    'fourier-option-pricer'], check=True)\n",
-    "    importlib.invalidate_caches()\n",
     "\n",
     "from foureng.iv.implied_vol    import BSInputs, bs_price_from_fwd\n",
     "from foureng.models.base       import ForwardSpec\n",
