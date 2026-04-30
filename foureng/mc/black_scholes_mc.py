@@ -24,6 +24,18 @@ def european_call_mc(
     Returns array of prices shape (len(K),).
     """
     K = np.atleast_1d(np.asarray(K, dtype=float))
+    if K.size == 0:
+        raise ValueError("K/strikes must be non-empty")
+    if np.any(K <= 0.0):
+        raise ValueError("All strikes must be strictly positive")
+    if S0 <= 0.0:
+        raise ValueError("S0 must be strictly positive")
+    if T <= 0.0:
+        raise ValueError("T must be strictly positive")
+    if vol < 0.0:
+        raise ValueError("vol must be non-negative")
+    if mc.n_paths <= 0:
+        raise ValueError("n_paths must be positive")
     rng = np.random.default_rng(mc.seed)
     Z = rng.standard_normal(mc.n_paths)
     ST = S0 * np.exp((r - q - 0.5 * vol * vol) * T + vol * np.sqrt(T) * Z)
