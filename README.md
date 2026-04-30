@@ -66,6 +66,32 @@ result = fe.cos_prices(phi, fwd, strikes, grid)
 print(result.call_prices)
 ```
 
+## Testing and validation layout
+
+The repository currently collects 282 pytest cases. They are grouped by
+validation purpose rather than by implementation phase:
+
+| Folder | Contents |
+|--------|----------|
+| `tests/papers/` | Published-paper and benchmark replications: Carr-Madan, Lewis, FRFT, Fang-Oosterlee COS, and Kou/COS checks. |
+| `tests/models/` | Model adapter, regression-strip, and reduction-limit tests for BSM, OU-SV, CGMY, NIG, Bates, Heston-Kou, and Heston-CGMY. |
+| `tests/methods/` | Pricing-method behavior: COS policies, filters, alpha validity, cross-method agreement, and robustness sweeps. |
+| `tests/features/` | End-to-end package features: Monte Carlo, control variates, implied volatility, calibration, Greeks, public API, and integration workflows. |
+
+Run the fast CI-style suite with:
+
+```bash
+pytest -q -m "not slow"
+```
+
+Run every test, including slower reference and Monte Carlo checks, with:
+
+```bash
+pytest -q
+```
+
+See [tests/README.md](tests/README.md) for the folder map.
+
 ## API reference
 
 The main public API is exposed from:
