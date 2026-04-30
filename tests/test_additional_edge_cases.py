@@ -193,3 +193,11 @@ def test_heston_kou_zero_jump_intensity_cos_prices_match_heston():
     heston_prices = price_strip("heston", "cos", strikes, fwd, heston)
 
     assert np.allclose(heston_kou_prices, heston_prices, atol=1e-10, rtol=1e-10)
+
+
+def test_heston_cgmy_zero_activity_cf_reduces_to_heston():
+    fwd, heston, _ = _heston_base_case()
+    heston_cgmy = _heston_cgmy_no_jump_params(heston)
+    u = np.array([-2.5, -0.5, 0.0, 1.0, 3.5], dtype=float)
+
+    assert np.allclose(heston_cgmy_cf(u, fwd, heston_cgmy), heston_cf(u, fwd, heston), atol=1e-13, rtol=1e-13)
