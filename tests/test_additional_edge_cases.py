@@ -129,3 +129,10 @@ def test_bates_zero_jump_intensity_cf_reduces_to_heston():
     u = np.array([-3.0, -1.0, 0.0, 0.75, 2.5], dtype=float)
 
     assert np.allclose(bates_cf(u, fwd, bates), heston_cf(u, fwd, heston), atol=1e-13, rtol=1e-13)
+
+
+def test_bates_zero_jump_intensity_cumulants_reduce_to_heston():
+    fwd, heston, _ = _heston_base_case()
+    bates = _bates_no_jump_params(heston)
+
+    assert np.allclose(bates_cumulants(fwd, bates), heston_cumulants(fwd, heston), atol=1e-12, rtol=1e-12)
