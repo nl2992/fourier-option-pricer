@@ -1,6 +1,6 @@
 # Appendix
 
-This appendix collects the extra project material that does not belong in the package-facing `README.md`: repository context, methodology notes, benchmark setup, and interpretation.
+This appendix collects the extra project material that does not belong in the package-facing `README.md`: repository context, methodology notes, benchmark setup, and interpretation. The package README stays focused on install, quick start, API surface, and the demo notebook; the longer project narrative lives here instead.
 
 ## Repository guide
 

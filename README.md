@@ -65,5 +65,3 @@ MIT. See [LICENSE](LICENSE).
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/nl2992/fourier-option-pricer/blob/main/notebooks/demo.ipynb)
 
 The Colab-ready demo notebook lives at [notebooks/demo.ipynb](notebooks/demo.ipynb).
-
-Extra project notes and methodology live in [APPENDIX.md](APPENDIX.md).
