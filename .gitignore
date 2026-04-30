@@ -17,6 +17,7 @@ env/
 /notebooks/benchmarks/
 /notebooks/*_executed.ipynb
 /notebooks/*-executed.ipynb
+/notebooks/cosPaper_Replication.ipynb
 /notebooks/demo-deprecated.ipynb
 /notebooks/demo_executed.ipynb
 /notebooks/presentation_fourier_methods.ipynb
