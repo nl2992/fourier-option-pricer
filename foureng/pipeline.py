@@ -324,7 +324,7 @@ def price_strip(
             eta = 0.10 if improved_decision.grid.width > 48.0 else 0.25
             cm_grid = FFTGrid(N=max(4096, improved_decision.grid.N), eta=eta, alpha=1.5)
             return np.asarray(carr_madan_price_at_strikes(phi, fwd, cm_grid, K), dtype=np.float64)
-        raise ValueError(f"unsupported cos_improved fallback method {decision.method!r}")
+        raise ValueError(f"unsupported cos_improved fallback method {improved_decision.method!r}")
 
     if method == "cos_filtered":
         # ------------------------------------------------------------------
