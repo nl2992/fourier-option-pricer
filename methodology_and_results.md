@@ -40,19 +40,53 @@ Fourier pricing exploits the fact that, for most asset models, the **characteris
 $$\phi(u) = \mathbb{E}\!\left[e^{iu \ln S_T}\right]$$
 
 is known in closed form even when the option price integral has no analytic solution.
-Given $\phi$, a European call can be priced by a single numerical integral.
-The three methods implemented here differ in how they discretise that integral:
+Given $\phi$, a European option can be priced by numerical inversion or by a
+series approximation of the risk-neutral density. The pricing layer is organized
+around the following methods:
 
-| Method | Key idea |
-|--------|----------|
-| Carr–Madan FFT | Damp the payoff, apply FFT to price a whole strike grid at once |
-| Lewis single-integral | Parseval identity; avoids the dampening parameter entirely |
-| COS (Fang–Oosterlee) | Expand the risk-neutral density in a cosine series on $[a, b]$ |
+| Method | Main idea | Best use |
+|--------|-----------|----------|
+| Carr–Madan FFT | Damped call transform plus FFT | Many strikes quickly on a regular log-strike grid |
+| FRFT | Carr–Madan with flexible log-strike spacing | Many strikes when the FFT grid is too restrictive |
+| Lewis single-integral | Shifted Fourier integral without a damping parameter | Few strikes or robust fallback pricing |
+| COS (Fang–Oosterlee) | Cosine expansion of the density on $[a,b]$ | High accuracy when the truncation interval is good |
+| Improved COS | Adaptive interval and $N$ selection | Safer COS automation across model families |
+| Filtered COS | COS with high-frequency damping | Jump-heavy, short-maturity, or oscillatory cases |
+| PyFENG FFT | External PyFENG pricer | Benchmarking and model support for known cases |
 
-## Truncation and filtering
+This separation is useful computationally: FFT/FRFT methods amortize work over
+many strikes, Lewis is a dependable sparse-strike fallback, and the COS family
+is the main high-accuracy engine when the interval and series resolution are
+well controlled.
 
-The COS method requires choosing a truncation interval $[a,b]$ for the log-price
-density. Two truncation strategies are implemented:
+## COS workflow, truncation, and filtering
+
+The COS method approximates the risk-neutral density with a finite cosine
+series. In implementation terms, the workflow is:
+
+```text
+model parameters
+      ↓
+build characteristic function φ(u)
+      ↓
+compute cumulants c1, c2, c4
+      ↓
+choose truncation interval [a,b]
+      ↓
+choose number of COS terms N
+      ↓
+evaluate φ at u_j = jπ/(b-a)
+      ↓
+compute model-side and payoff-side coefficients
+      ↓
+optionally apply spectral filter weights
+      ↓
+discounted dot product gives the option price
+```
+
+The key numerical choices are the truncation interval, the number of terms, and
+whether to filter high-frequency terms. Two truncation strategies are
+implemented:
 
 - **Cumulant rule** (Fang & Oosterlee 2008) — sets $[a,b]$ from the first four
   cumulants of $\ln S_T$.
@@ -60,10 +94,32 @@ density. Two truncation strategies are implemented:
   until the tail-mass proxy falls below a user-specified tolerance. This is used
   for stress cases where the cumulant rule can become unreliable or overly wide.
 
-In addition, the project implements an **adaptive filtered-COS extension**
-**"extension"** inspired by Ruijter, Versteegh and Oosterlee (2015), as the  Rather than applying one
-fixed spectral filter, we adapt the idea into a tolerance-driven selector around
-COS pricing.
+For vanilla calls, the implementation often prices the put coefficients first
+and recovers the call by put-call parity,
+
+$$
+C = P + e^{-rT}(F_0 - K).
+$$
+
+This avoids direct-call coefficient cancellation on wide intervals, where
+exponential payoff terms can become numerically large.
+
+Improved COS keeps the COS pricing formula but automates the interval and
+resolution choices. It classifies the model tail behavior, widens the interval
+until a tail proxy is acceptable, selects $N$ from the interval width, and can
+fall back to Lewis or Carr–Madan when the interval becomes too wide for COS to
+be efficient.
+
+| Tail family | Interpretation | Example models |
+|-------------|----------------|----------------|
+| Gaussian-like | Thin tails | BSM, Heston, OU-SV, NIG |
+| Semi-heavy | Jump or exponential-type tails | Kou, Bates, Heston-Kou |
+| Heavy | Slower-decaying tails | VG, some CGMY regimes |
+
+The project also implements an **adaptive filtered-COS extension** inspired by
+Ruijter, Versteegh and Oosterlee (2015). Rather than applying one fixed spectral
+filter, the repo treats filters as candidates inside a tolerance-driven selector
+around COS pricing.
 
 - **Why filtering is added:** truncation fixes the interval, but COS can still
   show finite-series ringing near payoff kinks, short maturities, or jump-heavy
@@ -72,6 +128,25 @@ COS pricing.
   also tests Fejér, Lanczos, raised-cosine, and exponential filters.
 - **Selection rule:** use the cheapest candidate that meets the tolerance. If a
   filter does not help, the method falls back to the no-filter Junike choice.
+
+The implemented filter weights $\sigma_j$ satisfy $0 \leq \sigma_j \leq 1$ and
+multiply the COS terms before the final dot product:
+
+$$
+V_0 \approx e^{-rT}\sum_{j=0}^{N-1}\sigma_j A_j U_j.
+$$
+
+| Filter | Main idea | Practical effect |
+|--------|-----------|------------------|
+| `none` | No damping | Baseline COS |
+| `fejer` | Linear high-frequency reduction | Simple smoothing |
+| `lanczos` | Sinc-shaped damping | Gentle smoothing |
+| `raised_cosine` | Smooth cosine taper | Smooth fade-out |
+| `exponential` | Strong damping near the highest frequencies | Useful default for jump-heavy cases |
+
+The adaptive filtered-COS selector is therefore not a claim that filtering
+always dominates. It is a policy layer that can choose the unfiltered Junike
+setup when that is faster or more accurate.
 
 
 ## Models
@@ -156,9 +231,9 @@ candidate inside a **deterministic numerical-policy search**.  The adaptive
 selector compares vanilla COS, Junike-COS, and filtered Junike-COS, then selects
 the fastest candidate satisfying a target error tolerance.
 
-> **This extension does not necessarily improve and claim, filtered-COS universally dominates Junike-COS.**
-> The intended object is the adaptive selector, which can choose no filter where
-> filtering is unnecessary.
+> **Important:** filtered-COS is not assumed to universally dominate Junike-COS.
+> The contribution is the adaptive selector, which can choose no filter when
+> filtering is unnecessary or slower.
 
 **Usage:**
 
@@ -316,4 +391,3 @@ This document records:
 ## License
 
 MIT. See [LICENSE](LICENSE).
-
