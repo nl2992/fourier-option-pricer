@@ -66,6 +66,22 @@ def heston_conditional_mc_calls(
     Then price each strike by BS-style integration across paths.
     """
     K = np.atleast_1d(np.asarray(strikes, dtype=float))
+    if K.size == 0:
+        raise ValueError("strikes must be non-empty")
+    if np.any(K <= 0.0):
+        raise ValueError("All strikes must be strictly positive")
+    if S0 <= 0.0:
+        raise ValueError("S0 must be strictly positive")
+    if T <= 0.0:
+        raise ValueError("T must be strictly positive")
+    if mc.n_paths <= 0:
+        raise ValueError("n_paths must be positive")
+    if mc.n_steps <= 0:
+        raise ValueError("n_steps must be positive")
+    if mc.scheme not in {"exact", "milstein"}:
+        raise ValueError("scheme must be 'exact' or 'milstein'")
+    if p.nu <= 0.0:
+        raise ValueError("Heston nu must be strictly positive")
     rng = np.random.default_rng(mc.seed)
     sim = _sim_var_exact if mc.scheme == "exact" else _sim_var_milstein
     v_T, V_T = sim(p.v0, p.kappa, p.theta, p.nu, T, mc.n_paths, mc.n_steps, rng)
