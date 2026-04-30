@@ -79,6 +79,8 @@ The reporting rules are simple:
 # Imports + theme + helpers
 # ─────────────────────────────────────────────────────────────────────────
 
+INSTALL_CODE = "%pip install -q -U fourier-option-pricer"
+
 SETUP_CODE = """# ── Run configuration ──────────────────────────────────────────────────
 # Change these and re-run from here; every section reads them.
 METHOD            = \"cos\"                         # \"cos\" | \"carr_madan\" | \"lewis\" | \"cos_junike\"
@@ -91,6 +93,7 @@ SEED              = 42
 import importlib.util
 import os
 import pathlib
+import subprocess
 import sys
 import warnings
 import time
@@ -107,6 +110,13 @@ except Exception:
         print(obj)
 
 warnings.filterwarnings(\"ignore\", category=RuntimeWarning)
+
+if importlib.util.find_spec(\"foureng\") is None:
+    subprocess.run(
+        [sys.executable, \"-m\", \"pip\", \"install\", \"-q\", \"-U\", \"fourier-option-pricer\"],
+        check=True,
+    )
+    importlib.invalidate_caches()
 
 def _iter_repo_candidates():
     seen = set()
@@ -149,24 +159,25 @@ for candidate in _iter_repo_candidates():
         REPO_ROOT = candidate
         break
 if REPO_ROOT is None:
-    for base in [pathlib.Path.home() / name for name in (\"Desktop\", \"Documents\", \"Projects\", \"Code\")]:
-        if not base.exists():
-            continue
-        try:
-            for match in base.rglob(\"foureng/__init__.py\"):
-                candidate = match.parent.parent
-                if (candidate / \"benchmarks\").exists():
-                    REPO_ROOT = candidate
-                    break
-        except Exception:
-            continue
-        if REPO_ROOT is not None:
-            break
-if REPO_ROOT is None:
-    raise RuntimeError(
-        f\"Could not locate repo root from working-directory candidates; \"
-        \"launch the notebook from inside the project or set PWD to the repo path.\"
+    clone_root = pathlib.Path.cwd() / \"fourier-option-pricer\"
+    repo_url = os.environ.get(
+        \"FOURENG_REPO_URL\",
+        \"https://github.com/nl2992/fourier-option-pricer.git\",
     )
+    if not clone_root.exists():
+        subprocess.run(
+            [
+                \"git\",
+                \"clone\",
+                \"--depth\",
+                \"1\",
+                \"--quiet\",
+                repo_url,
+                str(clone_root),
+            ],
+            check=True,
+        )
+    REPO_ROOT = clone_root.resolve()
 
 for path in (REPO_ROOT, REPO_ROOT):
     if str(path) not in sys.path:
@@ -923,6 +934,7 @@ def build() -> None:
     cells = [
         md(TITLE_MD),
         md(OPENING_VISUAL_MD),
+        code(INSTALL_CODE),
         code(SETUP_CODE),
         code(HELPERS_CODE),
         md(ACT1_MD), code(ACT1_CODE),
