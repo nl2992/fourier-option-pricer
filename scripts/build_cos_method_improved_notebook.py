@@ -92,6 +92,23 @@ import sys
 import time
 import warnings
 
+_NOTEBOOK_PIP_PACKAGES = [
+    "fourier-option-pricer",
+    "numpy",
+    "scipy",
+    "matplotlib",
+    "pandas",
+    "pyfeng",
+    "statsmodels",
+]
+
+if any(importlib.util.find_spec(name) is None for name in ("foureng", "numpy", "pandas", "matplotlib")):
+    subprocess.run(
+        [sys.executable, "-m", "pip", "install", "-q", "-U", *_NOTEBOOK_PIP_PACKAGES],
+        check=True,
+    )
+    importlib.invalidate_caches()
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -102,13 +119,6 @@ try:
 except Exception:
     def display(obj):
         print(obj)
-
-if importlib.util.find_spec("foureng") is None:
-    subprocess.run(
-        [sys.executable, "-m", "pip", "install", "-q", "-U", "fourier-option-pricer"],
-        check=True,
-    )
-    importlib.invalidate_caches()
 
 def _iter_repo_candidates():
     seen = set()
@@ -222,7 +232,7 @@ print("repo root:", REPO_ROOT)
 print("output dir:", OUTDIR)
 """
 
-INSTALL_CODE = "%pip install -q -U fourier-option-pricer"
+INSTALL_CODE = "%pip install -q -U fourier-option-pricer numpy scipy matplotlib pandas pyfeng statsmodels"
 
 
 HELPERS_CODE = r"""
