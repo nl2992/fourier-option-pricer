@@ -109,7 +109,7 @@ Then follow step 2a (venv) or 2b (conda) from Option A above.
 
 Click the **Open in Colab** badge in the [Demo notebook](#demo-notebook) section. The first cell installs all dependencies automatically — no local Python needed.
 
-> **Note:** Colab's pre-installed numpy is compatible. The notebook does not upgrade it, so the environment loads cleanly.
+> **Note:** Colab's Python 3.12 runtime ships with numpy 2.0.0, which has a known import bug. Cell 1 automatically upgrades numpy to a compatible version and clears the module cache — no manual restart needed.
 
 ---
 
