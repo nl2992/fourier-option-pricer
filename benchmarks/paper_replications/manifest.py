@@ -69,6 +69,28 @@ FO2008_EXPECTED_TABLE_LABELS: tuple[str, ...] = (
 )
 
 
+JUNIKE_SUMMARY_CASE_IDS: tuple[str, ...] = (
+    "bsm_table2",
+    "heston_table4_t1",
+    "heston_table5_t10",
+    "heston_table6_strip",
+    "vg_table7_t01",
+    "vg_table7_t1",
+    "cgmy_table8_y05",
+    "cgmy_table10_y198",
+)
+
+
+REGRESSION_STRIP_MODELS: tuple[str, ...] = (
+    "ousv",
+    "cgmy",
+    "nig",
+    "bates",
+    "heston_kou",
+    "heston_cgmy",
+)
+
+
 PAPER_OUTPUT_BUNDLES: tuple[PaperOutputBundle, ...] = (
     PaperOutputBundle(
         name="fo2008_replication",
@@ -115,5 +137,7 @@ __all__ = [
     "FO2008_EXPECTED_CASE_IDS",
     "FO2008_EXPECTED_FAMILIES",
     "FO2008_EXPECTED_TABLE_LABELS",
+    "JUNIKE_SUMMARY_CASE_IDS",
+    "REGRESSION_STRIP_MODELS",
     "PAPER_OUTPUT_BUNDLES",
 ]
