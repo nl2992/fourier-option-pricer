@@ -331,6 +331,11 @@ Available filters: `"none"`, `"fejer"`, `"lanczos"`, `"raised_cosine"`, and `"ex
 
 ## API reference
 
+This README lists the main public surfaces. The top-level `foureng` package
+exports the commonly used objects; broader model and pipeline functionality is
+available through submodules such as `foureng.pipeline`, `foureng.models`,
+`foureng.surface`, `foureng.greeks`, and `foureng.mc`.
+
 ### `ForwardSpec(S0, r, q, T)`
 
 | Parameter | Type | Description |
@@ -342,16 +347,40 @@ Available filters: `"none"`, `"fejer"`, `"lanczos"`, `"raised_cosine"`, and `"ex
 
 Provides `F0` for the forward price and `disc` for the discount factor.
 
-### Model parameter classes
+### Model parameter classes and characteristic functions
 
-| Class | Model |
-| --- | --- |
-| `HestonParams(kappa, theta, nu, rho, v0)` | Heston stochastic volatility |
-| `VGParams(sigma, nu, theta)` | Variance Gamma |
-| `KouParams(sigma, lam, p, eta1, eta2)` | Kou double-exponential jump diffusion |
-| `BatesParams(...)` | Bates, i.e. Heston with Poisson jumps |
-| `CGMYParams(C, G, M, Y)` | CGMY pure-jump Lévy process |
-| `NIGParams(alpha, beta, delta)` | Normal Inverse Gaussian |
+| Model key | Parameter class | Characteristic function / cumulants |
+| --- | --- | --- |
+| `"bsm"` | `BsmParams(sigma)` | `bsm_cf`, `bsm_cumulants` |
+| `"heston"` | `HestonParams(kappa, theta, nu, rho, v0)` | `heston_cf` / `heston_cf_form2`, `heston_cumulants` |
+| `"ousv"` | `OusvParams(...)` | `ousv_cf`, `ousv_cumulants` |
+| `"vg"` | `VGParams(sigma, nu, theta)` | `vg_cf`, `vg_cumulants` |
+| `"cgmy"` | `CgmyParams(C, G, M, Y)` | `cgmy_cf`, `cgmy_cumulants` |
+| `"nig"` | `NigParams(...)` | `nig_cf`, `nig_cumulants` |
+| `"kou"` | `KouParams(sigma, lam, p, eta1, eta2)` | `kou_cf`, `kou_cumulants` |
+| `"bates"` | `BatesParams(...)` | `bates_cf`, `bates_cumulants` |
+| `"heston_kou"` | `HestonKouParams(...)` | `heston_kou_cf`, `heston_kou_cumulants` |
+| `"heston_cgmy"` | `HestonCGMYParams(...)` | `heston_cgmy_cf`, `heston_cgmy_cumulants` |
+
+The top-level package exports the most common Heston, VG, and Kou classes and
+functions. The full model set is available from `foureng.models` and is used by
+`foureng.pipeline.price_strip`.
+
+### `price_strip(model, method, strikes, fwd, params, *, grid=None, cp=1)`
+
+Unified high-level pricing entry point from `foureng.pipeline`.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `model` | `str` | One of the model keys above. |
+| `method` | `str` | `"cos"`, `"cos_improved"`, `"cos_filtered"`, `"frft"`, `"carr_madan"`, or `"pyfeng_fft"`. |
+| `strikes` | `(K,)` array | Strike prices. |
+| `fwd` | `ForwardSpec` | Market inputs. |
+| `params` | model dataclass | Parameters matching `model`. |
+| `grid` | grid/policy object | Optional `COSGrid`, `COSGridPolicy`, `FFTGrid`, `FRFTGrid`, or `(policy_or_grid, COSFilterSpec)`. |
+| `cp` | `int` | `+1` calls or `-1` puts for PyFENG-backed pricing. |
+
+Returns a one-dimensional NumPy array of prices.
 
 ### `cos_prices(phi, fwd, strikes, grid)`
 
@@ -364,16 +393,14 @@ Provides `F0` for the forward price and `disc` for the discount factor.
 
 Returns a `COSResult` with fields `strikes` and `call_prices`.
 
-### `carr_madan_price_at_strikes(phi, fwd, grid, strikes)`
+### Fourier pricing engines
 
-| Parameter | Type | Description |
+| Function | Grid | Return |
 | --- | --- | --- |
-| `phi` | callable | Risk-neutral characteristic function. |
-| `fwd` | `ForwardSpec` | Market inputs. |
-| `grid` | `FFTGrid(N, eta, alpha)` | Carr–Madan FFT grid. |
-| `strikes` | `(K,)` array | Strike prices. |
-
-Returns a one-dimensional array of call prices.
+| `carr_madan_price_at_strikes(phi, fwd, grid, strikes)` | `FFTGrid(N, eta, alpha)` | `(K,)` call-price array |
+| `frft_price_at_strikes(phi, fwd, grid, strikes)` | `FRFTGrid(N, eta, lam, alpha)` | `(K,)` call-price array |
+| `lewis_call_prices(phi, strikes, spot, texp, intr=0, divr=0, ...)` | integration settings | `(K,)` call-price array |
+| `cos_prices(phi, fwd, strikes, grid)` | `COSGrid(N, a, b, center=0)` | `COSResult` |
 
 ### `cos_auto_grid(cumulants, N, L)` and `cos_improved_grid(cumulants, model, params)`
 
@@ -404,21 +431,13 @@ Dataclass controlling truncation-interval selection and adaptive choice of the n
 
 Returns the recommended `COSGridPolicy` for a model string such as `"heston"`, `"vg"`, or `"kou"`. This is intended to provide stable defaults while still allowing manual overrides.
 
-### `filtered_cos_prices(phi, fwd, strikes, grid, *, filter_spec)`
+### Filtered COS
 
-COS pricer with a spectral filter applied to the COS coefficient sequence before pricing.
+`filtered_cos_prices(phi, fwd, strikes, grid, *, filter_spec)` prices with a
+spectral filter applied to the COS coefficient sequence. It returns a
+`COSResult`.
 
-| Parameter | Type | Description |
-| --- | --- | --- |
-| `phi` | callable | Risk-neutral characteristic function. |
-| `fwd` | `ForwardSpec` | Market inputs. |
-| `strikes` | `(K,)` array | Strike prices. |
-| `grid` | `COSGrid` | Resolved COS grid. |
-| `filter_spec` | `COSFilterSpec` | Filter specification, for example exponential order 8. |
-
-Returns a `COSResult`.
-
-### `COSFilterSpec(name, order, alpha)`
+`COSFilterSpec(name, order, alpha)` supports:
 
 | `name` value | Description |
 | --- | --- |
@@ -428,14 +447,28 @@ Returns a `COSResult`.
 | `"raised_cosine"` | Raised-cosine window. |
 | `"exponential"` | Exponential filter with tunable order. |
 
-### `implied_vol_newton_safeguarded(price, inputs)`
+The adaptive selector utilities live in
+`foureng.experiments.cos_filter_grid_search`.
+
+### Implied volatility
 
 | Parameter | Type | Description |
 | --- | --- | --- |
 | `price` | `float` | Option price. |
 | `inputs` | `BSInputs` | Black–Scholes inputs: `BSInputs(F0, K, T, r, q, is_call)`. |
 
-Returns the implied volatility as a `float`.
+`implied_vol_newton_safeguarded(price, inputs)` returns implied volatility as a
+`float`; `implied_vol_brent` is available as a slower robust alternative.
+
+### Surfaces, calibration, Greeks, and Monte Carlo
+
+| Area | Main APIs |
+| --- | --- |
+| Surfaces | `SurfaceSpec`, `model_price_surface`, `model_iv_surface` |
+| Calibration | `calibrate_heston`, `calibrate_vg`, `calibrate_kou`, `CalibrationResult` |
+| COS Greeks | `cos_price_and_greeks`, `cos_delta_gamma`, `cos_parameter_sensitivity`, `COSGreeks` |
+| Monte Carlo | `european_call_mc`, `MCSpec`, `heston_conditional_mc_calls`, `HestonMCScheme` |
+| Control variates | `bs_call_cv`, `heston_call_bs_control`, `CVResult` |
 
 ## Extended methodology and results
 
