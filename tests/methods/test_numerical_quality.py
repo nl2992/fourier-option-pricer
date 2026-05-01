@@ -21,8 +21,7 @@ import numpy as np
 import pytest
 
 import foureng as fe
-from foureng.models.bates import bates_cumulants, bates_cf
-
+from foureng.models.bates import bates_cf, bates_cumulants
 
 # ---------------------------------------------------------------------------
 # Shared fixtures
@@ -37,17 +36,24 @@ _KOU = fe.KouParams(sigma=0.2, lam=1.0, p=0.6, eta1=25.0, eta2=10.0)
 _MJD = fe.MertonJDParams(sigma=0.2, lam=1.0, muj=-0.05, sigj=0.1)
 # Bates with zero jumps = in-house fallback
 _BATES_NOJUMP = fe.BatesParams(
-    kappa=2.0, theta=0.04, nu=0.5, rho=-0.7, v0=0.04,
-    lam_j=0.0, mu_j=0.0, sigma_j=0.01,
+    kappa=2.0,
+    theta=0.04,
+    nu=0.5,
+    rho=-0.7,
+    v0=0.04,
+    lam_j=0.0,
+    mu_j=0.0,
+    sigma_j=0.01,
 )
 
-_FFT_GRID  = fe.FFTGrid(N=4096, eta=0.25, alpha=1.5)
+_FFT_GRID = fe.FFTGrid(N=4096, eta=0.25, alpha=1.5)
 _FRFT_GRID = fe.FRFTGrid(N=4096, eta=0.25, lam=0.01, alpha=1.5)
 
 
 # ---------------------------------------------------------------------------
 # 1. Cancellation-safe formulas — expm1 / log1p
 # ---------------------------------------------------------------------------
+
 
 class TestCancellationSafeFormulas:
     """Verify bates_cf and bates_cumulants use expm1 for the jump compensator
@@ -65,8 +71,14 @@ class TestCancellationSafeFormulas:
         The CF output must be finite even for near-zero parameters.
         """
         params = fe.BatesParams(
-            kappa=1.0, theta=0.04, nu=0.5, rho=-0.5, v0=0.04,
-            lam_j=2.0, mu_j=1e-10, sigma_j=1e-6,
+            kappa=1.0,
+            theta=0.04,
+            nu=0.5,
+            rho=-0.5,
+            v0=0.04,
+            lam_j=2.0,
+            mu_j=1e-10,
+            sigma_j=1e-6,
         )
         fwd = fe.ForwardSpec(S0=100.0, r=0.05, q=0.0, T=0.5)
         c1, c2, c4 = bates_cumulants(fwd, params)
@@ -74,7 +86,7 @@ class TestCancellationSafeFormulas:
         assert np.isfinite(c2), "c2 cumulant must be finite"
 
         # zeta must be non-negative (exp of a real number ≥ 1 → expm1 ≥ 0)
-        arg = params.mu_j + 0.5 * params.sigma_j ** 2
+        arg = params.mu_j + 0.5 * params.sigma_j**2
         zeta_expm1 = float(np.expm1(arg))
         assert zeta_expm1 >= 0.0, "zeta = expm1(arg) must be non-negative"
 
@@ -100,14 +112,14 @@ class TestCancellationSafeFormulas:
 # ---------------------------------------------------------------------------
 
 _COS_CASES = [
-    ("kou",    "cos",          _KOU,         None),
-    ("kou",    "cos_improved", _KOU,         None),
-    ("kou",    "carr_madan",   _KOU,         _FFT_GRID),
-    ("kou",    "frft",         _KOU,         _FRFT_GRID),
-    ("merton_jd", "cos",          _MJD,         None),
-    ("merton_jd", "cos_improved", _MJD,         None),
-    ("merton_jd", "carr_madan",   _MJD,         _FFT_GRID),
-    ("merton_jd", "frft",         _MJD,         _FRFT_GRID),
+    ("kou", "cos", _KOU, None),
+    ("kou", "cos_improved", _KOU, None),
+    ("kou", "carr_madan", _KOU, _FFT_GRID),
+    ("kou", "frft", _KOU, _FRFT_GRID),
+    ("merton_jd", "cos", _MJD, None),
+    ("merton_jd", "cos_improved", _MJD, None),
+    ("merton_jd", "carr_madan", _MJD, _FFT_GRID),
+    ("merton_jd", "frft", _MJD, _FRFT_GRID),
 ]
 
 
@@ -115,9 +127,7 @@ _COS_CASES = [
 def test_pricer_output_is_finite(model, method, params, grid):
     """No NaN or inf must flow out of any (model, method) combination."""
     prices = fe.price_strip(model, method, _STRIKES, _FWD, params, grid=grid)
-    assert np.all(np.isfinite(prices)), (
-        f"{model}/{method} produced non-finite prices: {prices}"
-    )
+    assert np.all(np.isfinite(prices)), f"{model}/{method} produced non-finite prices: {prices}"
 
 
 @pytest.mark.parametrize("model,method,params,grid", _COS_CASES)
@@ -133,14 +143,13 @@ def test_pricer_output_is_float64(model, method, params, grid):
 def test_pricer_output_non_negative(model, method, params, grid):
     """Call prices must be >= 0 (no-arbitrage floor)."""
     prices = fe.price_strip(model, method, _STRIKES, _FWD, params, grid=grid)
-    assert np.all(prices >= -1e-9), (
-        f"{model}/{method} produced negative prices: {prices}"
-    )
+    assert np.all(prices >= -1e-9), f"{model}/{method} produced negative prices: {prices}"
 
 
 # ---------------------------------------------------------------------------
 # 3. COS Greeks — analytic (better than FD), output must be finite and bounded
 # ---------------------------------------------------------------------------
+
 
 class TestCOSGreeks:
     """COS computes exact analytic Delta and Gamma — no finite-difference bumps."""
@@ -175,15 +184,22 @@ class TestCOSGreeks:
 # 4. MC RNG — reproducibility and seed isolation
 # ---------------------------------------------------------------------------
 
+
 class TestMCReproducibility:
     """MC engines use np.random.default_rng(seed) — same seed → same prices."""
 
     def _mc_prices(self, seed: int) -> np.ndarray:
         from foureng.mc.black_scholes_mc import MCSpec, european_call_mc
+
         spec = MCSpec(n_paths=2000, seed=seed)
         return european_call_mc(
-            _FWD.S0, _STRIKES, _FWD.T, _FWD.r, _FWD.q,
-            vol=0.2, mc=spec,
+            _FWD.S0,
+            _STRIKES,
+            _FWD.T,
+            _FWD.r,
+            _FWD.q,
+            vol=0.2,
+            mc=spec,
         )
 
     def test_same_seed_gives_same_prices(self):
@@ -205,18 +221,18 @@ class TestMCReproducibility:
 # 5. Variance floor — no NaN from near-zero sigma in Heston conditional MC
 # ---------------------------------------------------------------------------
 
+
 class TestVarianceFloor:
     """sigma = sqrt(max(sigma^2, 1e-16)) prevents NaN from near-zero variance."""
 
     def test_heston_mc_near_zero_variance_stays_finite(self):
         """Heston v0 ≈ 0 must not produce NaN prices."""
         from foureng.mc.heston_conditional_mc import HestonMCScheme, heston_conditional_mc_calls
+
         params = fe.HestonParams(kappa=10.0, theta=0.04, nu=0.1, rho=-0.5, v0=1e-12)
-        fwd    = fe.ForwardSpec(S0=100.0, r=0.05, q=0.0, T=0.5)
+        fwd = fe.ForwardSpec(S0=100.0, r=0.05, q=0.0, T=0.5)
         scheme = HestonMCScheme(n_paths=500, n_steps=50, seed=7)
-        prices = heston_conditional_mc_calls(
-            fwd.S0, _STRIKES, fwd.T, fwd.r, fwd.q, params, scheme
-        )
+        prices = heston_conditional_mc_calls(fwd.S0, _STRIKES, fwd.T, fwd.r, fwd.q, params, scheme)
         assert np.all(np.isfinite(prices)), "Near-zero v0 must not produce NaN in MC"
 
 
@@ -224,27 +240,29 @@ class TestVarianceFloor:
 # 6. Extreme inputs — tiny T, tiny vol, wide strikes
 # ---------------------------------------------------------------------------
 
+
 class TestExtremeInputs:
     def test_tiny_maturity_cos_finite(self):
         """T = 1/365 (one day) must not blow up the COS pricer."""
         fwd_short = fe.ForwardSpec(S0=100.0, r=0.05, q=0.0, T=1.0 / 365.0)
         cums = fe.kou_cumulants(fwd_short, _KOU)
         grid = fe.cos_improved_grid(cums, model="kou", params=_KOU)
-        phi  = lambda u: fe.kou_cf(u, fwd_short, _KOU)
+        phi = lambda u: fe.kou_cf(u, fwd_short, _KOU)
         from foureng.pricers.cos import cos_prices
+
         result = cos_prices(phi, fwd_short, _STRIKES, grid)
         assert np.all(np.isfinite(result.call_prices)), "Tiny T must not produce NaN"
 
     def test_large_strike_range_finite(self):
         """Strikes from deep-ITM to deep-OTM must all be finite."""
         strikes = np.array([40.0, 60.0, 80.0, 100.0, 130.0, 160.0, 200.0])
-        prices  = fe.price_strip("kou", "cos_improved", strikes, _FWD, _KOU)
+        prices = fe.price_strip("kou", "cos_improved", strikes, _FWD, _KOU)
         assert np.all(np.isfinite(prices))
 
     def test_deep_otm_non_negative(self):
         """Deep-OTM call prices must be >= 0."""
         strikes = np.array([150.0, 200.0, 300.0])
-        prices  = fe.price_strip("merton_jd", "cos_improved", strikes, _FWD, _MJD)
+        prices = fe.price_strip("merton_jd", "cos_improved", strikes, _FWD, _MJD)
         assert np.all(prices >= -1e-10)
 
 
@@ -252,11 +270,12 @@ class TestExtremeInputs:
 # 7. dtype correctness
 # ---------------------------------------------------------------------------
 
+
 class TestDtypes:
     def test_kou_cf_returns_complex128(self):
         """CF must return complex128 (double-precision complex)."""
         omega = np.array([0.0, 1.0, 2.0, 5.0])
-        phi   = fe.kou_cf(omega, _FWD, _KOU)
+        phi = fe.kou_cf(omega, _FWD, _KOU)
         assert phi.dtype == np.complex128, f"CF returned {phi.dtype}, expected complex128"
 
     def test_cumulants_return_floats(self):
