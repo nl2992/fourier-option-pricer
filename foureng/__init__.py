@@ -31,6 +31,7 @@ from .models.heston import HestonParams, heston_cf_form2, heston_cumulants
 from .models.variance_gamma import VGParams, vg_cf, vg_cumulants
 from .models.kou import KouParams, kou_cf, kou_cumulants
 from .models.sv32 import Sv32Params, sv32_cf, sv32_cumulants
+from .models.garch_wmw2012 import GarchWMW2012Params, garch_wmw2012_cf, garch_wmw2012_cumulants
 
 from .utils.grids import COSGrid, COSGridPolicy, FFTGrid, FRFTGrid
 
@@ -84,6 +85,7 @@ __all__ = [
     "VGParams", "vg_cf", "vg_cumulants",
     "KouParams", "kou_cf", "kou_cumulants",
     "Sv32Params", "sv32_cf", "sv32_cumulants",
+    "GarchWMW2012Params", "garch_wmw2012_cf", "garch_wmw2012_cumulants",
     # grids
     "COSGrid", "COSGridPolicy", "FFTGrid", "FRFTGrid",
     # pricers
