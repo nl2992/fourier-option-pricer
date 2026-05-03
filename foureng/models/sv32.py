@@ -77,6 +77,16 @@ class Sv32Params(ModelSpec):
         nu: float,
         rho: float,
     ):
+        if not (np.isfinite(v0) and v0 > 0):
+            raise ValueError(f"Sv32Params: v0 must be > 0; got {v0}")
+        if not (np.isfinite(kappa) and kappa > 0):
+            raise ValueError(f"Sv32Params: kappa must be > 0; got {kappa}")
+        if not (np.isfinite(theta) and theta > 0):
+            raise ValueError(f"Sv32Params: theta must be > 0; got {theta}")
+        if not (np.isfinite(nu) and nu > 0):
+            raise ValueError(f"Sv32Params: nu must be > 0; got {nu}")
+        if not (np.isfinite(rho) and -1.0 < rho < 1.0):
+            raise ValueError(f"Sv32Params: rho must be in (-1, 1); got {rho}")
         object.__setattr__(self, "name", "sv32")
         object.__setattr__(self, "v0", v0)
         object.__setattr__(self, "kappa", kappa)
