@@ -21,6 +21,7 @@ from .models.heston_cgmy import (
     heston_cgmy_cf,
     heston_cgmy_cumulants,
 )
+from .models.sv32 import Sv32Params, sv32_cf, sv32_cumulants
 from .utils.grids import FFTGrid, FRFTGrid, COSGrid, COSGridPolicy
 from .pricers.carr_madan import carr_madan_price_at_strikes
 from .pricers.frft import frft_price_at_strikes
@@ -81,13 +82,14 @@ _MODELS: dict[str, tuple[type, Any, Any]] = {
     "bates":       (BatesParams,       bates_cf,        bates_cumulants),
     "heston_kou":  (HestonKouParams,   heston_kou_cf,   heston_kou_cumulants),
     "heston_cgmy": (HestonCGMYParams,  heston_cgmy_cf,  heston_cgmy_cumulants),
+    "sv32":        (Sv32Params,        sv32_cf,         sv32_cumulants),
 }
 
 # Models whose CF has no PyFENG FFT counterpart — ``method='pyfeng_fft'``
 # raises for these. Kou / Bates / Heston-Kou / Heston-CGMY: PyFENG ships
-# no FFT pricer for any of them. BSM, Heston, OUSV, VG, CGMY, NIG all
+# no FFT pricer for any of them. BSM, Heston, OUSV, VG, CGMY, NIG, sv32 all
 # have native PyFENG FFT pricers (BsmFft / HestonFft / OusvFft /
-# VarGammaFft / CgmyFft / ExpNigFft).
+# VarGammaFft / CgmyFft / ExpNigFft / Sv32Fft).
 _NO_PYFENG_FFT = {"kou", "bates", "heston_kou", "heston_cgmy"}
 _DIRECT_CALL_FRIENDLY_MODELS = {"heston", "ousv", "nig"}
 
@@ -157,6 +159,10 @@ def _pyfeng_fft_price(model: str, strikes, fwd: ForwardSpec, params, cp: int):
     elif model == "nig":
         m = pf.ExpNigFft(sigma=params.sigma, vov=params.nu, theta=params.theta,
                           intr=fwd.r, divr=fwd.q)
+    elif model == "sv32":
+        m = pf.Sv32Fft(sigma=params.v0, vov=params.nu, mr=params.kappa,
+                        rho=params.rho, theta=params.theta,
+                        intr=fwd.r, divr=fwd.q)
     else:
         raise ValueError(f"unknown model {model!r}")
     return np.asarray(m.price(K, spot=fwd.S0, texp=fwd.T, cp=cp), dtype=np.float64)
@@ -177,9 +183,9 @@ def price_strip(
     Parameters
     ----------
     model :
-        One of the ten supported model keys: ``"bsm"``, ``"heston"``, ``"ousv"``,
+        One of the supported model keys: ``"bsm"``, ``"heston"``, ``"ousv"``,
         ``"vg"``, ``"cgmy"``, ``"nig"``, ``"kou"``, ``"bates"``,
-        ``"heston_kou"``, ``"heston_cgmy"``.
+        ``"heston_kou"``, ``"heston_cgmy"``, ``"sv32"``.
     method :
         * ``"cos"`` — in-house COS (Fang-Oosterlee 2008),
         * ``"cos_improved"`` — adaptive COS policy with centered intervals,
