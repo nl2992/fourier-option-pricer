@@ -1,4 +1,5 @@
 """Shared runtime helpers used across the project notebooks."""
+
 from __future__ import annotations
 
 import importlib.util
@@ -11,7 +12,7 @@ from typing import Callable, Iterable
 import numpy as np
 import pandas as pd
 
-from .columbia import COLUMBIA_BLUE, DARK, NAVY
+from .columbia import DARK, NAVY
 
 
 def timeit_strip(fn, *args, n_repeat: int = 3, warmup: bool = True, **kwargs):
@@ -51,13 +52,11 @@ def sci(x: float) -> str:
     return f"{x:.2e}"
 
 
-def error_zoom_bounds(*arrays, pad_frac: float = 0.08, min_pad: float = 5e-6) -> tuple[float, float]:
+def error_zoom_bounds(
+    *arrays, pad_frac: float = 0.08, min_pad: float = 5e-6
+) -> tuple[float, float]:
     """Tight linear y-limits for clustered error curves."""
-    values = [
-        np.ravel(np.asarray(arr, dtype=float))
-        for arr in arrays
-        if np.asarray(arr).size
-    ]
+    values = [np.ravel(np.asarray(arr, dtype=float)) for arr in arrays if np.asarray(arr).size]
     if not values:
         return 0.0, 1.0
     merged = np.concatenate(values)
@@ -94,54 +93,59 @@ def night_style(
             color=mid,
             props="color: #0B1F3A; font-weight: bold;",
         )
-    styler = styler.set_properties(**{
-        "background-color": DARK,
-        "color": "#F8FAFC",
-        "border": "1px solid #4B6FA8",
-        "font-size": "11px",
-    })
-    styler = styler.set_table_styles([
-        {
-            "selector": "table",
-            "props": [
-                ("border-collapse", "collapse"),
-                ("width", "100%"),
-                ("font-family", "Menlo, Monaco, monospace"),
-            ],
-        },
-        {
-            "selector": "caption",
-            "props": [
-                ("caption-side", "top"),
-                ("color", NAVY),
-                ("font-size", "13px"),
-                ("font-weight", "bold"),
-                ("padding", "6px 0"),
-            ],
-        },
-        {
-            "selector": "th",
-            "props": [
-                ("background-color", NAVY),
-                ("color", "#F8FAFC"),
-                ("border", "1px solid #4B6FA8"),
-                ("padding", "6px 8px"),
-            ],
-        },
-        {"selector": "td", "props": [("padding", "6px 8px")]},
-        {
-            "selector": "tbody tr:nth-child(even)",
-            "props": [("background-color", "#10294B")],
-        },
-        {
-            "selector": "tbody tr:nth-child(odd)",
-            "props": [("background-color", "#0B1F3A")],
-        },
-        {
-            "selector": "tbody tr:hover",
-            "props": [("background-color", "#1F5CA6")],
-        },
-    ], overwrite=False)
+    styler = styler.set_properties(
+        **{
+            "background-color": DARK,
+            "color": "#F8FAFC",
+            "border": "1px solid #4B6FA8",
+            "font-size": "11px",
+        }
+    )
+    styler = styler.set_table_styles(
+        [
+            {
+                "selector": "table",
+                "props": [
+                    ("border-collapse", "collapse"),
+                    ("width", "100%"),
+                    ("font-family", "Menlo, Monaco, monospace"),
+                ],
+            },
+            {
+                "selector": "caption",
+                "props": [
+                    ("caption-side", "top"),
+                    ("color", NAVY),
+                    ("font-size", "13px"),
+                    ("font-weight", "bold"),
+                    ("padding", "6px 0"),
+                ],
+            },
+            {
+                "selector": "th",
+                "props": [
+                    ("background-color", NAVY),
+                    ("color", "#F8FAFC"),
+                    ("border", "1px solid #4B6FA8"),
+                    ("padding", "6px 8px"),
+                ],
+            },
+            {"selector": "td", "props": [("padding", "6px 8px")]},
+            {
+                "selector": "tbody tr:nth-child(even)",
+                "props": [("background-color", "#10294B")],
+            },
+            {
+                "selector": "tbody tr:nth-child(odd)",
+                "props": [("background-color", "#0B1F3A")],
+            },
+            {
+                "selector": "tbody tr:hover",
+                "props": [("background-color", "#1F5CA6")],
+            },
+        ],
+        overwrite=False,
+    )
     if caption is not None:
         styler = styler.set_caption(caption)
     if hide_index:
@@ -158,72 +162,73 @@ def style_table(
 ):
     """Light Columbia-styled table used in the presentation notebooks."""
     styler = (
-        df.style
-        .format(precision=4, thousands=",")
+        df.style.format(precision=4, thousands=",")
         .set_caption(caption)
-        .set_table_styles([
-            {
-                "selector": "caption",
-                "props": [
-                    ("color", NAVY),
-                    ("font-weight", "700"),
-                    ("font-size", "13.5px"),
-                    ("padding", "4px 0 10px 0"),
-                    ("text-align", "left"),
-                    ("caption-side", "top"),
-                ],
-            },
-            {
-                "selector": "table",
-                "props": [
-                    ("border-collapse", "separate"),
-                    ("border-spacing", "0"),
-                    ("margin", "4px 0 10px 0"),
-                    ("width", "auto"),
-                    ("font-size", "12.5px"),
-                    ("color", "#1a2230"),
-                    ("border", "1px solid #CAD4E3"),
-                    ("border-radius", "6px"),
-                    ("overflow", "hidden"),
-                ],
-            },
-            {
-                "selector": "thead th",
-                "props": [
-                    ("background", NAVY),
-                    ("color", "white"),
-                    ("font-weight", "700"),
-                    ("padding", "8px 12px"),
-                    ("border", "none"),
-                    ("text-align", "center"),
-                ],
-            },
-            {
-                "selector": "tbody th",
-                "props": [
-                    ("background", "white"),
-                    ("color", NAVY),
-                    ("font-weight", "700"),
-                    ("padding", "6px 10px"),
-                    ("border-right", "2px solid #012169"),
-                    ("border-bottom", "1px solid #E1E7EF"),
-                    ("text-align", "left"),
-                ],
-            },
-            {
-                "selector": "tbody td",
-                "props": [
-                    ("padding", "6px 12px"),
-                    ("border-bottom", "1px solid #E1E7EF"),
-                    ("color", "#1a2230"),
-                ],
-            },
-            {"selector": "tbody tr:nth-child(odd)  td", "props": [("background", "#FFFFFF")]},
-            {"selector": "tbody tr:nth-child(even) td", "props": [("background", "#EAF0F8")]},
-            {"selector": "tbody tr:nth-child(odd)  th", "props": [("background", "#FFFFFF")]},
-            {"selector": "tbody tr:nth-child(even) th", "props": [("background", "#EAF0F8")]},
-            {"selector": "tbody tr:hover td", "props": [("background", "#D6E2F2")]},
-        ])
+        .set_table_styles(
+            [
+                {
+                    "selector": "caption",
+                    "props": [
+                        ("color", NAVY),
+                        ("font-weight", "700"),
+                        ("font-size", "13.5px"),
+                        ("padding", "4px 0 10px 0"),
+                        ("text-align", "left"),
+                        ("caption-side", "top"),
+                    ],
+                },
+                {
+                    "selector": "table",
+                    "props": [
+                        ("border-collapse", "separate"),
+                        ("border-spacing", "0"),
+                        ("margin", "4px 0 10px 0"),
+                        ("width", "auto"),
+                        ("font-size", "12.5px"),
+                        ("color", "#1a2230"),
+                        ("border", "1px solid #CAD4E3"),
+                        ("border-radius", "6px"),
+                        ("overflow", "hidden"),
+                    ],
+                },
+                {
+                    "selector": "thead th",
+                    "props": [
+                        ("background", NAVY),
+                        ("color", "white"),
+                        ("font-weight", "700"),
+                        ("padding", "8px 12px"),
+                        ("border", "none"),
+                        ("text-align", "center"),
+                    ],
+                },
+                {
+                    "selector": "tbody th",
+                    "props": [
+                        ("background", "white"),
+                        ("color", NAVY),
+                        ("font-weight", "700"),
+                        ("padding", "6px 10px"),
+                        ("border-right", "2px solid #012169"),
+                        ("border-bottom", "1px solid #E1E7EF"),
+                        ("text-align", "left"),
+                    ],
+                },
+                {
+                    "selector": "tbody td",
+                    "props": [
+                        ("padding", "6px 12px"),
+                        ("border-bottom", "1px solid #E1E7EF"),
+                        ("color", "#1a2230"),
+                    ],
+                },
+                {"selector": "tbody tr:nth-child(odd)  td", "props": [("background", "#FFFFFF")]},
+                {"selector": "tbody tr:nth-child(even) td", "props": [("background", "#EAF0F8")]},
+                {"selector": "tbody tr:nth-child(odd)  th", "props": [("background", "#FFFFFF")]},
+                {"selector": "tbody tr:nth-child(even) th", "props": [("background", "#EAF0F8")]},
+                {"selector": "tbody tr:hover td", "props": [("background", "#D6E2F2")]},
+            ]
+        )
     )
     if gradient_cols:
         styler = styler.background_gradient(
@@ -236,8 +241,7 @@ def style_table(
     if highlight_col:
         styler = styler.apply(
             lambda s: [
-                "font-weight:700;color:#012169" if c == highlight_col else ""
-                for c in s.index
+                "font-weight:700;color:#012169" if c == highlight_col else "" for c in s.index
             ],
             axis=0,
         )

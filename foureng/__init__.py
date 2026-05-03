@@ -18,37 +18,57 @@ Submodules ``foureng.models``, ``foureng.pricers``, ``foureng.mc``,
 ``foureng.iv``, ``foureng.surface``, and ``foureng.greeks`` are also
 importable for finer-grained access.
 """
+
 from __future__ import annotations
 
 try:
-    from importlib.metadata import version as _pkg_version, PackageNotFoundError as _PNF
+    from importlib.metadata import PackageNotFoundError as _PNF
+    from importlib.metadata import version as _pkg_version
+
     __version__: str = _pkg_version("fourier-option-pricer")
 except _PNF:  # editable install without metadata yet
     __version__ = "0.3.1"
 
-from .models.base import ForwardSpec, CharFunc, ModelSpec
-from .models.bsm import BsmParams, bsm_cf, bsm_cumulants
-from .models.heston import HestonParams, heston_cf_form2, heston_cumulants
-from .models.ousv import OusvParams, ousv_cf, ousv_cumulants
-from .models.variance_gamma import VGParams, vg_cf, vg_cumulants
-from .models.cgmy import CgmyParams, cgmy_cf, cgmy_cumulants
-from .models.nig import NigParams, nig_cf, nig_cumulants
-from .models.kou import KouParams, kou_cf, kou_cumulants
+from .greeks import (
+    COSGreeks,
+    cos_delta_gamma,
+    cos_parameter_sensitivity,
+    cos_price_and_greeks,
+)
+from .iv.implied_vol import (
+    BSInputs,
+    bs_price_from_fwd,
+    implied_vol_brent,
+    implied_vol_newton_safeguarded,
+)
+from .mc.black_scholes_mc import MCSpec, european_call_mc
+from .mc.control_variate import CVResult, bs_call_cv, heston_call_bs_control
+from .mc.heston_conditional_mc import HestonMCScheme, heston_conditional_mc_calls
+from .models.base import CharFunc, ForwardSpec, ModelSpec
 from .models.bates import BatesParams, bates_cf, bates_cumulants
-from .models.heston_kou import HestonKouParams, heston_kou_cf, heston_kou_cumulants
-from .models.heston_cgmy import HestonCGMYParams, heston_cgmy_cf, heston_cgmy_cumulants
-from .models.sv32 import Sv32Params, sv32_cf, sv32_cumulants
-from .models.garch_wmw2012 import GarchWMW2012Params, garch_wmw2012_cf, garch_wmw2012_cumulants
-from .models.rough_heston import RoughHestonParams, rough_heston_cf, rough_heston_cumulants
-from .models.merton_jd import MertonJDParams, merton_jd_cf, merton_jd_cumulants
-from .models.meixner import MeixnerParams, meixner_cf, meixner_cumulants
-from .models.bilateral_gamma import BilateralGammaParams, bilateral_gamma_cf, bilateral_gamma_cumulants
-from .models.generalized_hyperbolic import GHParams, gh_cf, gh_cumulants
+from .models.bilateral_gamma import (
+    BilateralGammaParams,
+    bilateral_gamma_cf,
+    bilateral_gamma_cumulants,
+)
+from .models.bsm import BsmParams, bsm_cf, bsm_cumulants
+from .models.cgmy import CgmyParams, cgmy_cf, cgmy_cumulants
 from .models.fmls import FMLSParams, fmls_cf, fmls_cumulants
+from .models.garch_wmw2012 import GarchWMW2012Params, garch_wmw2012_cf, garch_wmw2012_cumulants
+from .models.generalized_hyperbolic import GHParams, gh_cf, gh_cumulants
+from .models.heston import HestonParams, heston_cf_form2, heston_cumulants
+from .models.heston_cgmy import HestonCGMYParams, heston_cgmy_cf, heston_cgmy_cumulants
+from .models.heston_kou import HestonKouParams, heston_kou_cf, heston_kou_cumulants
+from .models.kou import KouParams, kou_cf, kou_cumulants
+from .models.meixner import MeixnerParams, meixner_cf, meixner_cumulants
+from .models.merton_jd import MertonJDParams, merton_jd_cf, merton_jd_cumulants
+from .models.nig import NigParams, nig_cf, nig_cumulants
+from .models.ousv import OusvParams, ousv_cf, ousv_cumulants
+from .models.rough_heston import RoughHestonParams, rough_heston_cf, rough_heston_cumulants
+from .models.sv32 import Sv32Params, sv32_cf, sv32_cumulants
+from .models.variance_gamma import VGParams, vg_cf, vg_cumulants
 from .pipeline import price_strip
-
-from .utils.grids import COSGrid, COSGridPolicy, FFTGrid, FRFTGrid
-
+from .pricers.carr_madan import carr_madan_fft_prices, carr_madan_price_at_strikes
 from .pricers.cos import (
     COSPolicyDecision,
     COSResult,
@@ -58,85 +78,129 @@ from .pricers.cos import (
     cos_prices,
     recommended_cos_policy,
 )
-from .pricers.carr_madan import carr_madan_price_at_strikes, carr_madan_fft_prices
-from .pricers.frft import frft_price_at_strikes, frft_prices
 from .pricers.filtered_cos import FilteredCOSDecision, filtered_cos_prices
-from .utils.spectral_filters import COSFilterSpec, cos_filter_weights
-
-from .iv.implied_vol import (
-    BSInputs,
-    bs_price_from_fwd,
-    implied_vol_brent,
-    implied_vol_newton_safeguarded,
-)
-
+from .pricers.frft import frft_price_at_strikes, frft_prices
 from .surface import (
+    CalibrationResult,
     SurfaceSpec,
+    calibrate_heston,
+    calibrate_kou,
+    calibrate_vg,
     model_iv_surface,
     model_price_surface,
-    CalibrationResult,
-    calibrate_heston,
-    calibrate_vg,
-    calibrate_kou,
 )
-
-from .greeks import (
-    COSGreeks,
-    cos_delta_gamma,
-    cos_price_and_greeks,
-    cos_parameter_sensitivity,
-)
-
-from .mc.black_scholes_mc import european_call_mc, MCSpec
-from .mc.heston_conditional_mc import heston_conditional_mc_calls, HestonMCScheme
-from .mc.control_variate import bs_call_cv, heston_call_bs_control, CVResult
+from .utils.grids import COSGrid, COSGridPolicy, FFTGrid, FRFTGrid
+from .utils.spectral_filters import COSFilterSpec, cos_filter_weights
 
 __all__ = [
     "__version__",
     # base
-    "ForwardSpec", "CharFunc", "ModelSpec",
+    "ForwardSpec",
+    "CharFunc",
+    "ModelSpec",
     # models — params, CF, cumulants (all 18)
-    "BsmParams", "bsm_cf", "bsm_cumulants",
-    "HestonParams", "heston_cf_form2", "heston_cumulants",
-    "OusvParams", "ousv_cf", "ousv_cumulants",
-    "VGParams", "vg_cf", "vg_cumulants",
-    "CgmyParams", "cgmy_cf", "cgmy_cumulants",
-    "NigParams", "nig_cf", "nig_cumulants",
-    "KouParams", "kou_cf", "kou_cumulants",
-    "BatesParams", "bates_cf", "bates_cumulants",
-    "HestonKouParams", "heston_kou_cf", "heston_kou_cumulants",
-    "HestonCGMYParams", "heston_cgmy_cf", "heston_cgmy_cumulants",
-    "Sv32Params", "sv32_cf", "sv32_cumulants",
-    "GarchWMW2012Params", "garch_wmw2012_cf", "garch_wmw2012_cumulants",
-    "RoughHestonParams", "rough_heston_cf", "rough_heston_cumulants",
-    "MertonJDParams", "merton_jd_cf", "merton_jd_cumulants",
-    "MeixnerParams", "meixner_cf", "meixner_cumulants",
-    "BilateralGammaParams", "bilateral_gamma_cf", "bilateral_gamma_cumulants",
-    "GHParams", "gh_cf", "gh_cumulants",
-    "FMLSParams", "fmls_cf", "fmls_cumulants",
+    "BsmParams",
+    "bsm_cf",
+    "bsm_cumulants",
+    "HestonParams",
+    "heston_cf_form2",
+    "heston_cumulants",
+    "OusvParams",
+    "ousv_cf",
+    "ousv_cumulants",
+    "VGParams",
+    "vg_cf",
+    "vg_cumulants",
+    "CgmyParams",
+    "cgmy_cf",
+    "cgmy_cumulants",
+    "NigParams",
+    "nig_cf",
+    "nig_cumulants",
+    "KouParams",
+    "kou_cf",
+    "kou_cumulants",
+    "BatesParams",
+    "bates_cf",
+    "bates_cumulants",
+    "HestonKouParams",
+    "heston_kou_cf",
+    "heston_kou_cumulants",
+    "HestonCGMYParams",
+    "heston_cgmy_cf",
+    "heston_cgmy_cumulants",
+    "Sv32Params",
+    "sv32_cf",
+    "sv32_cumulants",
+    "GarchWMW2012Params",
+    "garch_wmw2012_cf",
+    "garch_wmw2012_cumulants",
+    "RoughHestonParams",
+    "rough_heston_cf",
+    "rough_heston_cumulants",
+    "MertonJDParams",
+    "merton_jd_cf",
+    "merton_jd_cumulants",
+    "MeixnerParams",
+    "meixner_cf",
+    "meixner_cumulants",
+    "BilateralGammaParams",
+    "bilateral_gamma_cf",
+    "bilateral_gamma_cumulants",
+    "GHParams",
+    "gh_cf",
+    "gh_cumulants",
+    "FMLSParams",
+    "fmls_cf",
+    "fmls_cumulants",
     # pipeline
     "price_strip",
     # grids
-    "COSGrid", "COSGridPolicy", "FFTGrid", "FRFTGrid",
+    "COSGrid",
+    "COSGridPolicy",
+    "FFTGrid",
+    "FRFTGrid",
     # pricers
-    "cos_prices", "cos_auto_grid", "cos_improved_grid",
-    "recommended_cos_policy", "cos_adaptive_decision",
-    "COSResult", "COSPolicyDecision",
-    "carr_madan_price_at_strikes", "carr_madan_fft_prices",
-    "frft_price_at_strikes", "frft_prices",
+    "cos_prices",
+    "cos_auto_grid",
+    "cos_improved_grid",
+    "recommended_cos_policy",
+    "cos_adaptive_decision",
+    "COSResult",
+    "COSPolicyDecision",
+    "carr_madan_price_at_strikes",
+    "carr_madan_fft_prices",
+    "frft_price_at_strikes",
+    "frft_prices",
     # filtered COS extension
-    "COSFilterSpec", "cos_filter_weights",
-    "filtered_cos_prices", "FilteredCOSDecision",
+    "COSFilterSpec",
+    "cos_filter_weights",
+    "filtered_cos_prices",
+    "FilteredCOSDecision",
     # iv
-    "BSInputs", "bs_price_from_fwd",
-    "implied_vol_brent", "implied_vol_newton_safeguarded",
+    "BSInputs",
+    "bs_price_from_fwd",
+    "implied_vol_brent",
+    "implied_vol_newton_safeguarded",
     # surface + calibration
-    "SurfaceSpec", "model_iv_surface", "model_price_surface",
-    "CalibrationResult", "calibrate_heston", "calibrate_vg", "calibrate_kou",
+    "SurfaceSpec",
+    "model_iv_surface",
+    "model_price_surface",
+    "CalibrationResult",
+    "calibrate_heston",
+    "calibrate_vg",
+    "calibrate_kou",
     # greeks
-    "COSGreeks", "cos_delta_gamma", "cos_price_and_greeks", "cos_parameter_sensitivity",
+    "COSGreeks",
+    "cos_delta_gamma",
+    "cos_price_and_greeks",
+    "cos_parameter_sensitivity",
     # mc
-    "european_call_mc", "MCSpec",
-    "heston_conditional_mc_calls", "HestonMCScheme",
-    "bs_call_cv", "heston_call_bs_control", "CVResult",
+    "european_call_mc",
+    "MCSpec",
+    "heston_conditional_mc_calls",
+    "HestonMCScheme",
+    "bs_call_cv",
+    "heston_call_bs_control",
+    "CVResult",
 ]

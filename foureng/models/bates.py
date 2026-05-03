@@ -19,7 +19,9 @@ References
 * Fang & Oosterlee (2008) for the COS truncation rule this cumulants
   function feeds.
 """
+
 from __future__ import annotations
+
 from dataclasses import dataclass
 
 import numpy as np
@@ -113,6 +115,7 @@ class BatesParams(ModelSpec):
 # Characteristic function
 # ---------------------------------------------------------------------------
 
+
 def bates_cf(u: np.ndarray, fwd: ForwardSpec, p: BatesParams) -> np.ndarray:
     """Bates CF of X_T = log(S_T/F_0).
 
@@ -149,6 +152,7 @@ def bates_cf(u: np.ndarray, fwd: ForwardSpec, p: BatesParams) -> np.ndarray:
 # Cumulants (independent components → cumulants add)
 # ---------------------------------------------------------------------------
 
+
 def bates_cumulants(fwd: ForwardSpec, p: BatesParams) -> tuple[float, float, float]:
     """Cumulants (c1, c2, c4) of X_T under Bates.
 
@@ -179,7 +183,7 @@ def bates_cumulants(fwd: ForwardSpec, p: BatesParams) -> tuple[float, float, flo
     # Jump raw moments and compensator.
     zeta = float(np.exp(mu_j + 0.5 * sig_j * sig_j) - 1.0)
     EY2 = mu_j * mu_j + sig_j * sig_j
-    EY4 = mu_j ** 4 + 6.0 * mu_j * mu_j * sig_j * sig_j + 3.0 * sig_j ** 4
+    EY4 = mu_j**4 + 6.0 * mu_j * mu_j * sig_j * sig_j + 3.0 * sig_j**4
 
     c1_j = lam_j * T * (mu_j - zeta)
     c2_j = lam_j * T * EY2

@@ -1,6 +1,9 @@
 from __future__ import annotations
-import numpy as np
+
 from dataclasses import dataclass
+
+import numpy as np
+
 from .base import ForwardSpec, ModelSpec
 
 
@@ -14,6 +17,7 @@ class KouParams(ModelSpec):
     eta1  : up-jump rate   (eta1 > 1 for finite mean)
     eta2  : down-jump rate (eta2 > 0)
     """
+
     sigma: float
     lam: float
     p: float
@@ -31,7 +35,9 @@ class KouParams(ModelSpec):
 
     def __post_init__(self) -> None:
         if self.eta1 <= 1.0:
-            raise ValueError(f"KouParams: eta1 must be > 1 (no first moment otherwise); got {self.eta1}")
+            raise ValueError(
+                f"KouParams: eta1 must be > 1 (no first moment otherwise); got {self.eta1}"
+            )
         if self.eta2 <= 0.0:
             raise ValueError(f"KouParams: eta2 must be > 0; got {self.eta2}")
         if not (0.0 <= self.p <= 1.0):
@@ -76,9 +82,9 @@ def kou_cumulants(fwd: ForwardSpec, p: KouParams) -> tuple[float, float, float]:
     zeta = pp * eta1 / (eta1 - 1.0) + (1.0 - pp) * eta2 / (eta2 + 1.0) - 1.0
     omega = -0.5 * sigma * sigma - lam * zeta
 
-    EY  = pp / eta1 - (1.0 - pp) / eta2
-    EY2 = 2.0 * pp / eta1 ** 2 + 2.0 * (1.0 - pp) / eta2 ** 2
-    EY4 = 24.0 * pp / eta1 ** 4 + 24.0 * (1.0 - pp) / eta2 ** 4
+    EY = pp / eta1 - (1.0 - pp) / eta2
+    EY2 = 2.0 * pp / eta1**2 + 2.0 * (1.0 - pp) / eta2**2
+    EY4 = 24.0 * pp / eta1**4 + 24.0 * (1.0 - pp) / eta2**4
 
     c1 = T * (omega + lam * EY)
     c2 = T * (sigma * sigma + lam * EY2)

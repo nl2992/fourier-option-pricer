@@ -30,7 +30,9 @@ References
 * Cont, R. & Tankov, P. (2004), *Financial Modelling with Jump Processes*,
   CRC Press. (Chapter 12 for the CF and pricing formulae.)
 """
+
 from __future__ import annotations
+
 from dataclasses import dataclass
 
 import numpy as np
@@ -84,6 +86,7 @@ class MertonJDParams(ModelSpec):
 # Characteristic function
 # ---------------------------------------------------------------------------
 
+
 def merton_jd_cf(u: np.ndarray, fwd: ForwardSpec, p: MertonJDParams) -> np.ndarray:
     """CF of X_T = log(S_T/F_0) under Merton JD.
 
@@ -109,16 +112,14 @@ def merton_jd_cf(u: np.ndarray, fwd: ForwardSpec, p: MertonJDParams) -> np.ndarr
     T = fwd.T
 
     # Jump parameters
-    zeta = np.expm1(p.muj + 0.5 * p.sigj ** 2)  # exp(muj + sigj^2/2) - 1
+    zeta = np.expm1(p.muj + 0.5 * p.sigj**2)  # exp(muj + sigj^2/2) - 1
     omega = -p.lam * zeta
 
     # Log-normal jump size CF: phi_Y(u) = E[exp(iu*Y)]
-    phi_Y = np.exp(1j * u_c * p.muj - 0.5 * p.sigj ** 2 * u_c ** 2)
+    phi_Y = np.exp(1j * u_c * p.muj - 0.5 * p.sigj**2 * u_c**2)
 
     exponent = T * (
-        1j * u_c * (omega - 0.5 * p.sigma ** 2)
-        - 0.5 * p.sigma ** 2 * u_c ** 2
-        + p.lam * (phi_Y - 1.0)
+        1j * u_c * (omega - 0.5 * p.sigma**2) - 0.5 * p.sigma**2 * u_c**2 + p.lam * (phi_Y - 1.0)
     )
     return np.exp(exponent)
 
@@ -126,6 +127,7 @@ def merton_jd_cf(u: np.ndarray, fwd: ForwardSpec, p: MertonJDParams) -> np.ndarr
 # ---------------------------------------------------------------------------
 # Cumulants (closed form)
 # ---------------------------------------------------------------------------
+
 
 def merton_jd_cumulants(fwd: ForwardSpec, p: MertonJDParams) -> tuple[float, float, float]:
     """Cumulants ``(c1, c2, c4)`` of X_T = log(S_T/F_0) under Merton JD.
@@ -142,10 +144,10 @@ def merton_jd_cumulants(fwd: ForwardSpec, p: MertonJDParams) -> tuple[float, flo
     T = fwd.T
     lam, muj, sigj, sigma = p.lam, p.muj, p.sigj, p.sigma
 
-    zeta = np.expm1(muj + 0.5 * sigj ** 2)
+    zeta = np.expm1(muj + 0.5 * sigj**2)
     omega = -lam * zeta
 
     c1 = T * (omega + lam * muj)
-    c2 = T * (sigma ** 2 + lam * (muj ** 2 + sigj ** 2))
-    c4 = T * lam * (muj ** 4 + 6 * muj ** 2 * sigj ** 2 + 3 * sigj ** 4)
+    c2 = T * (sigma**2 + lam * (muj**2 + sigj**2))
+    c4 = T * lam * (muj**4 + 6 * muj**2 * sigj**2 + 3 * sigj**4)
     return float(c1), float(c2), float(c4)

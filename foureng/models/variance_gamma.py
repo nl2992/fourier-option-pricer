@@ -10,13 +10,15 @@ The analytic cumulants are still computed in-house from FO2008 Table 10
 — PyFENG doesn't expose cumulants and we need them for the COS
 auto-grid truncation.
 """
+
 from __future__ import annotations
+
 from dataclasses import dataclass
 
 import numpy as np
 
-from .base import ForwardSpec, ModelSpec
 from ._pyfeng_backend import build_cached, import_pyfeng
+from .base import ForwardSpec, ModelSpec
 
 
 @dataclass(frozen=True)
@@ -58,6 +60,7 @@ def _pyfeng_vg_model(fwd: ForwardSpec, p: VGParams):
         vov    <-  p.nu      (variance-of-time subordinator rate)
         theta  <-  p.theta   (drift asymmetry)
     """
+
     def _factory():
         pf = import_pyfeng()
         return pf.VarGammaFft(
@@ -67,6 +70,7 @@ def _pyfeng_vg_model(fwd: ForwardSpec, p: VGParams):
             intr=fwd.r,
             divr=fwd.q,
         )
+
     return build_cached(_VG_MODEL_CACHE, (p, fwd), _factory)
 
 
@@ -107,9 +111,9 @@ def vg_cumulants(fwd: ForwardSpec, p: VGParams) -> tuple[float, float, float]:
     omega = np.log(cond) / nu
     c1 = (theta + omega) * T
     c2 = (sigma * sigma + nu * theta * theta) * T
-    c4 = 3.0 * (
-        sigma ** 4 * nu
-        + 2.0 * theta ** 4 * nu ** 3
-        + 4.0 * sigma * sigma * theta * theta * nu * nu
-    ) * T
+    c4 = (
+        3.0
+        * (sigma**4 * nu + 2.0 * theta**4 * nu**3 + 4.0 * sigma * sigma * theta * theta * nu * nu)
+        * T
+    )
     return float(c1), float(c2), float(c4)
