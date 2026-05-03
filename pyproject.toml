@@ -7,53 +7,49 @@ name = "fourier-option-pricer"
 version = "0.3.1"
 description = "Fourier-based European option pricing with Carr-Madan FFT, FRFT, and COS under characteristic-function models."
 readme = "README.md"
+requires-python = ">=3.10"
 license = { text = "MIT" }
 authors = [{ name = "Nigel Li", email = "nigelli676@gmail.com" }]
-requires-python = ">=3.10"
 dependencies = [
-  "numpy>=1.26",
-  "scipy>=1.10",
-  "matplotlib>=3.7",
-  # PyFENG imports statsmodels at module import time.
-  "statsmodels>=0.14",
-  # Heston and VG characteristic functions delegate to PyFENG
-  # (Prof. Choi's library); Bates reuses the PyFENG-backed Heston CF.
-  # Kou remains in-house (PyFENG has no Kou model).
-  "pyfeng>=0.3.0",
+    "numpy>=1.26",
+    "scipy>=1.10",
+    "matplotlib>=3.7",
+    "statsmodels>=0.14",
+    "pyfeng>=0.3.0",
 ]
 keywords = [
-  "quant-finance",
-  "option-pricing",
-  "fourier",
-  "carr-madan",
-  "cos-method",
-  "heston",
+    "quant-finance",
+    "option-pricing",
+    "fourier",
+    "carr-madan",
+    "cos-method",
+    "heston",
 ]
 classifiers = [
-  "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.10",
-  "Programming Language :: Python :: 3.11",
-  "Programming Language :: Python :: 3.12",
-  "Topic :: Office/Business :: Financial",
-  "Topic :: Scientific/Engineering :: Mathematics",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Office/Business :: Financial",
+    "Topic :: Scientific/Engineering :: Mathematics",
 ]
 
 [project.optional-dependencies]
 test = ["pytest>=7.4"]
-dev = ["pytest>=7.4", "jupyter>=1.0", "nbformat>=5.10", "ruff", "mypy", "build", "twine"]
+dev  = ["pytest>=7.4", "jupyter>=1.0", "nbformat>=5.10", "build", "twine", "ruff"]
 
 [project.urls]
-Homepage = "https://github.com/nl2992/fourier-option-pricer"
+Homepage   = "https://github.com/nl2992/fourier-option-pricer"
 Repository = "https://github.com/nl2992/fourier-option-pricer"
-Issues = "https://github.com/nl2992/fourier-option-pricer/issues"
+Issues     = "https://github.com/nl2992/fourier-option-pricer/issues"
 
 [tool.setuptools.packages.find]
-where = ["."]
+where   = ["."]
 include = ["foureng*"]
-exclude = ["tests*", "benchmarks*", "scripts*", "notebooks*"]
+exclude = ["tests*", "benchmarks*", "notebooks*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 markers = [
-  "slow: tests that take more than a second (deselect with -m 'not slow')",
+    "slow: tests that take more than a second (deselect with -m 'not slow')",
 ]
