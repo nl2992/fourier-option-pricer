@@ -157,16 +157,20 @@ def cos_adaptive_decision(
         L_used = float(
             policy.paper_L
             if policy.paper_L is not None
-            else (policy.L if policy.L is not None else _default_L_seed(model, params, mode=policy.mode))
+            else (
+                policy.L
+                if policy.L is not None
+                else _default_L_seed(model, params, mode=policy.mode)
+            )
         )
     else:
         L_used = float(
-            policy.L
-            if policy.L is not None
-            else _default_L_seed(model, params, mode=policy.mode)
+            policy.L if policy.L is not None else _default_L_seed(model, params, mode=policy.mode)
         )
 
-    max_L = 96.0  # 4× the 24.0 "wide interval" fallback threshold; beyond this COS is never efficient
+    max_L = (
+        96.0  # 4× the 24.0 "wide interval" fallback threshold; beyond this COS is never efficient
+    )
     if policy.truncation == "tolerance":
         while True:
             if policy.centered:
@@ -278,10 +282,7 @@ def _call_payoff_coeffs(a: float, b: float, N: int, K: np.ndarray, F0: float) ->
     ec = np.exp(c)
 
     chi = (
-        cos_cd * ed
-        - cos_cc * ec
-        + omega[:, None] * sin_cd * ed
-        - omega[:, None] * sin_cc * ec
+        cos_cd * ed - cos_cc * ec + omega[:, None] * sin_cd * ed - omega[:, None] * sin_cc * ec
     ) / (1.0 + omega[:, None] ** 2)
 
     psi = np.empty_like(chi)
@@ -425,8 +426,7 @@ def cos_prices(
                 calls = np.where(direct_mask, direct_calls, calls)
         elif payoff_mode not in {"put_parity", "auto"}:
             raise ValueError(
-                f"unknown payoff_mode {payoff_mode!r}; choose "
-                "'put_parity' | 'call_direct' | 'auto'"
+                f"unknown payoff_mode {payoff_mode!r}; choose 'put_parity' | 'call_direct' | 'auto'"
             )
     return COSResult(strikes=strikes, call_prices=calls)
 

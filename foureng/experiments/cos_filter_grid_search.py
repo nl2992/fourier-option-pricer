@@ -31,6 +31,7 @@ Design references
   application of spectral filters in a Fourier option pricing technique,"
   Journal of Computational Finance.
 """
+
 from __future__ import annotations
 
 import time
@@ -44,10 +45,10 @@ from foureng.pipeline import price_strip
 from foureng.utils.grids import COSGridPolicy
 from foureng.utils.spectral_filters import COSFilterSpec
 
-
 # ---------------------------------------------------------------------------
 # Candidate dataclass
 # ---------------------------------------------------------------------------
+
 
 @dataclass(frozen=True)
 class FilterGridCandidate:
@@ -121,6 +122,7 @@ def describe_filter_result(
 # Internal timing helper
 # ---------------------------------------------------------------------------
 
+
 def _time_call(fn, n_repeat: int = 3):
     """Run ``fn()`` up to ``n_repeat`` times and return ``(result, best_ms)``.
 
@@ -142,6 +144,7 @@ def _time_call(fn, n_repeat: int = 3):
 # ---------------------------------------------------------------------------
 # Default candidate set
 # ---------------------------------------------------------------------------
+
 
 def default_filtered_cos_candidates() -> list[FilterGridCandidate]:
     """Build the default grid-search candidate set.
@@ -211,6 +214,7 @@ def default_filtered_cos_candidates() -> list[FilterGridCandidate]:
 # Grid-search runner
 # ---------------------------------------------------------------------------
 
+
 def run_filtered_cos_grid_search(
     *,
     model: str,
@@ -275,9 +279,7 @@ def run_filtered_cos_grid_search(
                 grid_arg = (cand.policy, cand.filter_spec)
 
             prices, runtime_ms = _time_call(
-                lambda m=method, g=grid_arg: price_strip(
-                    model, m, strikes, fwd, params, grid=g
-                ),
+                lambda m=method, g=grid_arg: price_strip(model, m, strikes, fwd, params, grid=g),
                 n_repeat=n_repeat,
             )
 
@@ -285,36 +287,40 @@ def run_filtered_cos_grid_search(
             max_abs_err = float(np.max(np.abs(err)))
             mean_abs_err = float(np.mean(np.abs(err)))
 
-            rows.append({
-                "method_label":  cand.method_label,
-                "truncation":    cand.policy.truncation,
-                "dx_target":     cand.policy.dx_target,
-                "L":             cand.policy.L,
-                "eps_trunc":     cand.policy.eps_trunc,
-                "filter":        "none" if cand.filter_spec is None else cand.filter_spec.name,
-                "filter_order":  np.nan if cand.filter_spec is None else cand.filter_spec.order,
-                "runtime_ms":    runtime_ms,
-                "max_abs_err":   max_abs_err,
-                "mean_abs_err":  mean_abs_err,
-                "passes_tol":    max_abs_err <= tol,
-                "status":        "ok",
-            })
+            rows.append(
+                {
+                    "method_label": cand.method_label,
+                    "truncation": cand.policy.truncation,
+                    "dx_target": cand.policy.dx_target,
+                    "L": cand.policy.L,
+                    "eps_trunc": cand.policy.eps_trunc,
+                    "filter": "none" if cand.filter_spec is None else cand.filter_spec.name,
+                    "filter_order": np.nan if cand.filter_spec is None else cand.filter_spec.order,
+                    "runtime_ms": runtime_ms,
+                    "max_abs_err": max_abs_err,
+                    "mean_abs_err": mean_abs_err,
+                    "passes_tol": max_abs_err <= tol,
+                    "status": "ok",
+                }
+            )
 
         except Exception as exc:
-            rows.append({
-                "method_label":  cand.method_label,
-                "truncation":    getattr(cand.policy, "truncation", None),
-                "dx_target":     getattr(cand.policy, "dx_target", None),
-                "L":             getattr(cand.policy, "L", None),
-                "eps_trunc":     getattr(cand.policy, "eps_trunc", None),
-                "filter":        "none" if cand.filter_spec is None else cand.filter_spec.name,
-                "filter_order":  np.nan if cand.filter_spec is None else cand.filter_spec.order,
-                "runtime_ms":    np.nan,
-                "max_abs_err":   np.inf,
-                "mean_abs_err":  np.inf,
-                "passes_tol":    False,
-                "status":        f"fail: {type(exc).__name__}: {exc}",
-            })
+            rows.append(
+                {
+                    "method_label": cand.method_label,
+                    "truncation": getattr(cand.policy, "truncation", None),
+                    "dx_target": getattr(cand.policy, "dx_target", None),
+                    "L": getattr(cand.policy, "L", None),
+                    "eps_trunc": getattr(cand.policy, "eps_trunc", None),
+                    "filter": "none" if cand.filter_spec is None else cand.filter_spec.name,
+                    "filter_order": np.nan if cand.filter_spec is None else cand.filter_spec.order,
+                    "runtime_ms": np.nan,
+                    "max_abs_err": np.inf,
+                    "mean_abs_err": np.inf,
+                    "passes_tol": False,
+                    "status": f"fail: {type(exc).__name__}: {exc}",
+                }
+            )
 
     df = pd.DataFrame(rows)
     if df.empty:
@@ -329,6 +335,7 @@ def run_filtered_cos_grid_search(
 # ---------------------------------------------------------------------------
 # Best-candidate selector
 # ---------------------------------------------------------------------------
+
 
 def select_fastest_under_tolerance(df: pd.DataFrame, tol: float) -> pd.Series:
     """Select the fastest candidate satisfying ``max_abs_err ≤ tol``.

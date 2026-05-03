@@ -1,16 +1,19 @@
 from __future__ import annotations
-import numpy as np
+
 from dataclasses import dataclass
+
+import numpy as np
+
 from ..models.base import CharFunc, ForwardSpec
-from ..utils.grids import FRFTGrid
-from ..utils.numerics import cm_simpson_weights, phi_logprice
 from ..utils.frft import frft
+from ..utils.grids import FRFTGrid
 from ..utils.interp import interp_cubic
+from ..utils.numerics import cm_simpson_weights, phi_logprice
 
 
 @dataclass(frozen=True)
 class FRFTResult:
-    k: np.ndarray            # log-strike grid
+    k: np.ndarray  # log-strike grid
     call_prices: np.ndarray
     K: np.ndarray
 

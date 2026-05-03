@@ -24,64 +24,104 @@ In-house native CFs:
     generalized_hyperbolic GHParams    — GH Lévy (Barndorff-Nielsen 1977)
     fmls         FMLSParams            — Finite Moment Log Stable (Carr-Wu 2003)
 """
-from .base import ForwardSpec, ModelSpec, CharFunc
 
-from .bsm import BsmParams, bsm_cf, bsm_cumulants
-from .heston import HestonParams, heston_cf, heston_cf_form2, heston_cumulants
-from .ousv import OusvParams, ousv_cf, ousv_cumulants
-from .variance_gamma import VGParams, vg_cf, vg_cumulants
-from .cgmy import CgmyParams, cgmy_cf, cgmy_cumulants
-from .nig import NigParams, nig_cf, nig_cumulants
-from .kou import KouParams, kou_cf, kou_cumulants
+from .base import CharFunc, ForwardSpec, ModelSpec
 from .bates import BatesParams, bates_cf, bates_cumulants
-from .heston_kou import HestonKouParams, heston_kou_cf, heston_kou_cumulants
-from .heston_cgmy import HestonCGMYParams, cgmy_levy_exponent, heston_cgmy_cf, heston_cgmy_cumulants
-from .sv32 import Sv32Params, sv32_cf, sv32_cumulants
-from .garch_wmw2012 import GarchWMW2012Params, garch_wmw2012_cf, garch_wmw2012_cumulants
-from .rough_heston import RoughHestonParams, rough_heston_cf, rough_heston_cumulants
-from .merton_jd import MertonJDParams, merton_jd_cf, merton_jd_cumulants
-from .meixner import MeixnerParams, meixner_cf, meixner_cumulants
 from .bilateral_gamma import BilateralGammaParams, bilateral_gamma_cf, bilateral_gamma_cumulants
-from .generalized_hyperbolic import GHParams, gh_cf, gh_cumulants
+from .bsm import BsmParams, bsm_cf, bsm_cumulants
+from .cgmy import CgmyParams, cgmy_cf, cgmy_cumulants
 from .fmls import FMLSParams, fmls_cf, fmls_cumulants
+from .garch_wmw2012 import GarchWMW2012Params, garch_wmw2012_cf, garch_wmw2012_cumulants
+from .generalized_hyperbolic import GHParams, gh_cf, gh_cumulants
+from .heston import HestonParams, heston_cf, heston_cf_form2, heston_cumulants
+from .heston_cgmy import HestonCGMYParams, cgmy_levy_exponent, heston_cgmy_cf, heston_cgmy_cumulants
+from .heston_kou import HestonKouParams, heston_kou_cf, heston_kou_cumulants
+from .kou import KouParams, kou_cf, kou_cumulants
+from .meixner import MeixnerParams, meixner_cf, meixner_cumulants
+from .merton_jd import MertonJDParams, merton_jd_cf, merton_jd_cumulants
+from .nig import NigParams, nig_cf, nig_cumulants
+from .ousv import OusvParams, ousv_cf, ousv_cumulants
+from .rough_heston import RoughHestonParams, rough_heston_cf, rough_heston_cumulants
+from .sv32 import Sv32Params, sv32_cf, sv32_cumulants
+from .variance_gamma import VGParams, vg_cf, vg_cumulants
 
 __all__ = [
     # base
-    "ForwardSpec", "ModelSpec", "CharFunc",
+    "ForwardSpec",
+    "ModelSpec",
+    "CharFunc",
     # BSM
-    "BsmParams", "bsm_cf", "bsm_cumulants",
+    "BsmParams",
+    "bsm_cf",
+    "bsm_cumulants",
     # Heston
-    "HestonParams", "heston_cf", "heston_cf_form2", "heston_cumulants",
+    "HestonParams",
+    "heston_cf",
+    "heston_cf_form2",
+    "heston_cumulants",
     # OUSV
-    "OusvParams", "ousv_cf", "ousv_cumulants",
+    "OusvParams",
+    "ousv_cf",
+    "ousv_cumulants",
     # Variance Gamma
-    "VGParams", "vg_cf", "vg_cumulants",
+    "VGParams",
+    "vg_cf",
+    "vg_cumulants",
     # CGMY
-    "CgmyParams", "cgmy_cf", "cgmy_cumulants",
+    "CgmyParams",
+    "cgmy_cf",
+    "cgmy_cumulants",
     # NIG
-    "NigParams", "nig_cf", "nig_cumulants",
+    "NigParams",
+    "nig_cf",
+    "nig_cumulants",
     # Kou
-    "KouParams", "kou_cf", "kou_cumulants",
+    "KouParams",
+    "kou_cf",
+    "kou_cumulants",
     # Bates
-    "BatesParams", "bates_cf", "bates_cumulants",
+    "BatesParams",
+    "bates_cf",
+    "bates_cumulants",
     # Heston-Kou
-    "HestonKouParams", "heston_kou_cf", "heston_kou_cumulants",
+    "HestonKouParams",
+    "heston_kou_cf",
+    "heston_kou_cumulants",
     # Heston-CGMY
-    "HestonCGMYParams", "cgmy_levy_exponent", "heston_cgmy_cf", "heston_cgmy_cumulants",
+    "HestonCGMYParams",
+    "cgmy_levy_exponent",
+    "heston_cgmy_cf",
+    "heston_cgmy_cumulants",
     # 3/2 SV
-    "Sv32Params", "sv32_cf", "sv32_cumulants",
+    "Sv32Params",
+    "sv32_cf",
+    "sv32_cumulants",
     # GARCH
-    "GarchWMW2012Params", "garch_wmw2012_cf", "garch_wmw2012_cumulants",
+    "GarchWMW2012Params",
+    "garch_wmw2012_cf",
+    "garch_wmw2012_cumulants",
     # Rough Heston
-    "RoughHestonParams", "rough_heston_cf", "rough_heston_cumulants",
+    "RoughHestonParams",
+    "rough_heston_cf",
+    "rough_heston_cumulants",
     # Merton JD
-    "MertonJDParams", "merton_jd_cf", "merton_jd_cumulants",
+    "MertonJDParams",
+    "merton_jd_cf",
+    "merton_jd_cumulants",
     # Meixner
-    "MeixnerParams", "meixner_cf", "meixner_cumulants",
+    "MeixnerParams",
+    "meixner_cf",
+    "meixner_cumulants",
     # Bilateral Gamma
-    "BilateralGammaParams", "bilateral_gamma_cf", "bilateral_gamma_cumulants",
+    "BilateralGammaParams",
+    "bilateral_gamma_cf",
+    "bilateral_gamma_cumulants",
     # Generalized Hyperbolic
-    "GHParams", "gh_cf", "gh_cumulants",
+    "GHParams",
+    "gh_cf",
+    "gh_cumulants",
     # FMLS
-    "FMLSParams", "fmls_cf", "fmls_cumulants",
+    "FMLSParams",
+    "fmls_cf",
+    "fmls_cumulants",
 ]

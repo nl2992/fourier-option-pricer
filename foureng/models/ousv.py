@@ -26,13 +26,15 @@ References
 * Schöbel, R. and Zhu, J. (1999), "Stochastic Volatility With an
   Ornstein–Uhlenbeck Process: An Extension", European Finance Review.
 """
+
 from __future__ import annotations
+
 from dataclasses import dataclass
 
 import numpy as np
 
-from .base import ForwardSpec, ModelSpec
 from ._pyfeng_backend import build_cached, import_pyfeng
+from .base import ForwardSpec, ModelSpec
 
 
 @dataclass(frozen=True)
@@ -60,8 +62,7 @@ class OusvParams(ModelSpec):
     nu: float
     rho: float
 
-    def __init__(self, sigma0: float, kappa: float, theta: float,
-                 nu: float, rho: float):
+    def __init__(self, sigma0: float, kappa: float, theta: float, nu: float, rho: float):
         if not (np.isfinite(sigma0) and sigma0 > 0):
             raise ValueError(f"OusvParams: sigma0 must be > 0; got {sigma0}")
         if not (np.isfinite(kappa) and kappa > 0):
@@ -98,6 +99,7 @@ def _pyfeng_ousv_model(fwd: ForwardSpec, p: OusvParams):
         vov    <-  p.nu
         rho    <-  p.rho
     """
+
     def _factory():
         pf = import_pyfeng()
         return pf.OusvFft(
@@ -109,6 +111,7 @@ def _pyfeng_ousv_model(fwd: ForwardSpec, p: OusvParams):
             intr=fwd.r,
             divr=fwd.q,
         )
+
     return build_cached(_OUSV_MODEL_CACHE, (p, fwd), _factory)
 
 
@@ -116,13 +119,13 @@ def ousv_cf(u: np.ndarray, fwd: ForwardSpec, p: OusvParams) -> np.ndarray:
     """CF of ``X_T = log(S_T / F_0)`` under OUSV — via PyFENG's ``OusvFft``."""
     m = _pyfeng_ousv_model(fwd, p)
     u_arr = np.asarray(u)
-    return np.asarray(m.charfunc_logprice(u_arr, texp=fwd.T),
-                      dtype=np.complex128)
+    return np.asarray(m.charfunc_logprice(u_arr, texp=fwd.T), dtype=np.complex128)
 
 
 # ---------------------------------------------------------------------------
 # Cumulants — numerical via Cauchy integral on the CF
 # ---------------------------------------------------------------------------
+
 
 def ousv_cumulants(fwd: ForwardSpec, p: OusvParams) -> tuple[float, float, float]:
     """Cumulants ``(c1, c2, c4)`` of ``X_T`` under OUSV.
@@ -134,6 +137,8 @@ def ousv_cumulants(fwd: ForwardSpec, p: OusvParams) -> tuple[float, float, float
     """
     from ..utils.cumulants import cumulants_from_cf
 
-    phi = lambda u: ousv_cf(u, fwd, p)
-    c = cumulants_from_cf(phi, order=4, radius=0.25, M=64)
+    def _phi(u):
+        return ousv_cf(u, fwd, p)
+
+    c = cumulants_from_cf(_phi, order=4, radius=0.25, M=64)
     return float(c[0]), float(c[1]), float(c[3])

@@ -22,34 +22,38 @@ same scale across strikes (prices vary by orders of magnitude ITM/OTM). For
 pathological inputs (stale quotes, arbitrage violations) switch to a
 price-space loss with vega weights.
 """
+
 from __future__ import annotations
-import numpy as np
+
 from dataclasses import dataclass
 from typing import Callable
+
+import numpy as np
 from scipy.optimize import minimize
 
-from ..models.base import ForwardSpec
 from ..models.heston import HestonParams, heston_cf_form2, heston_cumulants
-from ..models.variance_gamma import VGParams, vg_cf, vg_cumulants
 from ..models.kou import KouParams, kou_cf, kou_cumulants
+from ..models.variance_gamma import VGParams, vg_cf, vg_cumulants
 from .vol_surface import SurfaceSpec, model_iv_surface
 
 
 @dataclass
 class CalibrationResult:
-    params: dict            # best-fit parameters as a dict
-    loss: float             # final objective (weighted SSE on IVs)
+    params: dict  # best-fit parameters as a dict
+    loss: float  # final objective (weighted SSE on IVs)
     success: bool
     nfev: int
-    residuals: np.ndarray   # (nT, nK) IV residuals model - market
+    residuals: np.ndarray  # (nT, nK) IV residuals model - market
 
 
 # --- Param-vector <-> model converters ---------------------------------------
 
+
 def _heston_from_vec(x: np.ndarray) -> HestonParams:
     kappa, theta, nu, rho, v0 = x
-    return HestonParams(kappa=float(kappa), theta=float(theta), nu=float(nu),
-                        rho=float(rho), v0=float(v0))
+    return HestonParams(
+        kappa=float(kappa), theta=float(theta), nu=float(nu), rho=float(rho), v0=float(v0)
+    )
 
 
 def _vg_from_vec(x: np.ndarray) -> VGParams:
@@ -59,11 +63,13 @@ def _vg_from_vec(x: np.ndarray) -> VGParams:
 
 def _kou_from_vec(x: np.ndarray) -> KouParams:
     sigma, lam, p, eta1, eta2 = x
-    return KouParams(sigma=float(sigma), lam=float(lam), p=float(p),
-                     eta1=float(eta1), eta2=float(eta2))
+    return KouParams(
+        sigma=float(sigma), lam=float(lam), p=float(p), eta1=float(eta1), eta2=float(eta2)
+    )
 
 
 # --- Core calibration loop ---------------------------------------------------
+
 
 def _calibrate(
     spec: SurfaceSpec,
@@ -90,8 +96,7 @@ def _calibrate(
     """
     if market_ivs.shape != (len(spec.maturities), len(spec.strikes)):
         raise ValueError(
-            f"market_ivs shape {market_ivs.shape} != "
-            f"({len(spec.maturities)}, {len(spec.strikes)})"
+            f"market_ivs shape {market_ivs.shape} != ({len(spec.maturities)}, {len(spec.strikes)})"
         )
     if weights is None:
         weights = np.ones_like(market_ivs)
@@ -131,15 +136,18 @@ def _calibrate(
         opts = dict(maxiter=maxiter, ftol=ftol, eps=fd_step)
         res = minimize(objective, x0=z0, bounds=z_bounds, method="L-BFGS-B", options=opts)
     else:
-        res = minimize(objective, x0=z0, bounds=z_bounds, method=method,
-                       options=dict(maxiter=maxiter))
+        res = minimize(
+            objective, x0=z0, bounds=z_bounds, method=method, options=dict(maxiter=maxiter)
+        )
 
     best_x = unscale(res.x)
     best_params = unpack(best_x)
     # Refresh stored residuals at the reported optimum.
     objective(res.x)
     return CalibrationResult(
-        params=best_params.__dict__ if hasattr(best_params, "__dict__") else dict(vars(best_params)),
+        params=best_params.__dict__
+        if hasattr(best_params, "__dict__")
+        else dict(vars(best_params)),
         loss=float(res.fun),
         success=bool(res.success),
         nfev=int(nfev[0]),
@@ -150,25 +158,25 @@ def _calibrate(
 # --- Model-specific entry points ---------------------------------------------
 
 HESTON_DEFAULT_BOUNDS = [
-    (1e-3, 20.0),     # kappa
-    (1e-4, 2.0),      # theta (long-run variance)
-    (1e-3, 5.0),      # nu    (vol of vol)
+    (1e-3, 20.0),  # kappa
+    (1e-4, 2.0),  # theta (long-run variance)
+    (1e-3, 5.0),  # nu    (vol of vol)
     (-0.999, 0.999),  # rho
-    (1e-4, 2.0),      # v0
+    (1e-4, 2.0),  # v0
 ]
 
 VG_DEFAULT_BOUNDS = [
-    (1e-3, 2.0),      # sigma
-    (1e-4, 5.0),      # nu
-    (-2.0, 2.0),      # theta
+    (1e-3, 2.0),  # sigma
+    (1e-4, 5.0),  # nu
+    (-2.0, 2.0),  # theta
 ]
 
 KOU_DEFAULT_BOUNDS = [
-    (1e-3, 2.0),      # sigma
-    (1e-4, 20.0),     # lam
-    (1e-3, 1.0 - 1e-3),   # p
-    (1.0 + 1e-3, 50.0),   # eta1 (> 1 for finite jump mean)
-    (1e-3, 50.0),     # eta2
+    (1e-3, 2.0),  # sigma
+    (1e-4, 20.0),  # lam
+    (1e-3, 1.0 - 1e-3),  # p
+    (1.0 + 1e-3, 50.0),  # eta1 (> 1 for finite jump mean)
+    (1e-3, 50.0),  # eta2
 ]
 
 
@@ -194,9 +202,14 @@ def calibrate_heston(
         bounds=bounds,
         weights=weights,
         unpack=_heston_from_vec,
-        cf_factory_from_params=lambda p: (lambda fwd: (lambda u: heston_cf_form2(u, fwd, p))),
-        cumulant_factory_from_params=lambda p: (lambda fwd: heston_cumulants(fwd, p)),
-        N=N, L=L, method=method, fd_step=fd_step, maxiter=maxiter, ftol=ftol,
+        cf_factory_from_params=lambda p: lambda fwd: lambda u: heston_cf_form2(u, fwd, p),
+        cumulant_factory_from_params=lambda p: lambda fwd: heston_cumulants(fwd, p),
+        N=N,
+        L=L,
+        method=method,
+        fd_step=fd_step,
+        maxiter=maxiter,
+        ftol=ftol,
     )
 
 
@@ -222,9 +235,14 @@ def calibrate_vg(
         bounds=bounds,
         weights=weights,
         unpack=_vg_from_vec,
-        cf_factory_from_params=lambda p: (lambda fwd: (lambda u: vg_cf(u, fwd, p))),
-        cumulant_factory_from_params=lambda p: (lambda fwd: vg_cumulants(fwd, p)),
-        N=N, L=L, method=method, fd_step=fd_step, maxiter=maxiter, ftol=ftol,
+        cf_factory_from_params=lambda p: lambda fwd: lambda u: vg_cf(u, fwd, p),
+        cumulant_factory_from_params=lambda p: lambda fwd: vg_cumulants(fwd, p),
+        N=N,
+        L=L,
+        method=method,
+        fd_step=fd_step,
+        maxiter=maxiter,
+        ftol=ftol,
     )
 
 
@@ -250,7 +268,12 @@ def calibrate_kou(
         bounds=bounds,
         weights=weights,
         unpack=_kou_from_vec,
-        cf_factory_from_params=lambda p: (lambda fwd: (lambda u: kou_cf(u, fwd, p))),
-        cumulant_factory_from_params=lambda p: (lambda fwd: kou_cumulants(fwd, p)),
-        N=N, L=L, method=method, fd_step=fd_step, maxiter=maxiter, ftol=ftol,
+        cf_factory_from_params=lambda p: lambda fwd: lambda u: kou_cf(u, fwd, p),
+        cumulant_factory_from_params=lambda p: lambda fwd: kou_cumulants(fwd, p),
+        N=N,
+        L=L,
+        method=method,
+        fd_step=fd_step,
+        maxiter=maxiter,
+        ftol=ftol,
     )

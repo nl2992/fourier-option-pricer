@@ -17,6 +17,7 @@ amount. We instead run :func:`scipy.optimize.brentq` directly against
 a closed-form Black-Scholes call. No dependency on PyFENG here and
 the solver is ~2x faster than PyFENG's wrapped version on a strip.
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -85,9 +86,7 @@ def implied_vol_from_prices(
     prices = np.asarray(prices, dtype=np.float64)
     strikes = np.asarray(strikes, dtype=np.float64)
     if prices.shape != strikes.shape:
-        raise ValueError(
-            f"prices {prices.shape} and strikes {strikes.shape} must match"
-        )
+        raise ValueError(f"prices {prices.shape} and strikes {strikes.shape} must match")
     if cp not in (1, -1):
         raise ValueError(f"cp must be +1 (call) or -1 (put); got {cp}")
 
@@ -113,7 +112,10 @@ def implied_vol_from_prices(
         try:
             iv[i] = brentq(
                 lambda s, K=K, P=P: price_fn(F, K, T, s, disc) - P,
-                sigma_lo, sigma_hi, xtol=1e-12, rtol=1e-12,
+                sigma_lo,
+                sigma_hi,
+                xtol=1e-12,
+                rtol=1e-12,
             )
         except Exception:
             iv[i] = np.nan
