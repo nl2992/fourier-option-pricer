@@ -20,7 +20,11 @@ importable for finer-grained access.
 """
 from __future__ import annotations
 
-__version__ = "0.3.1"
+try:
+    from importlib.metadata import version as _pkg_version, PackageNotFoundError as _PNF
+    __version__: str = _pkg_version("fourier-option-pricer")
+except _PNF:  # editable install without metadata yet
+    __version__ = "0.3.1"
 
 from .models.base import ForwardSpec, CharFunc, ModelSpec
 from .models.bsm import BsmParams, bsm_cf, bsm_cumulants
