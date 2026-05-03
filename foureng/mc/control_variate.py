@@ -45,12 +45,14 @@ This also removes the only cross-module dependency on
 MC is still available in :mod:`foureng.mc.heston_conditional_mc` as a
 pedagogical baseline, but the control variate no longer needs it.
 """
+
 from __future__ import annotations
-import numpy as np
+
 from dataclasses import dataclass
-from ..models.base import ForwardSpec
+
+import numpy as np
+
 from ..models.heston import HestonParams
-from ..iv.implied_vol import bs_price_from_fwd, BSInputs
 
 
 @dataclass(frozen=True)
@@ -105,9 +107,12 @@ def bs_call_cv(
     vr = (se_plain / se_cv) ** 2 if se_cv > 0 else float("inf")
 
     return CVResult(
-        price_plain=mean_plain, price_cv=mean_cv,
-        se_plain=se_plain, se_cv=se_cv,
-        var_reduction=vr, n_paths=n_paths,
+        price_plain=mean_plain,
+        price_cv=mean_cv,
+        se_plain=se_plain,
+        se_cv=se_cv,
+        var_reduction=vr,
+        n_paths=n_paths,
     )
 
 
@@ -158,14 +163,18 @@ def heston_call_bs_control(
         import pyfeng as pf  # type: ignore
     except Exception as exc:  # pragma: no cover
         raise ImportError(
-            "heston_call_bs_control requires pyfeng; install with "
-            "`pip install pyfeng`."
+            "heston_call_bs_control requires pyfeng; install with `pip install pyfeng`."
         ) from exc
 
     del n_steps  # honoured via docstring; GK2011 endpoint sampler needs no substepping
     m = pf.HestonMcGlassermanKim2011(
-        sigma=p.v0, vov=p.nu, rho=p.rho, mr=p.kappa, theta=p.theta,
-        intr=r, divr=q,
+        sigma=p.v0,
+        vov=p.nu,
+        rho=p.rho,
+        mr=p.kappa,
+        theta=p.theta,
+        intr=r,
+        divr=q,
     )
     m.set_num_params(
         n_path=int(n_paths),
@@ -191,8 +200,7 @@ def heston_call_bs_control(
     logFK = np.log(F0 / K)
     d1 = (logFK + mu_cond + sigma2_cond) / sigma_cond
     d2 = d1 - sigma_cond
-    X = disc * (F0 * np.exp(mu_cond + 0.5 * sigma2_cond) * norm.cdf(d1)
-                - K * norm.cdf(d2))
+    X = disc * (F0 * np.exp(mu_cond + 0.5 * sigma2_cond) * norm.cdf(d1) - K * norm.cdf(d2))
 
     # Integrated-variance control with exact mean.
     Y = V_T
@@ -208,7 +216,10 @@ def heston_call_bs_control(
     vr = (se_plain / se_cv) ** 2 if se_cv > 0 else float("inf")
 
     return CVResult(
-        price_plain=mean_plain, price_cv=mean_cv,
-        se_plain=se_plain, se_cv=se_cv,
-        var_reduction=vr, n_paths=n_paths,
+        price_plain=mean_plain,
+        price_cv=mean_cv,
+        se_plain=se_plain,
+        se_cv=se_cv,
+        var_reduction=vr,
+        n_paths=n_paths,
     )

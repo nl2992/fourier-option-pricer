@@ -11,6 +11,7 @@ The contract is declared here ahead of time so that downstream modules
 can start importing the symbol without churn later. Concrete subclasses
 land in Pass 2.
 """
+
 from __future__ import annotations
 
 

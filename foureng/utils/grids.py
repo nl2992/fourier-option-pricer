@@ -1,6 +1,8 @@
 from __future__ import annotations
-import numpy as np
+
 from dataclasses import dataclass
+
+import numpy as np
 
 
 @dataclass(frozen=True)
@@ -22,6 +24,7 @@ class FFTGrid:
         depends on the parametrisation. Use
         :func:`~foureng.utils.validity.check_alpha` to verify.
     """
+
     N: int
     eta: float
     alpha: float
@@ -65,6 +68,7 @@ class FRFTGrid:
         :class:`FFTGrid`. The standard choice **alpha = 1.5** works for
         most models; see :func:`~foureng.utils.validity.check_alpha`.
     """
+
     N: int
     eta: float
     lam: float
@@ -96,6 +100,7 @@ class COSGrid:
     around zero for the centered state variable without changing the public
     pricing API.
     """
+
     N: int
     a: float
     b: float

@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import numpy as np
 
 
@@ -21,7 +22,7 @@ def frft(x: np.ndarray, zeta: float) -> np.ndarray:
         raise ValueError("input must have length >= 1")
 
     j = np.arange(N)
-    chirp = np.exp(1j * np.pi * zeta * j * j)             # e^{+i pi zeta j^2}
+    chirp = np.exp(1j * np.pi * zeta * j * j)  # e^{+i pi zeta j^2}
 
     # y: x * conj(chirp), padded with zeros to length 2N
     y = np.zeros(2 * N, dtype=np.complex128)
@@ -33,7 +34,7 @@ def frft(x: np.ndarray, zeta: float) -> np.ndarray:
     z = np.zeros(2 * N, dtype=np.complex128)
     z[:N] = chirp
     if N > 1:
-        z[N + 1:] = chirp[1:][::-1]
+        z[N + 1 :] = chirp[1:][::-1]
 
     conv = np.fft.ifft(np.fft.fft(y) * np.fft.fft(z))[:N]
     return np.conj(chirp) * conv

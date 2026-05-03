@@ -25,6 +25,7 @@ per calibration point, one per notebook example. Constructing a
 single :meth:`charfunc_logprice` call, so caching matters for COS's
 two-pass usage (cumulant Cauchy integral + strip pricing).
 """
+
 from __future__ import annotations
 
 from typing import Any, Callable
@@ -42,8 +43,7 @@ def import_pyfeng():
         import pyfeng as pf  # type: ignore
     except (ImportError, ModuleNotFoundError) as exc:  # pragma: no cover
         raise ImportError(
-            "foureng requires pyfeng for this model's CF; install with "
-            "`pip install pyfeng`."
+            "foureng requires pyfeng for this model's CF; install with `pip install pyfeng`."
         ) from exc
     return pf
 

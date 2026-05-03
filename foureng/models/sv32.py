@@ -30,13 +30,15 @@ PyFENG benchmark (from docstring)::
     strikes=[95, 100, 105], spot=100, texp=0.5
     → prices ≈ [11.7235, 8.9978, 6.7091]
 """
+
 from __future__ import annotations
+
 from dataclasses import dataclass
 
 import numpy as np
 
-from .base import ForwardSpec, ModelSpec
 from ._pyfeng_backend import build_cached, import_pyfeng
+from .base import ForwardSpec, ModelSpec
 
 
 @dataclass(frozen=True)
@@ -113,6 +115,7 @@ def _pyfeng_sv32_model(fwd: ForwardSpec, p: Sv32Params):
         vov    <->  p.nu       (vol-of-vol)
         rho    <->  p.rho      (spot-var correlation)
     """
+
     def _factory():
         pf = import_pyfeng()
         return pf.Sv32Fft(
@@ -124,6 +127,7 @@ def _pyfeng_sv32_model(fwd: ForwardSpec, p: Sv32Params):
             intr=fwd.r,
             divr=fwd.q,
         )
+
     return build_cached(_SV32_MODEL_CACHE, (p, fwd), _factory)
 
 
@@ -155,6 +159,7 @@ def sv32_cf(u: np.ndarray, fwd: ForwardSpec, p: Sv32Params) -> np.ndarray:
 # Cumulants — numerical Cauchy integral
 # ---------------------------------------------------------------------------
 
+
 def sv32_cumulants(fwd: ForwardSpec, p: Sv32Params) -> tuple[float, float, float]:
     """Cumulants ``(c1, c2, c4)`` of ``X_T`` under the 3/2 SV model.
 
@@ -165,6 +170,8 @@ def sv32_cumulants(fwd: ForwardSpec, p: Sv32Params) -> tuple[float, float, float
     """
     from ..utils.cumulants import cumulants_from_cf
 
-    phi = lambda u: sv32_cf(u, fwd, p)
-    c = cumulants_from_cf(phi, order=4, radius=0.25, M=64)
+    def _phi(u):
+        return sv32_cf(u, fwd, p)
+
+    c = cumulants_from_cf(_phi, order=4, radius=0.25, M=64)
     return float(c[0]), float(c[1]), float(c[3])

@@ -44,10 +44,10 @@ Notes
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from typing import Callable, Literal
 
-import math
 import numpy as np
 
 from .base import BasePricer
@@ -99,6 +99,7 @@ def cf_from_logprice_cf(logprice_cf: CF, x0: float) -> CF:
 
     This helper builds that adapted CF.
     """
+
     def _wrapped(u: ComplexOrArray) -> ComplexOrArray:
         return np.exp(-1j * u * x0) * logprice_cf(u)
 
@@ -168,13 +169,13 @@ def _lewis_integral_quad(
         from scipy.integrate import quad
     except Exception as exc:  # pragma: no cover
         raise ImportError(
-            "scipy is required for method='quad'. "
-            "Either install scipy or use method='trapz'."
+            "scipy is required for method='quad'. Either install scipy or use method='trapz'."
         ) from exc
 
     out = np.empty_like(k_log_moneyness, dtype=float)
 
     for i, k in enumerate(k_log_moneyness):
+
         def _f(u: float) -> float:
             val = cf(u - 0.5j)
             return float(np.real(np.exp(-1j * u * k) * val / (u * u + 0.25)))
@@ -360,7 +361,10 @@ class LewisPricer(BasePricer):
                     "LewisPricer.price expects either a CF callable "
                     "or a model exposing charfunc_logreturn(u, texp)."
                 )
-            cf = lambda u: model.charfunc_logreturn(u, texp)
+
+            def cf(u):
+                return model.charfunc_logreturn(u, texp)
+
             intr = kwargs.pop("intr", getattr(model, "intr", 0.0))
             divr = kwargs.pop("divr", getattr(model, "divr", 0.0))
             is_fwd = kwargs.pop("is_fwd", getattr(model, "is_fwd", False))
