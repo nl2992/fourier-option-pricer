@@ -44,5 +44,26 @@ jobs:
           print("statsmodels", m.version("statsmodels"))
           PY
 
-      - name: Run tests
+      - name: Run fast tests
         run: pytest tests/ -q --tb=short -m "not slow"
+
+  package:
+    name: Build and check package
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install build tools
+        run: python -m pip install --upgrade pip build twine
+
+      - name: Build distribution
+        run: python -m build
+
+      - name: Check distribution metadata
+        run: twine check dist/*
