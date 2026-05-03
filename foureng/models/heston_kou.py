@@ -69,6 +69,24 @@ class HestonKouParams(ModelSpec):
         eta1: float,
         eta2: float,
     ):
+        if not (np.isfinite(kappa) and kappa > 0):
+            raise ValueError(f"HestonKouParams: kappa must be > 0; got {kappa}")
+        if not (np.isfinite(theta) and theta > 0):
+            raise ValueError(f"HestonKouParams: theta must be > 0; got {theta}")
+        if not (np.isfinite(nu) and nu >= 0):
+            raise ValueError(f"HestonKouParams: nu must be >= 0; got {nu}")
+        if not (np.isfinite(rho) and -1.0 < rho < 1.0):
+            raise ValueError(f"HestonKouParams: rho must be in (-1, 1); got {rho}")
+        if not (np.isfinite(v0) and v0 > 0):
+            raise ValueError(f"HestonKouParams: v0 must be > 0; got {v0}")
+        if not (np.isfinite(lam_j) and lam_j >= 0):
+            raise ValueError(f"HestonKouParams: lam_j must be >= 0; got {lam_j}")
+        if not (np.isfinite(p_j) and 0.0 < p_j < 1.0):
+            raise ValueError(f"HestonKouParams: p_j must be in (0, 1); got {p_j}")
+        if not (np.isfinite(eta1) and eta1 > 1.0):
+            raise ValueError(f"HestonKouParams: eta1 must be > 1 (martingale condition); got {eta1}")
+        if not (np.isfinite(eta2) and eta2 > 0):
+            raise ValueError(f"HestonKouParams: eta2 must be > 0; got {eta2}")
         object.__setattr__(self, "name", "heston_kou")
         object.__setattr__(self, "kappa", kappa)
         object.__setattr__(self, "theta", theta)
