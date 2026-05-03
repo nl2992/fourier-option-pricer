@@ -27,9 +27,16 @@ from __future__ import annotations
 __version__ = "0.3.1"
 
 from .models.base import ForwardSpec, CharFunc, ModelSpec
+from .models.bsm import BsmParams, bsm_cf, bsm_cumulants
 from .models.heston import HestonParams, heston_cf_form2, heston_cumulants
+from .models.ousv import OusvParams, ousv_cf, ousv_cumulants
 from .models.variance_gamma import VGParams, vg_cf, vg_cumulants
+from .models.cgmy import CgmyParams, cgmy_cf, cgmy_cumulants
+from .models.nig import NigParams, nig_cf, nig_cumulants
 from .models.kou import KouParams, kou_cf, kou_cumulants
+from .models.bates import BatesParams, bates_cf, bates_cumulants
+from .models.heston_kou import HestonKouParams, heston_kou_cf, heston_kou_cumulants
+from .models.heston_cgmy import HestonCGMYParams, heston_cgmy_cf, heston_cgmy_cumulants
 from .models.sv32 import Sv32Params, sv32_cf, sv32_cumulants
 from .models.garch_wmw2012 import GarchWMW2012Params, garch_wmw2012_cf, garch_wmw2012_cumulants
 from .models.rough_heston import RoughHestonParams, rough_heston_cf, rough_heston_cumulants
@@ -38,6 +45,7 @@ from .models.meixner import MeixnerParams, meixner_cf, meixner_cumulants
 from .models.bilateral_gamma import BilateralGammaParams, bilateral_gamma_cf, bilateral_gamma_cumulants
 from .models.generalized_hyperbolic import GHParams, gh_cf, gh_cumulants
 from .models.fmls import FMLSParams, fmls_cf, fmls_cumulants
+from .pipeline import price_strip
 
 from .utils.grids import COSGrid, COSGridPolicy, FFTGrid, FRFTGrid
 
@@ -85,11 +93,19 @@ from .mc.control_variate import bs_call_cv, heston_call_bs_control, CVResult
 
 __all__ = [
     "__version__",
-    # char funcs
+    # base
     "ForwardSpec", "CharFunc", "ModelSpec",
+    # models — params, CF, cumulants (all 18)
+    "BsmParams", "bsm_cf", "bsm_cumulants",
     "HestonParams", "heston_cf_form2", "heston_cumulants",
+    "OusvParams", "ousv_cf", "ousv_cumulants",
     "VGParams", "vg_cf", "vg_cumulants",
+    "CgmyParams", "cgmy_cf", "cgmy_cumulants",
+    "NigParams", "nig_cf", "nig_cumulants",
     "KouParams", "kou_cf", "kou_cumulants",
+    "BatesParams", "bates_cf", "bates_cumulants",
+    "HestonKouParams", "heston_kou_cf", "heston_kou_cumulants",
+    "HestonCGMYParams", "heston_cgmy_cf", "heston_cgmy_cumulants",
     "Sv32Params", "sv32_cf", "sv32_cumulants",
     "GarchWMW2012Params", "garch_wmw2012_cf", "garch_wmw2012_cumulants",
     "RoughHestonParams", "rough_heston_cf", "rough_heston_cumulants",
@@ -98,6 +114,8 @@ __all__ = [
     "BilateralGammaParams", "bilateral_gamma_cf", "bilateral_gamma_cumulants",
     "GHParams", "gh_cf", "gh_cumulants",
     "FMLSParams", "fmls_cf", "fmls_cumulants",
+    # pipeline
+    "price_strip",
     # grids
     "COSGrid", "COSGridPolicy", "FFTGrid", "FRFTGrid",
     # pricers
