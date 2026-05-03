@@ -81,6 +81,15 @@ class BilateralGammaParams(ModelSpec):
 
     def __init__(self, alpha_p: float, lambda_p: float,
                  alpha_m: float, lambda_m: float):
+        import numpy as _np
+        if not (_np.isfinite(alpha_p) and alpha_p > 0):
+            raise ValueError(f"alpha_p must be finite and > 0; got {alpha_p}")
+        if not (_np.isfinite(lambda_p) and lambda_p > 1):
+            raise ValueError(f"lambda_p must be finite and > 1 (martingale condition); got {lambda_p}")
+        if not (_np.isfinite(alpha_m) and alpha_m > 0):
+            raise ValueError(f"alpha_m must be finite and > 0; got {alpha_m}")
+        if not (_np.isfinite(lambda_m) and lambda_m > 1):
+            raise ValueError(f"lambda_m must be finite and > 1 (martingale condition); got {lambda_m}")
         object.__setattr__(self, "name", "bilateral_gamma")
         object.__setattr__(self, "alpha_p", alpha_p)
         object.__setattr__(self, "lambda_p", lambda_p)
