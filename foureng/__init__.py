@@ -37,6 +37,7 @@ from .models.merton_jd import MertonJDParams, merton_jd_cf, merton_jd_cumulants
 from .models.meixner import MeixnerParams, meixner_cf, meixner_cumulants
 from .models.bilateral_gamma import BilateralGammaParams, bilateral_gamma_cf, bilateral_gamma_cumulants
 from .models.generalized_hyperbolic import GHParams, gh_cf, gh_cumulants
+from .models.fmls import FMLSParams, fmls_cf, fmls_cumulants
 
 from .utils.grids import COSGrid, COSGridPolicy, FFTGrid, FRFTGrid
 
@@ -96,6 +97,7 @@ __all__ = [
     "MeixnerParams", "meixner_cf", "meixner_cumulants",
     "BilateralGammaParams", "bilateral_gamma_cf", "bilateral_gamma_cumulants",
     "GHParams", "gh_cf", "gh_cumulants",
+    "FMLSParams", "fmls_cf", "fmls_cumulants",
     # grids
     "COSGrid", "COSGridPolicy", "FFTGrid", "FRFTGrid",
     # pricers
