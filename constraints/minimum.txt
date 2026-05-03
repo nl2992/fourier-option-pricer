@@ -1,0 +1,8 @@
+# Minimum supported dependency versions — mirrors the lower bounds in pyproject.toml.
+# Used in CI with: pip install -c constraints/minimum.txt -e ".[test]"
+# Purpose: catch regressions caused by API changes in our minimum-declared deps.
+numpy==1.26.0
+scipy==1.10.0
+matplotlib==3.7.0
+statsmodels==0.14.0
+pyfeng==0.3.0
