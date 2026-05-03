@@ -52,7 +52,9 @@ References
 * Cont, R. & Tankov, P. (2004), *Financial Modelling with Jump Processes*,
   CRC Press, Chapter 4.
 """
+
 from __future__ import annotations
+
 from dataclasses import dataclass
 
 import numpy as np
@@ -80,6 +82,7 @@ class MeixnerParams(ModelSpec):
 
     def __init__(self, a: float, b: float, delta: float):
         import numpy as _np
+
         if not (_np.isfinite(a) and a > 0):
             raise ValueError(f"a must be finite and > 0; got {a}")
         if not (_np.isfinite(b) and abs(b) < _np.pi):
@@ -96,6 +99,7 @@ class MeixnerParams(ModelSpec):
 # Drift correction
 # ---------------------------------------------------------------------------
 
+
 def _meixner_omega(p: MeixnerParams) -> float:
     """Drift correction so E[exp(X_T)] = 1.
 
@@ -107,6 +111,7 @@ def _meixner_omega(p: MeixnerParams) -> float:
 # ---------------------------------------------------------------------------
 # Characteristic function
 # ---------------------------------------------------------------------------
+
 
 def meixner_cf(u: np.ndarray, fwd: ForwardSpec, p: MeixnerParams) -> np.ndarray:
     """CF of X_T = log(S_T/F_0) under the Meixner process.
@@ -143,6 +148,7 @@ def meixner_cf(u: np.ndarray, fwd: ForwardSpec, p: MeixnerParams) -> np.ndarray:
 # Cumulants — numerical Cauchy integral (no simple closed form needed)
 # ---------------------------------------------------------------------------
 
+
 def meixner_cumulants(fwd: ForwardSpec, p: MeixnerParams) -> tuple[float, float, float]:
     """Cumulants ``(c1, c2, c4)`` of X_T under the Meixner process.
 
@@ -150,6 +156,8 @@ def meixner_cumulants(fwd: ForwardSpec, p: MeixnerParams) -> tuple[float, float,
     """
     from ..utils.cumulants import cumulants_from_cf
 
-    phi = lambda u: meixner_cf(u, fwd, p)
-    c = cumulants_from_cf(phi, order=4, radius=0.25, M=64)
+    def _phi(u):
+        return meixner_cf(u, fwd, p)
+
+    c = cumulants_from_cf(_phi, order=4, radius=0.25, M=64)
     return float(c[0]), float(c[1]), float(c[3])

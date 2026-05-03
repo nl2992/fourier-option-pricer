@@ -17,13 +17,15 @@ Why bother at all given we have a closed form? Two reasons:
   * A pricing sanity check that is known exact lets us bound numerical
     error floors for the other models on the same grid.
 """
+
 from __future__ import annotations
+
 from dataclasses import dataclass
 
 import numpy as np
 
-from .base import ForwardSpec, ModelSpec
 from ._pyfeng_backend import build_cached, import_pyfeng
+from .base import ForwardSpec, ModelSpec
 
 
 @dataclass(frozen=True)
@@ -52,9 +54,11 @@ _BSM_MODEL_CACHE: dict[tuple, object] = {}
 
 def _pyfeng_bsm_model(fwd: ForwardSpec, p: BsmParams):
     """Build-and-cache a :class:`pyfeng.BsmFft` for ``(fwd, p)``."""
+
     def _factory():
         pf = import_pyfeng()
         return pf.BsmFft(sigma=p.sigma, intr=fwd.r, divr=fwd.q)
+
     return build_cached(_BSM_MODEL_CACHE, (p, fwd), _factory)
 
 
@@ -62,13 +66,13 @@ def bsm_cf(u: np.ndarray, fwd: ForwardSpec, p: BsmParams) -> np.ndarray:
     """CF of ``X_T = log(S_T / F_0)`` under BSM — via PyFENG's ``BsmFft``."""
     m = _pyfeng_bsm_model(fwd, p)
     u_arr = np.asarray(u)
-    return np.asarray(m.charfunc_logprice(u_arr, texp=fwd.T),
-                      dtype=np.complex128)
+    return np.asarray(m.charfunc_logprice(u_arr, texp=fwd.T), dtype=np.complex128)
 
 
 # ---------------------------------------------------------------------------
 # Cumulants — closed form (BSM is Gaussian in log-forward)
 # ---------------------------------------------------------------------------
+
 
 def bsm_cumulants(fwd: ForwardSpec, p: BsmParams) -> tuple[float, float, float]:
     """Cumulants ``(c1, c2, c4)`` of ``X_T = log(S_T / F_0)`` under BSM.

@@ -43,7 +43,9 @@ References
 * Lewis, A. L. (2000), *Option Valuation Under Stochastic Volatility*,
   Finance Press (same benchmark parameters as Sv32).
 """
+
 from __future__ import annotations
+
 from dataclasses import dataclass
 
 import numpy as np
@@ -108,6 +110,7 @@ class GarchWMW2012Params(ModelSpec):
 # Native MGF / CF — bypasses the broken PyFENG charfunc_logprice
 # ---------------------------------------------------------------------------
 
+
 def _avg_exp_safe(x: np.ndarray) -> np.ndarray:
     """(1 - exp(x)) / x, complex-safe. Returns 1.0 where x ≈ 0.
 
@@ -156,11 +159,7 @@ def _garch_mgf(uu: np.ndarray, p: "GarchWMW2012Params", texp: float) -> np.ndarr
 
     # C term (Lemma 2.1)
     C = -(p.kappa - 0.5 * uu_etc) * dd_m_gg * texp - (p.kappa + 0.5 * uu_etc) * log_tmp
-    term3_num = (
-        2 * p.nu**2 * p.theta * zeta
-        + dd_m_gg**2 * np.exp(-dd * texp)
-        - 4 * dd**2 * avgexp
-    )
+    term3_num = 2 * p.nu**2 * p.theta * zeta + dd_m_gg**2 * np.exp(-dd * texp) - 4 * dd**2 * avgexp
     C -= (term3_num * dd_m_gg * texp / (2 * dd) / tmp) / 4.0
 
     # D term
@@ -195,9 +194,8 @@ def garch_wmw2012_cf(u: np.ndarray, fwd: ForwardSpec, p: GarchWMW2012Params) -> 
 # Cumulants — numerical Cauchy integral
 # ---------------------------------------------------------------------------
 
-def garch_wmw2012_cumulants(
-    fwd: ForwardSpec, p: GarchWMW2012Params
-) -> tuple[float, float, float]:
+
+def garch_wmw2012_cumulants(fwd: ForwardSpec, p: GarchWMW2012Params) -> tuple[float, float, float]:
     """Cumulants ``(c1, c2, c4)`` of X_T under the GARCH diffusion model.
 
     The GARCH MGF is analytic in a disk around u=0 (under typical parameters
@@ -206,6 +204,8 @@ def garch_wmw2012_cumulants(
     """
     from ..utils.cumulants import cumulants_from_cf
 
-    phi = lambda u: garch_wmw2012_cf(u, fwd, p)
-    c = cumulants_from_cf(phi, order=4, radius=0.25, M=64)
+    def _phi(u):
+        return garch_wmw2012_cf(u, fwd, p)
+
+    c = cumulants_from_cf(_phi, order=4, radius=0.25, M=64)
     return float(c[0]), float(c[1]), float(c[3])

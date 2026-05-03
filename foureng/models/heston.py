@@ -15,14 +15,16 @@ log-forward CF to ~1e-18 on the Lewis parameters (verified across
 convention shift ``phi * exp(-1j*u*log(F0))`` belongs here — marked
 inline below.
 """
+
 from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import Any  # retained for _HESTON_MODEL_CACHE type annotation
 
 import numpy as np
 
+from ._pyfeng_backend import build_cached, import_pyfeng
 from .base import ForwardSpec, ModelSpec
-from ._pyfeng_backend import import_pyfeng, build_cached
 
 
 @dataclass(frozen=True)
@@ -79,7 +81,7 @@ def _pyfeng_heston_model(fwd: ForwardSpec, p: HestonParams):
         _HESTON_MODEL_CACHE,
         key=(p, fwd),
         factory=lambda: import_pyfeng().HestonFft(
-            sigma=p.v0,      # PyFENG: sigma = v0 (variance, not sqrt)
+            sigma=p.v0,  # PyFENG: sigma = v0 (variance, not sqrt)
             vov=p.nu,
             rho=p.rho,
             mr=p.kappa,
@@ -124,6 +126,7 @@ heston_cf_form2 = heston_cf
 # formula is independent of whether the CF is analytic or PyFENG-backed.
 # ---------------------------------------------------------------------------
 
+
 def heston_cumulants(fwd: ForwardSpec, p: HestonParams) -> tuple[float, float, float]:
     """Cumulants (c1, c2, c4) of X_T = log(S_T/F_0) via Cauchy integration
     on the CF. Matches the project's convention documented in
@@ -131,6 +134,8 @@ def heston_cumulants(fwd: ForwardSpec, p: HestonParams) -> tuple[float, float, f
     """
     from ..utils.cumulants import cumulants_from_cf
 
-    phi = lambda u: heston_cf(u, fwd, p)
-    c = cumulants_from_cf(phi, order=4, radius=0.25, M=64)
+    def _phi(u):
+        return heston_cf(u, fwd, p)
+
+    c = cumulants_from_cf(_phi, order=4, radius=0.25, M=64)
     return float(c[0]), float(c[1]), float(c[3])
