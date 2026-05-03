@@ -115,7 +115,7 @@ def _improved_cos_payoff_mode(model: str, grid: COSGrid) -> str:
 def _pyfeng_fft_price(model: str, strikes, fwd: ForwardSpec, params, cp: int):
     """Call PyFENG's FFT pricer directly.
 
-    Supported models: BSM, Heston, OUSV, VG — the four PyFENG ships
+    Supported models: BSM, Heston, OUSV, VG, CGMY, NIG — the six models PyFENG ships
     native ``*Fft`` pricers for. Raises :class:`ValueError` for any
     entry in :data:`_NO_PYFENG_FFT` (Kou, Bates, Heston-Kou, Heston-CGMY).
     """
@@ -177,15 +177,17 @@ def price_strip(
     Parameters
     ----------
     model :
-        One of ``"heston"``, ``"vg"``, ``"kou"``, ``"bates"``.
+        One of the ten supported model keys: ``"bsm"``, ``"heston"``, ``"ousv"``,
+        ``"vg"``, ``"cgmy"``, ``"nig"``, ``"kou"``, ``"bates"``,
+        ``"heston_kou"``, ``"heston_cgmy"``.
     method :
         * ``"cos"`` — in-house COS (Fang-Oosterlee 2008),
         * ``"cos_improved"`` — adaptive COS policy with centered intervals,
           coupled N/L selection, and wide-interval fallback,
         * ``"frft"`` — in-house FRFT (Chourdakis 2004),
         * ``"carr_madan"`` — in-house Carr-Madan FFT (1999),
-        * ``"pyfeng_fft"`` — PyFENG's own pricer (``HestonFft`` or
-          ``VarGammaFft``). Not available for Kou or Bates.
+        * ``"pyfeng_fft"`` — PyFENG's own native FFT pricer (BSM, Heston, OUSV,
+          VG, CGMY, NIG). Not available for Kou, Bates, Heston-Kou, or Heston-CGMY.
     strikes :
         1-D iterable of strikes.
     fwd, params :
