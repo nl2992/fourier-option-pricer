@@ -1,26 +1,22 @@
 """fourier-option-pricer: Fourier methods for European option pricing.
 
-Public API (stable surface for external use):
+All 18 model dataclasses, characteristic functions, and cumulants are
+available directly from this top-level package:
 
-    from foureng import (
-        ForwardSpec, HestonParams, VGParams, KouParams,
-        heston_cf_form2, vg_cf, kou_cf,
-        heston_cumulants, vg_cumulants, kou_cumulants,
-        cos_prices, cos_auto_grid, cos_improved_grid,
-        carr_madan_price_at_strikes, frft_price_at_strikes,
-        COSGrid, COSGridPolicy, FFTGrid, FRFTGrid,
-        implied_vol_newton_safeguarded, BSInputs, bs_price_from_fwd,
-        SurfaceSpec, model_iv_surface, model_price_surface,
-        calibrate_heston, calibrate_vg, calibrate_kou,
-        cos_price_and_greeks, cos_delta_gamma, cos_parameter_sensitivity,
-        bs_call_cv, heston_call_bs_control,
-    )
+    import foureng as fe
 
-Submodules (``foureng.pricers``, ``foureng.models``, ``foureng.mc``,
-``foureng.iv``, ``foureng.surface``, ``foureng.greeks``, ``foureng.utils``)
-remain importable for finer-grained access. ``foureng.models`` is the
-canonical location of the characteristic-function layer — this used to
-live at ``foureng.char_func`` before the Pass-1 PyFENG-compat rename.
+    fwd    = fe.ForwardSpec(S0=100, r=0.01, q=0.0, T=1.0)
+    params = fe.HestonParams(kappa=4.0, theta=0.25, nu=1.0, rho=-0.5, v0=0.04)
+    phi    = lambda u: fe.heston_cf_form2(u, fwd, params)
+    grid   = fe.cos_auto_grid(fe.heston_cumulants(fwd, params), N=256, L=10.0)
+    result = fe.cos_prices(phi, fwd, [90, 100, 110], grid)
+
+    # or use the unified dispatcher
+    prices = fe.price_strip("heston", "cos", [90, 100, 110], fwd, params)
+
+Submodules ``foureng.models``, ``foureng.pricers``, ``foureng.mc``,
+``foureng.iv``, ``foureng.surface``, and ``foureng.greeks`` are also
+importable for finer-grained access.
 """
 from __future__ import annotations
 
