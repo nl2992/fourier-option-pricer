@@ -99,11 +99,9 @@ _MODELS: dict[str, tuple[type, Any, Any]] = {
     "fmls":                   (FMLSParams, fmls_cf, fmls_cumulants),
 }
 
-# Models whose CF has no PyFENG FFT counterpart — ``method='pyfeng_fft'``
-# raises for these. Kou / Bates / Heston-Kou / Heston-CGMY: PyFENG ships
-# no FFT pricer for any of them. BSM, Heston, OUSV, VG, CGMY, NIG, sv32 all
-# have native PyFENG FFT pricers (BsmFft / HestonFft / OusvFft /
-# VarGammaFft / CgmyFft / ExpNigFft / Sv32Fft).
+# Models with no PyFENG FFT pricer — ``method='pyfeng_fft'`` raises for these.
+# PyFENG ships native *Fft classes for: bsm, heston, ousv, vg, cgmy, nig,
+# sv32 (Sv32Fft), rough_heston (RoughHestonFft in pyfeng.sv_fft).
 _NO_PYFENG_FFT = {"kou", "bates", "heston_kou", "heston_cgmy", "garch_wmw2012", "merton_jd", "meixner", "bilateral_gamma", "generalized_hyperbolic", "fmls"}
 _DIRECT_CALL_FRIENDLY_MODELS = {"heston", "ousv", "nig"}
 
@@ -131,9 +129,14 @@ def _improved_cos_payoff_mode(model: str, grid: COSGrid) -> str:
 def _pyfeng_fft_price(model: str, strikes, fwd: ForwardSpec, params, cp: int):
     """Call PyFENG's FFT pricer directly.
 
-    Supported models: BSM, Heston, OUSV, VG, CGMY, NIG — the six models PyFENG ships
-    native ``*Fft`` pricers for. Raises :class:`ValueError` for any
-    entry in :data:`_NO_PYFENG_FFT` (Kou, Bates, Heston-Kou, Heston-CGMY).
+    Supported models (PyFENG ships native ``*Fft`` classes for these):
+    ``bsm``, ``heston``, ``ousv``, ``vg``, ``cgmy``, ``nig``,
+    ``sv32``, ``rough_heston``.
+
+    Raises :class:`ValueError` for any model in :data:`_NO_PYFENG_FFT`
+    (``kou``, ``bates``, ``heston_kou``, ``heston_cgmy``, ``garch_wmw2012``,
+    ``merton_jd``, ``meixner``, ``bilateral_gamma``, ``generalized_hyperbolic``,
+    ``fmls``).
     """
     if model in _NO_PYFENG_FFT:
         raise ValueError(
@@ -215,8 +218,10 @@ def price_strip(
           coupled N/L selection, and wide-interval fallback,
         * ``"frft"`` — in-house FRFT (Chourdakis 2004),
         * ``"carr_madan"`` — in-house Carr-Madan FFT (1999),
-        * ``"pyfeng_fft"`` — PyFENG's own native FFT pricer (BSM, Heston, OUSV,
-          VG, CGMY, NIG). Not available for Kou, Bates, Heston-Kou, or Heston-CGMY.
+        * ``"pyfeng_fft"`` — PyFENG's own native FFT pricer. Available for:
+          BSM, Heston, OUSV, VG, CGMY, NIG, 3/2 SV (``sv32``), Rough Heston.
+          Not available for Kou, Bates, Heston-Kou, Heston-CGMY, GARCH,
+          Merton JD, Meixner, Bilateral Gamma, GH, or FMLS.
     strikes :
         1-D iterable of strikes.
     fwd, params :
