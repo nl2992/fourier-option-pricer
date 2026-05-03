@@ -1,6 +1,6 @@
 """fourier-option-pricer: Fourier methods for European option pricing.
 
-All 18 model dataclasses, characteristic functions, and cumulants are
+All 20 model dataclasses, characteristic functions, and cumulants are
 available directly from this top-level package:
 
     import foureng as fe
@@ -53,10 +53,11 @@ from .models.bilateral_gamma import (
 )
 from .models.bsm import BsmParams, bsm_cf, bsm_cumulants
 from .models.cgmy import CgmyParams, cgmy_cf, cgmy_cumulants
+from .models.double_heston import DoubleHestonParams, double_heston_cf, double_heston_cumulants
 from .models.fmls import FMLSParams, fmls_cf, fmls_cumulants
 from .models.garch_wmw2012 import GarchWMW2012Params, garch_wmw2012_cf, garch_wmw2012_cumulants
 from .models.generalized_hyperbolic import GHParams, gh_cf, gh_cumulants
-from .models.heston import HestonParams, heston_cf_form2, heston_cumulants
+from .models.heston import HestonParams, heston_cf_form2, heston_cumulants, heston_riccati_cd
 from .models.heston_cgmy import HestonCGMYParams, heston_cgmy_cf, heston_cgmy_cumulants
 from .models.heston_kou import HestonKouParams, heston_kou_cf, heston_kou_cumulants
 from .models.kou import KouParams, kou_cf, kou_cumulants
@@ -67,6 +68,7 @@ from .models.ousv import OusvParams, ousv_cf, ousv_cumulants
 from .models.rough_heston import RoughHestonParams, rough_heston_cf, rough_heston_cumulants
 from .models.sv32 import Sv32Params, sv32_cf, sv32_cumulants
 from .models.variance_gamma import VGParams, vg_cf, vg_cumulants
+from .models.vgsa import VGSAParams, vgsa_cf, vgsa_cumulants
 from .pipeline import price_strip
 from .pricers.carr_madan import carr_madan_fft_prices, carr_madan_price_at_strikes
 from .pricers.cos import (
@@ -98,7 +100,7 @@ __all__ = [
     "ForwardSpec",
     "CharFunc",
     "ModelSpec",
-    # models — params, CF, cumulants (all 18)
+    # models — params, CF, cumulants (all 20)
     "BsmParams",
     "bsm_cf",
     "bsm_cumulants",
@@ -153,6 +155,13 @@ __all__ = [
     "FMLSParams",
     "fmls_cf",
     "fmls_cumulants",
+    "DoubleHestonParams",
+    "double_heston_cf",
+    "double_heston_cumulants",
+    "heston_riccati_cd",
+    "VGSAParams",
+    "vgsa_cf",
+    "vgsa_cumulants",
     # pipeline
     "price_strip",
     # grids
