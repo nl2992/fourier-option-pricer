@@ -33,6 +33,7 @@ from .models.kou import KouParams, kou_cf, kou_cumulants
 from .models.sv32 import Sv32Params, sv32_cf, sv32_cumulants
 from .models.garch_wmw2012 import GarchWMW2012Params, garch_wmw2012_cf, garch_wmw2012_cumulants
 from .models.rough_heston import RoughHestonParams, rough_heston_cf, rough_heston_cumulants
+from .models.merton_jd import MertonJDParams, merton_jd_cf, merton_jd_cumulants
 
 from .utils.grids import COSGrid, COSGridPolicy, FFTGrid, FRFTGrid
 
@@ -88,6 +89,7 @@ __all__ = [
     "Sv32Params", "sv32_cf", "sv32_cumulants",
     "GarchWMW2012Params", "garch_wmw2012_cf", "garch_wmw2012_cumulants",
     "RoughHestonParams", "rough_heston_cf", "rough_heston_cumulants",
+    "MertonJDParams", "merton_jd_cf", "merton_jd_cumulants",
     # grids
     "COSGrid", "COSGridPolicy", "FFTGrid", "FRFTGrid",
     # pricers
