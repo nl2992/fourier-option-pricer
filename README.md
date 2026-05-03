@@ -29,6 +29,10 @@ The pricing layer supports eighteen characteristic-function models. Some are thi
 | Generalized Hyperbolic | `GHParams` | In-house implementation | Normal variance-mean mixture via GIG; includes NIG (λ=−½) and Hyperbolic (λ=1) as special cases. |
 | Finite Moment Log Stable (FMLS) | `FMLSParams` | In-house implementation | Maximally negatively-skewed α-stable Lévy process; all positive moments of S_T are finite (Carr & Wu 2003). |
 
+> **PyFENG dependency note.** The eight PyFENG-backed models rely on `pyfeng>=0.3.0`. Rough Heston imports directly from `pyfeng.sv_fft` (not `pyfeng.ex`) to avoid a broken path that calls the removed `scipy.misc.derivative` in newer SciPy. The `method="pyfeng_fft"` option in `price_strip` is supported only for these eight models; the remaining ten use the in-house COS / Carr-Madan / FRFT pricers.
+
+All 18 models are **first-class public API objects** importable directly from the top-level package. Their parameter dataclasses, characteristic functions, and cumulant functions are all in `foureng.__all__` and importable as `fe.HestonParams`, `fe.vg_cf`, `fe.fmls_cumulants`, etc. The `MODEL_REGISTRY` in `foureng.models.registry` is the single source of truth for which models are supported and which have a native PyFENG FFT pricer; `price_strip` dispatches through it.
+
 ### Why use Fourier methods here instead of plain Monte Carlo?
 
 Monte Carlo is still useful as a validation baseline, but it scales poorly for plain-vanilla European pricing once a characteristic function is available. Its standard error behaves like
@@ -76,7 +80,7 @@ print(result.call_prices)
 
 ## Testing and validation layout
 
-The repository currently collects 487 pytest cases. They are grouped by
+The repository currently collects 600 pytest cases. They are grouped by
 validation purpose rather than by implementation phase:
 
 | Folder | Contents |
@@ -130,8 +134,8 @@ from foureng.pipeline import price_strip
 | `HestonKouParams(kappa, theta, nu, rho, v0, lam_j, p_j, eta1, eta2)` | Heston block plus Kou jump parameters | Heston-Kou composite model dataclass. |
 | `HestonCGMYParams(kappa, theta, nu, rho, v0, C, G, M, Y)` | Heston block plus CGMY jump parameters | Heston-CGMY composite model dataclass. |
 | `Sv32Params(v0, kappa, theta, nu, rho)` | 3/2 model parameters | 3/2 stochastic-volatility parameter dataclass. |
-| `GarchWMW2012Params(omega, beta, alpha, gamma)` | GARCH model parameters | Discrete-time GARCH option pricing dataclass. |
-| `RoughHestonParams(v0, kappa, theta, nu, rho, H)` | Rough Heston parameters (H is Hurst index) | Rough Heston parameter dataclass; requires `H` in `(0, 0.5)`. |
+| `GarchWMW2012Params(v0, kappa, theta, nu, rho)` | GARCH diffusion parameters (Wu-Ma-Wang 2012) | Discrete-time GARCH option pricing dataclass. |
+| `RoughHestonParams(sigma, vov, mr, rho, theta, alpha)` | Rough Heston parameters | Rough Heston parameter dataclass; `alpha` in `(0, 1)` (fractional exponent). |
 | `MertonJDParams(sigma, lam, mu_j, sigma_j)` | Diffusion volatility plus jump parameters | Merton jump-diffusion parameter dataclass. |
 | `MeixnerParams(a, b, delta)` | Meixner Lévy parameters | Meixner process parameter dataclass. |
 | `BilateralGammaParams(alpha_p, lambda_p, alpha_m, lambda_m)` | Bilateral Gamma parameters | Bilateral Gamma parameter dataclass (separate up/down Gamma processes). |
