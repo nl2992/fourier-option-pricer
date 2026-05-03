@@ -62,6 +62,16 @@ class OusvParams(ModelSpec):
 
     def __init__(self, sigma0: float, kappa: float, theta: float,
                  nu: float, rho: float):
+        if not (np.isfinite(sigma0) and sigma0 > 0):
+            raise ValueError(f"OusvParams: sigma0 must be > 0; got {sigma0}")
+        if not (np.isfinite(kappa) and kappa > 0):
+            raise ValueError(f"OusvParams: kappa must be > 0; got {kappa}")
+        if not np.isfinite(theta):
+            raise ValueError(f"OusvParams: theta must be finite; got {theta}")
+        if not (np.isfinite(nu) and nu >= 0):
+            raise ValueError(f"OusvParams: nu must be >= 0; got {nu}")
+        if not (np.isfinite(rho) and -1.0 < rho < 1.0):
+            raise ValueError(f"OusvParams: rho must be in (-1, 1); got {rho}")
         object.__setattr__(self, "name", "ousv")
         object.__setattr__(self, "sigma0", sigma0)
         object.__setattr__(self, "kappa", kappa)

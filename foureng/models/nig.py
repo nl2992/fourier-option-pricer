@@ -68,6 +68,18 @@ class NigParams(ModelSpec):
     theta: float
 
     def __init__(self, sigma: float, nu: float, theta: float):
+        if not (np.isfinite(sigma) and sigma > 0):
+            raise ValueError(f"NigParams: sigma must be > 0; got {sigma}")
+        if not (np.isfinite(nu) and nu > 0):
+            raise ValueError(f"NigParams: nu must be > 0; got {nu}")
+        if not np.isfinite(theta):
+            raise ValueError(f"NigParams: theta must be finite; got {theta}")
+        if 1.0 - 2.0 * theta * nu - sigma ** 2 * nu <= 0:
+            raise ValueError(
+                f"NigParams: existence condition 1 - 2*theta*nu - sigma^2*nu > 0 violated "
+                f"(got {1.0 - 2.0 * theta * nu - sigma ** 2 * nu:.6g}); "
+                "martingale correction would be complex."
+            )
         object.__setattr__(self, "name", "nig")
         object.__setattr__(self, "sigma", sigma)
         object.__setattr__(self, "nu", nu)
