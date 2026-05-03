@@ -23,6 +23,7 @@ from .models.heston_cgmy import (
 )
 from .models.sv32 import Sv32Params, sv32_cf, sv32_cumulants
 from .models.garch_wmw2012 import GarchWMW2012Params, garch_wmw2012_cf, garch_wmw2012_cumulants
+from .models.rough_heston import RoughHestonParams, rough_heston_cf, rough_heston_cumulants
 from .utils.grids import FFTGrid, FRFTGrid, COSGrid, COSGridPolicy
 from .pricers.carr_madan import carr_madan_price_at_strikes
 from .pricers.frft import frft_price_at_strikes
@@ -85,6 +86,7 @@ _MODELS: dict[str, tuple[type, Any, Any]] = {
     "heston_cgmy": (HestonCGMYParams,  heston_cgmy_cf,  heston_cgmy_cumulants),
     "sv32":        (Sv32Params,        sv32_cf,         sv32_cumulants),
     "garch_wmw2012": (GarchWMW2012Params, garch_wmw2012_cf, garch_wmw2012_cumulants),
+    "rough_heston":  (RoughHestonParams,  rough_heston_cf,  rough_heston_cumulants),
 }
 
 # Models whose CF has no PyFENG FFT counterpart — ``method='pyfeng_fft'``
@@ -165,6 +167,15 @@ def _pyfeng_fft_price(model: str, strikes, fwd: ForwardSpec, params, cp: int):
         m = pf.Sv32Fft(sigma=params.v0, vov=params.nu, mr=params.kappa,
                         rho=params.rho, theta=params.theta,
                         intr=fwd.r, divr=fwd.q)
+    elif model == "rough_heston":
+        # RoughHestonFft lives in pyfeng.sv_fft; pyfeng.ex is broken under
+        # newer SciPy (scipy.misc.derivative was removed).
+        from pyfeng.sv_fft import RoughHestonFft as _RoughHestonFft  # type: ignore
+        m = _RoughHestonFft(
+            sigma=params.sigma, vov=params.vov, mr=params.mr,
+            rho=params.rho, theta=params.theta, alpha=params.alpha,
+            intr=fwd.r, divr=fwd.q,
+        )
     else:
         raise ValueError(f"unknown model {model!r}")
     return np.asarray(m.price(K, spot=fwd.S0, texp=fwd.T, cp=cp), dtype=np.float64)
