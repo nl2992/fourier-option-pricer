@@ -1,14 +1,14 @@
 """Model-layer base types.
 
-Pass 1 scope — this module only holds ``ForwardSpec``, ``ModelSpec``, and
-the ``CharFunc`` callable protocol. The ``FourierModelBase`` abstract
-class is *declared here as a Pass-2 placeholder* so downstream modules
-can begin importing the symbol, but it is deliberately unimplemented
-until Pass 2 (backend normalization) when each model gains a concrete
-class that inherits from it.
+This module defines the three primitives shared by every model in the package:
 
-Keeping the placeholder here — instead of adding a second base module
-later — means Pass 2 is a pure in-file fill-in, not another rename.
+* :class:`ForwardSpec` — market inputs (spot, rates, maturity).
+* :class:`ModelSpec` — base dataclass for all model parameter classes.
+* :class:`CharFunc` — callable protocol for characteristic functions.
+
+:class:`FourierModelBase` is a reserved base class for future class-based
+model backends; the current API uses free functions (e.g. ``heston_cf``,
+``vg_cf``) and is not affected by it.
 """
 from __future__ import annotations
 from dataclasses import dataclass
@@ -64,29 +64,12 @@ class CharFunc(Protocol):
 
 
 class FourierModelBase:
-    """Abstract model contract for the PyFENG-compatible façade layer.
+    """Reserved base class for future class-based model backends.
 
-    **Pass 1: placeholder.** This class is intentionally empty. It will
-    be fleshed out in Pass 2 (backend normalization), when each
-    ``models/<model>.py`` gains a concrete class that implements
-    ``charfunc_logprice`` and ``cumulants``. Pass 3 (``sv_fft.py``,
-    ``sv_cos.py``, ``sv_frft.py`` façades) then inherits from these
-    classes.
-
-    Intended Pass-2 surface (documented early so that reviews align):
-
-        class FourierModelBase:
-            model_name: str
-
-            def charfunc_logprice(self, u, texp):
-                raise NotImplementedError
-
-            def cumulants(self, texp):
-                raise NotImplementedError
-
-    Do not use this class in production code yet — the current
-    characteristic-function surface is still the free functions
-    ``bsm_cf``, ``heston_cf``, etc.
+    The current public API uses free functions (``bsm_cf``, ``heston_cf``,
+    etc.) and does not require this class.  It is retained as an import
+    anchor for ``foureng.models.registry`` and may be fleshed out in a
+    future release.
     """
 
     model_name: str = ""
