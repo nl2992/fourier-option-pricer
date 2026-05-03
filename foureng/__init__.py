@@ -35,6 +35,7 @@ from .models.garch_wmw2012 import GarchWMW2012Params, garch_wmw2012_cf, garch_wm
 from .models.rough_heston import RoughHestonParams, rough_heston_cf, rough_heston_cumulants
 from .models.merton_jd import MertonJDParams, merton_jd_cf, merton_jd_cumulants
 from .models.meixner import MeixnerParams, meixner_cf, meixner_cumulants
+from .models.bilateral_gamma import BilateralGammaParams, bilateral_gamma_cf, bilateral_gamma_cumulants
 
 from .utils.grids import COSGrid, COSGridPolicy, FFTGrid, FRFTGrid
 
@@ -92,6 +93,7 @@ __all__ = [
     "RoughHestonParams", "rough_heston_cf", "rough_heston_cumulants",
     "MertonJDParams", "merton_jd_cf", "merton_jd_cumulants",
     "MeixnerParams", "meixner_cf", "meixner_cumulants",
+    "BilateralGammaParams", "bilateral_gamma_cf", "bilateral_gamma_cumulants",
     # grids
     "COSGrid", "COSGridPolicy", "FFTGrid", "FRFTGrid",
     # pricers
