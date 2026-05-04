@@ -151,7 +151,7 @@ The project's own implementation work includes:
 4. **Cumulant functions** for all 20 models, used for COS grid construction.
 5. **Spectral-filter utilities**  -  Fejér, Lanczos, raised-cosine, exponential filters (`foureng/utils/spectral_filters.py`).
 6. **Adaptive policy selector**  -  deterministic grid-search over `(COSGridPolicy, COSFilterSpec)` candidate sets (`foureng/experiments/cos_filter_grid_search.py`).
-7. **Structured test infrastructure**  -  692 pytest cases across five evidence levels; frozen JSON reference fixtures; model-reduction gates; cross-method agreement checks.
+7. **Structured test infrastructure**  -  732 pytest cases across five evidence levels; frozen JSON reference fixtures; model-reduction gates; cross-method agreement checks.
 8. **Paper-replication and validation notebooks**  -  10 notebooks covering FO2008, Bates MathWorks, 3/2 SV, improved COS, adaptive filtered COS, and advanced demos.
 
 ---
