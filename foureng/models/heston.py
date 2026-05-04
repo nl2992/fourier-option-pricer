@@ -122,6 +122,82 @@ heston_cf_form2 = heston_cf
 
 
 # ---------------------------------------------------------------------------
+# Riccati decomposition — needed by Double Heston and any model that
+# composes two independent Heston variance factors.
+# ---------------------------------------------------------------------------
+
+
+def heston_riccati_cd(u: np.ndarray, T: float, p: "HestonParams") -> tuple[np.ndarray, np.ndarray]:
+    """Riccati (C, D) such that phi_Heston(u; T) = exp(C + D * v0).
+
+    Uses Form 2 ("Little Heston Trap", Albrecher et al. 2007) which avoids
+    the complex-log branch discontinuity present in the original Form 1 when
+    (rho*nu*iu - kappa - d) crosses the negative real axis mid-maturity.
+
+    Parameters
+    ----------
+    u : array_like (real or complex)
+        Frequency grid.
+    T : float
+        Time to expiry.
+    p : HestonParams
+        Model parameters. Requires ``nu > 0``.
+
+    Returns
+    -------
+    C, D : np.ndarray (complex128)
+        ``phi_Heston(u; T) = exp(C + D * p.v0)`` element-wise.
+
+    Notes
+    -----
+    The Albrecher Form 2 formula is::
+
+        xi    = kappa - rho * nu * iu
+        d     = sqrt(xi^2 + nu^2 * (iu + u^2))
+        g2    = (xi - d) / (xi + d)
+        B     = (xi - d) / nu^2 * (1 - exp(-d*T)) / (1 - g2*exp(-d*T))
+        A     = kappa*theta / nu^2 * ((xi-d)*T - 2*log((1-g2*exp(-d*T))/(1-g2)))
+        phi   = exp(A + B*v0)
+
+    so C = A and D = B.
+
+    References
+    ----------
+    * Albrecher, H., Mayer, P., Schachermayer, W. & Teugels, J. (2007),
+      "The Little Heston Trap", *Wilmott Magazine*, Jan/Feb, 83-92.
+    """
+    if p.nu == 0.0:
+        raise ValueError("heston_riccati_cd requires nu > 0; use BSM for nu = 0.")
+    u_c = np.asarray(u, dtype=np.complex128)
+    kappa, theta, nu, rho = p.kappa, p.theta, p.nu, p.rho
+
+    # Form 2 has removable singularities at u=0 and u=-i (where iu + u² = 0),
+    # both of which give phi=1 (C=D=0). Detect them and substitute a safe
+    # dummy value for the intermediate algebra, then override the output.
+    inner = 1j * u_c + u_c**2  # = u*(u + i); zero iff u=0 or u=-i
+    degen = np.abs(inner) < 1e-14
+    u_eval = np.where(degen, 1.0 + 1j, u_c)  # safe non-degenerate substitute
+
+    xi = kappa - rho * nu * 1j * u_eval
+    d = np.sqrt(xi**2 + nu**2 * (1j * u_eval + u_eval**2))
+
+    g2 = (xi - d) / (xi + d)
+    exp_neg_dT = np.exp(-d * T)
+
+    # Albrecher Form 2: B from the Riccati solution
+    B = (xi - d) / nu**2 * (1.0 - exp_neg_dT) / (1.0 - g2 * exp_neg_dT)
+
+    # A: integrated kappa*theta term
+    log_term = np.log((1.0 - g2 * exp_neg_dT) / (1.0 - g2))
+    A = kappa * theta / nu**2 * ((xi - d) * T - 2.0 * log_term)
+
+    # phi = exp(A + B*v0);  at degenerate points phi=1 → C=D=0
+    C = np.where(degen, 0j, A)
+    D = np.where(degen, 0j, B)
+    return C, D
+
+
+# ---------------------------------------------------------------------------
 # Cumulants (used by COS auto-grid). Derived numerically from the CF so the
 # formula is independent of whether the CF is analytic or PyFENG-backed.
 # ---------------------------------------------------------------------------
