@@ -288,19 +288,19 @@ The idea is **inspired by** spectral-filter work such as Ruijter, Versteegh and 
 
 Our innovation on top of that inspiration is the policy layer: we keep the same characteristic function, truncation logic, and payoff coefficients, then add spectral damping and choose among explicit `(grid policy, filter)` candidates while always preserving the unfiltered Junike-style path as a fallback.
 
-Plain COS keeps the usual payoff sum
+Plain COS keeps the usual payoff sum:
 
-```
-price = disc * sum_k  A_k * V_k
-```
-
-while the project extension adds spectral weights `sigma_k` that damp the high-frequency COS modes before the final sum:
-
-```
-price = disc * sum_k  sigma_k * A_k * V_k
+```math
+\mathrm{price} \approx \mathrm{disc}\sum_k A_k V_k
 ```
 
-with `sigma_k in [0, 1]`, near one for the low modes and smaller in the tail modes.
+The project extension adds spectral weights `\sigma_k` that damp the high-frequency COS modes before the final sum:
+
+```math
+\mathrm{price} \approx \mathrm{disc}\sum_k \sigma_k A_k V_k
+```
+
+with `\sigma_k \in [0,1]`, near one for the low modes and smaller in the tail modes.
 
 Four filter families are available: Fejer, Lanczos, raised-cosine, and exponential. A deterministic policy-search selector compares candidates from `(COSGridPolicy, COSFilterSpec)` pairs and returns the fastest one that meets the user's error tolerance, with the no-filter Junike candidate always included.
 
