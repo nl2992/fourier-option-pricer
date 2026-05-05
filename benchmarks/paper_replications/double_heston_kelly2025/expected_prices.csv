@@ -1,0 +1,11 @@
+case_id,table,model,method,option_type,S0,r,q,T,kappa1,theta1,nu1,rho1,v01,kappa2,theta2,nu2,rho2,v02,K,expected_price,tolerance_abs,reference_type
+kelly2025,Vanilla price table,double_heston,cos,call,100.0,0.1,0.0,1.0,0.9,0.10,0.1,-0.5,0.36,1.2,0.15,0.2,-0.5,0.49,60.0,52.7623,5.0e-4,paper_table
+kelly2025,Vanilla price table,double_heston,cos,call,100.0,0.1,0.0,1.0,0.9,0.10,0.1,-0.5,0.36,1.2,0.15,0.2,-0.5,0.49,80.0,42.2321,5.0e-4,paper_table
+kelly2025,Vanilla price table,double_heston,cos,call,100.0,0.1,0.0,1.0,0.9,0.10,0.1,-0.5,0.36,1.2,0.15,0.2,-0.5,0.49,100.0,33.9625,5.0e-4,paper_table
+kelly2025,Vanilla price table,double_heston,cos,call,100.0,0.1,0.0,1.0,0.9,0.10,0.1,-0.5,0.36,1.2,0.15,0.2,-0.5,0.49,110.0,30.5234,5.0e-4,paper_table
+kelly2025,Vanilla price table,double_heston,cos,call,100.0,0.1,0.0,1.0,0.9,0.10,0.1,-0.5,0.36,1.2,0.15,0.2,-0.5,0.49,130.0,24.7718,5.0e-4,paper_table
+kelly2025,Vanilla price table,double_heston,cos,put,100.0,0.1,0.0,1.0,0.9,0.10,0.1,-0.5,0.36,1.2,0.15,0.2,-0.5,0.49,60.0,7.0526,5.0e-4,paper_table
+kelly2025,Vanilla price table,double_heston,cos,put,100.0,0.1,0.0,1.0,0.9,0.10,0.1,-0.5,0.36,1.2,0.15,0.2,-0.5,0.49,80.0,14.6191,5.0e-4,paper_table
+kelly2025,Vanilla price table,double_heston,cos,put,100.0,0.1,0.0,1.0,0.9,0.10,0.1,-0.5,0.36,1.2,0.15,0.2,-0.5,0.49,100.0,24.4463,5.0e-4,paper_table
+kelly2025,Vanilla price table,double_heston,cos,put,100.0,0.1,0.0,1.0,0.9,0.10,0.1,-0.5,0.36,1.2,0.15,0.2,-0.5,0.49,110.0,30.0556,5.0e-4,paper_table
+kelly2025,Vanilla price table,double_heston,cos,put,100.0,0.1,0.0,1.0,0.9,0.10,0.1,-0.5,0.36,1.2,0.15,0.2,-0.5,0.49,130.0,42.4007,5.0e-4,paper_table

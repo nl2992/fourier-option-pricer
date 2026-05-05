@@ -1,0 +1,9 @@
+paper_key: generalized_hyperbolic
+citation: "Barndorff-Nielsen, O.E. (1977), Exponentially Decreasing Distributions for the Logarithm of Particle Size"
+doi: "10.1098/rspa.1977.0041"
+reference_type: derived_reference
+model: generalized_hyperbolic
+method: carr_madan
+table: "GH special cases: NIG and hyperbolic"
+tolerance_abs: 1.0e-4
+notes: "Tests validate special-case structure rather than copied option price tables."

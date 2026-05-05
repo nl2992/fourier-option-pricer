@@ -1,0 +1,9 @@
+paper_key: lewis_2001
+citation: "Lewis, A.L. (2001), A Simple Option Formula for General Jump-Diffusion and Other Exponential Levy Processes"
+doi: ""
+reference_type: external_reference
+model: heston
+method: lewis
+table: "Five-strike Heston reference strip"
+tolerance_abs: 1.0e-4
+notes: "Fifteen-digit Heston strip used as an independent Fourier integration benchmark."

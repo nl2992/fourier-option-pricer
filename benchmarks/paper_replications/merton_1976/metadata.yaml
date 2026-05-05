@@ -1,0 +1,9 @@
+paper_key: merton_1976
+citation: "Merton, R.C. (1976), Option Pricing when Underlying Stock Returns are Discontinuous"
+doi: "10.1016/0304-405X(76)90022-2"
+reference_type: external_reference
+model: merton_jd
+method: poisson_mixture_bsm
+table: "Closed-form Poisson mixture and lambda=0 BSM limit"
+tolerance_abs: 1.0e-4
+notes: "Structural tests use the analytic Poisson-mixture construction rather than a copied price table."

@@ -1,0 +1,2 @@
+case_id,table,model,method,range_policy,expected_a,expected_b,tolerance_abs,reference_type,notes
+junike_range_policy,Derived truncation policy,cos_improved,cos_improved,adaptive,,,1.0e-4,derived_reference,"See benchmarks/cos_method_improved/outputs/cos_method_improved_paper_compare.csv"

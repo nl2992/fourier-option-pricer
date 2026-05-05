@@ -1,0 +1,9 @@
+paper_key: junike_2024_cos_terms
+citation: "Junike, G. (2024), On the Number of Terms in the COS Method for European Option Pricing"
+doi: ""
+reference_type: derived_reference
+model: cos_improved
+method: recommended_cos_policy
+table: "Term-count policy checks"
+tolerance_abs: 1.0e-4
+notes: "Term-count tests exercise the implemented policy; exact paper table values are not yet copied."

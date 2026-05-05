@@ -1,0 +1,11 @@
+case_id,table,model,method,option_type,S0,r,q,T,K,expected_price,N_values,L,tolerance_abs,reference_type
+bsm_table2,Table 2,bsm,cos,call,100.0,0.1,0.0,0.1,80.0,20.7992,"32;64;128;256;512",10.0,1.0e-4,paper_table
+bsm_table2,Table 2,bsm,cos,call,100.0,0.1,0.0,0.1,100.0,3.6600,"32;64;128;256;512",10.0,1.0e-4,paper_table
+bsm_table2,Table 2,bsm,cos,call,100.0,0.1,0.0,0.1,120.0,0.0446,"32;64;128;256;512",10.0,1.0e-4,paper_table
+heston_table4_t1,Table 4,heston,cos,call,100.0,0.0,0.0,1.0,100.0,5.78515545,"40;80;120;160;200",10.0,1.0e-4,paper_table
+heston_table5_t10,Table 5,heston,cos,call,100.0,0.0,0.0,10.0,100.0,22.318945791,"40;65;90;115;140",32.0,1.0e-4,paper_table
+vg_table7_t01,Table 7 T=0.1,variance_gamma,cos,call,100.0,0.1,0.0,0.1,90.0,10.993703187,"128;256;512;1024;2048",10.0,1.0e-4,paper_table
+vg_table7_t1,Table 7 T=1.0,variance_gamma,cos,call,100.0,0.1,0.0,1.0,90.0,19.099354724,"30;60;90;120;150",10.0,1.0e-4,paper_table
+cgmy_table8_y05,Table 8 Y=0.5,cgmy,cos,call,100.0,0.1,0.0,1.0,100.0,19.812948843,"40;60;80;100;120;140",,1.0e-4,paper_table
+cgmy_table9_y15,Table 9 Y=1.5,cgmy,cos,call,100.0,0.1,0.0,1.0,100.0,49.790905469,"40;45;50;55;60;65",,1.0e-4,paper_table
+cgmy_table10_y198,Table 10 Y=1.98,cgmy,cos,call,100.0,0.1,0.0,1.0,100.0,99.999905510,"20;25;30;35;40",,1.0e-4,paper_table
