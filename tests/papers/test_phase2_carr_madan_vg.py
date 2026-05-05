@@ -5,12 +5,16 @@ Lewis (2001)  — 15-digit Heston CALL prices at K=80..120.
 """
 from __future__ import annotations
 import numpy as np
+import pytest
 
 from foureng.models.base import ForwardSpec
 from foureng.models.variance_gamma import VGParams, vg_cf
 from foureng.models.heston import HestonParams, heston_cf_form2
 from foureng.pricers.carr_madan import carr_madan_price_at_strikes
 from foureng.utils.grids import FFTGrid
+
+
+pytestmark = [pytest.mark.paper, pytest.mark.external_reference]
 
 
 def test_vg_carr_madan_cm1999_case4(cm1999_vg):

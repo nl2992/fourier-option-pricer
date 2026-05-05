@@ -34,6 +34,9 @@ from foureng.utils.grids import FFTGrid, FRFTGrid
 from foureng.iv.implied_vol import BSInputs, bs_price_from_fwd
 
 
+pytestmark = [pytest.mark.paper, pytest.mark.derived_reference]
+
+
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------

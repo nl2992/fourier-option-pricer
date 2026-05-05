@@ -6,6 +6,7 @@ step (for interpolation). Nyquist-constrained CM-FFT can't have both fine.
 """
 from __future__ import annotations
 import numpy as np
+import pytest
 
 from foureng.models.base import ForwardSpec
 from foureng.models.heston import HestonParams, heston_cf_form2
@@ -13,6 +14,9 @@ from foureng.models.variance_gamma import VGParams, vg_cf
 from foureng.pricers.carr_madan import carr_madan_price_at_strikes
 from foureng.pricers.frft import frft_prices, frft_price_at_strikes
 from foureng.utils.grids import FFTGrid, FRFTGrid
+
+
+pytestmark = [pytest.mark.paper, pytest.mark.derived_reference, pytest.mark.numerical_stability]
 
 
 def _heston_lewis_phi(d):

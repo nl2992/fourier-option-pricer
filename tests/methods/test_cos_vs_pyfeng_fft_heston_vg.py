@@ -31,6 +31,8 @@ from foureng.pricers.cos import cos_prices, cos_auto_grid
 pyfeng = pytest.importorskip("pyfeng", reason="pyfeng not installed; "
                                                "this suite cross-checks against it")
 
+pytestmark = [pytest.mark.adapter]
+
 
 def _cos_prices(phi, fwd: ForwardSpec, strikes: np.ndarray, cums, N: int, L: float) -> np.ndarray:
     grid = cos_auto_grid(cums, N=N, L=L)

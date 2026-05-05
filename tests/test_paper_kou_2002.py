@@ -11,6 +11,9 @@ from foureng.pricers.cos import cos_auto_grid, cos_prices
 from foureng.utils.grids import FFTGrid
 
 
+pytestmark = [pytest.mark.paper, pytest.mark.derived_reference]
+
+
 @pytest.fixture
 def kou_setup():
     fwd = ForwardSpec(S0=100.0, r=0.05, q=0.0, T=0.5)

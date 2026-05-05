@@ -30,6 +30,9 @@ from foureng.models.double_heston import DoubleHestonParams
 from foureng.pipeline import price_strip
 from foureng.utils.grids import FFTGrid, FRFTGrid
 
+
+pytestmark = [pytest.mark.paper, pytest.mark.external_reference]
+
 # ---------------------------------------------------------------------------
 # Reference data
 # ---------------------------------------------------------------------------
