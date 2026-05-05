@@ -6,7 +6,7 @@ This appendix collects the extra project material that does not belong in the pa
 
 - `foureng/`: packaged pricing library and public API
 - `notebooks/demo.ipynb`: Colab-friendly quick-start walkthrough
-- `notebooks/demo_advanced.ipynb`: full-feature showcase  -  all 20 models, 6 pricers, Greeks, IV surface, calibration, MC, new models, validation highlights (v0.4.1)
+- `notebooks/demo_advanced.ipynb`: **supplementary** full-feature showcase  -  all 20 models, 6 pricers, Greeks, IV surface, calibration, MC, new models, validation highlights (v0.4.1); not the recommended starting point
 - `notebooks/presentation_fourier_methods.ipynb`: presentation notebook version
 - `notebooks/fo2008_replication.ipynb`: full Fang-Oosterlee (2008) paper-faithful replication
 - `notebooks/cosPaper_Replication.ipynb`: COS paper replication with extended scoreboard
