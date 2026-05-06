@@ -6,19 +6,23 @@ Price European options under stochastic volatility and jump models using Fourier
 
 ## What problem it solves
 
-Most option pricing models beyond Black-Scholes — Heston, Bates, Variance Gamma, CGMY — do not have a closed-form price formula. Instead they give you the **characteristic function** of log-returns. This package turns that characteristic function into option prices.
+Most option pricing models beyond Black-Scholes (Heston, Bates, Variance Gamma, CGMY...) do not have a closed-form price formula. What they do have is an analytic **characteristic function** of log-returns, $\varphi_T(u) = \mathbb{E}[e^{iuX_T}]$. This package turns that into option prices.
 
-**Monte Carlo** is the brute-force baseline: simulate paths and average discounted payoffs. The problem is that standard error decays as 1/√n — cutting the error by 10× costs 100× more paths. In a calibration loop that re-prices across dozens of strikes and maturities repeatedly, that compounds fast.
+**Monte Carlo** is the obvious baseline: simulate paths and average the discounted payoffs. The catch is that standard error scales as $\sigma/\sqrt{n}$, meaning 10x better accuracy requires 100x more paths. In a calibration loop repricing across a full surface, this gets expensive fast.
 
-**Fourier methods** (Carr-Madan FFT, FRFT, COS) break that dependency. One characteristic function evaluation plus a deterministic transform prices an entire strike strip at once, giving machine-precision accuracy at sub-millisecond runtimes — orders of magnitude faster than Monte Carlo for strip pricing and calibration.
+**Fourier methods** (Carr-Madan FFT, FRFT, COS) sidestep this entirely. A single characteristic function evaluation plus a deterministic transform prices a whole strike strip at once, reaching near-machine-precision accuracy at sub-millisecond runtimes.
 
-**The COS method** (Fang & Oosterlee 2008) is typically the fastest of these, but it has a hidden trap. It expands the log-return density on a finite interval [a, b]. If that interval is chosen too narrowly, tail mass is lost before the series even starts and no number of extra terms recovers it. The standard approach — scale the cumulant-based half-width by a fixed heuristic multiplier L — gets this wrong on heavy-tailed or short-maturity models, producing visible oscillation in the pricing surface:
+**The COS method** (Fang & Oosterlee 2008) is typically the fastest of the three, but it has a subtle trap. The method approximates the log-return density as a Fourier-cosine series on a finite window $[a, b]$. The standard truncation rule places that window as
+
+$$[a, b] = \left[c_1 - L\sqrt{c_2 + \sqrt{|c_4|}},\; c_1 + L\sqrt{c_2 + \sqrt{|c_4|}}\right]$$
+
+where $c_1, c_2, c_4$ are the model's cumulants and $L$ is a heuristic multiplier. If the window is too narrow, tail mass is lost before the series even starts and no number of additional terms can fix that. The heuristic $L$ works fine on well-behaved models but fails on heavy-tailed or short-maturity cases, producing visible oscillation in the pricing surface:
 
 ![Adaptive filtered-COS: interval selection and spectral damping](docs/assets/adaptive_filtered_cos_schematic.png)
 
-This project implements the **improved COS truncation** of Junike & Pankrashkin (2022) and Junike (2024), which replaces the heuristic with a rigorous tail-mass tolerance, then adds an **original adaptive filtered-COS extension**: spectral weights (Fejér, Lanczos, raised-cosine, exponential) damp the high-frequency COS modes to suppress residual oscillation from sharp density features. A deterministic policy-search selector compares `(grid policy, filter)` candidates and returns the fastest one that meets the user's tolerance — always keeping the unfiltered Junike path available as a fallback. On the Fang-Oosterlee (2008) test suite the adaptive selector matches or beats the paper's best reported error in 6 of 8 cases.
+This project implements the **improved COS truncation** of Junike & Pankrashkin (2022) and Junike (2024), which replaces the heuristic $L$ with a rigorous tail-mass bound. On top of that, we add an **original adaptive filtered-COS extension**: spectral weights $\sigma_k \in [0, 1]$ (Fejér, Lanczos, raised-cosine, or exponential) applied to the high-frequency COS coefficients suppress residual oscillation from sharp density features. A policy-search selector automatically compares grid and filter combinations, returning the fastest configuration that meets the user's error tolerance while always keeping the plain Junike path as a fallback. On the Fang-Oosterlee (2008) test suite, the adaptive selector matches or beats the paper's best reported error in 6 of 8 cases.
 
-The package exposes **20 supported models** across stochastic-volatility, jump-diffusion, pure-Lévy, rough-volatility, and hybrid SVJ families, and **6 pricing engines** through one `price_strip` dispatcher.
+The package covers **20 models** across stochastic-volatility, jump-diffusion, pure-Lévy, rough-volatility, and hybrid SVJ families, all priced through one `price_strip` dispatcher with **6 interchangeable engines**.
 
 Full methodology: [appendix.md](appendix.md) · Extension details: [docs/filtered_cos_extension.md](docs/filtered_cos_extension.md).
 
@@ -149,7 +153,7 @@ MIT. See [LICENSE](LICENSE).
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/nl2992/fourier-option-pricer/blob/main/notebooks/demo.ipynb)
 
-[`notebooks/demo.ipynb`](notebooks/demo.ipynb) is the primary entry point: Carr-Madan, COS, and FRFT on a Heston strip, runnable in Colab with no local setup.
+[`notebooks/demo.ipynb`](notebooks/demo.ipynb) is the primary entry point. It runs Carr-Madan, COS, and FRFT on a Heston strip and works in Colab with no local setup.
 
 ### Supplementary notebook
 
@@ -271,7 +275,7 @@ Full bibliography with DOIs and free-access links: [docs/papers.md](docs/papers.
 
 ## Documentation
 
-All reference documentation is indexed at **[docs/README.md](docs/README.md)** — model zoo, full API, validation hierarchy, paper replication tables, filtered-COS extension, Bates/3/2 SV validation, AI workflow, and packaging checklist.
+All reference documentation is indexed at **[docs/README.md](docs/README.md)**: model zoo, full API, validation hierarchy, paper replication tables, filtered-COS extension, Bates/3/2 SV validation, AI workflow, and packaging checklist.
 
 | Document | Contents |
 |----------|----------|
