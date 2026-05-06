@@ -14,7 +14,7 @@ Most option pricing models beyond Black-Scholes do not have a price formula you 
 
 - 20 supported characteristic-function models across stochastic-volatility, jump-diffusion, pure-Levy, rough-volatility, and hybrid SVJ families
 - 6 pricing engines exposed through one dispatcher: COS, improved COS, filtered COS, Carr-Madan FFT, FRFT, and Lewis quadrature
-- 732 collected tests with paper, software-reference, adapter, stability, and end-to-end workflow coverage
+- 741 collected tests with paper, software-reference, adapter, stability, and end-to-end workflow coverage
 - 27 validation-matrix rows tracked explicitly in [docs/paper_validation_matrix.md](docs/paper_validation_matrix.md): 13 `done`, 13 `partial`, 1 `xfail-if-unstable`
 - Published as a PyPI package and structured as a reusable Python package rather than a notebook-only project
 - Original extension included: adaptive filtered-COS on top of the published Fourier pricing methods
@@ -369,7 +369,7 @@ python -m jupyter nbconvert --to notebook --execute \
   notebooks/paper_replications/bates_sv32_validation_demo.ipynb
 ```
 
-The repository has **732 pytest cases**.
+The repository has **741 pytest cases**.
 
 ### Quick verification for a fork
 
@@ -419,7 +419,7 @@ This is not a reimplementation of existing characteristic functions. The contrib
 
 1. A uniform `price_strip` dispatcher that prices any of 20 models by any of 6 methods with one function call.
 2. Twelve in-house characteristic-function models on top of the eight PyFENG-backed adapters, including four SVJ composites and six pure-Levy models.
-3. A structured validation harness with 732 test cases across [five evidence levels](docs/validation_hierarchy.md).
+3. A structured validation harness with 741 test cases across [five evidence levels](docs/validation_hierarchy.md).
 4. Improved COS truncation following Junike-Pankrashkin (2022) and Junike (2024), demonstrated on the [full FO2008 test suite](docs/fo2008_replication.md).
 5. Adaptive filtered-COS as an original extension.
 
