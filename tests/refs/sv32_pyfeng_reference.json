@@ -1,0 +1,19 @@
+{
+  "source": "Current repo sv32.py docstring / PyFENG-backed regression",
+  "purpose": "Frozen regression target for the current PyFENG-backed 3/2 integration.",
+  "model": "sv32",
+  "option_type": "call",
+  "spot": 100.0,
+  "risk_free_rate": 0.0,
+  "dividend_yield": 0.0,
+  "maturity": 0.5,
+  "v0": 0.06,
+  "kappa": 20.48,
+  "theta": 0.218,
+  "nu": 3.20,
+  "rho": -0.99,
+  "strikes": [95.0, 100.0, 105.0],
+  "call_prices": [11.7235, 8.9978, 6.7091],
+  "absolute_tolerance_published_prices": 0.0005,
+  "note": "This is not a paper-replication benchmark. It is a backend regression target for the current PyFENG-backed sv32 implementation."
+}
