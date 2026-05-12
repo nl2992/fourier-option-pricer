@@ -34,7 +34,7 @@ The unified dispatcher `fe.price_strip` routes through `foureng.models.registry.
 The eight PyFENG-backed models require `pyfeng>=0.4.0`.
 pyfeng 0.4.0 renamed `charfunc_logprice` → `logp_cf` and changed `VarGammaFft`/`ExpNigFft` from `vov=` to `nu=`.
 Rough Heston imports directly from `pyfeng.sv_fft` (not `pyfeng.ex`) to avoid a broken path that calls the removed `scipy.misc.derivative` in newer SciPy.
-The `method="pyfeng_fft"` option in `price_strip` is supported only for these eight models. It refers to the PyFENG-backed Lewis-style FFT path, distinct from the repo's own `method="lewis"` implementation in `foureng/pricers/lewis.py`. The remaining twelve models use the in-house COS / Carr-Madan / FRFT / Lewis pricers only.
+The `method="pyfeng_fft"` option in `price_strip` is supported only for these eight models. It refers to the PyFENG-backed Lewis-style FFT path. The remaining twelve models use the in-house `"cos"`, `"cos_improved"`, `"cos_filtered"`, `"carr_madan"`, and `"frft"` methods only. Note: `foureng/pricers/lewis.py` is an internal module used inside the COS/filtered-COS policy; `"lewis"` is not a valid `price_strip` method string.
 
 ## In-house composites
 

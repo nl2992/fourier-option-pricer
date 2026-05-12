@@ -85,26 +85,41 @@ It cannot pick a result worse than the best candidate in its set.
 
 ---
 
-## Appropriate interpretation
+## FO2008 benchmark results
 
-The key interpretation for this extension is:
+Results from [`notebooks/research/adaptive_cos.ipynb`](../notebooks/research/adaptive_cos.ipynb),
+which benchmarks all three COS variants on five canonical FO2008 test cases at N=256.
+
+| Case | Vanilla err | Junike err | Adaptive err | Filter selected | Interpretation |
+|------|-------------|------------|--------------|-----------------|----------------|
+| BSM T=1 | 1.78e-14 | 1.60e-14 | 1.60e-14 | none | All variants at machine precision |
+| Heston T=1 | 8.42e-10 | 1.87e-11 | 4.82e-13 | none | Gain from adaptive N policy, not filter |
+| Heston T=10 | 1.49e-10 | 2.51e-10 | 2.51e-10 | none | Wide interval needs more N; no filter help |
+| VG T=0.1 | 3.34e-03 | 3.38e-03 | 3.20e-03 | raised_cosine | Filter gives a small real improvement |
+| CGMY T=0.25 | 6.97e-07 | 5.85e-04 | 1.73e-08 | none | Junike widens interval; adaptive N recovers it |
+
+**What these results show:**
+- The spectral filter was actually selected (non-none) in only **1 of 5 cases** (VG T=0.1), and the improvement there is small (~5%).
+- Large accuracy gains (Heston T=1, CGMY T=0.25) come from the **adaptive N selection policy**, not from spectral damping.
+- For CGMY T=0.25, Junike truncation at N=256 is worse than vanilla because the wider interval requires more terms; the adaptive policy compensates by choosing a larger N.
+- The filter's job is residual oscillation suppression once the interval and N are already well-chosen.
+
+---
+
+## Appropriate interpretation
 
 > *"Junike helps truncation. Filtering helps residual finite-series / nonsmoothness cases.
 > The adaptive selector chooses among vanilla COS, Junike-COS, and filtered Junike-COS."*
 
-On the FO2008 test suite, the **Junike improved truncation** (which the selector always includes as a candidate) beats the naive paper-grid COS in **7/8 cases** and beats the paper's own best-N result in **6/8 cases**.
+On the broader FO2008 test suite (8 cases, paper-grid N), the **Junike improved truncation** beats the naive paper-grid COS in **7/8 cases** and beats the paper's own best-N result in **6/8 cases**.
 Full per-case data: [`benchmarks/cos_method_improved/outputs/cos_method_improved_paper_compare.csv`](../benchmarks/cos_method_improved/outputs/cos_method_improved_paper_compare.csv).
-The spectral filter adds a further stability layer in cases where the truncation window is already correct but residual oscillation from finite-series remains.
-See also [fo2008_replication.md](fo2008_replication.md) for the table of paper-grid vs. improved-COS errors.
+See also [fo2008_replication.md](fo2008_replication.md) for the full table.
+
 Appropriate scope for the extension:
 - The 7/8 and 6/8 results are attributable to the Junike truncation improvement, not to spectral filtering.
-- Filtered COS serves as a complementary stability control on top of Junike COS.
-- The extension is a deterministic policy layer over explicit candidate methods and filters.
-- Junike interval selection remains the primary driver of accuracy improvement.
-
-The extension is best understood as a second control layer that can improve pricing speed or
-accuracy in cases where the Junike truncation is adequate but the finite-series resolution
-is still the bottleneck.
+- The spectral filter provided a measurable (if small) gain in 1 of the 5 directly tested FO2008 cases.
+- Filtered COS is a complementary stability control, most useful when the truncation window is already correct but finite-series oscillation remains.
+- Junike interval selection and adaptive N policy are the primary accuracy drivers.
 
 ---
 

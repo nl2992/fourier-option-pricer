@@ -21,7 +21,7 @@ these levels via the `reference_type` field in the corresponding JSON fixture or
 
 ## Validation matrix
 
-When `pyfeng_fft` appears in the validation docs, it refers to the PyFENG-backed Lewis-style FFT path used as a software-side oracle for supported models. It is separate from the repo's own `method="lewis"` implementation.
+When `pyfeng_fft` appears in the validation docs, it refers to the PyFENG-backed Lewis-style FFT path used as a software-side oracle for supported models. Note: `"lewis"` is not a valid `price_strip` method string; the internal `foureng/pricers/lewis.py` module is used inside the COS policy layer only.
 
 See [paper_validation_matrix.md](paper_validation_matrix.md) for the complete per-model table
 linking each paper-backed result to its test file, reference type, and numeric target.

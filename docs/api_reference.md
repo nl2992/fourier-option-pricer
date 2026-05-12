@@ -124,7 +124,7 @@ from foureng.pipeline import price_strip
 | `"cos_improved"` | COS with Junike-style truncation policy |
 | `"carr_madan"` | Carr-Madan FFT |
 | `"frft"` | Fractional FFT |
-| `"lewis"` | In-house Lewis (2001) Fourier inversion implemented in `foureng/pricers/lewis.py` |
+| `"cos_filtered"` | COS with spectral damping (Fejér, Lanczos, raised-cosine, or exponential filter) |
 | `"pyfeng_fft"` | PyFENG-backed Lewis-style FFT path (PyFENG-backed models only) |
 
 ---
