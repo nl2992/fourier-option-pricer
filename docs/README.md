@@ -11,6 +11,7 @@ Start at [README.md](../README.md) for the project overview; come here for depth
 |----------|----------|
 | [model_zoo.md](model_zoo.md) | Complete catalogue of all 20 supported models  -  parameter dataclasses, CF sources, PyFENG dependency note, and `MODEL_REGISTRY` usage. |
 | [api_reference.md](api_reference.md) | Full public API tables: market inputs, parameter dataclasses, characteristic functions, cumulants, grid objects, core pricing functions, filtered-COS helpers, implied vol, surfaces/calibration/Greeks. |
+| [architecture_overview.md](architecture_overview.md) | Lucid-style package architecture map: entry points, routing core, model registry, pricers, utilities, higher-level features, and validation outputs. |
 | [packaging.md](packaging.md) | PyPI package identity, install instructions, runtime dependencies, CI setup, and build/release checklist. |
 | [papers.md](papers.md) | Comprehensive bibliography: all papers cited in the codebase, grouped by category, with DOIs and free-access links. |
 | [numerical_notes.md](numerical_notes.md) | Known numerical limitations: COS truncation failure modes, Carr-Madan alpha conditions, PyFENG version caveats, parameter edge cases, IV inversion guidance. |
