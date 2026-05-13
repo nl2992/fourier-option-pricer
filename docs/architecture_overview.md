@@ -1,6 +1,6 @@
 # Architecture Overview
 
-![fourier-option-pricer architecture overview](assets/architecture_overview.png)
+![fourier-option-pricer architecture overview](assets/architecture_overview.svg)
 
 This diagram shows how the package is organised from user-facing entry points down to pricing kernels, model characteristic functions, and validation outputs.
 
@@ -21,5 +21,5 @@ This diagram shows how the package is organised from user-facing entry points do
 
 ## Editable source
 
-- Mermaid flowchart source: [docs/assets/architecture_overview.mmd](assets/architecture_overview.mmd)
-- If you want to restyle or rebuild the diagram later, start from the Mermaid source and keep the PNG as the rendered snapshot used by the README/docs.
+- Editable diagram source: [docs/assets/architecture_overview.svg](assets/architecture_overview.svg)
+- The SVG is the canonical version, so future restyling can be done directly without recreating a separate diagram source file.
