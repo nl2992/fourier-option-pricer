@@ -1,0 +1,31 @@
+name: foureng
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python>=3.10
+  - pip
+
+  # ── Runtime ─────────────────────────────────────────────────────────────────
+  - numpy>=1.26
+  - scipy>=1.10
+  - matplotlib>=3.7
+  - pandas>=2.0
+  - statsmodels>=0.14
+
+  # ── Notebooks ───────────────────────────────────────────────────────────────
+  - jupyter>=1.0
+  - ipykernel>=6.0
+  - nbformat>=5.10
+
+  # ── Testing ─────────────────────────────────────────────────────────────────
+  - pytest>=7.4
+  - pytest-cov>=4.0
+  - hypothesis>=6.112
+
+  - pip:
+    # pyfeng is not reliably available on conda-forge; install via pip
+    - pyfeng>=0.4.0
+    - nbmake>=1.5
+    # editable install of the foureng package from your local clone
+    - -e .

@@ -30,17 +30,61 @@ Full methodology: [appendix.md](appendix.md) · Extension details: [docs/filtere
 
 ## Installation
 
-```bash
-pip install fourier-option-pricer
-```
+### Option A — library only (PyPI)
 
-Requires Python 3.10+, `numpy>=1.26`, `scipy>=1.10`, `pyfeng>=0.4.0`.
-
-To pin a version:
+Use this if you just want to import `foureng` in your own code and do not need the notebooks or tests.
 
 ```bash
-pip install "fourier-option-pricer==0.4.1"
+pip install fourier-option-pricer          # latest
+pip install "fourier-option-pricer==0.4.1" # pin to this release
 ```
+
+Requires Python 3.10+.
+
+### Option B — clone and run everything (pip + venv)
+
+Use this to run all notebooks, reproduce benchmarks, and execute the test suite.
+
+```bash
+git clone https://github.com/nl2992/fourier-option-pricer.git
+cd fourier-option-pricer
+
+python -m venv .venv
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
+
+pip install -r requirements.txt  # installs foureng + notebook + test deps
+```
+
+Open the notebooks:
+
+```bash
+jupyter lab                      # then navigate to notebooks/demo.ipynb
+```
+
+### Option C — clone and run everything (conda)
+
+```bash
+git clone https://github.com/nl2992/fourier-option-pricer.git
+cd fourier-option-pricer
+
+conda env create -f environment.yml
+conda activate foureng
+
+jupyter lab                      # then navigate to notebooks/demo.ipynb
+```
+
+### Option D — Google Colab (no local setup)
+
+Click the **Open in Colab** badge in the [Demo notebook](#demo-notebook) section below. The notebook installs all dependencies automatically and runs in the browser with no local setup required.
+
+### Dependencies
+
+| Group | Packages |
+|-------|----------|
+| Runtime | `numpy>=1.26`, `scipy>=1.10`, `matplotlib>=3.7`, `statsmodels>=0.14`, `pyfeng>=0.4.0` |
+| Notebooks | `pandas>=2.0`, `jupyter>=1.0`, `ipykernel>=6.0`, `nbformat>=5.10` |
+| Tests | `pytest>=7.4`, `pytest-cov>=4.0`, `hypothesis>=6.112`, `nbmake>=1.5` |
+| Dev tools | `ruff`, `mypy>=1.10`, `pyperf>=2.7` (via `pip install -e ".[dev]"`) |
 
 ---
 
@@ -210,17 +254,13 @@ Full per-paper matrix: [docs/paper_validation_matrix.md](docs/paper_validation_m
 
 ## Reproduce results
 
-```bash
-git clone https://github.com/nl2992/fourier-option-pricer.git
-cd fourier-option-pricer
-python3 -m venv .venv && source .venv/bin/activate
-pip install -e ".[test]"
+After cloning and installing (see [Installation](#installation) above):
 
-# fast CI suite
+```bash
+# fast CI suite — skips slow Monte Carlo and notebook-execution tests
 python -m pytest -q -m "not slow"
 
-# full suite including Monte Carlo and notebook guards
-pip install -e ".[test,notebook]"
+# full suite including notebook execution guards
 python -m pytest -q
 
 # paper-replication tests only
@@ -232,7 +272,7 @@ python -m pytest -q -m "software_reference"
 
 The repository has **741 pytest cases**.
 
-For developer quality checks:
+For linting and type checks:
 
 ```bash
 pip install -e ".[dev]"

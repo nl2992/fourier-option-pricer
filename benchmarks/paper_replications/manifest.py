@@ -110,24 +110,6 @@ PAPER_OUTPUT_BUNDLES: tuple[PaperOutputBundle, ...] = (
         ),
         expected_table_labels=FO2008_EXPECTED_TABLE_LABELS,
     ),
-    PaperOutputBundle(
-        name="cos_paper_replication",
-        output_dir="benchmarks/paper_replications/cos_paper_replication/outputs",
-        summary_file="summary.md",
-        csv_files=(
-            "fo2008_replication_errors.csv",
-            "fo2008_replication_prices.csv",
-            "fo2008_replication_timings.csv",
-            "extended_comparison.csv",
-        ),
-        family_figure_pattern="figures/family_{family}.png",
-        extra_figures=(
-            "figures/extension_error_vs_n.png",
-            "figures/extension_error_vs_time.png",
-            "figures/frontier.png",
-        ),
-        expected_table_labels=FO2008_EXPECTED_TABLE_LABELS,
-    ),
 )
 
 
