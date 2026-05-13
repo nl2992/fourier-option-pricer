@@ -88,7 +88,7 @@ def test_cos_vg_agrees_with_pyfeng_fft(cm1999_vg):
     strikes = d["strikes"]
     C_cos = _cos_prices(phi, fwd, strikes, vg_cumulants(fwd, p), N=2048, L=10.0)
 
-    m = pyfeng.VarGammaFft(sigma=p.sigma, vov=p.nu, theta=p.theta,
+    m = pyfeng.VarGammaFft(sigma=p.sigma, nu=p.nu, theta=p.theta,
                             intr=fwd.r, divr=fwd.q)
     C_pf = m.price(strikes, spot=fwd.S0, texp=fwd.T, cp=1)
 

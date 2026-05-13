@@ -65,7 +65,7 @@ def _pyfeng_vg_model(fwd: ForwardSpec, p: VGParams):
         pf = import_pyfeng()
         return pf.VarGammaFft(
             sigma=p.sigma,
-            vov=p.nu,
+            nu=p.nu,
             theta=p.theta,
             intr=fwd.r,
             divr=fwd.q,
@@ -90,7 +90,7 @@ def vg_cf(u: np.ndarray, fwd: ForwardSpec, p: VGParams) -> np.ndarray:
     """
     m = _pyfeng_vg_model(fwd, p)
     u_arr = np.asarray(u)
-    return np.asarray(m.charfunc_logprice(u_arr, texp=fwd.T), dtype=np.complex128)
+    return np.asarray(m.logp_cf(u_arr, texp=fwd.T), dtype=np.complex128)
 
 
 def vg_cumulants(fwd: ForwardSpec, p: VGParams) -> tuple[float, float, float]:

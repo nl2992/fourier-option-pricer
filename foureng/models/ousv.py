@@ -119,7 +119,7 @@ def ousv_cf(u: np.ndarray, fwd: ForwardSpec, p: OusvParams) -> np.ndarray:
     """CF of ``X_T = log(S_T / F_0)`` under OUSV — via PyFENG's ``OusvFft``."""
     m = _pyfeng_ousv_model(fwd, p)
     u_arr = np.asarray(u)
-    return np.asarray(m.charfunc_logprice(u_arr, texp=fwd.T), dtype=np.complex128)
+    return np.asarray(m.logp_cf(u_arr, texp=fwd.T), dtype=np.complex128)
 
 
 # ---------------------------------------------------------------------------

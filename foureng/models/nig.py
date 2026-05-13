@@ -111,7 +111,7 @@ def _pyfeng_nig_model(fwd: ForwardSpec, p: NigParams):
         pf = import_pyfeng()
         return pf.ExpNigFft(
             sigma=p.sigma,
-            vov=p.nu,
+            nu=p.nu,
             theta=p.theta,
             intr=fwd.r,
             divr=fwd.q,
@@ -124,7 +124,7 @@ def nig_cf(u: np.ndarray, fwd: ForwardSpec, p: NigParams) -> np.ndarray:
     """CF of ``X_T = log(S_T / F_0)`` under NIG — via PyFENG's ``ExpNigFft``."""
     m = _pyfeng_nig_model(fwd, p)
     u_arr = np.asarray(u)
-    return np.asarray(m.charfunc_logprice(u_arr, texp=fwd.T), dtype=np.complex128)
+    return np.asarray(m.logp_cf(u_arr, texp=fwd.T), dtype=np.complex128)
 
 
 # ---------------------------------------------------------------------------
