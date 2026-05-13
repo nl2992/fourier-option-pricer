@@ -1,9 +1,9 @@
 """Columbia-themed matplotlib style + a small library of plot helpers.
 
-Goal: uniform look-and-feel for the demo notebook and any figures exported
-to ``images/``. Call ``apply_columbia_style()`` once at the top of a notebook
-and every subsequent plot inherits the theme (white chart background, navy
-titles, dark-navy tick labels, light dotted grid, no top/right spines).
+Goal: uniform look-and-feel for the demo notebook and exported figures.
+Call ``apply_columbia_style()`` once at the top of a notebook and every
+subsequent plot inherits the theme (white chart background, navy titles,
+dark-navy tick labels, light dotted grid, no top/right spines).
 
 Palette is fixed to the Columbia-standard colours so slides and figures sit
 naturally next to the slide deck.

@@ -204,6 +204,6 @@ This motivates the improved COS policy described in
 Headline: the adaptive path beats the strict paper-grid replay in 7/8 cases and beats the
 paper's best reported error in 6/8 cases.
 
-> **Evidence:** Per-case numbers in [`benchmarks/cos_method_improved/outputs/cos_method_improved_paper_compare.csv`](../benchmarks/cos_method_improved/outputs/cos_method_improved_paper_compare.csv) and [`benchmarks/paper_replications/cos_paper_replication/outputs/fo2008_replication_errors.csv`](../benchmarks/paper_replications/cos_paper_replication/outputs/fo2008_replication_errors.csv).
+> **Evidence:** Per-case numbers in [`benchmarks/cos_method_improved/outputs/cos_method_improved_paper_compare.csv`](../benchmarks/cos_method_improved/outputs/cos_method_improved_paper_compare.csv) and [`benchmarks/paper_replications/fo2008_cos/outputs/fo2008_replication_errors.csv`](../benchmarks/paper_replications/fo2008_cos/outputs/fo2008_replication_errors.csv).
 > Notebook: [`notebooks/research/cos_method_improved.ipynb`](../notebooks/research/cos_method_improved.ipynb).
-> Summary report: [`benchmarks/paper_replications/cos_paper_replication/outputs/summary.md`](../benchmarks/paper_replications/cos_paper_replication/outputs/summary.md).
+> Summary report: [`benchmarks/paper_replications/fo2008_cos/outputs/summary.md`](../benchmarks/paper_replications/fo2008_cos/outputs/summary.md).

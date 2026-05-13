@@ -6,8 +6,8 @@ This appendix collects the extra project material that does not belong in the pa
 
 - `foureng/`: packaged pricing library and public API
 - `notebooks/demo.ipynb`: Colab-friendly quick-start walkthrough
-- `notebooks/demo_advanced.ipynb`: **supplementary** full-feature showcase  -  all 20 models, 6 pricers, Greeks, IV surface, calibration, MC, new models, validation highlights (v0.4.1); not the recommended starting point
-- `notebooks/presentation_fourier_methods.ipynb`: presentation notebook version
+- `notebooks/supplementary/demo_advanced.ipynb`: **supplementary** full-feature showcase  -  all 20 models, 6 pricers, Greeks, IV surface, calibration, MC, new models, validation highlights (v0.4.1); not the recommended starting point
+- `notebooks/supplementary/presentation_fourier_methods.ipynb`: presentation notebook version
 - `notebooks/fo2008_replication.ipynb`: full Fang-Oosterlee (2008) paper-faithful replication
 - `notebooks/cosPaper_Replication.ipynb`: COS paper replication with extended scoreboard
 - `notebooks/paper_replications/bates_mathworks_replication.ipynb`: Bates all-engine scoreboard vs MathWorks frozen reference
@@ -635,30 +635,12 @@ This is why the improved method should be described as a robustness and policy i
 
 ## 15. Results for the Junike-style fix
 
-The improved notebook shows where the adaptive policy helps, where it matches existing methods, and where another method remains the more appropriate fallback.
+The improved COS truncation (Junike & Pankrashkin 2022; Junike 2024) replaces the heuristic `L` multiplier in the truncation interval with a rigorous tail-mass bound. On the FO2008 test suite, the improved path beats the strict paper-grid replay in 7 of 8 cases and beats the paper's own best-N result in 6 of 8 cases.
 
-| Case | Paper best N | Paper best max error | Old default error | Our paper-grid replay | Improved method | Improved N | Improved error | Vs default | Vs paper | Vs paper-grid |
-|---|---:|---:|---:|---:|---|---:|---:|---|---|---|
-| BSM Table 2 | 64 | 3.55e-15 | 1.60e-14 | 1.60e-14 | COS | 64 | 1.54e-14 | better | worse | better |
-| Heston Table 4 | 200 | 3.70e-09 | 6.10e-08 | 6.57e-07 | COS | 512 | 2.22e-11 | better | better | better |
-| Heston Table 5 | 140 | 9.88e-10 | 5.07e-12 | 4.68e-03 | COS | 1024 | 9.68e-11 | worse | better | better |
-| Heston Table 6 strip | 200 | 2.05e-08 | 6.98e-08 | 2.62e-06 | COS | 512 | 2.92e-10 | better | better | better |
-| VG Table 7, T=0.1 | 2048 | 7.98e-08 | 4.44e-05 | 4.94e-08 | COS | 1024 | 1.49e-08 | better | better | better |
-| VG Table 7, T=1.0 | 150 | 1.51e-09 | 1.99e-10 | 4.39e-10 | COS | 2048 | 2.00e-10 | worse | better | better |
-| CGMY Table 8, Y=0.5 | 140 | 4.04e-09 | 1.19e-10 | 2.16e-10 | COS | 1024 | 1.19e-10 | worse | better | better |
-| CGMY Table 10, Y=1.98 | 40 | 1.94e-15 | 2.46e-11 | 1.47e-11 | Lewis | 8192 | 6.41e-11 | worse | worse | worse |
+Per-case numbers with error and method columns: [`benchmarks/cos_method_improved/outputs/cos_method_improved_paper_compare.csv`](benchmarks/cos_method_improved/outputs/cos_method_improved_paper_compare.csv).
+Full tables with paper comparison: [`docs/fo2008_replication.md`](docs/fo2008_replication.md).
 
-Headline interpretation:
-
-- the adaptive path beats the old default in `4/8` summary cases;
-- it beats the strict paper-grid replay in `7/8` cases;
-- it beats the paper's best reported error in `6/8` cases.
-
-The Heston `T=10` diagnostics are especially useful:
-
-- support-truncation error falls from about `7.00e-07` at `L=6` to `1.84e-09` at `L=8` and `5.06e-12` at `L=10`;
-- the paper-wide `L=32` interval only becomes highly accurate when `N` is also increased substantially;
-- direct call coefficients become unstable on wide intervals, while put-plus-parity remains better behaved.
+The Heston T=10 case illustrates the core issue most clearly: naive paper-grid COS reaches an error of 4.68e-03 because the truncation window is too narrow for the long maturity, while the improved policy selects a wider interval and larger N automatically, recovering sub-1e-10 accuracy.
 
 Conclusion: the Junike-style fix is not a different pricing formula. It is a better approximation policy for choosing the support and series resolution in COS.
 

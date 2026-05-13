@@ -15,7 +15,6 @@ Start at [README.md](../README.md) for the project overview; come here for depth
 | [packaging.md](packaging.md) | PyPI package identity, install instructions, runtime dependencies, CI setup, and build/release checklist. |
 | [papers.md](papers.md) | Comprehensive bibliography: all papers cited in the codebase, grouped by category, with DOIs and free-access links. |
 | [numerical_notes.md](numerical_notes.md) | Known numerical limitations: COS truncation failure modes, Carr-Madan alpha conditions, PyFENG version caveats, parameter edge cases, IV inversion guidance. |
-| [numerical_quality_checklist.md](numerical_quality_checklist.md) | M1/M4 floating-point rubric audit: per-item pass/fail status, the `expm1` bug fix in `bates.py`, and evidence links to `tests/methods/test_numerical_quality.py`. |
 
 ## Validation and results
 
@@ -23,9 +22,15 @@ Start at [README.md](../README.md) for the project overview; come here for depth
 |----------|----------|
 | [validation_hierarchy.md](validation_hierarchy.md) | The five evidence levels (`external_reference` → `qualitative_figure`), current status summary, and instructions for adding a new validation case. |
 | [paper_validation_matrix.md](paper_validation_matrix.md) | Per-paper validation matrix: every reported result linked to its test file, reference type, and numeric target. |
-| [course_rubric_assessment.md](course_rubric_assessment.md) | Course-rubric map, current project mark, remaining pitfalls, and follow-up policy. |
 | [fo2008_replication.md](fo2008_replication.md) | Paper-faithful Fang & Oosterlee (2008) replication tables (Tables 1–10), interpretation notes, and improved-COS summary with benchmark CSV links. |
 | [bates_sv32_validation.md](bates_sv32_validation.md) | Detailed validation record for Bates (BATES-01–07) and 3/2 SV (SV32-01–05): parameters, mu_j formula, reference types, tolerances, and test-file links. |
+
+## Internal / audit documents
+
+| Document | Contents |
+|----------|----------|
+| [course_rubric_assessment.md](course_rubric_assessment.md) | Course-rubric map, current project mark, remaining pitfalls, and follow-up policy. |
+| [numerical_quality_checklist.md](numerical_quality_checklist.md) | M1/M4 floating-point rubric audit: per-item pass/fail status, the `expm1` bug fix in `bates.py`, and evidence links to `tests/methods/test_numerical_quality.py`. |
 
 ## Extensions and workflow
 
