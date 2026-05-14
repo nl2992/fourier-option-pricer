@@ -1,154 +1,142 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1140" viewBox="0 0 1800 1140" role="img" aria-labelledby="title desc">
-  <title id="title">fourier-option-pricer architecture</title>
-  <desc id="desc">A layered architecture diagram showing entry surfaces, the unified package API, dispatch and registry, model backends, pricing engines, higher-level features, and validation outputs.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="1680" height="860" viewBox="0 0 1680 860" role="img" aria-labelledby="title desc">
+  <title id="title">fourier-option-pricer architecture overview</title>
+  <desc id="desc">A simplified four-stage architecture diagram for the fourier-option-pricer package.</desc>
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#fcfdff"/>
       <stop offset="100%" stop-color="#f7f9fc"/>
     </linearGradient>
     <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
-      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#17345b" flood-opacity="0.08"/>
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#17345b" flood-opacity="0.08"/>
     </filter>
-    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M0,0 L10,5 L0,10 z" fill="#90a5c3"/>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M0,0 L12,6 L0,12 z" fill="#98adc9"/>
     </marker>
     <style>
-      .canvas { fill: url(#bg); stroke: #d9e3f0; stroke-width: 2; }
-      .title { font: 700 34px 'Aptos', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; fill: #17345b; }
-      .subtitle { font: 17px 'Aptos', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; fill: #5f7390; }
-      .group { fill: #ffffff; stroke: #d8e3f1; stroke-width: 1.8; rx: 24; filter: url(#shadow); }
-      .group-title { font: 700 19px 'Aptos', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; fill: #17345b; }
-      .group-subtitle { font: 14px 'Aptos', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; fill: #6a7f99; }
-      .card { fill: #ffffff; stroke: #d2ddeb; stroke-width: 1.5; rx: 16; }
-      .chip { fill: #ffffff; stroke: #d7e1ee; stroke-width: 1.4; rx: 14; }
-      .blue { fill: #eef4fb; stroke: #cadaef; }
-      .teal { fill: #eefbf5; stroke: #b9e3d1; }
-      .amber { fill: #fff7ed; stroke: #f0d2ab; }
-      .violet { fill: #f5f3ff; stroke: #d8cdf7; }
-      .slate { fill: #f8fafc; stroke: #dbe5ef; }
-      .card-title-blue { font: 700 18px 'Aptos', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; fill: #244575; }
-      .card-title-teal { font: 700 18px 'Aptos', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; fill: #17624d; }
-      .card-title-amber { font: 700 18px 'Aptos', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; fill: #8a5312; }
-      .card-title-violet { font: 700 18px 'Aptos', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; fill: #6847a3; }
-      .card-title-slate { font: 700 18px 'Aptos', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; fill: #334a68; }
-      .body { font: 15px 'Aptos', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; fill: #536983; }
-      .small { font: 13px 'Aptos', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; fill: #627893; }
-      .mono { font: 600 16px Menlo, Consolas, Monaco, monospace; fill: #193555; }
-      .chip-title { font: 700 16px 'Aptos', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; fill: #29456d; }
-      .connector { fill: none; stroke: #90a5c3; stroke-width: 3.5; stroke-linecap: round; marker-end: url(#arrow); }
-      .connector-soft { fill: none; stroke: #b2c3d8; stroke-width: 3; stroke-linecap: round; marker-end: url(#arrow); }
-      .divider { stroke: #e6edf6; stroke-width: 1; }
+      .canvas { fill: url(#bg); stroke: #d8e2ef; stroke-width: 2; }
+      .title { font: 700 34px 'Aptos', 'Segoe UI', Arial, sans-serif; fill: #193a67; }
+      .subtitle { font: 17px 'Aptos', 'Segoe UI', Arial, sans-serif; fill: #627895; }
+      .panel { stroke-width: 1.6; rx: 24; filter: url(#shadow); }
+      .slate { fill: #f8fafc; stroke: #d7e2ef; }
+      .blue { fill: #eef4fb; stroke: #cad9ed; }
+      .green { fill: #eef9f4; stroke: #bfe1d0; }
+      .violet { fill: #f6f2ff; stroke: #d7caf5; }
+      .footer { fill: #fff6ec; stroke: #edcfaa; }
+      .panel-title { font: 700 20px 'Aptos', 'Segoe UI', Arial, sans-serif; fill: #193a67; }
+      .panel-title-green { font: 700 20px 'Aptos', 'Segoe UI', Arial, sans-serif; fill: #1d6a53; }
+      .panel-title-violet { font: 700 20px 'Aptos', 'Segoe UI', Arial, sans-serif; fill: #64469a; }
+      .panel-title-footer { font: 700 18px 'Aptos', 'Segoe UI', Arial, sans-serif; fill: #8a5312; }
+      .section { font: 700 15px 'Aptos', 'Segoe UI', Arial, sans-serif; fill: #28496f; }
+      .section-green { font: 700 15px 'Aptos', 'Segoe UI', Arial, sans-serif; fill: #1d6a53; }
+      .body { font: 14px 'Aptos', 'Segoe UI', Arial, sans-serif; fill: #526984; }
+      .small { font: 13px 'Aptos', 'Segoe UI', Arial, sans-serif; fill: #647992; }
+      .mono { font: 600 18px Menlo, Consolas, monospace; fill: #1d3d69; }
+      .card { fill: #ffffff; stroke: #d6e0ee; stroke-width: 1.3; rx: 16; }
+      .arrow { fill: none; stroke: #98adc9; stroke-width: 4; stroke-linecap: round; marker-end: url(#arrow); }
     </style>
   </defs>
 
-  <rect class="canvas" x="24" y="24" width="1752" height="1092" rx="28"/>
+  <rect class="canvas" x="24" y="24" width="1632" height="812" rx="28"/>
 
-  <text class="title" x="60" y="86">fourier-option-pricer architecture</text>
-  <text class="subtitle" x="60" y="118">Layered package view: one public API routes 20 models into interchangeable Fourier engines, analytics modules, and validation outputs.</text>
+  <text class="title" x="60" y="84">fourier-option-pricer architecture</text>
+  <text class="subtitle" x="60" y="114">A simpler package map: entry points feed one public API, one routing core, one pricing stack, and one output layer.</text>
 
-  <rect class="group" x="60" y="146" width="1680" height="112" rx="24"/>
-  <text class="group-title" x="88" y="182">1. Entry surfaces</text>
-  <text class="group-subtitle" x="88" y="205">How readers, graders, and developers first touch the repo</text>
+  <path class="arrow" d="M410 420 L470 420"/>
+  <path class="arrow" d="M806 420 L866 420"/>
+  <path class="arrow" d="M1202 420 L1262 420"/>
 
-  <rect class="chip slate" x="88" y="220" width="388" height="22" rx="11"/>
-  <text class="chip-title" x="106" y="236">README + quick start</text>
-  <text class="small" x="284" y="236">install and first strip</text>
+  <!-- stage 1 -->
+  <rect class="panel slate" x="60" y="160" width="350" height="560" rx="24"/>
+  <text class="panel-title" x="88" y="202">1. Entry points</text>
+  <text class="small" x="88" y="226">How users, graders, and developers first meet the repo</text>
 
-  <rect class="chip slate" x="496" y="220" width="388" height="22" rx="11"/>
-  <text class="chip-title" x="514" y="236">notebooks/</text>
-  <text class="small" x="625" y="236">demo, replay, research</text>
+  <rect class="card" x="88" y="258" width="294" height="68" rx="16"/>
+  <text class="section" x="108" y="287">README + quick start</text>
+  <text class="body" x="108" y="309">installation, import, first strip</text>
 
-  <rect class="chip slate" x="904" y="220" width="388" height="22" rx="11"/>
-  <text class="chip-title" x="922" y="236">benchmarks/</text>
-  <text class="small" x="1057" y="236">replications, frontiers, CSV outputs</text>
+  <rect class="card" x="88" y="346" width="294" height="68" rx="16"/>
+  <text class="section" x="108" y="375">notebooks/</text>
+  <text class="body" x="108" y="397">demo, paper replay, research</text>
 
-  <rect class="chip slate" x="1312" y="220" width="388" height="22" rx="11"/>
-  <text class="chip-title" x="1330" y="236">tests/</text>
-  <text class="small" x="1403" y="236">models, methods, features, papers</text>
+  <rect class="card" x="88" y="434" width="294" height="68" rx="16"/>
+  <text class="section" x="108" y="463">tests + benchmarks/</text>
+  <text class="body" x="108" y="485">validation cases and runtime evidence</text>
 
-  <path class="connector-soft" d="M900 258 L900 294"/>
+  <rect class="card" x="88" y="522" width="294" height="68" rx="16"/>
+  <text class="section" x="108" y="551">docs + appendix</text>
+  <text class="body" x="108" y="573">reporting and methodological detail</text>
 
-  <rect class="group" x="60" y="294" width="1680" height="122" rx="24"/>
-  <text class="group-title" x="88" y="330">2. Unified package surface</text>
-  <text class="group-subtitle" x="88" y="353">One import path and one dispatcher keep the package surface stable across all model families</text>
+  <!-- stage 2 -->
+  <rect class="panel blue" x="456" y="160" width="350" height="560" rx="24"/>
+  <text class="panel-title" x="484" y="202">2. Public API + routing</text>
+  <text class="small" x="484" y="226">One interface, then one dispatcher</text>
 
-  <rect class="card blue" x="88" y="360" width="1624" height="48" rx="16"/>
-  <text class="mono" x="112" y="381">import foureng as fe</text>
-  <text class="body" x="112" y="399">ForwardSpec  -  model dataclasses  -  price_strip(...)  -  IV / Greeks / surfaces</text>
+  <rect class="card" x="484" y="258" width="294" height="86" rx="16"/>
+  <text class="mono" x="504" y="290">import foureng as fe</text>
+  <text class="body" x="504" y="318">ForwardSpec, parameter dataclasses,</text>
+  <text class="body" x="504" y="338">helpers, exposed pricers</text>
 
-  <path class="connector-soft" d="M900 416 L900 442"/>
+  <rect class="card" x="484" y="366" width="294" height="86" rx="16"/>
+  <text class="mono" x="504" y="398">price_strip(...)</text>
+  <text class="body" x="504" y="426">switch engines without changing</text>
+  <text class="body" x="504" y="446">model inputs or strike arrays</text>
 
-  <rect class="group" x="60" y="442" width="1680" height="176" rx="24"/>
-  <text class="group-title" x="88" y="478">3. Dispatch and model registry</text>
-  <text class="group-subtitle" x="88" y="501">The routing core interprets the request; the registry supplies model metadata, characteristic functions, and backend capabilities</text>
+  <rect class="card" x="484" y="474" width="294" height="96" rx="16"/>
+  <text class="section" x="504" y="504">foureng/pipeline.py</text>
+  <text class="body" x="504" y="532">dispatches model + method requests</text>
+  <text class="body" x="504" y="552">applies improved-COS / filtered-COS selection</text>
 
-  <rect class="card blue" x="88" y="520" width="782" height="76" rx="18"/>
-  <text class="card-title-blue" x="112" y="548">foureng/pipeline.py</text>
-  <text class="body" x="112" y="568">Parses the model + method request and optional grid</text>
-  <text class="body" x="112" y="587">Applies improved-COS / filtered-COS selection and dispatches to in-house pricers or pyfeng_fft</text>
+  <rect class="card" x="484" y="590" width="294" height="96" rx="16"/>
+  <text class="section" x="504" y="620">models/registry.py</text>
+  <text class="body" x="504" y="648">maps labels to params, CF hooks, cumulants,</text>
+  <text class="body" x="504" y="668">and backend capabilities</text>
 
-  <rect class="card blue" x="930" y="520" width="782" height="76" rx="18"/>
-  <text class="card-title-blue" x="954" y="548">foureng/models/registry.py</text>
-  <text class="body" x="954" y="568">Maps labels -&gt; params class, characteristic function, cumulants, and backend metadata</text>
-  <text class="body" x="954" y="587">Separates in-house models from PyFENG-backed adapters and records pyfeng_fft support</text>
+  <!-- stage 3 -->
+  <rect class="panel green" x="852" y="160" width="350" height="560" rx="24"/>
+  <text class="panel-title-green" x="880" y="202">3. Pricing stack</text>
+  <text class="small" x="880" y="226">Backends, engines, and shared numerics</text>
 
-  <path class="connector-soft" d="M900 618 L900 646"/>
+  <rect class="card" x="880" y="258" width="294" height="96" rx="16"/>
+  <text class="section-green" x="900" y="288">Model backends</text>
+  <text class="body" x="900" y="316">12 in-house characteristic-function models</text>
+  <text class="body" x="900" y="336">8 PyFENG-backed adapters</text>
 
-  <rect class="group" x="60" y="646" width="1680" height="258" rx="24"/>
-  <text class="group-title" x="88" y="682">4. Pricing stack</text>
-  <text class="group-subtitle" x="88" y="705">Model backends supply characteristic functions; pricing engines and shared numerics turn them into strike-strip prices</text>
+  <rect class="card" x="880" y="376" width="294" height="116" rx="16"/>
+  <text class="section-green" x="900" y="406">Fourier engines</text>
+  <text class="body" x="900" y="434">COS, improved COS, filtered COS</text>
+  <text class="body" x="900" y="454">Carr-Madan FFT, FRFT, Lewis</text>
+  <text class="body" x="900" y="474">pyfeng_fft on supported backends</text>
 
-  <rect class="card teal" x="88" y="722" width="780" height="154" rx="20"/>
-  <text class="card-title-teal" x="112" y="750">Model backends</text>
+  <rect class="card" x="880" y="514" width="294" height="116" rx="16"/>
+  <text class="section-green" x="900" y="544">Shared numerics</text>
+  <text class="body" x="900" y="572">grids, cumulants, spectral filters,</text>
+  <text class="body" x="900" y="592">validity guards, experiment helpers</text>
 
-  <rect class="card" x="112" y="768" width="352" height="88" rx="16"/>
-  <text class="card-title-teal" x="136" y="796">In-house characteristic functions</text>
-  <text class="body" x="136" y="818">12 native families</text>
-  <text class="small" x="136" y="838">Bates, Kou, Heston-CGMY, Heston-Kou, Merton JD, Meixner, Bilateral Gamma, GH, FMLS, Double Heston, VGSA, GARCH</text>
+  <!-- stage 4 -->
+  <rect class="panel violet" x="1248" y="160" width="350" height="560" rx="24"/>
+  <text class="panel-title-violet" x="1276" y="202">4. Features + outputs</text>
+  <text class="small" x="1276" y="226">Everything above the kernel reuses the same base stack</text>
 
-  <rect class="card" x="492" y="768" width="352" height="88" rx="16"/>
-  <text class="card-title-teal" x="516" y="796">PyFENG-backed adapters</text>
-  <text class="body" x="516" y="818">8 supported backends</text>
-  <text class="small" x="516" y="838">BSM, Heston, OUSV, VG, CGMY, NIG, SV32, Rough Heston; pyfeng_fft on supported subsets</text>
+  <rect class="card" x="1276" y="258" width="294" height="68" rx="16"/>
+  <text class="section" x="1296" y="287">Analytics</text>
+  <text class="body" x="1296" y="309">iv/  -  greeks/  -  surface/  -  mc/</text>
 
-  <rect class="card amber" x="932" y="722" width="780" height="154" rx="20"/>
-  <text class="card-title-amber" x="956" y="750">Pricing engines and numerics</text>
+  <rect class="card" x="1276" y="346" width="294" height="68" rx="16"/>
+  <text class="section" x="1296" y="375">Validation</text>
+  <text class="body" x="1296" y="397">tests/  -  benchmarks/  -  paper replications</text>
 
-  <rect class="card" x="956" y="768" width="340" height="88" rx="16"/>
-  <text class="card-title-amber" x="980" y="796">Pricers</text>
-  <text class="body" x="980" y="818">COS, improved COS, filtered COS</text>
-  <text class="body" x="980" y="838">Carr-Madan FFT, FRFT, Lewis, pyfeng_fft</text>
+  <rect class="card" x="1276" y="434" width="294" height="68" rx="16"/>
+  <text class="section" x="1296" y="463">Reporting</text>
+  <text class="body" x="1296" y="485">docs/  -  notebooks/  -  appendix</text>
 
-  <rect class="card" x="1316" y="768" width="372" height="88" rx="16"/>
-  <text class="card-title-amber" x="1340" y="796">Shared numerics</text>
-  <text class="body" x="1340" y="818">grids, cumulants, spectral filters</text>
-  <text class="body" x="1340" y="838">validity guards, interpolation, numerics</text>
+  <rect class="card" x="1276" y="522" width="294" height="108" rx="16"/>
+  <text class="section" x="1296" y="552">Project message</text>
+  <text class="body" x="1296" y="580">The repo is not a loose collection of notebooks.</text>
+  <text class="body" x="1296" y="600">All validation and presentation layers sit on</text>
+  <text class="body" x="1296" y="620">the same reusable pricing foundation.</text>
 
-  <rect class="card" x="956" y="814" width="732" height="42" rx="16"/>
-  <text class="card-title-amber" x="980" y="840">Research tooling</text>
-  <text class="small" x="1135" y="840">adaptive grid / filter search  -  pyperf canonical cases  -  benchmark helpers</text>
-
-  <path class="connector" d="M868 799 L920 799"/>
-  <path class="connector-soft" d="M900 904 L900 932"/>
-
-  <rect class="group" x="60" y="932" width="1680" height="126" rx="24"/>
-  <text class="group-title" x="88" y="968">5. Higher-level features and outputs</text>
-  <text class="group-subtitle" x="88" y="991">Everything above the pricing stack reuses the same models and pricers instead of duplicating pricing logic</text>
-
-  <rect class="card violet" x="88" y="1008" width="520" height="32" rx="16"/>
-  <text class="chip-title" x="108" y="1028">Analytics</text>
-  <text class="small" x="212" y="1028">iv/   -   greeks/   -   surface/</text>
-
-  <rect class="card violet" x="640" y="1008" width="520" height="32" rx="16"/>
-  <text class="chip-title" x="660" y="1028">Validation</text>
-  <text class="small" x="772" y="1028">mc/   -   tests/   -   benchmarks/</text>
-
-  <rect class="card violet" x="1192" y="1008" width="520" height="32" rx="16"/>
-  <text class="chip-title" x="1212" y="1028">Reporting</text>
-  <text class="small" x="1323" y="1028">docs/   -   notebooks/   -   appendix</text>
-
-  <rect class="group" x="60" y="1072" width="1680" height="38" rx="19"/>
-  <text class="group-title" x="88" y="1098">External dependencies</text>
-  <text class="small" x="292" y="1098">NumPy / SciPy for vectorised numerics   -   PyFENG for supported backend characteristic functions   -   GitHub Actions / PyPI for CI and release</text>
-  <text class="small" x="1712" y="1098" text-anchor="end">lewis = in-house inversion   -   pyfeng_fft = PyFENG-backed Lewis-style FFT bridge</text>
+  <!-- footer -->
+  <rect class="panel footer" x="60" y="744" width="1538" height="64" rx="20"/>
+  <text class="panel-title-footer" x="88" y="784">Note</text>
+  <text class="body" x="156" y="784">`lewis` = in-house inversion in `foureng/pricers/lewis.py`   -   `pyfeng_fft` = PyFENG-backed Lewis-style FFT bridge</text>
 </svg>
