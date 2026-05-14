@@ -7,7 +7,8 @@ This module is a small audit manifest for the repo's paper-facing assets:
 - the figure / CSV / summary bundles written by the two replication notebooks.
 
 The goal is not to drive pricing logic. It exists so tests can fail loudly if
-we add or rename paper material without updating the replication outputs.
+we add or rename paper material without updating the canonical replication
+outputs.
 """
 from __future__ import annotations
 
