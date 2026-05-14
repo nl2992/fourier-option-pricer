@@ -39,6 +39,21 @@ env/
 .coverage.*
 htmlcov/
 
+# ── Generated benchmark outputs with old naming (written by cosPaper_Replication.ipynb) ──
+# The canonical fo2008_cos/outputs/ files have a fo2008_ / fig_ prefix.
+# cosPaper_Replication.ipynb also writes legacy-named copies; ignore those.
+/benchmarks/paper_replications/fo2008_cos/outputs/extended_comparison.csv
+/benchmarks/paper_replications/fo2008_cos/outputs/figures/frontier.png
+/benchmarks/paper_replications/fo2008_cos/outputs/figures/family_bsm.png
+/benchmarks/paper_replications/fo2008_cos/outputs/figures/family_cgmy.png
+/benchmarks/paper_replications/fo2008_cos/outputs/figures/family_heston.png
+/benchmarks/paper_replications/fo2008_cos/outputs/figures/family_vg.png
+/benchmarks/paper_replications/fo2008_cos/outputs/figures/extension_error_vs_n.png
+/benchmarks/paper_replications/fo2008_cos/outputs/figures/extension_error_vs_time.png
+
+# ── images/ directory (removed from repo; may still exist locally) ────────────
+/images/
+
 # ── Local / personal files not needed for submission ─────────────────────────
 _local_backup/
 /Papers/
