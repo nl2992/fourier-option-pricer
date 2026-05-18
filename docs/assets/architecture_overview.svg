@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1680" height="860" viewBox="0 0 1680 860" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1080" viewBox="0 0 1800 1080" role="img" aria-labelledby="title desc">
   <title id="title">fourier-option-pricer architecture overview</title>
-  <desc id="desc">A simplified four-stage architecture diagram for the fourier-option-pricer package.</desc>
+  <desc id="desc">A systems-style architecture diagram for the fourier-option-pricer package, showing entry surfaces, internal package layers, and validation and delivery outputs.</desc>
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#fcfdff"/>
@@ -10,133 +10,151 @@
       <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#17345b" flood-opacity="0.08"/>
     </filter>
     <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
-      <path d="M0,0 L12,6 L0,12 z" fill="#98adc9"/>
+      <path d="M0,0 L12,6 L0,12 z" fill="#8fa8c8"/>
     </marker>
     <style>
       .canvas { fill: url(#bg); stroke: #d8e2ef; stroke-width: 2; }
-      .title { font: 700 34px 'Aptos', 'Segoe UI', Arial, sans-serif; fill: #193a67; }
-      .subtitle { font: 17px 'Aptos', 'Segoe UI', Arial, sans-serif; fill: #627895; }
-      .panel { stroke-width: 1.6; rx: 24; filter: url(#shadow); }
-      .slate { fill: #f8fafc; stroke: #d7e2ef; }
-      .blue { fill: #eef4fb; stroke: #cad9ed; }
-      .green { fill: #eef9f4; stroke: #bfe1d0; }
-      .violet { fill: #f6f2ff; stroke: #d7caf5; }
-      .footer { fill: #fff6ec; stroke: #edcfaa; }
-      .panel-title { font: 700 20px 'Aptos', 'Segoe UI', Arial, sans-serif; fill: #193a67; }
-      .panel-title-green { font: 700 20px 'Aptos', 'Segoe UI', Arial, sans-serif; fill: #1d6a53; }
-      .panel-title-violet { font: 700 20px 'Aptos', 'Segoe UI', Arial, sans-serif; fill: #64469a; }
-      .panel-title-footer { font: 700 18px 'Aptos', 'Segoe UI', Arial, sans-serif; fill: #8a5312; }
-      .section { font: 700 15px 'Aptos', 'Segoe UI', Arial, sans-serif; fill: #28496f; }
-      .section-green { font: 700 15px 'Aptos', 'Segoe UI', Arial, sans-serif; fill: #1d6a53; }
-      .body { font: 14px 'Aptos', 'Segoe UI', Arial, sans-serif; fill: #526984; }
-      .small { font: 13px 'Aptos', 'Segoe UI', Arial, sans-serif; fill: #647992; }
-      .mono { font: 600 18px Menlo, Consolas, monospace; fill: #1d3d69; }
-      .card { fill: #ffffff; stroke: #d6e0ee; stroke-width: 1.3; rx: 16; }
-      .arrow { fill: none; stroke: #98adc9; stroke-width: 4; stroke-linecap: round; marker-end: url(#arrow); }
+      .title { font: 700 36px 'Aptos', 'Segoe UI', Arial, sans-serif; fill: #193a67; }
+      .subtitle { font: 18px 'Aptos', 'Segoe UI', Arial, sans-serif; fill: #627895; }
+      .zone { fill: #ffffff; stroke: #d6e1ef; stroke-width: 1.8; rx: 26; filter: url(#shadow); }
+      .pkg { fill: #fbfdff; stroke: #1da7e1; stroke-width: 2.2; stroke-dasharray: 10 8; rx: 28; }
+      .section-blue { fill: #eef4fb; stroke: #c9d8ed; stroke-width: 1.5; rx: 22; }
+      .section-green { fill: #eef9f4; stroke: #bfe2d0; stroke-width: 1.5; rx: 22; }
+      .section-amber { fill: #fff6ec; stroke: #efcfaa; stroke-width: 1.5; rx: 22; }
+      .section-violet { fill: #f5f2ff; stroke: #d7caf5; stroke-width: 1.5; rx: 22; }
+      .section-slate { fill: #f8fafc; stroke: #d7e2ef; stroke-width: 1.5; rx: 22; }
+      .node { fill: #ffffff; stroke: #d4deec; stroke-width: 1.3; rx: 16; }
+      .zone-title { font: 700 22px 'Aptos', 'Segoe UI', Arial, sans-serif; fill: #193a67; }
+      .pkg-title { font: 700 20px 'Aptos', 'Segoe UI', Arial, sans-serif; fill: #1686bf; }
+      .section-title { font: 700 17px 'Aptos', 'Segoe UI', Arial, sans-serif; fill: #234670; }
+      .section-title-green { font: 700 17px 'Aptos', 'Segoe UI', Arial, sans-serif; fill: #1d6a53; }
+      .section-title-amber { font: 700 17px 'Aptos', 'Segoe UI', Arial, sans-serif; fill: #8a5312; }
+      .section-title-violet { font: 700 17px 'Aptos', 'Segoe UI', Arial, sans-serif; fill: #6847a3; }
+      .label { font: 700 16px 'Aptos', 'Segoe UI', Arial, sans-serif; fill: #27486f; }
+      .body { font: 14px 'Aptos', 'Segoe UI', Arial, sans-serif; fill: #4f6783; }
+      .small { font: 13px 'Aptos', 'Segoe UI', Arial, sans-serif; fill: #667b94; }
+      .mono { font: 600 16px Menlo, Consolas, monospace; fill: #1d3d69; }
+      .arrow { fill: none; stroke: #8fa8c8; stroke-width: 3.5; stroke-linecap: round; marker-end: url(#arrow); }
+      .tag { font: 700 12px 'Aptos', 'Segoe UI', Arial, sans-serif; fill: #1686bf; }
     </style>
   </defs>
 
-  <rect class="canvas" x="24" y="24" width="1632" height="812" rx="28"/>
+  <rect class="canvas" x="24" y="24" width="1752" height="1032" rx="30"/>
 
-  <text class="title" x="60" y="84">fourier-option-pricer architecture</text>
-  <text class="subtitle" x="60" y="114">A simpler package map: entry points feed one public API, one routing core, one pricing stack, and one output layer.</text>
+  <text class="title" x="60" y="88">fourier-option-pricer architecture</text>
+  <text class="subtitle" x="60" y="120">Systems view: external entry surfaces flow into one package core, then out to analytics, validation, and report artifacts.</text>
 
-  <path class="arrow" d="M410 420 L470 420"/>
-  <path class="arrow" d="M806 420 L866 420"/>
-  <path class="arrow" d="M1202 420 L1262 420"/>
+  <!-- left zone -->
+  <rect class="zone" x="60" y="180" width="270" height="760" rx="26"/>
+  <text class="zone-title" x="88" y="220">Entry Surfaces</text>
+  <text class="small" x="88" y="246">Where the repo is consumed</text>
 
-  <!-- stage 1 -->
-  <rect class="panel slate" x="60" y="160" width="350" height="560" rx="24"/>
-  <text class="panel-title" x="88" y="202">1. Entry points</text>
-  <text class="small" x="88" y="226">How users, graders, and developers first meet the repo</text>
+  <rect class="node" x="88" y="290" width="214" height="88" rx="16"/>
+  <text class="label" x="108" y="324">README + quick start</text>
+  <text class="body" x="108" y="348">install, import, first strip</text>
 
-  <rect class="card" x="88" y="258" width="294" height="68" rx="16"/>
-  <text class="section" x="108" y="287">README + quick start</text>
-  <text class="body" x="108" y="309">installation, import, first strip</text>
+  <rect class="node" x="88" y="404" width="214" height="88" rx="16"/>
+  <text class="label" x="108" y="438">notebooks/</text>
+  <text class="body" x="108" y="462">demo, paper replay, research</text>
 
-  <rect class="card" x="88" y="346" width="294" height="68" rx="16"/>
-  <text class="section" x="108" y="375">notebooks/</text>
-  <text class="body" x="108" y="397">demo, paper replay, research</text>
+  <rect class="node" x="88" y="518" width="214" height="88" rx="16"/>
+  <text class="label" x="108" y="552">tests/</text>
+  <text class="body" x="108" y="576">paper, model, feature checks</text>
 
-  <rect class="card" x="88" y="434" width="294" height="68" rx="16"/>
-  <text class="section" x="108" y="463">tests + benchmarks/</text>
-  <text class="body" x="108" y="485">validation cases and runtime evidence</text>
+  <rect class="node" x="88" y="632" width="214" height="88" rx="16"/>
+  <text class="label" x="108" y="666">benchmarks/</text>
+  <text class="body" x="108" y="690">runtime frontiers, saved outputs</text>
 
-  <rect class="card" x="88" y="522" width="294" height="68" rx="16"/>
-  <text class="section" x="108" y="551">docs + appendix</text>
-  <text class="body" x="108" y="573">reporting and methodological detail</text>
+  <rect class="node" x="88" y="746" width="214" height="88" rx="16"/>
+  <text class="label" x="108" y="780">docs + appendix</text>
+  <text class="body" x="108" y="804">report, methodology, references</text>
 
-  <!-- stage 2 -->
-  <rect class="panel blue" x="456" y="160" width="350" height="560" rx="24"/>
-  <text class="panel-title" x="484" y="202">2. Public API + routing</text>
-  <text class="small" x="484" y="226">One interface, then one dispatcher</text>
+  <!-- package boundary -->
+  <rect class="pkg" x="370" y="180" width="1070" height="760" rx="28"/>
+  <text class="pkg-title" x="392" y="208">fourier-option-pricer package</text>
 
-  <rect class="card" x="484" y="258" width="294" height="86" rx="16"/>
-  <text class="mono" x="504" y="290">import foureng as fe</text>
-  <text class="body" x="504" y="318">ForwardSpec, parameter dataclasses,</text>
-  <text class="body" x="504" y="338">helpers, exposed pricers</text>
+  <!-- layer 1 -->
+  <rect class="section-blue" x="400" y="236" width="1010" height="124" rx="22"/>
+  <text class="section-title" x="426" y="268">Interface layer</text>
 
-  <rect class="card" x="484" y="366" width="294" height="86" rx="16"/>
-  <text class="mono" x="504" y="398">price_strip(...)</text>
-  <text class="body" x="504" y="426">switch engines without changing</text>
-  <text class="body" x="504" y="446">model inputs or strike arrays</text>
+  <rect class="node" x="430" y="286" width="280" height="46" rx="14"/>
+  <text class="mono" x="452" y="315">import foureng as fe</text>
 
-  <rect class="card" x="484" y="474" width="294" height="96" rx="16"/>
-  <text class="section" x="504" y="504">foureng/pipeline.py</text>
-  <text class="body" x="504" y="532">dispatches model + method requests</text>
-  <text class="body" x="504" y="552">applies improved-COS / filtered-COS selection</text>
+  <rect class="node" x="760" y="286" width="280" height="46" rx="14"/>
+  <text class="mono" x="785" y="315">price_strip(...)</text>
 
-  <rect class="card" x="484" y="590" width="294" height="96" rx="16"/>
-  <text class="section" x="504" y="620">models/registry.py</text>
-  <text class="body" x="504" y="648">maps labels to params, CF hooks, cumulants,</text>
-  <text class="body" x="504" y="668">and backend capabilities</text>
+  <rect class="node" x="1090" y="286" width="290" height="46" rx="14"/>
+  <text class="body" x="1112" y="315">ForwardSpec, model dataclasses, exposed helpers</text>
 
-  <!-- stage 3 -->
-  <rect class="panel green" x="852" y="160" width="350" height="560" rx="24"/>
-  <text class="panel-title-green" x="880" y="202">3. Pricing stack</text>
-  <text class="small" x="880" y="226">Backends, engines, and shared numerics</text>
+  <!-- layer 2 -->
+  <rect class="section-blue" x="400" y="396" width="1010" height="154" rx="22"/>
+  <text class="section-title" x="426" y="428">Dispatch and metadata layer</text>
 
-  <rect class="card" x="880" y="258" width="294" height="96" rx="16"/>
-  <text class="section-green" x="900" y="288">Model backends</text>
-  <text class="body" x="900" y="316">12 in-house characteristic-function models</text>
-  <text class="body" x="900" y="336">8 PyFENG-backed adapters</text>
+  <rect class="node" x="430" y="448" width="450" height="72" rx="16"/>
+  <text class="label" x="452" y="478">foureng/pipeline.py</text>
+  <text class="body" x="452" y="502">dispatches model + method requests; applies improved-COS / filtered-COS selection</text>
 
-  <rect class="card" x="880" y="376" width="294" height="116" rx="16"/>
-  <text class="section-green" x="900" y="406">Fourier engines</text>
-  <text class="body" x="900" y="434">COS, improved COS, filtered COS</text>
-  <text class="body" x="900" y="454">Carr-Madan FFT, FRFT, Lewis</text>
-  <text class="body" x="900" y="474">pyfeng_fft on supported backends</text>
+  <rect class="node" x="930" y="448" width="450" height="72" rx="16"/>
+  <text class="label" x="952" y="478">foureng/models/registry.py</text>
+  <text class="body" x="952" y="502">maps labels to params, characteristic functions, cumulants, and backend capability</text>
 
-  <rect class="card" x="880" y="514" width="294" height="116" rx="16"/>
-  <text class="section-green" x="900" y="544">Shared numerics</text>
-  <text class="body" x="900" y="572">grids, cumulants, spectral filters,</text>
-  <text class="body" x="900" y="592">validity guards, experiment helpers</text>
+  <!-- layer 3 -->
+  <rect class="section-green" x="400" y="586" width="490" height="250" rx="22"/>
+  <text class="section-title-green" x="426" y="618">Model layer</text>
 
-  <!-- stage 4 -->
-  <rect class="panel violet" x="1248" y="160" width="350" height="560" rx="24"/>
-  <text class="panel-title-violet" x="1276" y="202">4. Features + outputs</text>
-  <text class="small" x="1276" y="226">Everything above the kernel reuses the same base stack</text>
+  <rect class="node" x="430" y="644" width="430" height="72" rx="16"/>
+  <text class="label" x="452" y="674">In-house characteristic-function models</text>
+  <text class="body" x="452" y="698">Bates, Kou, Heston-CGMY, Heston-Kou, Merton JD, GH, FMLS, Double Heston, VGSA, and others</text>
 
-  <rect class="card" x="1276" y="258" width="294" height="68" rx="16"/>
-  <text class="section" x="1296" y="287">Analytics</text>
-  <text class="body" x="1296" y="309">iv/  -  greeks/  -  surface/  -  mc/</text>
+  <rect class="node" x="430" y="738" width="430" height="72" rx="16"/>
+  <text class="label" x="452" y="768">PyFENG-backed adapters</text>
+  <text class="body" x="452" y="792">BSM, Heston, OUSV, VG, CGMY, NIG, SV32, Rough Heston; `pyfeng_fft` where supported</text>
 
-  <rect class="card" x="1276" y="346" width="294" height="68" rx="16"/>
-  <text class="section" x="1296" y="375">Validation</text>
-  <text class="body" x="1296" y="397">tests/  -  benchmarks/  -  paper replications</text>
+  <rect class="section-amber" x="920" y="586" width="490" height="250" rx="22"/>
+  <text class="section-title-amber" x="946" y="618">Numerical engine layer</text>
 
-  <rect class="card" x="1276" y="434" width="294" height="68" rx="16"/>
-  <text class="section" x="1296" y="463">Reporting</text>
-  <text class="body" x="1296" y="485">docs/  -  notebooks/  -  appendix</text>
+  <rect class="node" x="950" y="644" width="430" height="72" rx="16"/>
+  <text class="label" x="972" y="674">Fourier pricing engines</text>
+  <text class="body" x="972" y="698">COS, improved COS, filtered COS, Carr-Madan FFT, FRFT, Lewis, `pyfeng_fft`</text>
 
-  <rect class="card" x="1276" y="522" width="294" height="108" rx="16"/>
-  <text class="section" x="1296" y="552">Project message</text>
-  <text class="body" x="1296" y="580">The repo is not a loose collection of notebooks.</text>
-  <text class="body" x="1296" y="600">All validation and presentation layers sit on</text>
-  <text class="body" x="1296" y="620">the same reusable pricing foundation.</text>
+  <rect class="node" x="950" y="738" width="430" height="72" rx="16"/>
+  <text class="label" x="972" y="768">Shared numerics and experiments</text>
+  <text class="body" x="972" y="792">grids, cumulants, spectral filters, validity guards, policy search, benchmark helpers</text>
 
-  <!-- footer -->
-  <rect class="panel footer" x="60" y="744" width="1538" height="64" rx="20"/>
-  <text class="panel-title-footer" x="88" y="784">Note</text>
-  <text class="body" x="156" y="784">`lewis` = in-house inversion in `foureng/pricers/lewis.py`   -   `pyfeng_fft` = PyFENG-backed Lewis-style FFT bridge</text>
+  <!-- right zone -->
+  <rect class="zone" x="1470" y="180" width="270" height="760" rx="26"/>
+  <text class="zone-title" x="1498" y="220">Evidence and Delivery</text>
+  <text class="small" x="1498" y="246">Where results leave the core package</text>
+
+  <rect class="section-violet" x="1498" y="290" width="214" height="168" rx="20"/>
+  <text class="section-title-violet" x="1518" y="322">Analytics modules</text>
+  <text class="body" x="1518" y="350">iv/</text>
+  <text class="body" x="1518" y="374">greeks/</text>
+  <text class="body" x="1518" y="398">surface/</text>
+  <text class="body" x="1518" y="422">mc/</text>
+
+  <rect class="section-violet" x="1498" y="486" width="214" height="148" rx="20"/>
+  <text class="section-title-violet" x="1518" y="518">Validation artifacts</text>
+  <text class="body" x="1518" y="546">tests/</text>
+  <text class="body" x="1518" y="570">benchmarks/</text>
+  <text class="body" x="1518" y="594">paper replications</text>
+
+  <rect class="section-violet" x="1498" y="662" width="214" height="148" rx="20"/>
+  <text class="section-title-violet" x="1518" y="694">Reporting artifacts</text>
+  <text class="body" x="1518" y="722">docs/</text>
+  <text class="body" x="1518" y="746">notebooks/</text>
+  <text class="body" x="1518" y="770">appendix / README</text>
+
+  <!-- connectors -->
+  <path class="arrow" d="M330 560 L430 309"/>
+
+  <path class="arrow" d="M900 332 L900 446"/>
+  <path class="arrow" d="M900 520 L900 620"/>
+  <path class="arrow" d="M860 680 L950 680"/>
+  <path class="arrow" d="M1380 680 L1498 560"/>
+
+  <!-- footer note -->
+  <rect class="section-amber" x="370" y="960" width="1370" height="66" rx="18"/>
+  <text class="section-title-amber" x="396" y="988">Note</text>
+  <text class="body" x="460" y="988">`lewis` = in-house Lewis inversion in `foureng/pricers/lewis.py`   -   `pyfeng_fft` = PyFENG-backed Lewis-style FFT bridge</text>
 </svg>
