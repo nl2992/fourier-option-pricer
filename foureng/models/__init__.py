@@ -1,4 +1,4 @@
-"""Characteristic functions and parameter dataclasses for all 21 models.
+"""Characteristic functions and parameter dataclasses for all 26 models.
 
 PyFENG-backed (thin adapters around ``pyfeng.*Fft.logp_cf``, requires pyfeng>=0.4.0):
 
@@ -26,6 +26,11 @@ In-house native CFs:
     double_heston  DoubleHestonParams     -  Two-factor Heston SV (Christoffersen 2009)
     vgsa           VGSAParams             -  VG with Stochastic Arrival (CGMY 2003)
     heston_nig     HestonNIGParams        -  Heston SV + NIG jumps (Cont-Tankov 2004)
+    heston_vg      HestonVGParams         -  Heston SV + VG jumps (Cont-Tankov 2004)
+    svjj           SVJJParams             -  SV + jumps in price & variance (DPS 2000)
+    bns_gamma_ou   BNSGammaOUParams       -  BNS Gamma-OU SV (BNS 2001)
+    nts            NTSParams              -  Normal Tempered Stable (Kim-Rachev 2008)
+    cgmysa         CGMYSAParams           -  CGMY with Stochastic Arrival (CGMY 2003)
 """
 
 from .base import CharFunc, ForwardSpec, ModelSpec
@@ -40,8 +45,13 @@ from .generalized_hyperbolic import GHParams, gh_cf, gh_cumulants
 from .heston import HestonParams, heston_cf, heston_cf_form2, heston_cumulants, heston_riccati_cd
 from .heston_cgmy import HestonCGMYParams, cgmy_levy_exponent, heston_cgmy_cf, heston_cgmy_cumulants
 from .heston_kou import HestonKouParams, heston_kou_cf, heston_kou_cumulants
+from .bns_gamma_ou import BNSGammaOUParams, bns_gamma_ou_cf, bns_gamma_ou_cumulants
+from .cgmysa import CGMYSAParams, cgmysa_cf, cgmysa_cumulants
 from .heston_nig import HestonNIGParams, heston_nig_cf, heston_nig_cumulants
+from .heston_vg import HestonVGParams, heston_vg_cf, heston_vg_cumulants
 from .kou import KouParams, kou_cf, kou_cumulants
+from .nts import NTSParams, nts_cf, nts_cumulants
+from .svjj import SVJJParams, svjj_cf, svjj_cumulants
 from .meixner import MeixnerParams, meixner_cf, meixner_cumulants
 from .merton_jd import MertonJDParams, merton_jd_cf, merton_jd_cumulants
 from .nig import NigParams, nig_cf, nig_cumulants
@@ -143,4 +153,24 @@ __all__ = [
     "HestonNIGParams",
     "heston_nig_cf",
     "heston_nig_cumulants",
+    # Heston-VG
+    "HestonVGParams",
+    "heston_vg_cf",
+    "heston_vg_cumulants",
+    # SVJJ
+    "SVJJParams",
+    "svjj_cf",
+    "svjj_cumulants",
+    # BNS Gamma-OU
+    "BNSGammaOUParams",
+    "bns_gamma_ou_cf",
+    "bns_gamma_ou_cumulants",
+    # NTS
+    "NTSParams",
+    "nts_cf",
+    "nts_cumulants",
+    # CGMY-SA
+    "CGMYSAParams",
+    "cgmysa_cf",
+    "cgmysa_cumulants",
 ]
