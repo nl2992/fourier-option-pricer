@@ -83,7 +83,7 @@ from .base import ForwardSpec, ModelSpec
 try:
     from numpy import trapezoid as _trapezoid  # type: ignore[attr-defined]  # NumPy >= 2.0
 except ImportError:
-    from numpy import trapz as _trapezoid  # type: ignore[attr-defined]  # NumPy < 2.0
+    from numpy import trapz as _trapezoid  # type: ignore[attr-defined, no-redef]
 
 
 @dataclass(frozen=True)
