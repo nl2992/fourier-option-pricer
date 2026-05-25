@@ -119,7 +119,7 @@ Use this if you want to `import foureng` in your own code without cloning the re
 
 ```bash
 pip install fourier-option-pricer          # latest
-pip install "fourier-option-pricer==0.4.2" # pin to this release
+pip install "fourier-option-pricer==0.5.0" # pin to this release
 ```
 
 Requires Python 3.10+.

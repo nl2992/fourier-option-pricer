@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.5.0 - 2026-05-25
 
 - Added 6 new characteristic-function models, bringing the catalogue to 26 total:
   - `heston_nig`  — Heston SV + NIG jumps (Cont-Tankov 2004)
