@@ -1,4 +1,4 @@
-"""Characteristic functions and parameter dataclasses for all 20 models.
+"""Characteristic functions and parameter dataclasses for all 21 models.
 
 PyFENG-backed (thin adapters around ``pyfeng.*Fft.logp_cf``, requires pyfeng>=0.4.0):
 
@@ -25,6 +25,7 @@ In-house native CFs:
     fmls           FMLSParams             -  Finite Moment Log Stable (Carr-Wu 2003)
     double_heston  DoubleHestonParams     -  Two-factor Heston SV (Christoffersen 2009)
     vgsa           VGSAParams             -  VG with Stochastic Arrival (CGMY 2003)
+    heston_nig     HestonNIGParams        -  Heston SV + NIG jumps (Cont-Tankov 2004)
 """
 
 from .base import CharFunc, ForwardSpec, ModelSpec
@@ -39,6 +40,7 @@ from .generalized_hyperbolic import GHParams, gh_cf, gh_cumulants
 from .heston import HestonParams, heston_cf, heston_cf_form2, heston_cumulants, heston_riccati_cd
 from .heston_cgmy import HestonCGMYParams, cgmy_levy_exponent, heston_cgmy_cf, heston_cgmy_cumulants
 from .heston_kou import HestonKouParams, heston_kou_cf, heston_kou_cumulants
+from .heston_nig import HestonNIGParams, heston_nig_cf, heston_nig_cumulants
 from .kou import KouParams, kou_cf, kou_cumulants
 from .meixner import MeixnerParams, meixner_cf, meixner_cumulants
 from .merton_jd import MertonJDParams, merton_jd_cf, merton_jd_cumulants
@@ -137,4 +139,8 @@ __all__ = [
     "VGSAParams",
     "vgsa_cf",
     "vgsa_cumulants",
+    # Heston-NIG
+    "HestonNIGParams",
+    "heston_nig_cf",
+    "heston_nig_cumulants",
 ]

@@ -29,6 +29,7 @@ from .generalized_hyperbolic import GHParams, gh_cf, gh_cumulants
 from .heston import HestonParams, heston_cf, heston_cumulants
 from .heston_cgmy import HestonCGMYParams, heston_cgmy_cf, heston_cgmy_cumulants
 from .heston_kou import HestonKouParams, heston_kou_cf, heston_kou_cumulants
+from .heston_nig import HestonNIGParams, heston_nig_cf, heston_nig_cumulants
 from .kou import KouParams, kou_cf, kou_cumulants
 from .meixner import MeixnerParams, meixner_cf, meixner_cumulants
 from .merton_jd import MertonJDParams, merton_jd_cf, merton_jd_cumulants
@@ -116,6 +117,14 @@ MODEL_REGISTRY: dict[str, ModelEntry] = {
         False,
     ),
     "vgsa": _e("vgsa", VGSAParams, vgsa_cf, vgsa_cumulants, False),
+    # ── Model 21 ──────────────────────────────────────────────────────────────
+    "heston_nig": _e(
+        "heston_nig",
+        HestonNIGParams,
+        heston_nig_cf,
+        heston_nig_cumulants,
+        False,
+    ),
 }
 
 __all__ = ["ModelEntry", "MODEL_REGISTRY"]
