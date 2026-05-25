@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.1 - 2026-05-25
+
+- CI fixes: ruff-format all new files; replace `np.trapz` with NumPy 2.0-compatible `trapezoid` shim in `bns_gamma_ou.py` and `svjj.py`; widen `heston_riccati_cd` type annotation for array T argument.
+
 ## 0.5.0 - 2026-05-25
 
 - Added 6 new characteristic-function models, bringing the catalogue to 26 total:
