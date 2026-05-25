@@ -56,6 +56,7 @@ license-files = []
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+addopts = "-m 'not slow'"
 markers = [
     "slow: tests that take more than a second (deselect with -m 'not slow')",
     "paper: published-paper replication or benchmark tests",

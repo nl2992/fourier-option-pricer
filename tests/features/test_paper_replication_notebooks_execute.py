@@ -19,6 +19,9 @@ import pytest
 def _execute_notebook_in_current_env(nb: Path, output_path: str) -> None:
     kernel_name = f"foureng-ci-{uuid.uuid4().hex[:8]}"
     env = dict(os.environ)
+    project_root = str(Path(__file__).resolve().parent.parent)
+    existing = env.get("PYTHONPATH", "")
+    env["PYTHONPATH"] = f"{project_root}:{existing}" if existing else project_root
     with tempfile.TemporaryDirectory() as tmpdir:
         jupyter_path = str(Path(tmpdir) / "share" / "jupyter")
         env["JUPYTER_DATA_DIR"] = jupyter_path
