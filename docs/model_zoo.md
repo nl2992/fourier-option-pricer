@@ -1,6 +1,6 @@
 # Model Zoo
 
-Complete catalogue of the twenty characteristic-function models supported by `foureng`.
+Complete catalogue of the twenty-six characteristic-function models supported by `foureng`.
 All are importable from the top-level package (`import foureng as fe`).
 The unified dispatcher `fe.price_strip` routes through `foureng.models.registry.MODEL_REGISTRY`.
 
@@ -28,13 +28,19 @@ The unified dispatcher `fe.price_strip` routes through `foureng.models.registry.
 | Finite Moment Log Stable | `FMLSParams` | In-house implementation | Maximally negatively-skewed α-stable Lévy process; all positive moments of S_T are finite (Carr & Wu 2003). |
 | Double Heston | `DoubleHestonParams` | In-house implementation | Two independent Heston variance factors; CF factorises as a product of two single-Heston CFs. |
 | VGSA | `VGSAParams` | In-house implementation | Variance Gamma on a stochastic CIR activity clock; captures term-structure of skew and vol-of-vol clustering. |
+| Heston-NIG | `HestonNIGParams` | In-house composite | Heston stochastic-volatility block plus Normal Inverse Gaussian jump factor (Cont-Tankov 2004). |
+| Heston-VG | `HestonVGParams` | In-house composite | Heston block plus Variance Gamma jump factor; VG Lévy exponent in Madan-Carr-Chang (1998) parametrisation. |
+| SVJJ | `SVJJParams` | In-house implementation | SV with simultaneous correlated jumps in price and variance (Duffie-Pan-Singleton 2000); analytic D from Heston Riccati, trapezoidal correction for jump term in C. |
+| BNS-Gamma-OU | `BNSGammaOUParams` | In-house implementation | Barndorff-Nielsen & Shephard (2001) Gamma-OU stochastic variance; CF via Nicolato-Venardos (2003) quadrature of the Gamma log-Laplace over the OU integral path. |
+| NTS | `NTSParams` | In-house implementation | Normal Tempered Stable (Kim-Rachev-Rüschendorf 2008); BM subordinated to a tempered α-stable process, guaranteeing finite exponential moments and a real martingale correction. |
+| CGMY-SA | `CGMYSAParams` | In-house implementation | CGMY Lévy process on a CIR stochastic arrival clock (Carr et al. 2003); reuses the same CIR Laplace structure as VGSA with the richer CGMY tail index Y. |
 
 ## PyFENG dependency
 
 The eight PyFENG-backed models require `pyfeng>=0.4.0`.
 pyfeng 0.4.0 renamed `charfunc_logprice` → `logp_cf` and changed `VarGammaFft`/`ExpNigFft` from `vov=` to `nu=`.
 Rough Heston imports directly from `pyfeng.sv_fft` (not `pyfeng.ex`) to avoid a broken path that calls the removed `scipy.misc.derivative` in newer SciPy.
-The `method="pyfeng_fft"` option in `price_strip` is supported only for these eight models. It refers to the PyFENG-backed Lewis-style FFT path. The remaining twelve models use the in-house `"cos"`, `"cos_improved"`, `"cos_filtered"`, `"carr_madan"`, and `"frft"` methods only. Note: `foureng/pricers/lewis.py` is an internal module used inside the COS/filtered-COS policy; `"lewis"` is not a valid `price_strip` method string.
+The `method="pyfeng_fft"` option in `price_strip` is supported only for these eight models. It refers to the PyFENG-backed Lewis-style FFT path. The remaining eighteen models use the in-house `"cos"`, `"cos_improved"`, `"cos_filtered"`, `"carr_madan"`, and `"frft"` methods only. Note: `foureng/pricers/lewis.py` is an internal module used inside the COS/filtered-COS policy; `"lewis"` is not a valid `price_strip` method string.
 
 ## In-house composites
 
@@ -48,7 +54,7 @@ At zero jump intensity each composite reduces to plain Heston  -  this is checke
 
 ## Public API
 
-All twenty models are **first-class public API objects** importable directly from the top-level package.
+All twenty-six models are **first-class public API objects** importable directly from the top-level package.
 Parameter dataclasses, characteristic functions, and cumulant functions are all in `foureng.__all__`:
 
 ```python

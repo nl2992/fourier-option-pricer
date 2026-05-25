@@ -6,7 +6,7 @@ This appendix collects the extra project material that does not belong in the pa
 
 - `foureng/`: packaged pricing library and public API
 - `notebooks/demo.ipynb`: Colab-friendly quick-start walkthrough
-- `notebooks/supplementary/demo_advanced.ipynb`: **supplementary** full-feature showcase  -  all 20 models, 6 pricers, Greeks, IV surface, calibration, MC, new models, validation highlights (v0.4.2); not the recommended starting point
+- `notebooks/supplementary/demo_advanced.ipynb`: **supplementary** full-feature showcase  -  all 26 models, 6 pricers, Greeks, IV surface, calibration, MC, new models, validation highlights (v0.4.2); not the recommended starting point
 - `notebooks/fo2008_replication.ipynb`: full Fang-Oosterlee (2008) paper-faithful replication
 - `notebooks/paper_replications/bates_mathworks_replication.ipynb`: Bates all-engine scoreboard vs MathWorks frozen reference
 - `notebooks/paper_replications/three_halves_replication.ipynb`: 3/2 SV PyFENG regression + Baldeaux-Badran qualitative IV smile
@@ -156,10 +156,10 @@ Once a model exposes `phi(u)`, it can be priced by Carr--Madan FFT, FRFT, or COS
 
 ## 6. Model coverage
 
-The full model catalogue  -  all twenty supported models with parameter dataclasses,
+The full model catalogue  -  all twenty-six supported models with parameter dataclasses,
 CF sources, and API notes  -  is in [docs/model_zoo.md](docs/model_zoo.md).
 
-The twenty models split into two groups.
+The twenty-six models split into two groups.
 
 ### 6.1 PyFENG-backed characteristic functions
 
@@ -178,7 +178,7 @@ The project contribution is not the re-derivation of these characteristic functi
 
 ### 6.2 In-house characteristic functions
 
-The following twelve models are implemented directly:
+The following eighteen models are implemented directly:
 
 - Kou double-exponential jump diffusion;
 - Bates: Heston plus Merton lognormal jumps (SVJ composite);
@@ -191,7 +191,13 @@ The following twelve models are implemented directly:
 - Generalised Hyperbolic (normal variance-mean mixture via GIG);
 - Finite Moment Log Stable (α-stable, Carr & Wu 2003);
 - Double Heston (two independent Heston variance factors);
-- VGSA (Variance Gamma on a stochastic CIR activity clock).
+- VGSA (Variance Gamma on a stochastic CIR activity clock);
+- Heston-NIG: Heston plus Normal Inverse Gaussian jump factor (Cont-Tankov 2004);
+- Heston-VG: Heston plus Variance Gamma jump factor (Cont-Tankov 2004);
+- SVJJ: SV with simultaneous correlated jumps in price and variance (Duffie-Pan-Singleton 2000);
+- BNS-Gamma-OU: Barndorff-Nielsen & Shephard (2001) Gamma-OU stochastic variance (CF via Nicolato-Venardos 2003);
+- NTS: Normal Tempered Stable, Kim-Rachev-Rüschendorf (2008) tempered α-stable subordination;
+- CGMY-SA: CGMY on a CIR stochastic arrival clock (Carr-Geman-Madan-Yor 2003).
 
 These are validated by:
 

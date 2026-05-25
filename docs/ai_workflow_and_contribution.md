@@ -148,13 +148,13 @@ In-house models use the repo's own COS, Carr-Madan, FRFT, filtered-COS, and Lewi
 
 The project's own implementation work includes:
 
-1. **Unified `price_strip` dispatcher**  -  one call prices any of 20 models by any of 6 methods without model-specific wiring (`foureng/pipeline.py`).
+1. **Unified `price_strip` dispatcher**  -  one call prices any of 26 models by any of 6 methods without model-specific wiring (`foureng/pipeline.py`).
 2. **In-house pricers**  -  Carr-Madan FFT, FRFT, COS, improved COS (Junike-Pankrashkin truncation + Junike term-count policy), filtered COS, and Lewis Fourier inversion (`foureng/pricers/`).
-3. **In-house characteristic functions** for 12 models not available via PyFENG: Kou, Bates, Heston-Kou, Heston-CGMY, GARCH-WMW2012, Merton JD, Meixner, Bilateral Gamma, Generalised Hyperbolic, FMLS, Double Heston, VGSA.
-4. **Cumulant functions** for all 20 models, used for COS grid construction.
+3. **In-house characteristic functions** for 18 models not available via PyFENG: Kou, Bates, Heston-Kou, Heston-CGMY, GARCH-WMW2012, Merton JD, Meixner, Bilateral Gamma, Generalised Hyperbolic, FMLS, Double Heston, VGSA, Heston-NIG, Heston-VG, SVJJ, BNS-Gamma-OU, NTS, CGMY-SA.
+4. **Cumulant functions** for all 26 models, used for COS grid construction.
 5. **Spectral-filter utilities**  -  Fejér, Lanczos, raised-cosine, exponential filters (`foureng/utils/spectral_filters.py`).
 6. **Adaptive policy selector**  -  deterministic grid-search over `(COSGridPolicy, COSFilterSpec)` candidate sets (`foureng/experiments/cos_filter_grid_search.py`).
-7. **Structured test infrastructure**  -  741 pytest cases across five evidence levels; frozen JSON reference fixtures; model-reduction gates; cross-method agreement checks.
+7. **Structured test infrastructure**  -  820 pytest cases across five evidence levels; frozen JSON reference fixtures; model-reduction gates; cross-method agreement checks.
 8. **Paper-replication and validation notebooks**  -  10 notebooks covering FO2008, Bates MathWorks, 3/2 SV, improved COS, adaptive filtered COS, and advanced demos.
 
 ---

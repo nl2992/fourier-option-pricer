@@ -10,9 +10,9 @@ Quick key:
 
 | Summary item | Count / note |
 | --- | --- |
-| Total tracked validation rows | 27 |
+| Total tracked validation rows | 33 |
 | `done` | 13 |
-| `partial` | 13 |
+| `partial` | 19 |
 | `xfail-if-unstable` | 1 |
 | Exact published-paper anchors | Carr-Madan (1999), Lewis (2001), FO2008 Heston ATM, Kelly (2025) |
 | Exact software anchors | MathWorks Bates price, surface, FFT/FRFT, and delta references |
@@ -61,3 +61,9 @@ Quick key:
 | Lewis (2000); Baldeaux & Badran (2012) | `Sv32Params` | Original BB figure params, shape check only; no printed price table | `tests/papers/test_sv32_baldeaux_badran_original_smoke.py` | `qualitative_figure` | no-figure-only | xfail-if-unstable |
 | Sv32 PyFENG surface | `Sv32Params`, `sv32_cf` | 7x4 surface from pyfeng_fft (frozen at generation time) | `tests/models/test_sv32_pyfeng_surface_reference.py` | `adapter` / `derived_reference` | yes-derived | done |
 | BSM all-pricer baseline | `BsmParams` | Closed-form Black-Scholes call prices across all six pricing methods (cos/cos_improved 1e-8; lewis 1e-7; carr_madan/frft 1e-4; pyfeng_fft 1e-5) | `tests/models/test_bsm_closed_form_all_pricers.py` | `derived_reference` | yes-derived | done |
+| Cont & Tankov (2004) — Heston-NIG | `HestonNIGParams`, `heston_nig_cf` | CF structure (phi(0)=1, phi(-i)=1, modulus ≤1, conjugate symmetry), COS vs Carr-Madan atol=1e-3, positive monotone calls, put-call parity | `tests/models/test_new_models_batch.py` | `derived_reference` | yes-derived | partial |
+| Cont & Tankov (2004) — Heston-VG | `HestonVGParams`, `heston_vg_cf` | CF structure, COS vs Carr-Madan atol=1e-3, VG jump existence condition, OTM smile increase vs pure Heston | `tests/models/test_new_models_batch.py` | `derived_reference` | yes-derived | partial |
+| Duffie, Pan & Singleton (2000) — SVJJ | `SVJJParams`, `svjj_cf` | CF structure, COS vs Carr-Madan atol=1e-3, lam=0 recovers Heston, higher intensity raises OTM | `tests/models/test_new_models_batch.py` | `derived_reference` | yes-derived | partial |
+| Barndorff-Nielsen & Shephard (2001); Nicolato & Venardos (2003) | `BNSGammaOUParams`, `bns_gamma_ou_cf` | CF structure, COS vs Carr-Madan atol=1e-3, higher Gamma activity raises ATM price | `tests/models/test_new_models_batch.py` | `derived_reference` | yes-derived | partial |
+| Kim, Rachev & Rüschendorf (2008) — NTS | `NTSParams`, `nts_cf` | CF structure (tempered stable ensures real psi(-i)), COS vs Carr-Madan atol=1e-3, existence condition | `tests/models/test_new_models_batch.py` | `derived_reference` | yes-derived | partial |
+| Carr, Geman, Madan & Yor (2003) — CGMY-SA | `CGMYSAParams`, `cgmysa_cf` | CF structure, COS vs Carr-Madan atol=1e-3, lam=0 recovers plain CGMY at atol=1e-3 | `tests/models/test_new_models_batch.py` | `derived_reference` | yes-derived | partial |

@@ -22,7 +22,7 @@ where $c_1, c_2, c_4$ are the model's cumulants and $L$ is a heuristic multiplie
 
 This project implements the **improved COS truncation** of Junike & Pankrashkin (2022) and Junike (2024), which replaces the heuristic $L$ with a rigorous tail-mass bound. On the FO2008 test suite, this truncation improvement beats the paper-grid COS in 7 of 8 cases and beats the paper's own best-N result in 6 of 8 (see [`benchmarks/cos_method_improved/`](benchmarks/cos_method_improved/outputs/cos_method_improved_paper_compare.csv)). On top of that, we add an **original adaptive filtered-COS extension**: spectral weights $\sigma_k \in [0, 1]$ (Fejér, Lanczos, raised-cosine, or exponential) applied to the high-frequency COS coefficients to suppress residual oscillation from sharp density features. A policy-search selector automatically compares grid and filter combinations, returning the fastest configuration that meets the user's tolerance, with the plain Junike path always included as a fallback.
 
-The package covers **20 models** across stochastic-volatility, jump-diffusion, pure-Lévy, rough-volatility, and hybrid SVJ families, all priced through one `price_strip` dispatcher with **6 interchangeable engines**.
+The package covers **26 models** across stochastic-volatility, jump-diffusion, pure-Lévy, rough-volatility, and hybrid SVJ families, all priced through one `price_strip` dispatcher with **6 interchangeable engines**.
 
 Full methodology: [appendix.md](appendix.md) · Extension details: [docs/filtered_cos_extension.md](docs/filtered_cos_extension.md) · Package architecture: [docs/architecture_overview.md](docs/architecture_overview.md).
 
@@ -197,6 +197,12 @@ Everything is importable from `import foureng as fe`.
 | `FMLSParams` | `alpha, sigma` | Finite Moment Log Stable |
 | `DoubleHestonParams` | `kappa1..v01, kappa2..v02` | Two-factor Heston |
 | `VGSAParams` | `C, G, M, kappa, eta, lam` | VG with stochastic activity |
+| `HestonNIGParams` | `kappa, theta, nu, rho, v0, nig_sigma, nig_nu, nig_theta` | Heston SV + NIG jumps |
+| `HestonVGParams` | `kappa, theta, nu, rho, v0, vg_sigma, vg_nu, vg_theta` | Heston SV + VG jumps |
+| `SVJJParams` | `kappa, theta, nu, rho, v0, lam, mu_J, sigma_J, mu_V, rho_J` | SV + correlated price & variance jumps |
+| `BNSGammaOUParams` | `V0, lambda_ou, rho_l, a, b` | BNS Gamma-OU stochastic variance |
+| `NTSParams` | `lam, theta, sigma, alpha` | Normal Tempered Stable (tempered α-stable subordination) |
+| `CGMYSAParams` | `C0, C, G, M, Y, kappa, eta, lam` | CGMY on CIR stochastic arrival clock |
 
 Full model details: [docs/model_zoo.md](docs/model_zoo.md).
 
@@ -252,7 +258,7 @@ MIT. See [LICENSE](LICENSE).
 
 ### Supplementary notebook
 
-[`notebooks/supplementary/demo_advanced.ipynb`](notebooks/supplementary/demo_advanced.ipynb) is a **supplementary reference** for readers who want a comprehensive tour after the main demo. It covers all 20 models, all 6 pricers, Greeks, IV surface, Heston calibration, Monte Carlo, new models (Double Heston, VGSA), and validation highlights. It is **not** the recommended starting point.
+[`notebooks/supplementary/demo_advanced.ipynb`](notebooks/supplementary/demo_advanced.ipynb) is a **supplementary reference** for readers who want a comprehensive tour after the main demo. It covers all 26 models, all 6 pricers, Greeks, IV surface, Heston calibration, Monte Carlo, new models (Double Heston, VGSA, HestonVG, SVJJ, BNS-Gamma-OU, NTS, CGMY-SA), and validation highlights. It is **not** the recommended starting point.
 
 ---
 
@@ -295,6 +301,10 @@ MIT. See [LICENSE](LICENSE).
 | VG, Rough Heston | PyFENG adapter parity | atol=1e-3 | partial |
 | Kou, Bilateral Gamma, GH, FMLS, Meixner | Derived reference, cross-method | atol=1e-4 | partial |
 | VGSA | Derived reference, cross-method | atol=1e-3 | partial |
+| HestonNIG, HestonVG, SVJJ | CF structure + COS/CM cross-engine | atol=1e-3 | partial |
+| BNS-Gamma-OU | CF structure + COS/CM cross-engine (Nicolato-Venardos 2003 quadrature) | atol=1e-3 | partial |
+| NTS (Kim-Rachev-Rüschendorf 2008) | CF structure + COS/CM cross-engine | atol=1e-3 | partial |
+| CGMY-SA | CF structure + COS/CM cross-engine; lam=0 matches plain CGMY | atol=1e-3 | partial |
 
 Full per-paper matrix: [docs/paper_validation_matrix.md](docs/paper_validation_matrix.md). Evidence-level definitions: [docs/validation_hierarchy.md](docs/validation_hierarchy.md).
 
@@ -318,7 +328,7 @@ python -m pytest -q -m "paper"
 python -m pytest -q -m "software_reference"
 ```
 
-The repository has **741 pytest cases**.
+The repository has **820 pytest cases**.
 
 For linting and type checks:
 
@@ -359,6 +369,10 @@ python -m mypy foureng
 | Lewis benchmark | Lewis, A.L. (2001), *A Simple Option Formula for General Jump-Diffusion and Other Exponential Lévy Processes* |
 | Kou jump-diffusion | Kou, S.G. (2002), *A Jump-Diffusion Model for Option Pricing* |
 | Bates SVJ | Bates, D.S. (1996), *Jumps and Stochastic Volatility: Exchange Rate Processes Implicit in Deutsche Mark Options* |
+| SVJJ (SV + price & variance jumps) | Duffie, D., Pan, J. and Singleton, K. (2000), *Transform Analysis and Asset Pricing for Affine Jump-Diffusions* |
+| BNS-Gamma-OU stochastic variance | Barndorff-Nielsen, O.E. and Shephard, N. (2001), *Non-Gaussian Ornstein-Uhlenbeck-based Models and Some of Their Uses in Financial Economics* |
+| NTS (Normal Tempered Stable) | Kim, Y.S., Rachev, S.T. and Rüschendorf, L. (2008), *Normal Tempered Stable Distribution and its Application to Asset Pricing* |
+| CGMY-SA / VGSA stochastic arrival | Carr, P., Geman, H., Madan, D.B. and Yor, M. (2003), *Stochastic Volatility for Lévy Processes* |
 
 Full bibliography with DOIs and free-access links: [docs/papers.md](docs/papers.md).
 

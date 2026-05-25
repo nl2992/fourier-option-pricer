@@ -35,6 +35,12 @@ from foureng.pipeline import price_strip
 | `FMLSParams(alpha, sigma)` | Stability index and scale | `alpha` in `(1, 2]`, recovers BSM at `alpha=2`. |
 | `DoubleHestonParams(kappa1, theta1, nu1, rho1, v01, kappa2, theta2, nu2, rho2, v02)` | Two independent Heston variance-factor sets | CF factorises as product of two single-Heston CFs. |
 | `VGSAParams(C, G, M, kappa, eta, lam)` | VG tempering rates plus CIR activity-clock parameters | `lam=0` reduces to standard VG. |
+| `HestonNIGParams(kappa, theta, nu, rho, v0, nig_sigma, nig_nu, nig_theta)` | Heston block plus NIG jump parameters | `nig_nu > 0`; existence condition checked at construction. |
+| `HestonVGParams(kappa, theta, nu, rho, v0, vg_sigma, vg_nu, vg_theta)` | Heston block plus VG jump parameters | VG in Madan-Carr-Chang (1998) parametrisation; `vg_nu > 0`. |
+| `SVJJParams(kappa, theta, nu, rho, v0, lam, mu_J, sigma_J, mu_V, rho_J)` | Heston block plus simultaneous price/variance jump parameters | Existence condition: `1 - rho_J * mu_V > 0`. |
+| `BNSGammaOUParams(V0, lambda_ou, rho_l, a, b)` | Gamma-OU stochastic variance parameters | `V0 > 0`, `lambda_ou > 0`, `rho_l < b`. |
+| `NTSParams(lam, theta, sigma, alpha)` | Normal Tempered Stable parameters | `alpha` in `(0, 1)`; existence condition: `lam + theta + sigma²/2 > 0`. |
+| `CGMYSAParams(C0, C, G, M, Y, kappa, eta, lam)` | CGMY Lévy plus CIR activity-clock parameters | `Y` in `(0, 2) \ {1}`, `M > 1`; `lam=0` gives deterministic clock. |
 
 ---
 
@@ -64,6 +70,12 @@ from foureng.pipeline import price_strip
 | `fmls_cf` | `(u, fwd, params)` | FMLS CF via principal branch of `(iu)^alpha`. |
 | `double_heston_cf` | `(u, fwd, params)` | Double Heston CF; product of two single-Heston CFs. |
 | `vgsa_cf` | `(u, fwd, params)` | VGSA CF via CIR Laplace transform of the VG Lévy exponent. |
+| `heston_nig_cf` | `(u, fwd, params)` | Heston-NIG CF (Heston × NIG jump block). |
+| `heston_vg_cf` | `(u, fwd, params)` | Heston-VG CF (Heston × VG jump block). |
+| `svjj_cf` | `(u, fwd, params)` | SVJJ CF; analytic D from Heston Riccati, trapezoidal integration for C jump correction. |
+| `bns_gamma_ou_cf` | `(u, fwd, params)` | BNS-Gamma-OU CF via Nicolato-Venardos quadrature of the Gamma log-Laplace. |
+| `nts_cf` | `(u, fwd, params)` | NTS CF; tempered stable Lévy exponent with principal-branch complex power. |
+| `cgmysa_cf` | `(u, fwd, params)` | CGMY-SA CF via CIR Laplace transform of the CGMY Lévy exponent. |
 
 ### Cumulants
 
@@ -89,6 +101,12 @@ from foureng.pipeline import price_strip
 | `fmls_cumulants(fwd, params)` | `ForwardSpec`, `FMLSParams` | FMLS cumulants via numerical Cauchy integration. **Note:** COS is not recommended for α<2 (power-law tails); prefer Carr-Madan or FRFT. |
 | `double_heston_cumulants(fwd, params)` | `ForwardSpec`, `DoubleHestonParams` | Sum of the two single-factor Heston cumulants. |
 | `vgsa_cumulants(fwd, params)` | `ForwardSpec`, `VGSAParams` | VGSA cumulants via CIR moment formulas. |
+| `heston_nig_cumulants(fwd, params)` | `ForwardSpec`, `HestonNIGParams` | Heston-NIG cumulants via Cauchy integration. |
+| `heston_vg_cumulants(fwd, params)` | `ForwardSpec`, `HestonVGParams` | Heston-VG cumulants via Cauchy integration. |
+| `svjj_cumulants(fwd, params)` | `ForwardSpec`, `SVJJParams` | SVJJ cumulants via Cauchy integration. |
+| `bns_gamma_ou_cumulants(fwd, params)` | `ForwardSpec`, `BNSGammaOUParams` | BNS-Gamma-OU cumulants via Cauchy integration. |
+| `nts_cumulants(fwd, params)` | `ForwardSpec`, `NTSParams` | NTS cumulants via Cauchy integration. |
+| `cgmysa_cumulants(fwd, params)` | `ForwardSpec`, `CGMYSAParams` | CGMY-SA cumulants via Cauchy integration. |
 
 ---
 
