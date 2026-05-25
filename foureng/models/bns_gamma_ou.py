@@ -78,9 +78,12 @@ import numpy as np
 
 from .base import ForwardSpec, ModelSpec
 
-# np.trapezoid was added in NumPy 2.0; np.trapz is deprecated there and
-# removed from stubs.  This shim works on both NumPy 1.x and 2.x.
-_trapezoid = getattr(np, "trapezoid", np.trapz)  # type: ignore[attr-defined]
+# np.trapezoid was added in NumPy 2.0; np.trapz was deprecated and removed
+# from stubs.  try/except ImportError is the pattern mypy handles cleanly.
+try:
+    from numpy import trapezoid as _trapezoid  # type: ignore[attr-defined]  # NumPy >= 2.0
+except ImportError:
+    from numpy import trapz as _trapezoid  # type: ignore[attr-defined]  # NumPy < 2.0
 
 
 @dataclass(frozen=True)
