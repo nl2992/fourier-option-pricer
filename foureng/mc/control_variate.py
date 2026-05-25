@@ -195,12 +195,9 @@ def heston_call_bs_control(
         intr=r,
         divr=q,
     )
-    m.set_num_params(
-        n_path=int(n_paths),
-        dt=float(T),
-        rn_seed=seed,
-        antithetic=False,  # preserve prior in-house behavior (no antithetic)
-    )
+    # pyfeng>=0.4.1 renamed set_num_params -> configure; fall back for 0.4.0
+    _cfg = getattr(m, "configure", None) or m.set_num_params
+    _cfg(n_path=int(n_paths), dt=float(T), rn_seed=seed, antithetic=False)
 
     v_0_vec = np.full(int(n_paths), p.v0, dtype=float)
     v_T, avg_var, _extra = m.cond_states_step(float(T), v_0_vec)
