@@ -62,7 +62,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from .base import ForwardSpec, ModelSpec
-from .heston import HestonParams, heston_cf, heston_cumulants
+from .heston import HestonParams, heston_cf
 
 
 @dataclass(frozen=True)

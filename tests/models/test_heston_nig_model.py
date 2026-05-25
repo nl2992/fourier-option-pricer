@@ -30,7 +30,7 @@ import numpy as np
 import pytest
 
 from foureng.models.base import ForwardSpec
-from foureng.models.heston import HestonParams, heston_cf
+from foureng.models.heston import heston_cf
 from foureng.models.heston_nig import HestonNIGParams, heston_nig_cf, heston_nig_cumulants
 from foureng.pricers.carr_madan import carr_madan_price_at_strikes
 from foureng.pricers.cos import cos_auto_grid, cos_prices
