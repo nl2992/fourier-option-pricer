@@ -31,31 +31,42 @@ _GRID_CM = FFTGrid(N=4096, eta=0.25, alpha=1.5)
 # Canonical parameters for each model
 # ---------------------------------------------------------------------------
 
-P_HV = HestonVGParams(kappa=2.0, theta=0.04, nu=0.3, rho=-0.7, v0=0.04,
-                       vg_sigma=0.15, vg_nu=0.5, vg_theta=-0.1)
+P_HV = HestonVGParams(
+    kappa=2.0, theta=0.04, nu=0.3, rho=-0.7, v0=0.04, vg_sigma=0.15, vg_nu=0.5, vg_theta=-0.1
+)
 
-P_SVJJ = SVJJParams(kappa=2.0, theta=0.04, nu=0.3, rho=-0.7, v0=0.04,
-                     lam=0.5, mu_J=-0.05, sigma_J=0.1, mu_V=0.05, rho_J=0.5)
+P_SVJJ = SVJJParams(
+    kappa=2.0,
+    theta=0.04,
+    nu=0.3,
+    rho=-0.7,
+    v0=0.04,
+    lam=0.5,
+    mu_J=-0.05,
+    sigma_J=0.1,
+    mu_V=0.05,
+    rho_J=0.5,
+)
 
 P_BNS = BNSGammaOUParams(V0=0.04, lambda_ou=2.0, rho_l=-0.5, a=2.0, b=10.0)
 
 P_NTS = NTSParams(lam=1.0, theta=0.0, sigma=0.2, alpha=0.5)
 
-P_CGMYSA = CGMYSAParams(C0=1.0, C=0.5, G=5.0, M=5.0, Y=0.5,
-                         kappa=2.0, eta=1.0, lam=0.5)
+P_CGMYSA = CGMYSAParams(C0=1.0, C=0.5, G=5.0, M=5.0, Y=0.5, kappa=2.0, eta=1.0, lam=0.5)
 
 _ALL = [
-    ("heston_vg",   P_HV,     heston_vg_cf),
-    ("svjj",        P_SVJJ,   svjj_cf),
-    ("bns_gamma_ou",P_BNS,    bns_gamma_ou_cf),
-    ("nts",         P_NTS,    nts_cf),
-    ("cgmysa",      P_CGMYSA, cgmysa_cf),
+    ("heston_vg", P_HV, heston_vg_cf),
+    ("svjj", P_SVJJ, svjj_cf),
+    ("bns_gamma_ou", P_BNS, bns_gamma_ou_cf),
+    ("nts", P_NTS, nts_cf),
+    ("cgmysa", P_CGMYSA, cgmysa_cf),
 ]
 
 
 # ===========================================================================
 # 1. CF structure
 # ===========================================================================
+
 
 @pytest.mark.parametrize("name,params,cf_fn", _ALL)
 def test_phi_at_zero(name, params, cf_fn):
@@ -75,8 +86,7 @@ def test_phi_at_minus_i(name, params, cf_fn):
 def test_phi_modulus_le_one(name, params, cf_fn):
     """|phi(u)| <= 1 for all real u."""
     vals = cf_fn(_UGRID, _FWD, params)
-    assert np.all(np.abs(vals) <= 1.0 + 1e-10), \
-        f"{name}: |phi| exceeds 1 at some u"
+    assert np.all(np.abs(vals) <= 1.0 + 1e-10), f"{name}: |phi| exceeds 1 at some u"
 
 
 @pytest.mark.parametrize("name,params,cf_fn", _ALL)
@@ -92,12 +102,12 @@ def test_conjugate_symmetry(name, params, cf_fn):
 # 2. Cross-engine consistency
 # ===========================================================================
 
+
 @pytest.mark.parametrize("name,params,cf_fn", _ALL)
 def test_cos_vs_carr_madan(name, params, cf_fn):
     """COS and Carr-Madan agree to 1e-3."""
     calls_cos = price_strip(name, "cos", _STRIKES, _FWD, params)
-    calls_cm = price_strip(name, "carr_madan", _STRIKES, _FWD, params,
-                           grid=_GRID_CM)
+    calls_cm = price_strip(name, "carr_madan", _STRIKES, _FWD, params, grid=_GRID_CM)
     err = float(np.max(np.abs(calls_cos - calls_cm)))
     assert err < 1e-3, f"{name}: COS vs CM max|err|={err:.2e}"
 
@@ -105,6 +115,7 @@ def test_cos_vs_carr_madan(name, params, cf_fn):
 # ===========================================================================
 # 3. Structural / no-arbitrage properties
 # ===========================================================================
+
 
 @pytest.mark.parametrize("name,params,cf_fn", _ALL)
 def test_calls_positive_and_monotone(name, params, cf_fn):
@@ -127,11 +138,12 @@ def test_put_call_parity(name, params, cf_fn):
 # 4. Model-specific properties
 # ===========================================================================
 
-class TestHestonVGSpecific:
 
+class TestHestonVGSpecific:
     def test_vg_jump_raises_smile(self):
         """Adding VG jumps to Heston increases OTM put value vs pure Heston."""
         from foureng.models.heston import HestonParams
+
         p_heston = HestonParams(kappa=2.0, theta=0.04, nu=0.3, rho=-0.7, v0=0.04)
         K_otm = np.array([85.0])
         c_h = price_strip("heston", "cos", K_otm, _FWD, p_heston)[0]
@@ -141,18 +153,36 @@ class TestHestonVGSpecific:
     def test_existence_condition_rejected(self):
         """VG existence condition violation raises ValueError."""
         with pytest.raises(ValueError, match="existence condition"):
-            HestonVGParams(kappa=2, theta=0.04, nu=0.3, rho=-0.5, v0=0.04,
-                           vg_sigma=1.0, vg_nu=5.0, vg_theta=0.0)
+            HestonVGParams(
+                kappa=2,
+                theta=0.04,
+                nu=0.3,
+                rho=-0.5,
+                v0=0.04,
+                vg_sigma=1.0,
+                vg_nu=5.0,
+                vg_theta=0.0,
+            )
 
 
 class TestSVJJSpecific:
-
     def test_zero_lambda_recovers_heston(self):
         """SVJJ with lam=0 matches Heston prices."""
         from foureng.models.heston import HestonParams
+
         p_h = HestonParams(kappa=2, theta=0.04, nu=0.3, rho=-0.7, v0=0.04)
-        p_svjj0 = SVJJParams(kappa=2, theta=0.04, nu=0.3, rho=-0.7, v0=0.04,
-                              lam=0.0, mu_J=0.0, sigma_J=0.1, mu_V=0.0, rho_J=0.0)
+        p_svjj0 = SVJJParams(
+            kappa=2,
+            theta=0.04,
+            nu=0.3,
+            rho=-0.7,
+            v0=0.04,
+            lam=0.0,
+            mu_J=0.0,
+            sigma_J=0.1,
+            mu_V=0.0,
+            rho_J=0.0,
+        )
         calls_h = price_strip("heston", "cos", _STRIKES, _FWD, p_h)
         calls_s = price_strip("svjj", "cos", _STRIKES, _FWD, p_svjj0)
         err = np.max(np.abs(calls_h - calls_s))
@@ -161,22 +191,51 @@ class TestSVJJSpecific:
     def test_higher_lambda_raises_otm(self):
         """More jump activity raises OTM call price."""
         K_otm = np.array([115.0])
-        p_lo = SVJJParams(kappa=2, theta=0.04, nu=0.3, rho=-0.5, v0=0.04,
-                          lam=0.1, mu_J=-0.05, sigma_J=0.1, mu_V=0.0, rho_J=0.0)
-        p_hi = SVJJParams(kappa=2, theta=0.04, nu=0.3, rho=-0.5, v0=0.04,
-                          lam=1.0, mu_J=-0.05, sigma_J=0.1, mu_V=0.0, rho_J=0.0)
+        p_lo = SVJJParams(
+            kappa=2,
+            theta=0.04,
+            nu=0.3,
+            rho=-0.5,
+            v0=0.04,
+            lam=0.1,
+            mu_J=-0.05,
+            sigma_J=0.1,
+            mu_V=0.0,
+            rho_J=0.0,
+        )
+        p_hi = SVJJParams(
+            kappa=2,
+            theta=0.04,
+            nu=0.3,
+            rho=-0.5,
+            v0=0.04,
+            lam=1.0,
+            mu_J=-0.05,
+            sigma_J=0.1,
+            mu_V=0.0,
+            rho_J=0.0,
+        )
         c_lo = price_strip("svjj", "cos", K_otm, _FWD, p_lo)[0]
         c_hi = price_strip("svjj", "cos", K_otm, _FWD, p_hi)[0]
         assert c_hi > c_lo, "Higher jump intensity should raise OTM call"
 
     def test_invalid_existence_condition(self):
         with pytest.raises(ValueError, match="existence condition"):
-            SVJJParams(kappa=2, theta=0.04, nu=0.3, rho=-0.5, v0=0.04,
-                       lam=0.5, mu_J=0.0, sigma_J=0.1, mu_V=2.0, rho_J=1.0)
+            SVJJParams(
+                kappa=2,
+                theta=0.04,
+                nu=0.3,
+                rho=-0.5,
+                v0=0.04,
+                lam=0.5,
+                mu_J=0.0,
+                sigma_J=0.1,
+                mu_V=2.0,
+                rho_J=1.0,
+            )
 
 
 class TestBNSSpecific:
-
     def test_higher_activity_raises_atm(self):
         """More Gamma activity (larger a) raises ATM price."""
         K_atm = np.array([_FWD.F0])
@@ -192,7 +251,6 @@ class TestBNSSpecific:
 
 
 class TestNTSSpecific:
-
     def test_alpha_near_one_agrees_structurally(self):
         """NTS with alpha close to 1 (BSM-like regime) prices calls correctly."""
         p = NTSParams(lam=1.0, theta=0.0, sigma=0.2, alpha=0.9)
@@ -218,14 +276,13 @@ class TestNTSSpecific:
 
 
 class TestCGMYSASpecific:
-
     def test_deterministic_clock_matches_cgmy(self):
         """CGMY-SA with lam=0 (deterministic clock at eta=1) matches CGMY."""
         from foureng.models.cgmy import CgmyParams
+
         p_cgmy = CgmyParams(C=0.5, G=5.0, M=5.0, Y=0.5)
         # C0=eta=1, lam=0 → clock Y_T = T deterministically
-        p_sa = CGMYSAParams(C0=1.0, C=0.5, G=5.0, M=5.0, Y=0.5,
-                             kappa=1.0, eta=1.0, lam=0.0)
+        p_sa = CGMYSAParams(C0=1.0, C=0.5, G=5.0, M=5.0, Y=0.5, kappa=1.0, eta=1.0, lam=0.0)
         calls_cgmy = price_strip("cgmy", "cos", _STRIKES, _FWD, p_cgmy)
         calls_sa = price_strip("cgmysa", "cos", _STRIKES, _FWD, p_sa)
         err = np.max(np.abs(calls_cgmy - calls_sa))
@@ -233,15 +290,12 @@ class TestCGMYSASpecific:
 
     def test_stochastic_clock_changes_prices(self):
         """Turning on the stochastic clock (lam>0) changes prices."""
-        p_det = CGMYSAParams(C0=1.0, C=0.5, G=5.0, M=5.0, Y=0.5,
-                              kappa=2.0, eta=1.0, lam=0.0)
-        p_sto = CGMYSAParams(C0=1.0, C=0.5, G=5.0, M=5.0, Y=0.5,
-                              kappa=2.0, eta=1.0, lam=1.0)
+        p_det = CGMYSAParams(C0=1.0, C=0.5, G=5.0, M=5.0, Y=0.5, kappa=2.0, eta=1.0, lam=0.0)
+        p_sto = CGMYSAParams(C0=1.0, C=0.5, G=5.0, M=5.0, Y=0.5, kappa=2.0, eta=1.0, lam=1.0)
         calls_det = price_strip("cgmysa", "cos", _STRIKES, _FWD, p_det)
         calls_sto = price_strip("cgmysa", "cos", _STRIKES, _FWD, p_sto)
         assert not np.allclose(calls_det, calls_sto, atol=1e-6)
 
     def test_bad_Y_rejected(self):
         with pytest.raises(ValueError, match="Y must be in"):
-            CGMYSAParams(C0=1.0, C=0.5, G=5.0, M=5.0, Y=1.0,
-                         kappa=2.0, eta=1.0, lam=0.5)
+            CGMYSAParams(C0=1.0, C=0.5, G=5.0, M=5.0, Y=1.0, kappa=2.0, eta=1.0, lam=0.5)

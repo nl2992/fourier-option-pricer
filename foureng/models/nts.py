@@ -112,8 +112,9 @@ class NTSParams(ModelSpec):
 # ---------------------------------------------------------------------------
 
 
-def _nts_levy_exponent(u: np.ndarray, lam: float, theta: float,
-                        sigma: float, alpha: float) -> np.ndarray:
+def _nts_levy_exponent(
+    u: np.ndarray, lam: float, theta: float, sigma: float, alpha: float
+) -> np.ndarray:
     """Per-unit-time Lévy exponent of the NTS process.
 
     psi(u) = -lam * ((1 - i*theta*u/lam + sigma^2*u^2/(2*lam))^alpha - 1)

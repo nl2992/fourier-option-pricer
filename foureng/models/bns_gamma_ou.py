@@ -78,6 +78,10 @@ import numpy as np
 
 from .base import ForwardSpec, ModelSpec
 
+# np.trapezoid was added in NumPy 2.0; np.trapz is deprecated there and
+# removed from stubs.  This shim works on both NumPy 1.x and 2.x.
+_trapezoid = getattr(np, "trapezoid", np.trapz)  # type: ignore[attr-defined]
+
 
 @dataclass(frozen=True)
 class BNSGammaOUParams(ModelSpec):
@@ -171,15 +175,15 @@ def bns_gamma_ou_cf(u: np.ndarray, fwd: ForwardSpec, p: BNSGammaOUParams) -> np.
     term_V0 = -coeff * V0 * (1.0 - np.exp(-lam * T)) / lam
 
     # Drift compensator
-    k_rho = _k_Z_gamma(np.array([rho_l]), a, b)[0]   # real scalar
+    k_rho = _k_Z_gamma(np.array([rho_l]), a, b)[0]  # real scalar
     term_drift = -1j * u_c * lam * T * float(np.real(k_rho))
 
     # Numerical integral: 200 points in [0, T]
     N = 200
-    taus = np.linspace(0.0, T, N + 1)        # (N+1,)
+    taus = np.linspace(0.0, T, N + 1)  # (N+1,)
     # g_u(tau): shape (M, N+1) where M = len(u_c)
-    u_col = u_c[:, np.newaxis]               # (M, 1)
-    taus_row = taus[np.newaxis, :]            # (1, N+1)
+    u_col = u_c[:, np.newaxis]  # (M, 1)
+    taus_row = taus[np.newaxis, :]  # (1, N+1)
 
     g = 1j * rho_l * u_col - coeff[:, np.newaxis] * (1.0 - np.exp(-lam * taus_row)) / lam
 
@@ -187,7 +191,7 @@ def bns_gamma_ou_cf(u: np.ndarray, fwd: ForwardSpec, p: BNSGammaOUParams) -> np.
     kZ_g = _k_Z_gamma(g, a, b)
 
     # Trapezoidal rule
-    term_int = lam * np.trapz(kZ_g, taus_row, axis=1)   # (M,)
+    term_int = lam * _trapezoid(kZ_g, taus_row, axis=1)  # (M,)
 
     log_phi = term_V0 + term_drift + term_int
     return np.exp(log_phi)
@@ -202,7 +206,5 @@ def bns_gamma_ou_cumulants(fwd: ForwardSpec, p: BNSGammaOUParams) -> tuple[float
     """Cumulants (c1, c2, c4) of X_T under BNS Gamma-OU via Cauchy integral."""
     from ..utils.cumulants import cumulants_from_cf
 
-    c = cumulants_from_cf(
-        lambda u: bns_gamma_ou_cf(u, fwd, p), order=4, radius=0.25, M=64
-    )
+    c = cumulants_from_cf(lambda u: bns_gamma_ou_cf(u, fwd, p), order=4, radius=0.25, M=64)
     return float(c[0]), float(c[1]), float(c[3])

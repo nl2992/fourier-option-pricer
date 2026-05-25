@@ -128,7 +128,9 @@ heston_cf_form2 = heston_cf
 # ---------------------------------------------------------------------------
 
 
-def heston_riccati_cd(u: np.ndarray, T: float | np.ndarray, p: "HestonParams") -> tuple[np.ndarray, np.ndarray]:
+def heston_riccati_cd(
+    u: np.ndarray, T: float | np.ndarray, p: "HestonParams"
+) -> tuple[np.ndarray, np.ndarray]:
     """Riccati (C, D) such that phi_Heston(u; T) = exp(C + D * v0).
 
     Uses Form 2 ("Little Heston Trap", Albrecher et al. 2007) which avoids

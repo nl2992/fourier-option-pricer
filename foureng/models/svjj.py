@@ -66,6 +66,10 @@ import numpy as np
 from .base import ForwardSpec, ModelSpec
 from .heston import HestonParams, heston_riccati_cd
 
+# np.trapezoid was added in NumPy 2.0; np.trapz is deprecated there and
+# removed from stubs.  This shim works on both NumPy 1.x and 2.x.
+_trapezoid = getattr(np, "trapezoid", np.trapz)  # type: ignore[attr-defined]
+
 
 @dataclass(frozen=True)
 class SVJJParams(ModelSpec):
@@ -213,27 +217,29 @@ def svjj_cf(u: np.ndarray, fwd: ForwardSpec, p: SVJJParams) -> np.ndarray:
     # Numerical integral of lambda*(Theta_J(u, D_H(tau)) - 1) - iu*lambda*m_J
     # over tau in [0, T].  D_H(tau) is the analytic Heston D at time tau.
     N_tau = 200
-    taus = np.linspace(0.0, T, N_tau + 1)   # shape (N_tau+1,)
+    taus = np.linspace(0.0, T, N_tau + 1)  # shape (N_tau+1,)
 
     # Vectorise: compute D_H at every tau for all u simultaneously.
     # heston_riccati_cd expects scalar T; loop over tau grid.
     # For efficiency, broadcast: u_c shape (M,), taus shape (N_tau+1,) → (M, N_tau+1)
-    u_col = u_c[:, np.newaxis]               # (M, 1)
-    taus_row = taus[np.newaxis, :]            # (1, N_tau+1)
+    u_col = u_c[:, np.newaxis]  # (M, 1)
+    taus_row = taus[np.newaxis, :]  # (1, N_tau+1)
 
-    _, D_grid = heston_riccati_cd(u_col.repeat(taus_row.shape[1], axis=1).ravel(),
-                                   taus_row.repeat(u_col.shape[0], axis=0).ravel(),
-                                   p.heston_params)
-    D_grid = D_grid.reshape(len(u_c), N_tau + 1)   # (M, N_tau+1)
+    _, D_grid = heston_riccati_cd(
+        u_col.repeat(taus_row.shape[1], axis=1).ravel(),
+        taus_row.repeat(u_col.shape[0], axis=0).ravel(),
+        p.heston_params,
+    )
+    D_grid = D_grid.reshape(len(u_c), N_tau + 1)  # (M, N_tau+1)
 
-    u_col2 = u_c[:, np.newaxis]              # (M, 1)
-    Theta = _theta_J(u_col2, D_grid, p)      # (M, N_tau+1)
+    u_col2 = u_c[:, np.newaxis]  # (M, 1)
+    Theta = _theta_J(u_col2, D_grid, p)  # (M, N_tau+1)
 
     # Integrand: lambda*(Theta - 1) - iu*lambda*m_J
     integrand = p.lam * (Theta - 1.0) - 1j * u_col2 * p.lam * m_J  # (M, N_tau+1)
 
     # Trapezoidal rule along tau axis
-    C_jump = np.trapz(integrand, taus_row, axis=1)   # (M,)
+    C_jump = _trapezoid(integrand, taus_row, axis=1)  # (M,)
 
     return np.exp(C_H + C_jump + D_H_T * p.v0)
 

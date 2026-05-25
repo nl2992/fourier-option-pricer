@@ -53,13 +53,15 @@ _TOL = 1e-3
 _SETS = {
     "ct2004_calibrated": (
         NigParams(sigma=0.12, nu=1.2, theta=-0.14),
-        np.array([20.77216377, 16.65562212, 12.77302902,  9.21213483,
-                   6.09372200,  3.57103348,  1.78888216]),
+        np.array(
+            [20.77216377, 16.65562212, 12.77302902, 9.21213483, 6.09372200, 3.57103348, 1.78888216]
+        ),
     ),
     "moderate": (
         NigParams(sigma=0.20, nu=0.50, theta=-0.10),
-        np.array([20.88474727, 17.02392471, 13.51204716, 10.42310712,
-                   7.81284024,  5.70271081,  4.07152579]),
+        np.array(
+            [20.88474727, 17.02392471, 13.51204716, 10.42310712, 7.81284024, 5.70271081, 4.07152579]
+        ),
     ),
 }
 
@@ -78,8 +80,7 @@ def test_nig_calls_cos(name, params, ref):
     calls = price_strip("nig", "cos", _STRIKES, _FWD, params)
     err = float(np.max(np.abs(calls - ref)))
     assert err < _TOL, (
-        f"NIG({name}) COS max|err|={err:.2e} > {_TOL:.2e}\n"
-        f"  calls={calls}\n  ref  ={ref}"
+        f"NIG({name}) COS max|err|={err:.2e} > {_TOL:.2e}\n  calls={calls}\n  ref  ={ref}"
     )
 
 

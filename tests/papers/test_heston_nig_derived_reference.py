@@ -62,15 +62,17 @@ _PARAMS = HestonNIGParams(
 
 _STRIKES = np.array([85.0, 90.0, 95.0, 100.0, 105.0, 110.0, 115.0])
 
-_REF_CALLS = np.array([
-    22.13592221,
-    18.59093412,
-    15.36198783,
-    12.47674426,
-     9.95179384,
-     7.79087026,
-     5.98438065,
-])
+_REF_CALLS = np.array(
+    [
+        22.13592221,
+        18.59093412,
+        15.36198783,
+        12.47674426,
+        9.95179384,
+        7.79087026,
+        5.98438065,
+    ]
+)
 
 _TOL = 1e-3
 
@@ -95,9 +97,7 @@ def test_heston_nig_calls_carr_madan():
     grid = FFTGrid(N=4096, eta=0.25, alpha=1.5)
     calls = price_strip("heston_nig", "carr_madan", _STRIKES, _FWD, _PARAMS, grid=grid)
     err = float(np.max(np.abs(calls - _REF_CALLS)))
-    assert err < _TOL, (
-        f"Heston-NIG CM calls vs Lewis ref: max|err| = {err:.2e} > {_TOL:.2e}"
-    )
+    assert err < _TOL, f"Heston-NIG CM calls vs Lewis ref: max|err| = {err:.2e} > {_TOL:.2e}"
 
 
 def test_heston_nig_calls_frft():
@@ -105,9 +105,7 @@ def test_heston_nig_calls_frft():
     grid = FRFTGrid(N=4096, eta=0.25, lam=0.005, alpha=1.5)
     calls = price_strip("heston_nig", "frft", _STRIKES, _FWD, _PARAMS, grid=grid)
     err = float(np.max(np.abs(calls - _REF_CALLS)))
-    assert err < _TOL, (
-        f"Heston-NIG FRFT calls vs Lewis ref: max|err| = {err:.2e} > {_TOL:.2e}"
-    )
+    assert err < _TOL, f"Heston-NIG FRFT calls vs Lewis ref: max|err| = {err:.2e} > {_TOL:.2e}"
 
 
 def test_heston_nig_put_call_parity():

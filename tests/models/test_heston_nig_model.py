@@ -51,8 +51,14 @@ TEXP = 1.0
 # Representative equity-calibration parameter set
 # (Heston SV with negative skew + NIG jump overlay with negative drift)
 _P_BENCH = HestonNIGParams(
-    kappa=2.0, theta=0.04, nu=0.3, rho=-0.7, v0=0.04,
-    nig_sigma=0.15, nig_nu=0.5, nig_theta=-0.10,
+    kappa=2.0,
+    theta=0.04,
+    nu=0.3,
+    rho=-0.7,
+    v0=0.04,
+    nig_sigma=0.15,
+    nig_nu=0.5,
+    nig_theta=-0.10,
 )
 _FWD_BENCH = ForwardSpec(S0=SPOT, r=0.05, q=0.0, T=TEXP)
 
@@ -96,9 +102,7 @@ class TestHestonNIGCFStructure:
         p, fwd = bench
         u_grid = np.linspace(-20, 20, 201)
         phi = heston_nig_cf(u_grid, fwd, p)
-        assert np.all(np.abs(phi) <= 1.0 + 1e-12), (
-            f"max|phi| = {np.max(np.abs(phi)):.6f} > 1"
-        )
+        assert np.all(np.abs(phi) <= 1.0 + 1e-12), f"max|phi| = {np.max(np.abs(phi)):.6f} > 1"
 
     def test_factorization_with_heston(self, bench):
         """phi_HN / phi_H gives the NIG jump component.
@@ -115,11 +119,14 @@ class TestHestonNIGCFStructure:
 
         # phi_HN / phi_H should be a CF with phi(-i) = 1
         ratio = phi_hn / phi_h
-        ratio_at_mi = (heston_nig_cf(np.array([-1j]), fwd, p) /
-                       heston_cf(np.array([-1j]), fwd, p.heston_params))
+        ratio_at_mi = heston_nig_cf(np.array([-1j]), fwd, p) / heston_cf(
+            np.array([-1j]), fwd, p.heston_params
+        )
         np.testing.assert_allclose(
-            abs(ratio_at_mi[0] - 1.0), 0.0, atol=1e-12,
-            err_msg="NIG jump component phi_NIG_jump(-i) must be 1"
+            abs(ratio_at_mi[0] - 1.0),
+            0.0,
+            atol=1e-12,
+            err_msg="NIG jump component phi_NIG_jump(-i) must be 1",
         )
 
         # ratio should be smooth and bounded
@@ -132,8 +139,7 @@ class TestHestonNIGCFStructure:
         phi_pos = heston_nig_cf(u_grid, fwd, p)
         phi_neg = heston_nig_cf(-u_grid, fwd, p)
         np.testing.assert_allclose(
-            phi_neg, np.conj(phi_pos), atol=1e-14,
-            err_msg="Heston-NIG CF conjugate symmetry"
+            phi_neg, np.conj(phi_pos), atol=1e-14, err_msg="Heston-NIG CF conjugate symmetry"
         )
 
 
@@ -151,9 +157,7 @@ class TestHestonNIGCrossEngine:
         cums = heston_nig_cumulants(fwd, p)
         grid = cos_auto_grid(cums, N=512, L=12.0)
         res = cos_prices(phi, fwd, STRIKES, grid)
-        np.testing.assert_allclose(
-            res.call_prices, lewis_ref, atol=1e-4, err_msg="COS vs Lewis"
-        )
+        np.testing.assert_allclose(res.call_prices, lewis_ref, atol=1e-4, err_msg="COS vs Lewis")
 
     def test_carr_madan_vs_lewis(self, bench, lewis_ref):
         p, fwd = bench
@@ -225,8 +229,14 @@ class TestHestonNIGStructural:
 
         def price_at_nig_sigma(sig):
             p = HestonNIGParams(
-                kappa=2.0, theta=0.04, nu=0.3, rho=-0.7, v0=0.04,
-                nig_sigma=sig, nig_nu=0.5, nig_theta=-0.10,
+                kappa=2.0,
+                theta=0.04,
+                nu=0.3,
+                rho=-0.7,
+                v0=0.04,
+                nig_sigma=sig,
+                nig_nu=0.5,
+                nig_theta=-0.10,
             )
             phi = lambda u: heston_nig_cf(u, fwd, p)
             cums = heston_nig_cumulants(fwd, p)
@@ -248,8 +258,14 @@ class TestHestonNIGStructural:
         fwd = _FWD_BENCH
         K = np.array([95.0, 100.0, 105.0])
         p = HestonNIGParams(
-            kappa=2.0, theta=0.04, nu=1e-6, rho=-0.5, v0=0.04,
-            nig_sigma=0.15, nig_nu=0.5, nig_theta=-0.10,
+            kappa=2.0,
+            theta=0.04,
+            nu=1e-6,
+            rho=-0.5,
+            v0=0.04,
+            nig_sigma=0.15,
+            nig_nu=0.5,
+            nig_theta=-0.10,
         )
         phi = lambda u: heston_nig_cf(u, fwd, p)
         calls = lewis_call_prices(phi, K, spot=fwd.S0, texp=fwd.T, intr=fwd.r, divr=fwd.q)
@@ -267,37 +283,93 @@ class TestHestonNIGParamValidation:
 
     def test_invalid_kappa(self):
         with pytest.raises(ValueError, match="kappa"):
-            HestonNIGParams(kappa=-1.0, theta=0.04, nu=0.3, rho=-0.5, v0=0.04,
-                            nig_sigma=0.15, nig_nu=0.5, nig_theta=-0.1)
+            HestonNIGParams(
+                kappa=-1.0,
+                theta=0.04,
+                nu=0.3,
+                rho=-0.5,
+                v0=0.04,
+                nig_sigma=0.15,
+                nig_nu=0.5,
+                nig_theta=-0.1,
+            )
 
     def test_invalid_nu_zero(self):
         with pytest.raises(ValueError, match="nu"):
-            HestonNIGParams(kappa=2.0, theta=0.04, nu=0.0, rho=-0.5, v0=0.04,
-                            nig_sigma=0.15, nig_nu=0.5, nig_theta=-0.1)
+            HestonNIGParams(
+                kappa=2.0,
+                theta=0.04,
+                nu=0.0,
+                rho=-0.5,
+                v0=0.04,
+                nig_sigma=0.15,
+                nig_nu=0.5,
+                nig_theta=-0.1,
+            )
 
     def test_invalid_rho(self):
         with pytest.raises(ValueError, match="rho"):
-            HestonNIGParams(kappa=2.0, theta=0.04, nu=0.3, rho=1.5, v0=0.04,
-                            nig_sigma=0.15, nig_nu=0.5, nig_theta=-0.1)
+            HestonNIGParams(
+                kappa=2.0,
+                theta=0.04,
+                nu=0.3,
+                rho=1.5,
+                v0=0.04,
+                nig_sigma=0.15,
+                nig_nu=0.5,
+                nig_theta=-0.1,
+            )
 
     def test_invalid_v0(self):
         with pytest.raises(ValueError, match="v0"):
-            HestonNIGParams(kappa=2.0, theta=0.04, nu=0.3, rho=-0.5, v0=0.0,
-                            nig_sigma=0.15, nig_nu=0.5, nig_theta=-0.1)
+            HestonNIGParams(
+                kappa=2.0,
+                theta=0.04,
+                nu=0.3,
+                rho=-0.5,
+                v0=0.0,
+                nig_sigma=0.15,
+                nig_nu=0.5,
+                nig_theta=-0.1,
+            )
 
     def test_invalid_nig_sigma(self):
         with pytest.raises(ValueError, match="nig_sigma"):
-            HestonNIGParams(kappa=2.0, theta=0.04, nu=0.3, rho=-0.5, v0=0.04,
-                            nig_sigma=0.0, nig_nu=0.5, nig_theta=-0.1)
+            HestonNIGParams(
+                kappa=2.0,
+                theta=0.04,
+                nu=0.3,
+                rho=-0.5,
+                v0=0.04,
+                nig_sigma=0.0,
+                nig_nu=0.5,
+                nig_theta=-0.1,
+            )
 
     def test_invalid_nig_nu(self):
         with pytest.raises(ValueError, match="nig_nu"):
-            HestonNIGParams(kappa=2.0, theta=0.04, nu=0.3, rho=-0.5, v0=0.04,
-                            nig_sigma=0.15, nig_nu=0.0, nig_theta=-0.1)
+            HestonNIGParams(
+                kappa=2.0,
+                theta=0.04,
+                nu=0.3,
+                rho=-0.5,
+                v0=0.04,
+                nig_sigma=0.15,
+                nig_nu=0.0,
+                nig_theta=-0.1,
+            )
 
     def test_nig_existence_condition_violated(self):
         """1 - 2*nig_theta*nig_nu - nig_sigma^2*nig_nu <= 0 must raise."""
         # Make nig_theta very positive so 2*theta*nu >> 1
         with pytest.raises(ValueError, match="existence condition"):
-            HestonNIGParams(kappa=2.0, theta=0.04, nu=0.3, rho=-0.5, v0=0.04,
-                            nig_sigma=0.15, nig_nu=0.5, nig_theta=5.0)
+            HestonNIGParams(
+                kappa=2.0,
+                theta=0.04,
+                nu=0.3,
+                rho=-0.5,
+                v0=0.04,
+                nig_sigma=0.15,
+                nig_nu=0.5,
+                nig_theta=5.0,
+            )

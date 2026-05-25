@@ -141,10 +141,7 @@ def _cgmy_levy_exponent(u: np.ndarray, C: float, G: float, M: float, Y: float) -
     """
     u_c = np.asarray(u, dtype=np.complex128)
     gY = _gamma_fn(-Y)
-    return C * gY * (
-        (M - 1j * u_c) ** Y - M**Y
-        + (G + 1j * u_c) ** Y - G**Y
-    )
+    return C * gY * ((M - 1j * u_c) ** Y - M**Y + (G + 1j * u_c) ** Y - G**Y)
 
 
 # ---------------------------------------------------------------------------
@@ -165,9 +162,7 @@ def cgmysa_cf(u: np.ndarray, fwd: ForwardSpec, p: CGMYSAParams) -> np.ndarray:
 
     num = _cir_integrated_cf(-1j * psi_u, T, p.C0, p.kappa, p.eta, p.lam)
 
-    den_scalar = _cir_integrated_cf(
-        np.array([-1j * psi_mi]), T, p.C0, p.kappa, p.eta, p.lam
-    )[0]
+    den_scalar = _cir_integrated_cf(np.array([-1j * psi_mi]), T, p.C0, p.kappa, p.eta, p.lam)[0]
     log_den = float(np.real(np.log(den_scalar)))
 
     return num * np.exp(-1j * u_c * log_den)

@@ -127,7 +127,9 @@ class HestonNIGParams(ModelSpec):
         if not (np.isfinite(theta) and theta > 0):
             raise ValueError(f"HestonNIGParams: theta must be > 0; got {theta}")
         if not (np.isfinite(nu) and nu > 0):
-            raise ValueError(f"HestonNIGParams: nu must be > 0 (PyFENG HestonFft requires vov > 0); got {nu}")
+            raise ValueError(
+                f"HestonNIGParams: nu must be > 0 (PyFENG HestonFft requires vov > 0); got {nu}"
+            )
         if not (np.isfinite(rho) and -1.0 < rho < 1.0):
             raise ValueError(f"HestonNIGParams: rho must be in (-1, 1); got {rho}")
         if not (np.isfinite(v0) and v0 > 0):
@@ -172,7 +174,9 @@ class HestonNIGParams(ModelSpec):
 # ---------------------------------------------------------------------------
 
 
-def _nig_levy_exponent(u: np.ndarray, nig_sigma: float, nig_nu: float, nig_theta: float) -> np.ndarray:
+def _nig_levy_exponent(
+    u: np.ndarray, nig_sigma: float, nig_nu: float, nig_theta: float
+) -> np.ndarray:
     """NIG Lévy exponent per unit time (no martingale correction).
 
         psi_NIG(u) = (1/nu) * (1 - sqrt(1 - 2i*theta*nu*u + sigma^2*nu*u^2))

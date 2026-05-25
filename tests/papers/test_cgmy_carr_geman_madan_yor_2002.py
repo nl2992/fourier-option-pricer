@@ -54,13 +54,31 @@ _TOL = 1e-3
 _SETS = {
     "Y05": (
         CgmyParams(C=1.0, G=5.0, M=5.0, Y=0.5),
-        np.array([28.06555815, 25.05430821, 22.30351638, 19.81294884,
-                  17.57559811, 15.57895760, 13.80659596]),
+        np.array(
+            [
+                28.06555815,
+                25.05430821,
+                22.30351638,
+                19.81294884,
+                17.57559811,
+                15.57895760,
+                13.80659596,
+            ]
+        ),
     ),
     "Y15_lowC": (
         CgmyParams(C=0.1, G=5.0, M=5.0, Y=1.5),
-        np.array([28.31026431, 25.35451657, 22.64178114, 20.16784292,
-                  17.92451143, 15.90058838, 14.08277564]),
+        np.array(
+            [
+                28.31026431,
+                25.35451657,
+                22.64178114,
+                20.16784292,
+                17.92451143,
+                15.90058838,
+                14.08277564,
+            ]
+        ),
     ),
 }
 
@@ -79,8 +97,7 @@ def test_cgmy_calls_cos(name, params, ref):
     calls = price_strip("cgmy", "cos", _STRIKES, _FWD, params)
     err = float(np.max(np.abs(calls - ref)))
     assert err < _TOL, (
-        f"CGMY({name}) COS max|err|={err:.2e} > {_TOL:.2e}\n"
-        f"  calls={calls}\n  ref  ={ref}"
+        f"CGMY({name}) COS max|err|={err:.2e} > {_TOL:.2e}\n  calls={calls}\n  ref  ={ref}"
     )
 
 
@@ -136,6 +153,4 @@ def test_cgmy_price_monotone_in_Y():
     p_hi = CgmyParams(C=0.5, G=5.0, M=5.0, Y=1.5)
     c_lo = price_strip("cgmy", "cos", K_otm, _FWD, p_lo)[0]
     c_hi = price_strip("cgmy", "cos", K_otm, _FWD, p_hi)[0]
-    assert c_hi > c_lo, (
-        f"OTM call should increase with Y: Y=0.5→{c_lo:.4f}, Y=1.5→{c_hi:.4f}"
-    )
+    assert c_hi > c_lo, f"OTM call should increase with Y: Y=0.5→{c_lo:.4f}, Y=1.5→{c_hi:.4f}"

@@ -123,12 +123,8 @@ MODEL_REGISTRY: dict[str, ModelEntry] = {
     ),
     "vgsa": _e("vgsa", VGSAParams, vgsa_cf, vgsa_cumulants, False),
     # ── Models 21-26 ──────────────────────────────────────────────────────────
-    "heston_nig": _e(
-        "heston_nig", HestonNIGParams, heston_nig_cf, heston_nig_cumulants, False
-    ),
-    "heston_vg": _e(
-        "heston_vg", HestonVGParams, heston_vg_cf, heston_vg_cumulants, False
-    ),
+    "heston_nig": _e("heston_nig", HestonNIGParams, heston_nig_cf, heston_nig_cumulants, False),
+    "heston_vg": _e("heston_vg", HestonVGParams, heston_vg_cf, heston_vg_cumulants, False),
     "svjj": _e("svjj", SVJJParams, svjj_cf, svjj_cumulants, False),
     "bns_gamma_ou": _e(
         "bns_gamma_ou", BNSGammaOUParams, bns_gamma_ou_cf, bns_gamma_ou_cumulants, False

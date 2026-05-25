@@ -57,13 +57,15 @@ _TOL = 1e-3
 _SETS = {
     "sz1999_bench": (
         OusvParams(sigma0=0.20, kappa=2.0, theta=0.20, nu=0.3, rho=-0.5),
-        np.array([21.77964753, 18.04888961, 14.61092135, 11.51807067,
-                   8.82076618,  6.55822854,  4.74465290]),
+        np.array(
+            [21.77964753, 18.04888961, 14.61092135, 11.51807067, 8.82076618, 6.55822854, 4.74465290]
+        ),
     ),
     "sz1999_hiskew": (
         OusvParams(sigma0=0.20, kappa=1.5, theta=0.15, nu=0.3, rho=-0.7),
-        np.array([21.69339919, 17.86026535, 14.28606016, 11.02696613,
-                   8.14700627,  5.71282600,  3.77863658]),
+        np.array(
+            [21.69339919, 17.86026535, 14.28606016, 11.02696613, 8.14700627, 5.71282600, 3.77863658]
+        ),
     ),
 }
 
@@ -82,8 +84,7 @@ def test_ousv_calls_cos(name, params, ref):
     calls = price_strip("ousv", "cos", _STRIKES, _FWD, params)
     err = float(np.max(np.abs(calls - ref)))
     assert err < _TOL, (
-        f"OUSV({name}) COS max|err|={err:.2e} > {_TOL:.2e}\n"
-        f"  calls={calls}\n  ref  ={ref}"
+        f"OUSV({name}) COS max|err|={err:.2e} > {_TOL:.2e}\n  calls={calls}\n  ref  ={ref}"
     )
 
 
