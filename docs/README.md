@@ -2,6 +2,7 @@
 
 Reference documentation for the `foureng` / `fourier-option-pricer` package.
 Start at [README.md](../README.md) for the project overview; come here for depth.
+For runnable walkthroughs, pair this index with the notebooks in [`notebooks/`](../notebooks/).
 
 ---
 
