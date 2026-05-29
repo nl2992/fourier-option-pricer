@@ -20,10 +20,6 @@ from dataclasses import dataclass
 import numpy as np
 
 from ..models.base import ForwardSpec
-from ..products.asian import AsianOption
-from ..products.barrier import BarrierOption
-from ..products.bermudan import BermudanOption
-from ..products.european import EuropeanOption
 from .paths import gbm_paths, gbm_terminal
 from .payoffs import (
     asian_arithmetic_payoff,
@@ -125,8 +121,7 @@ def mc_price(
     # ── Asian ──────────────────────────────────────────────────────────────
     if pt == "asian":
         T, K, cp = product.maturity, product.strike, product.cp
-        paths = gbm_paths(S0, r, q, T, sigma, mc.n_paths, mc.n_steps, rng,
-                          antithetic=mc.antithetic)
+        paths = gbm_paths(S0, r, q, T, sigma, mc.n_paths, mc.n_steps, rng, antithetic=mc.antithetic)
         avg_type = getattr(product, "average_type", "arithmetic")
         if avg_type == "geometric":
             raw = asian_geometric_payoff(paths, K, cp)
@@ -143,11 +138,9 @@ def mc_price(
             n_steps = len(product.monitoring_times)
         else:
             n_steps = mc.n_steps
-        paths = gbm_paths(S0, r, q, T, sigma, mc.n_paths, n_steps, rng,
-                          antithetic=mc.antithetic)
+        paths = gbm_paths(S0, r, q, T, sigma, mc.n_paths, n_steps, rng, antithetic=mc.antithetic)
         dt = T / n_steps
-        raw = barrier_payoff(paths, K, H, bt, cp,
-                             use_bb_correction=True, sigma=sigma, dt=dt)
+        raw = barrier_payoff(paths, K, H, bt, cp, use_bb_correction=True, sigma=sigma, dt=dt)
         disc = np.exp(-r * T)
         return _result(raw * disc, mc.n_paths)
 
@@ -166,6 +159,7 @@ def mc_price(
 
 
 # ── helper ─────────────────────────────────────────────────────────────────
+
 
 def _result(discounted_payoffs: np.ndarray, n_paths: int) -> MCResult:
     price = float(discounted_payoffs.mean())

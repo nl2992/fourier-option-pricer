@@ -198,16 +198,16 @@ KOU_DEFAULT_BOUNDS = [
 ]
 
 CGMY_DEFAULT_BOUNDS = [
-    (1e-4, 20.0),   # C  (intensity)
-    (1e-3, 50.0),   # G  (left-tail damping)
+    (1e-4, 20.0),  # C  (intensity)
+    (1e-3, 50.0),  # G  (left-tail damping)
     (1.0 + 1e-3, 50.0),  # M  (right-tail; must be > 1 for finite mean)
-    (1e-4, 1.99),   # Y  (activity index; Y < 2 for finite variance)
+    (1e-4, 1.99),  # Y  (activity index; Y < 2 for finite variance)
 ]
 
 NIG_DEFAULT_BOUNDS = [
-    (1e-3, 2.0),    # sigma
-    (1e-3, 5.0),    # nu
-    (-2.0, 2.0),    # theta
+    (1e-3, 2.0),  # sigma
+    (1e-3, 5.0),  # nu
+    (-2.0, 2.0),  # theta
 ]
 
 

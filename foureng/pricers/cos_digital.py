@@ -32,6 +32,8 @@ Price = disc * Σ_k' A_k * ψ_k  (asset-or-nothing)
 
 from __future__ import annotations
 
+from typing import Literal
+
 import numpy as np
 
 from ..models.base import ForwardSpec
@@ -39,8 +41,8 @@ from ..models.registry import MODEL_REGISTRY
 from ..products.digital import DigitalOption
 from .cos import cos_auto_grid
 
-
 # ── payoff coefficient helpers ─────────────────────────────────────────────
+
 
 def _chi(omega: np.ndarray, c1: float, c2: float, a: float, b: float) -> np.ndarray:
     """COS indicator coefficients (2/(b-a)) ∫_{c1}^{c2} cos(ω(x-a)) dx.
@@ -51,15 +53,12 @@ def _chi(omega: np.ndarray, c1: float, c2: float, a: float, b: float) -> np.ndar
     """
     chi = np.empty(len(omega))
     chi[0] = 2.0 * (c2 - c1) / (b - a)
-    w = omega[1:]                              # ω_k = kπ/(b-a) for k >= 1
-    chi[1:] = (2.0 / (b - a)) * (
-        np.sin(w * (c2 - a)) - np.sin(w * (c1 - a))
-    ) / w
+    w = omega[1:]  # ω_k = kπ/(b-a) for k >= 1
+    chi[1:] = (2.0 / (b - a)) * (np.sin(w * (c2 - a)) - np.sin(w * (c1 - a))) / w
     return chi
 
 
-def _psi(omega: np.ndarray, c1: float, c2: float, a: float, b: float,
-         F_T: float) -> np.ndarray:
+def _psi(omega: np.ndarray, c1: float, c2: float, a: float, b: float, F_T: float) -> np.ndarray:
     """COS asset-weighting coefficients (2/(b-a)) F_T ∫_{c1}^{c2} e^x cos(ω(x-a)) dx.
 
     Uses the exact integral:
@@ -68,17 +67,18 @@ def _psi(omega: np.ndarray, c1: float, c2: float, a: float, b: float,
     psi = np.empty(len(omega))
     # k = 0 term: ∫_{c1}^{c2} e^x dx = e^{c2} - e^{c1}
     psi[0] = 2.0 * F_T * (np.exp(c2) - np.exp(c1)) / (b - a)
-    k = omega[1:]                              # ω_k for k >= 1
-    phase = np.exp(-1j * k * a)               # e^{-iωa}
-    denom = 1.0 + 1j * k                      # 1 + iω
-    upper = np.exp(c2 * (1.0 + 1j * k))       # e^{c2(1+iω)}
-    lower = np.exp(c1 * (1.0 + 1j * k))       # e^{c1(1+iω)}
+    k = omega[1:]  # ω_k for k >= 1
+    phase = np.exp(-1j * k * a)  # e^{-iωa}
+    denom = 1.0 + 1j * k  # 1 + iω
+    upper = np.exp(c2 * (1.0 + 1j * k))  # e^{c2(1+iω)}
+    lower = np.exp(c1 * (1.0 + 1j * k))  # e^{c1(1+iω)}
     integral = np.real(phase / denom * (upper - lower))
     psi[1:] = 2.0 * F_T * integral / (b - a)
     return psi
 
 
 # ── main pricer ────────────────────────────────────────────────────────────
+
 
 def cos_digital_price(
     model: str,
@@ -145,9 +145,9 @@ def cos_digital_price(
     k_star = np.log(K / F_T)
     k_star = float(np.clip(k_star, a, b))  # clamp to [a, b]
 
-    if cp == 1:   # call: exercise when x > k_star
+    if cp == 1:  # call: exercise when x > k_star
         c1, c2 = k_star, b
-    else:         # put: exercise when x < k_star
+    else:  # put: exercise when x < k_star
         c1, c2 = a, k_star
 
     # Payoff integrals
@@ -175,7 +175,7 @@ def cos_digital_price_strip(
     strikes: np.ndarray,
     maturity: float,
     cp: int = 1,
-    payoff_type: str = "cash_or_nothing",
+    payoff_type: Literal["cash_or_nothing", "asset_or_nothing"] = "cash_or_nothing",
     cash_amount: float = 1.0,
     *,
     grid=None,

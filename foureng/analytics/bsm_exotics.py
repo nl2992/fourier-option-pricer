@@ -14,8 +14,8 @@ from __future__ import annotations
 import numpy as np
 from scipy.stats import norm
 
-
 # ── Margrabe (1978) exchange option ───────────────────────────────────────
+
 
 def margrabe_exchange(
     S1: float,
@@ -61,6 +61,7 @@ def margrabe_exchange(
 
 
 # ── BSM forward-start option ──────────────────────────────────────────────
+
 
 def bsm_forward_start(
     S: float,
@@ -109,13 +110,14 @@ def bsm_forward_start(
     # unit_value = BSM(S=1, K=alpha, r, q, tau) with standard formula:
     #   call = exp(-q*tau)*N(d1) - alpha*exp(-r*tau)*N(d2)
     if cp == 1:
-        unit_value = (np.exp(-q * tau) * norm.cdf(d1) - alpha * np.exp(-r * tau) * norm.cdf(d2))
+        unit_value = np.exp(-q * tau) * norm.cdf(d1) - alpha * np.exp(-r * tau) * norm.cdf(d2)
     else:
-        unit_value = (alpha * np.exp(-r * tau) * norm.cdf(-d2) - np.exp(-q * tau) * norm.cdf(-d1))
+        unit_value = alpha * np.exp(-r * tau) * norm.cdf(-d2) - np.exp(-q * tau) * norm.cdf(-d1)
     return S * np.exp(-q * t_start) * unit_value
 
 
 # ── Goldman-Sosin-Gatto (1979) floating-strike lookback ──────────────────
+
 
 def bsm_lookback_floating(
     S: float,
@@ -163,15 +165,22 @@ def bsm_lookback_floating(
         a3 = (np.log(S / m) + (-b + 0.5 * sig2) * T) / sq
         if abs(b) < 1e-12:
             # Special case b=0 to avoid division by zero
-            b_term = sigma * np.sqrt(T) * (norm.pdf(a1) + a1 * norm.cdf(a1) - norm.cdf(-a1))
-            return (S * np.exp(-q * T) * (norm.cdf(a1) + sig2 / (2 * b + 1e-300) * (
-                    -(S / m) ** (2 * b / sig2 + 1e-300) * norm.cdf(-a3) + np.exp(b * T) * norm.cdf(a1)
-            )) - m * np.exp(-r * T) * norm.cdf(a2))
+            return S * np.exp(-q * T) * (
+                norm.cdf(a1)
+                + sig2
+                / (2 * b + 1e-300)
+                * (
+                    -((S / m) ** (2 * b / sig2 + 1e-300)) * norm.cdf(-a3)
+                    + np.exp(b * T) * norm.cdf(a1)
+                )
+            ) - m * np.exp(-r * T) * norm.cdf(a2)
         ratio = (S / m) ** (-2 * b / sig2)
         return (
             S * np.exp(-q * T) * norm.cdf(a1)
             - m * np.exp(-r * T) * norm.cdf(a2)
-            + S * np.exp(-q * T) * (sig2 / (2 * b))
+            + S
+            * np.exp(-q * T)
+            * (sig2 / (2 * b))
             * (-(ratio) * norm.cdf(-a3) + np.exp(b * T) * norm.cdf(a1))
         )
     else:
@@ -180,19 +189,24 @@ def bsm_lookback_floating(
         a2 = a1 - sq
         a3 = (np.log(S / m) + (-b + 0.5 * sig2) * T) / sq
         if abs(b) < 1e-12:
-            return (m * np.exp(-r * T) * norm.cdf(-a2)
-                    - S * np.exp(-q * T) * norm.cdf(-a1)
-                    + S * np.exp(-q * T) * sig2 / (2 * 1e-300))  # degenerate
+            return (
+                m * np.exp(-r * T) * norm.cdf(-a2)
+                - S * np.exp(-q * T) * norm.cdf(-a1)
+                + S * np.exp(-q * T) * sig2 / (2 * 1e-300)
+            )  # degenerate
         ratio = (S / m) ** (-2 * b / sig2)
         return (
             m * np.exp(-r * T) * norm.cdf(-a2)
             - S * np.exp(-q * T) * norm.cdf(-a1)
-            + S * np.exp(-q * T) * (sig2 / (2 * b))
+            + S
+            * np.exp(-q * T)
+            * (sig2 / (2 * b))
             * (ratio * norm.cdf(a3) - np.exp(b * T) * norm.cdf(-a1))
         )
 
 
 # ── BSM gap option ─────────────────────────────────────────────────────────
+
 
 def bsm_gap_call(
     S: float,
@@ -215,5 +229,4 @@ def bsm_gap_call(
     sq = sigma * np.sqrt(T)
     d1 = (np.log(S / K2) + (b + 0.5 * sigma**2) * T) / sq
     d2 = d1 - sq
-    return (S * np.exp(-q * T) * norm.cdf(d1)
-            - K1 * np.exp(-r * T) * norm.cdf(d2))
+    return S * np.exp(-q * T) * norm.cdf(d1) - K1 * np.exp(-r * T) * norm.cdf(d2)

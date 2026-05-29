@@ -17,8 +17,8 @@ from __future__ import annotations
 
 import numpy as np
 
-
 # ── vanilla / terminal payoffs ────────────────────────────────────────────
+
 
 def european_payoff(S_T: np.ndarray, K: float, cp: int = 1) -> np.ndarray:
     """max(cp*(S_T − K), 0) — works on any-shape array."""
@@ -26,6 +26,7 @@ def european_payoff(S_T: np.ndarray, K: float, cp: int = 1) -> np.ndarray:
 
 
 # ── path-dependent payoffs ─────────────────────────────────────────────────
+
 
 def asian_arithmetic_payoff(
     paths: np.ndarray,
@@ -110,12 +111,12 @@ def barrier_payoff(
         if use_bb_correction and sigma is not None and dt is not None:
             _survived = _bb_down_survival(paths, H, sigma, dt)
         else:
-            _survived = (paths.min(axis=1) > H)
+            _survived = paths.min(axis=1) > H
     elif barrier_type.startswith("up"):
         if use_bb_correction and sigma is not None and dt is not None:
             _survived = _bb_up_survival(paths, H, sigma, dt)
         else:
-            _survived = (paths.max(axis=1) < H)
+            _survived = paths.max(axis=1) < H
     else:
         raise ValueError(f"Unknown barrier_type: {barrier_type!r}")
 
@@ -129,6 +130,7 @@ def barrier_payoff(
 
 
 # ── Brownian bridge correction ─────────────────────────────────────────────
+
 
 def _bb_down_survival(
     paths: np.ndarray,
@@ -154,9 +156,9 @@ def _bb_down_survival(
 
     survived = np.ones(n_paths, dtype=bool)
     for j in range(n_steps):
-        S_i  = paths[:, j]
+        S_i = paths[:, j]
         S_i1 = paths[:, j + 1]
-        a = np.log(S_i  / H)
+        a = np.log(S_i / H)
         b = np.log(S_i1 / H)
         # If either is ≤ 0 already breached at discrete grid
         already = (a <= 0) | (b <= 0)
@@ -165,9 +167,7 @@ def _bb_down_survival(
             survived &= ~already
             continue
         p_cross = np.zeros(n_paths)
-        p_cross[pos] = np.exp(
-            -2.0 * a[pos] * b[pos] / (sigma**2 * dt)
-        )
+        p_cross[pos] = np.exp(-2.0 * a[pos] * b[pos] / (sigma**2 * dt))
         p_cross = np.clip(p_cross, 0.0, 1.0)
         U = rng_bb.uniform(size=n_paths)
         crossed = already | (U < p_cross)
@@ -188,7 +188,7 @@ def _bb_up_survival(
 
     survived = np.ones(n_paths, dtype=bool)
     for j in range(n_steps):
-        S_i  = paths[:, j]
+        S_i = paths[:, j]
         S_i1 = paths[:, j + 1]
         a = np.log(H / S_i)
         b = np.log(H / S_i1)
@@ -198,9 +198,7 @@ def _bb_up_survival(
             survived &= ~already
             continue
         p_cross = np.zeros(n_paths)
-        p_cross[pos] = np.exp(
-            -2.0 * a[pos] * b[pos] / (sigma**2 * dt)
-        )
+        p_cross[pos] = np.exp(-2.0 * a[pos] * b[pos] / (sigma**2 * dt))
         p_cross = np.clip(p_cross, 0.0, 1.0)
         U = rng_bb.uniform(size=n_paths)
         crossed = already | (U < p_cross)

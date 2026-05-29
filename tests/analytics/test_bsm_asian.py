@@ -14,30 +14,30 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
-from pytest import approx
 
 from foureng.analytics.bsm_asian import bsm_geometric_asian, bsm_geometric_asian_parity
-from foureng.analytics.bsm_barrier import bsm_call, bsm_put  # reuse vanilla BSM
-
+from foureng.analytics.bsm_barrier import bsm_call  # reuse vanilla BSM
 
 _BASE = dict(S=100.0, K=100.0, r=0.05, q=0.0, T=1.0, sigma=0.20)
 
 
 # ── put-call parity ────────────────────────────────────────────────────────
 
+
 @pytest.mark.parametrize("K", [80.0, 90.0, 100.0, 110.0, 120.0])
 def test_geometric_asian_put_call_parity(K):
     """call − put = disc*(F_adj − K) to machine precision."""
     p = dict(S=100.0, K=K, r=0.05, q=0.02, T=1.0, sigma=0.20)
     call = bsm_geometric_asian(**p, cp=1)
-    put  = bsm_geometric_asian(**p, cp=-1)
-    rhs  = bsm_geometric_asian_parity(**p)
+    put = bsm_geometric_asian(**p, cp=-1)
+    rhs = bsm_geometric_asian_parity(**p)
     assert abs(call - put - rhs) < 1e-10, (
-        f"K={K}: call={call:.8f} put={put:.8f} diff={call-put:.8f} rhs={rhs:.8f}"
+        f"K={K}: call={call:.8f} put={put:.8f} diff={call - put:.8f} rhs={rhs:.8f}"
     )
 
 
 # ── Asian ≤ vanilla ────────────────────────────────────────────────────────
+
 
 @pytest.mark.parametrize("K", [85.0, 100.0, 115.0])
 def test_geometric_asian_call_leq_vanilla_call(K):
@@ -50,6 +50,7 @@ def test_geometric_asian_call_leq_vanilla_call(K):
 
 # ── non-negativity ────────────────────────────────────────────────────────
 
+
 @pytest.mark.parametrize("cp", [1, -1])
 @pytest.mark.parametrize("K", [70.0, 85.0, 100.0, 115.0, 130.0])
 def test_geometric_asian_non_negative(cp, K):
@@ -59,19 +60,21 @@ def test_geometric_asian_non_negative(cp, K):
 
 # ── monotone in strike ────────────────────────────────────────────────────
 
+
 def test_geometric_asian_call_decreasing_in_strike():
     strikes = np.linspace(80.0, 120.0, 9)
     prices = [bsm_geometric_asian(100.0, K, 0.05, 0.0, 1.0, 0.20, cp=1) for K in strikes]
-    assert all(prices[i] >= prices[i+1] - 1e-10 for i in range(len(prices)-1))
+    assert all(prices[i] >= prices[i + 1] - 1e-10 for i in range(len(prices) - 1))
 
 
 def test_geometric_asian_put_increasing_in_strike():
     strikes = np.linspace(80.0, 120.0, 9)
     prices = [bsm_geometric_asian(100.0, K, 0.05, 0.0, 1.0, 0.20, cp=-1) for K in strikes]
-    assert all(prices[i] <= prices[i+1] + 1e-10 for i in range(len(prices)-1))
+    assert all(prices[i] <= prices[i + 1] + 1e-10 for i in range(len(prices) - 1))
 
 
 # ── Kemna-Vorst / Haug numerical reference ────────────────────────────────
+
 
 def test_geometric_asian_kemna_vorst_reference():
     """
@@ -79,13 +82,12 @@ def test_geometric_asian_kemna_vorst_reference():
     Geometric average call: S=100, K=100, r=0.10, q=0, T=1, σ=0.30 → ≈ 6.99
     (MC-verified: 8.5349 (5M paths, 1000 steps). Tolerance ±0.01.)
     """
-    price = bsm_geometric_asian(
-        S=100.0, K=100.0, r=0.10, q=0.0, T=1.0, sigma=0.30, cp=1
-    )
+    price = bsm_geometric_asian(S=100.0, K=100.0, r=0.10, q=0.0, T=1.0, sigma=0.30, cp=1)
     assert abs(price - 8.5349) < 0.01, f"Reference: got {price:.4f}, expected ≈8.5349"
 
 
 # ── zero-vol limit ────────────────────────────────────────────────────────
+
 
 def test_geometric_asian_zero_vol_call():
     """σ → 0: Asian call → max(S − K, 0) * e^{-rT}  (average equals terminal)."""
@@ -104,6 +106,7 @@ def test_geometric_asian_zero_vol_call():
 
 # ── intrinsic value lower bound ───────────────────────────────────────────
 
+
 def test_geometric_asian_bounded_below_by_intrinsic():
     """Asian call ≥ disc * max(F_adj − K, 0)."""
     S, K, r, q, T, sigma = 100.0, 90.0, 0.05, 0.02, 1.0, 0.20
@@ -117,10 +120,11 @@ def test_geometric_asian_bounded_below_by_intrinsic():
 
 # ── cross-maturity ────────────────────────────────────────────────────────
 
+
 @pytest.mark.parametrize("T", [0.25, 0.5, 1.0, 2.0, 5.0])
 def test_geometric_asian_parity_across_maturities(T):
     p = dict(S=100.0, K=100.0, r=0.05, q=0.02, T=T, sigma=0.20)
     call = bsm_geometric_asian(**p, cp=1)
-    put  = bsm_geometric_asian(**p, cp=-1)
-    rhs  = bsm_geometric_asian_parity(**p)
+    put = bsm_geometric_asian(**p, cp=-1)
+    rhs = bsm_geometric_asian_parity(**p)
     assert abs(call - put - rhs) < 1e-10

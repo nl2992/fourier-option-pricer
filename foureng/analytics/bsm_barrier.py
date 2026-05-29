@@ -28,8 +28,8 @@ from __future__ import annotations
 import numpy as np
 from scipy.stats import norm
 
-
 # ── vanilla reference ──────────────────────────────────────────────────────
+
 
 def bsm_call(S: float, K: float, r: float, q: float, T: float, sigma: float) -> float:
     """Standard BSM European call price."""
@@ -51,9 +51,15 @@ def bsm_put(S: float, K: float, r: float, q: float, T: float, sigma: float) -> f
 
 # ── core building-block (Haug 2007, Ch. 2) ────────────────────────────────
 
+
 def _barrier_components(
-    S: float, K: float, H: float,
-    r: float, q: float, T: float, sigma: float,
+    S: float,
+    K: float,
+    H: float,
+    r: float,
+    q: float,
+    T: float,
+    sigma: float,
 ):
     """Return A, B, C, D building-block callables (φ, η-aware).
 
@@ -79,8 +85,8 @@ def _barrier_components(
     y1 = np.log(H**2 / (S * K)) / sq + (1 + mu) * sq
     y2 = np.log(H / S) / sq + (1 + mu) * sq
 
-    hs_2mu2 = (H / S) ** (2 * (mu + 1))   # (H/S)^{2μ+2}
-    hs_2mu  = (H / S) ** (2 * mu)          # (H/S)^{2μ}
+    hs_2mu2 = (H / S) ** (2 * (mu + 1))  # (H/S)^{2μ+2}
+    hs_2mu = (H / S) ** (2 * mu)  # (H/S)^{2μ}
     Sd = S * np.exp(-q * T)
     Kd = K * np.exp(-r * T)
 
@@ -91,17 +97,16 @@ def _barrier_components(
         return phi * (Sd * norm.cdf(phi * x2) - Kd * norm.cdf(phi * (x2 - sq)))
 
     def C(phi: int, eta: int) -> float:
-        return phi * (Sd * hs_2mu2 * norm.cdf(eta * y1)
-                      - Kd * hs_2mu  * norm.cdf(eta * (y1 - sq)))
+        return phi * (Sd * hs_2mu2 * norm.cdf(eta * y1) - Kd * hs_2mu * norm.cdf(eta * (y1 - sq)))
 
     def D(phi: int, eta: int) -> float:
-        return phi * (Sd * hs_2mu2 * norm.cdf(eta * y2)
-                      - Kd * hs_2mu  * norm.cdf(eta * (y2 - sq)))
+        return phi * (Sd * hs_2mu2 * norm.cdf(eta * y2) - Kd * hs_2mu * norm.cdf(eta * (y2 - sq)))
 
     return A, B, C, D
 
 
 # ── main public function ───────────────────────────────────────────────────
+
 
 def bsm_barrier_price(
     S: float,
@@ -132,7 +137,7 @@ def bsm_barrier_price(
     float
         Option price.  In-out parity holds: down_out + down_in = vanilla.
     """
-    phi = cp                                          # +1 call, -1 put
+    phi = cp  # +1 call, -1 put
     eta = 1 if barrier_type.startswith("down") else -1
 
     # Already breached: knock-out = 0, knock-in = vanilla
@@ -171,12 +176,12 @@ def bsm_barrier_price(
     #
     # In-out parity: out + in = A(φ) = vanilla for each case. ✓
 
-    if phi * eta > 0:   # easy-barrier case
+    if phi * eta > 0:  # easy-barrier case
         if barrier_type.endswith("_out"):
             return max(A(phi) - C(phi, eta), 0.0)
         else:
             return max(C(phi, eta), 0.0)
-    else:               # hard-barrier case
+    else:  # hard-barrier case
         if barrier_type.endswith("_out"):
             return max(A(phi) - B(phi) + C(phi, eta) - D(phi, eta), 0.0)
         else:

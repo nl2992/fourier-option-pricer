@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
-from pytest import approx
 
 from foureng.analytics.bsm_barrier import bsm_call, bsm_put
 from foureng.analytics.bsm_exotics import (
@@ -18,8 +17,8 @@ from foureng.analytics.bsm_exotics import (
     margrabe_exchange,
 )
 
-
 # ── Margrabe exchange option ──────────────────────────────────────────────
+
 
 def test_margrabe_non_negative():
     price = margrabe_exchange(100, 90, 0.02, 0.03, 1.0, 0.20, 0.25, -0.5)
@@ -62,7 +61,7 @@ def test_margrabe_same_assets_zero_vol():
     sigma = 0.20
     rho = 1.0  # perfect correlation → net vol = 0
     price = margrabe_exchange(S1, S2, q1, q2, T, sigma, sigma, rho)
-    expected = max(S1 - S2, 0.0)   # q1=q2=0, net σ=0 → pay max(S1-S2, 0) immediately
+    expected = max(S1 - S2, 0.0)  # q1=q2=0, net σ=0 → pay max(S1-S2, 0) immediately
     assert abs(price - expected) < 1e-8
 
 
@@ -73,6 +72,7 @@ def test_margrabe_positive_value_for_itm():
 
 # ── BSM forward-start ─────────────────────────────────────────────────────
 
+
 def test_forward_start_reduces_to_bsm_when_tstart_zero():
     """t_start = ε ≈ 0 → should match BSM call(S, alpha*S, r, q, T)."""
     S, alpha, r, q, T, sigma = 100.0, 1.0, 0.05, 0.02, 1.0, 0.20
@@ -80,9 +80,7 @@ def test_forward_start_reduces_to_bsm_when_tstart_zero():
     fs_price = bsm_forward_start(S, alpha, t_start, T, r, q, sigma, cp=1)
     # At t_start→0, K = alpha*S = 100
     bsm_price = bsm_call(S, alpha * S, r, q, T, sigma)
-    assert abs(fs_price - bsm_price) < 1e-4, (
-        f"FS→BSM: {fs_price:.6f} vs {bsm_price:.6f}"
-    )
+    assert abs(fs_price - bsm_price) < 1e-4, f"FS→BSM: {fs_price:.6f} vs {bsm_price:.6f}"
 
 
 def test_forward_start_positive():
@@ -100,12 +98,10 @@ def test_forward_start_put_call_parity():
     S, alpha, t_s, T, r, q, sigma = 100.0, 1.0, 0.25, 1.0, 0.05, 0.02, 0.25
     tau = T - t_s
     call = bsm_forward_start(S, alpha, t_s, T, r, q, sigma, cp=1)
-    put  = bsm_forward_start(S, alpha, t_s, T, r, q, sigma, cp=-1)
+    put = bsm_forward_start(S, alpha, t_s, T, r, q, sigma, cp=-1)
     # Put-call parity for BSM(S=1, K=alpha) scaled by S·e^{-q·t_s}
     rhs = S * np.exp(-q * t_s) * (np.exp(-q * tau) - alpha * np.exp(-r * tau))
-    assert abs(call - put - rhs) < 1e-8, (
-        f"FS parity: {call - put:.8f} vs {rhs:.8f}"
-    )
+    assert abs(call - put - rhs) < 1e-8, f"FS parity: {call - put:.8f} vs {rhs:.8f}"
 
 
 def test_forward_start_raises_on_invalid_tenor():
@@ -114,6 +110,7 @@ def test_forward_start_raises_on_invalid_tenor():
 
 
 # ── BSM lookback floating-strike ──────────────────────────────────────────
+
 
 def test_lookback_call_exceeds_vanilla_call():
     """Lookback (buy at min) ≥ ATM call (buy at K=S)."""
@@ -142,11 +139,12 @@ def test_lookback_call_lower_smin_increases_price():
     """Lower S_min → lookback call worth more (easier exercise region)."""
     S, r, q, T, sigma = 100.0, 0.05, 0.0, 1.0, 0.20
     p_high = bsm_lookback_floating(S, S_min=95.0, S_max=S, r=r, q=q, T=T, sigma=sigma, cp=1)
-    p_low  = bsm_lookback_floating(S, S_min=80.0, S_max=S, r=r, q=q, T=T, sigma=sigma, cp=1)
+    p_low = bsm_lookback_floating(S, S_min=80.0, S_max=S, r=r, q=q, T=T, sigma=sigma, cp=1)
     assert p_low >= p_high - 1e-8, f"Lower Smin {p_low:.4f} should be >= {p_high:.4f}"
 
 
 # ── BSM gap call ──────────────────────────────────────────────────────────
+
 
 def test_gap_call_reduces_to_bsm_when_k1_equals_k2():
     """K1 = K2 → gap call = standard BSM call."""
@@ -168,8 +166,8 @@ def test_gap_call_smaller_payment_increases_price():
     Lower K1 → larger net payment → higher price.
     """
     S, K2, r, q, T, sigma = 100.0, 90.0, 0.05, 0.0, 1.0, 0.20
-    p_lowK1  = bsm_gap_call(S, 80.0, K2, r, q, T, sigma)   # pays more
-    p_highK1 = bsm_gap_call(S, 95.0, K2, r, q, T, sigma)   # pays less
+    p_lowK1 = bsm_gap_call(S, 80.0, K2, r, q, T, sigma)  # pays more
+    p_highK1 = bsm_gap_call(S, 95.0, K2, r, q, T, sigma)  # pays less
     assert p_lowK1 >= p_highK1, (
         f"Lower K1 should give higher price: {p_lowK1:.4f} vs {p_highK1:.4f}"
     )

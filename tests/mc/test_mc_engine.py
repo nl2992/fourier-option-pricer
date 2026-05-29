@@ -19,11 +19,10 @@ from pytest import approx
 import foureng as fe
 from foureng.analytics.bsm_asian import bsm_geometric_asian
 from foureng.analytics.bsm_barrier import bsm_barrier_price, bsm_call
-from foureng.mc.engine import MCSpec, MCResult, mc_price
+from foureng.mc.engine import MCResult, MCSpec, mc_price
 from foureng.mc.paths import gbm_paths, gbm_terminal
 from foureng.mc.payoffs import (
     asian_arithmetic_payoff,
-    asian_geometric_payoff,
     barrier_payoff,
     european_payoff,
 )
@@ -31,7 +30,6 @@ from foureng.products.asian import AsianOption
 from foureng.products.barrier import BarrierOption
 from foureng.products.bermudan import BermudanOption
 from foureng.products.european import EuropeanOption
-
 
 _FWD = fe.ForwardSpec(S0=100.0, r=0.05, q=0.02, T=1.0)
 _SIGMA = 0.20
@@ -44,6 +42,7 @@ def _ci_contains(res: MCResult, ref: float, n_sigma: float = 3.0) -> bool:
 
 
 # ── European via MC ────────────────────────────────────────────────────────
+
 
 def test_mc_european_call_within_ci():
     prod = EuropeanOption(strike=100.0, maturity=1.0, cp=1)
@@ -62,10 +61,12 @@ def test_mc_european_put_within_ci():
 
 # ── Geometric Asian via MC vs analytic ────────────────────────────────────
 
+
 def test_mc_geometric_asian_call_within_ci():
-    mon = np.linspace(1/12, 1.0, 12)
-    prod = AsianOption(strike=100.0, maturity=1.0, cp=1,
-                       average_type="geometric", monitoring_times=mon)
+    mon = np.linspace(1 / 12, 1.0, 12)
+    prod = AsianOption(
+        strike=100.0, maturity=1.0, cp=1, average_type="geometric", monitoring_times=mon
+    )
     res = mc_price(_FWD, _SIGMA, prod, _MC)
     ref = bsm_geometric_asian(100.0, 100.0, _FWD.r, _FWD.q, 1.0, _SIGMA, cp=1)
     # MC monitors monthly (discrete); analytic is continuous — allow ±1.5% difference
@@ -76,14 +77,17 @@ def test_mc_geometric_asian_call_within_ci():
 
 # ── Arithmetic Asian: > geometric Asian (Jensen's inequality) ─────────────
 
+
 def test_arithmetic_asian_exceeds_geometric():
     """E[arith avg] ≥ E[geo avg] by Jensen's inequality → arith call ≥ geo call."""
-    mon = np.linspace(1/12, 1.0, 12)
+    mon = np.linspace(1 / 12, 1.0, 12)
     mc_small = MCSpec(n_paths=100_000, n_steps=252, seed=7, antithetic=True)
-    prod_arith = AsianOption(strike=100.0, maturity=1.0, cp=1,
-                              average_type="arithmetic", monitoring_times=mon)
-    prod_geo = AsianOption(strike=100.0, maturity=1.0, cp=1,
-                            average_type="geometric", monitoring_times=mon)
+    prod_arith = AsianOption(
+        strike=100.0, maturity=1.0, cp=1, average_type="arithmetic", monitoring_times=mon
+    )
+    prod_geo = AsianOption(
+        strike=100.0, maturity=1.0, cp=1, average_type="geometric", monitoring_times=mon
+    )
     res_a = mc_price(_FWD, _SIGMA, prod_arith, mc_small)
     res_g = mc_price(_FWD, _SIGMA, prod_geo, mc_small)
     assert res_a.price >= res_g.price - 3 * (res_a.stderr + res_g.stderr), (
@@ -93,14 +97,15 @@ def test_arithmetic_asian_exceeds_geometric():
 
 # ── Barrier DOC via MC vs BSM analytic ────────────────────────────────────
 
+
 def test_mc_barrier_doc_within_ci():
     """Down-and-out call MC should match BSM analytic to within 3σ."""
-    prod = BarrierOption(strike=100.0, barrier=80.0, maturity=1.0, cp=1,
-                          barrier_type="down_out")
+    prod = BarrierOption(strike=100.0, barrier=80.0, maturity=1.0, cp=1, barrier_type="down_out")
     mc = MCSpec(n_paths=200_000, n_steps=252, seed=42, antithetic=True)
     res = mc_price(_FWD, _SIGMA, prod, mc)
-    ref = bsm_barrier_price(100.0, 100.0, 80.0, _FWD.r, _FWD.q, 1.0, _SIGMA,
-                             barrier_type="down_out", cp=1)
+    ref = bsm_barrier_price(
+        100.0, 100.0, 80.0, _FWD.r, _FWD.q, 1.0, _SIGMA, barrier_type="down_out", cp=1
+    )
     assert _ci_contains(res, ref, n_sigma=4.0), (
         f"MC DOC={res.price:.4f} ± {res.stderr:.4f} BSM={ref:.4f}"
     )
@@ -110,18 +115,27 @@ def test_mc_barrier_in_out_parity():
     """MC(DOC) + MC(DIC) ≈ MC(European) via in-out parity."""
     mc = MCSpec(n_paths=300_000, n_steps=252, seed=99, antithetic=True)
     kwargs = dict(fwd=_FWD, sigma=_SIGMA, mc=mc)
-    res_do = mc_price(product=BarrierOption(strike=100.0, barrier=80.0, maturity=1.0, cp=1,
-                                             barrier_type="down_out"), **kwargs)
-    res_di = mc_price(product=BarrierOption(strike=100.0, barrier=80.0, maturity=1.0, cp=1,
-                                             barrier_type="down_in"), **kwargs)
+    res_do = mc_price(
+        product=BarrierOption(
+            strike=100.0, barrier=80.0, maturity=1.0, cp=1, barrier_type="down_out"
+        ),
+        **kwargs,
+    )
+    res_di = mc_price(
+        product=BarrierOption(
+            strike=100.0, barrier=80.0, maturity=1.0, cp=1, barrier_type="down_in"
+        ),
+        **kwargs,
+    )
     res_eu = mc_price(product=EuropeanOption(strike=100.0, maturity=1.0, cp=1), **kwargs)
-    combined_se = (res_do.stderr**2 + res_di.stderr**2 + res_eu.stderr**2)**0.5
+    combined_se = (res_do.stderr**2 + res_di.stderr**2 + res_eu.stderr**2) ** 0.5
     assert abs(res_do.price + res_di.price - res_eu.price) < 5 * combined_se, (
         f"Parity: DO={res_do.price:.4f} DI={res_di.price:.4f} EU={res_eu.price:.4f}"
     )
 
 
 # ── MCResult properties ────────────────────────────────────────────────────
+
 
 def test_mc_result_ci_width():
     """CI width = 2 * 1.96 * stderr."""
@@ -139,12 +153,13 @@ def test_mc_result_relative_error():
 
 # ── Antithetic variance reduction ─────────────────────────────────────────
 
+
 def test_antithetic_reduces_variance():
     """Antithetic MC should have lower variance than plain MC for same n_paths."""
     prod = EuropeanOption(strike=100.0, maturity=1.0, cp=1)
     n = 50_000
     plain_mc = MCSpec(n_paths=n, n_steps=1, seed=123, antithetic=False)
-    anti_mc  = MCSpec(n_paths=n, n_steps=1, seed=123, antithetic=True)
+    anti_mc = MCSpec(n_paths=n, n_steps=1, seed=123, antithetic=True)
     res_p = mc_price(_FWD, _SIGMA, prod, plain_mc)
     res_a = mc_price(_FWD, _SIGMA, prod, anti_mc)
     assert res_a.stderr < res_p.stderr, (
@@ -153,6 +168,7 @@ def test_antithetic_reduces_variance():
 
 
 # ── Determinism ────────────────────────────────────────────────────────────
+
 
 def test_mc_deterministic():
     """Same seed → identical price."""
@@ -165,14 +181,15 @@ def test_mc_deterministic():
 
 # ── Error handling ─────────────────────────────────────────────────────────
 
+
 def test_mc_bermudan_raises():
-    prod = BermudanOption(strike=100.0, maturity=1.0, cp=-1,
-                          exercise_times=np.array([0.5, 1.0]))
+    prod = BermudanOption(strike=100.0, maturity=1.0, cp=-1, exercise_times=np.array([0.5, 1.0]))
     with pytest.raises(NotImplementedError, match="LSMC"):
         mc_price(_FWD, _SIGMA, prod, _MC)
 
 
 # ── Path generator unit tests ──────────────────────────────────────────────
+
 
 def test_gbm_paths_shape():
     rng = np.random.default_rng(0)
@@ -203,6 +220,7 @@ def test_gbm_terminal_matches_exact_one_step():
 
 # ── Payoff unit tests ──────────────────────────────────────────────────────
 
+
 def test_european_payoff_call():
     S = np.array([90.0, 100.0, 110.0])
     p = european_payoff(S, 100.0, cp=1)
@@ -225,16 +243,17 @@ def test_asian_arithmetic_payoff_shape():
 
 def test_barrier_payoff_knocksout_correctly():
     """Down-out call: paths that cross below H pay 0."""
-    n = 6
     # Paths that definitely cross H=80 (dip to 70) vs those that don't (stay above 85)
-    paths = np.array([
-        [100.0, 70.0, 105.0],   # crosses: pay 0
-        [100.0, 95.0, 110.0],   # survives: pay 10
-        [100.0, 75.0, 108.0],   # crosses: pay 0
-        [100.0, 90.0, 112.0],   # survives: pay 12
-        [100.0, 80.0, 103.0],   # touches H exactly: knocked out
-        [100.0, 85.0, 115.0],   # survives: pay 15
-    ])
+    paths = np.array(
+        [
+            [100.0, 70.0, 105.0],  # crosses: pay 0
+            [100.0, 95.0, 110.0],  # survives: pay 10
+            [100.0, 75.0, 108.0],  # crosses: pay 0
+            [100.0, 90.0, 112.0],  # survives: pay 12
+            [100.0, 80.0, 103.0],  # touches H exactly: knocked out
+            [100.0, 85.0, 115.0],  # survives: pay 15
+        ]
+    )
     p = barrier_payoff(paths, 100.0, 80.0, "down_out", cp=1)
     assert p[0] == 0.0, "Crossed barrier should pay 0"
     assert p[1] == 10.0, "Survived should pay 10"

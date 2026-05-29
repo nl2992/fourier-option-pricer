@@ -60,11 +60,11 @@ def gbm_paths(
     else:
         Z = rng.standard_normal((n_paths, n_steps))
 
-    log_increments = drift + diff * Z                  # (n_paths, n_steps)
+    log_increments = drift + diff * Z  # (n_paths, n_steps)
     log_S = np.concatenate(
         [np.zeros((n_paths, 1)), np.cumsum(log_increments, axis=1)],
         axis=1,
-    )                                                  # (n_paths, n_steps+1)
+    )  # (n_paths, n_steps+1)
     return S0 * np.exp(log_S)
 
 

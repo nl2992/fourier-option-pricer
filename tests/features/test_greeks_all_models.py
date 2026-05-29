@@ -16,24 +16,56 @@ from foureng.greeks.cos_greeks import cos_price_and_greeks
 from foureng.models.registry import MODEL_REGISTRY
 from foureng.pricers.cos import cos_auto_grid
 
-
 ALL_MODELS = [
-    ("bsm",          fe.BsmParams(sigma=0.20)),
-    ("heston",       fe.HestonParams(kappa=2.0, theta=0.04, nu=0.5, rho=-0.5, v0=0.04)),
-    ("vg",           fe.VGParams(sigma=0.12, nu=0.3, theta=-0.14)),
-    ("cgmy",         fe.CgmyParams(C=1.0, G=5.0, M=5.0, Y=1.5)),
-    ("nig",          fe.NigParams(sigma=0.15, nu=0.3, theta=-0.14)),
-    ("kou",          fe.KouParams(sigma=0.15, lam=0.5, p=0.4, eta1=10.0, eta2=5.0)),
-    ("merton_jd",    fe.MertonJDParams(sigma=0.15, lam=0.5, muj=-0.1, sigj=0.10)),
-    ("bates",        fe.BatesParams(kappa=2.0, theta=0.04, nu=0.5, rho=-0.5, v0=0.04,
-                                    lam_j=0.5, mu_j=-0.1, sigma_j=0.1)),
-    ("heston_kou",   fe.HestonKouParams(kappa=2.0, theta=0.04, nu=0.5, rho=-0.5, v0=0.04,
-                                         lam_j=0.5, p_j=0.4, eta1=10.0, eta2=5.0)),
-    ("heston_cgmy",  fe.HestonCGMYParams(kappa=2.0, theta=0.04, nu=0.5, rho=-0.5, v0=0.04,
-                                          C=0.5, G=5.0, M=5.0, Y=1.5)),
-    ("double_heston", fe.DoubleHestonParams(kappa1=2.0, theta1=0.02, nu1=0.3, rho1=-0.4, v01=0.02,
-                                             kappa2=1.0, theta2=0.02, nu2=0.2, rho2=-0.3, v02=0.02)),
-    ("vgsa",         fe.VGSAParams(C=1.0, G=5.0, M=5.0, kappa=3.0, eta=1.0, lam=1.0)),
+    ("bsm", fe.BsmParams(sigma=0.20)),
+    ("heston", fe.HestonParams(kappa=2.0, theta=0.04, nu=0.5, rho=-0.5, v0=0.04)),
+    ("vg", fe.VGParams(sigma=0.12, nu=0.3, theta=-0.14)),
+    ("cgmy", fe.CgmyParams(C=1.0, G=5.0, M=5.0, Y=1.5)),
+    ("nig", fe.NigParams(sigma=0.15, nu=0.3, theta=-0.14)),
+    ("kou", fe.KouParams(sigma=0.15, lam=0.5, p=0.4, eta1=10.0, eta2=5.0)),
+    ("merton_jd", fe.MertonJDParams(sigma=0.15, lam=0.5, muj=-0.1, sigj=0.10)),
+    (
+        "bates",
+        fe.BatesParams(
+            kappa=2.0, theta=0.04, nu=0.5, rho=-0.5, v0=0.04, lam_j=0.5, mu_j=-0.1, sigma_j=0.1
+        ),
+    ),
+    (
+        "heston_kou",
+        fe.HestonKouParams(
+            kappa=2.0,
+            theta=0.04,
+            nu=0.5,
+            rho=-0.5,
+            v0=0.04,
+            lam_j=0.5,
+            p_j=0.4,
+            eta1=10.0,
+            eta2=5.0,
+        ),
+    ),
+    (
+        "heston_cgmy",
+        fe.HestonCGMYParams(
+            kappa=2.0, theta=0.04, nu=0.5, rho=-0.5, v0=0.04, C=0.5, G=5.0, M=5.0, Y=1.5
+        ),
+    ),
+    (
+        "double_heston",
+        fe.DoubleHestonParams(
+            kappa1=2.0,
+            theta1=0.02,
+            nu1=0.3,
+            rho1=-0.4,
+            v01=0.02,
+            kappa2=1.0,
+            theta2=0.02,
+            nu2=0.2,
+            rho2=-0.3,
+            v02=0.02,
+        ),
+    ),
+    ("vgsa", fe.VGSAParams(C=1.0, G=5.0, M=5.0, kappa=3.0, eta=1.0, lam=1.0)),
 ]
 
 
@@ -99,9 +131,7 @@ def test_cos_gamma_vs_fd(model, params):
         if abs(fd_gamma[i]) < 1e-5:
             continue
         rel = abs(gamma[i] - fd_gamma[i]) / abs(fd_gamma[i])
-        assert rel < 0.01, (
-            f"{model} K={K}: Gamma={gamma[i]:.6f} FD={fd_gamma[i]:.6f} rel={rel:.4f}"
-        )
+        assert rel < 0.01, f"{model} K={K}: Gamma={gamma[i]:.6f} FD={fd_gamma[i]:.6f} rel={rel:.4f}"
 
 
 @pytest.mark.parametrize("model,params", ALL_MODELS)

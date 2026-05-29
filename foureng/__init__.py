@@ -29,6 +29,14 @@ try:
 except _PNF:  # editable install without metadata yet
     __version__ = "0.4.1"
 
+from .analytics.bsm_asian import bsm_geometric_asian, bsm_geometric_asian_parity
+from .analytics.bsm_barrier import bsm_barrier_price
+from .analytics.bsm_exotics import (
+    bsm_forward_start,
+    bsm_gap_call,
+    bsm_lookback_floating,
+    margrabe_exchange,
+)
 from .greeks import (
     COSGreeks,
     cos_delta_gamma,
@@ -42,8 +50,8 @@ from .iv.implied_vol import (
     implied_vol_newton_safeguarded,
 )
 from .mc.black_scholes_mc import european_call_mc
-from .mc.engine import MCResult, MCSpec, mc_price
 from .mc.control_variate import CVResult, bs_call_cv, heston_call_bs_control
+from .mc.engine import MCResult, MCSpec, mc_price
 from .mc.heston_conditional_mc import HestonMCScheme, heston_conditional_mc_calls
 from .models.base import CharFunc, ForwardSpec, ModelSpec
 from .models.bates import BatesParams, bates_cf, bates_cumulants
@@ -86,14 +94,6 @@ from .pricers.cos import (
     cos_improved_grid,
     cos_prices,
     recommended_cos_policy,
-)
-from .analytics.bsm_asian import bsm_geometric_asian, bsm_geometric_asian_parity
-from .analytics.bsm_barrier import bsm_barrier_price
-from .analytics.bsm_exotics import (
-    bsm_forward_start,
-    bsm_gap_call,
-    bsm_lookback_floating,
-    margrabe_exchange,
 )
 from .pricers.cos_digital import cos_digital_price, cos_digital_price_strip
 from .pricers.filtered_cos import FilteredCOSDecision, filtered_cos_prices
@@ -218,8 +218,10 @@ __all__ = [
     "model_price_surface",
     "CalibrationResult",
     "calibrate_heston",
+    "calibrate_cgmy",
     "calibrate_vg",
     "calibrate_kou",
+    "calibrate_nig",
     # greeks
     "COSGreeks",
     "cos_delta_gamma",
@@ -228,9 +230,24 @@ __all__ = [
     # mc
     "european_call_mc",
     "MCSpec",
+    "MCResult",
+    "mc_price",
     "heston_conditional_mc_calls",
     "HestonMCScheme",
     "bs_call_cv",
     "heston_call_bs_control",
     "CVResult",
+    # analytics
+    "bsm_geometric_asian",
+    "bsm_geometric_asian_parity",
+    "bsm_barrier_price",
+    "bsm_forward_start",
+    "bsm_gap_call",
+    "bsm_lookback_floating",
+    "margrabe_exchange",
+    # digital
+    "bsm_asset_or_nothing",
+    "bsm_cash_or_nothing",
+    "cos_digital_price",
+    "cos_digital_price_strip",
 ]

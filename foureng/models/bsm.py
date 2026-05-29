@@ -94,6 +94,7 @@ def bsm_cumulants(fwd: ForwardSpec, p: BsmParams) -> tuple[float, float, float]:
 # Analytic digital prices  (closed-form reference)
 # ---------------------------------------------------------------------------
 
+
 def bsm_cash_or_nothing(
     fwd: ForwardSpec,
     p: BsmParams,

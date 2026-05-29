@@ -28,6 +28,7 @@ def surface_spec():
 
 # ── CGMY calibration ──────────────────────────────────────────────────────
 
+
 def test_calibrate_cgmy_recovers_market_ivs(surface_spec):
     """CGMY calibration from nearby start → residuals < 0.5% IV."""
     true_params = fe.CgmyParams(C=1.0, G=5.0, M=5.0, Y=1.5)
@@ -41,9 +42,7 @@ def test_calibrate_cgmy_recovers_market_ivs(surface_spec):
     result = fe.calibrate_cgmy(surface_spec, market_ivs, init, maxiter=500, N=512, L=12.0)
 
     # The calibrated model should reproduce market IVs to < 0.5 vol point
-    assert result.loss < 1e-4, (
-        f"CGMY calibration residuals too large: loss={result.loss:.4e}"
-    )
+    assert result.loss < 1e-4, f"CGMY calibration residuals too large: loss={result.loss:.4e}"
     assert np.all(np.abs(result.residuals) < 0.005), (
         f"Per-cell residuals exceed 0.5%: {result.residuals}"
     )
@@ -68,6 +67,7 @@ def test_calibrate_cgmy_returns_valid_params(surface_spec):
 
 # ── NIG calibration ───────────────────────────────────────────────────────
 
+
 def test_calibrate_nig_recovers_market_ivs(surface_spec):
     """NIG calibration from nearby start → residuals < 0.1 vol point."""
     true_params = fe.NigParams(sigma=0.15, nu=0.3, theta=-0.14)
@@ -80,9 +80,7 @@ def test_calibrate_nig_recovers_market_ivs(surface_spec):
     init = fe.NigParams(sigma=0.18, nu=0.35, theta=-0.10)
     result = fe.calibrate_nig(surface_spec, market_ivs, init, maxiter=500)
 
-    assert result.loss < 1e-8, (
-        f"NIG calibration loss too large: {result.loss:.4e}"
-    )
+    assert result.loss < 1e-8, f"NIG calibration loss too large: {result.loss:.4e}"
 
 
 def test_calibrate_nig_exact_start_gives_zero_loss(surface_spec):
@@ -99,6 +97,7 @@ def test_calibrate_nig_exact_start_gives_zero_loss(surface_spec):
 
 
 # ── CalibrationResult structure ────────────────────────────────────────────
+
 
 def test_calibration_result_has_correct_residual_shape(surface_spec):
     true_params = fe.NigParams(sigma=0.15, nu=0.3, theta=-0.14)
