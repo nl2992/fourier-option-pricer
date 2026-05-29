@@ -102,8 +102,10 @@ from .pricers.lewis import lewis_call_prices, lewis_prices
 from .surface import (
     CalibrationResult,
     SurfaceSpec,
+    calibrate_cgmy,
     calibrate_heston,
     calibrate_kou,
+    calibrate_nig,
     calibrate_vg,
     model_iv_surface,
     model_price_surface,

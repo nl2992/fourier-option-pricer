@@ -31,8 +31,10 @@ from typing import Callable
 import numpy as np
 from scipy.optimize import minimize
 
+from ..models.cgmy import CgmyParams, cgmy_cf, cgmy_cumulants
 from ..models.heston import HestonParams, heston_cf_form2, heston_cumulants
 from ..models.kou import KouParams, kou_cf, kou_cumulants
+from ..models.nig import NigParams, nig_cf, nig_cumulants
 from ..models.variance_gamma import VGParams, vg_cf, vg_cumulants
 from .vol_surface import SurfaceSpec, model_iv_surface
 
@@ -195,6 +197,19 @@ KOU_DEFAULT_BOUNDS = [
     (1e-3, 50.0),  # eta2
 ]
 
+CGMY_DEFAULT_BOUNDS = [
+    (1e-4, 20.0),   # C  (intensity)
+    (1e-3, 50.0),   # G  (left-tail damping)
+    (1.0 + 1e-3, 50.0),  # M  (right-tail; must be > 1 for finite mean)
+    (1e-4, 1.99),   # Y  (activity index; Y < 2 for finite variance)
+]
+
+NIG_DEFAULT_BOUNDS = [
+    (1e-3, 2.0),    # sigma
+    (1e-3, 5.0),    # nu
+    (-2.0, 2.0),    # theta
+]
+
 
 def calibrate_heston(
     spec: SurfaceSpec,
@@ -286,6 +301,84 @@ def calibrate_kou(
         unpack=_kou_from_vec,
         cf_factory_from_params=lambda p: lambda fwd: lambda u: kou_cf(u, fwd, p),
         cumulant_factory_from_params=lambda p: lambda fwd: kou_cumulants(fwd, p),
+        N=N,
+        L=L,
+        method=method,
+        fd_step=fd_step,
+        maxiter=maxiter,
+        ftol=ftol,
+    )
+
+
+def _cgmy_from_vec(x: np.ndarray) -> CgmyParams:
+    C, G, M, Y = x
+    return CgmyParams(C=float(C), G=float(G), M=float(M), Y=float(Y))
+
+
+def _nig_from_vec(x: np.ndarray) -> NigParams:
+    sigma, nu, theta = x
+    return NigParams(sigma=float(sigma), nu=float(nu), theta=float(theta))
+
+
+def calibrate_cgmy(
+    spec: SurfaceSpec,
+    market_ivs: np.ndarray,
+    initial: CgmyParams,
+    bounds: list[tuple[float, float]] | None = None,
+    weights: np.ndarray | None = None,
+    N: int = 512,
+    L: float = 12.0,
+    method: str = "Nelder-Mead",
+    fd_step: float = 1e-5,
+    maxiter: int = 1000,
+    ftol: float = 1e-10,
+) -> CalibrationResult:
+    """Calibrate CGMY model parameters to a market IV surface."""
+    bounds = bounds or CGMY_DEFAULT_BOUNDS
+    x0 = np.array([initial.C, initial.G, initial.M, initial.Y])
+    return _calibrate(
+        spec=spec,
+        market_ivs=market_ivs,
+        x0=x0,
+        bounds=bounds,
+        weights=weights,
+        unpack=_cgmy_from_vec,
+        cf_factory_from_params=lambda p: lambda fwd: lambda u: cgmy_cf(u, fwd, p),
+        cumulant_factory_from_params=lambda p: lambda fwd: cgmy_cumulants(fwd, p),
+        N=N,
+        L=L,
+        method=method,
+        fd_step=fd_step,
+        maxiter=maxiter,
+        ftol=ftol,
+    )
+
+
+def calibrate_nig(
+    spec: SurfaceSpec,
+    market_ivs: np.ndarray,
+    initial: NigParams,
+    bounds: list[tuple[float, float]] | None = None,
+    weights: np.ndarray | None = None,
+    N: int = 512,
+    L: float = 12.0,
+    method: str = "Nelder-Mead",
+    fd_step: float = 1e-5,
+    maxiter: int = 1000,
+    ftol: float = 1e-10,
+) -> CalibrationResult:
+    """Calibrate NIG model parameters to a market IV surface."""
+    bounds = bounds or NIG_DEFAULT_BOUNDS
+    x0 = np.array([initial.sigma, initial.nu, initial.theta])
+    return _calibrate(
+        spec=spec,
+        market_ivs=market_ivs,
+        x0=x0,
+        bounds=bounds,
+        weights=weights,
+        unpack=_nig_from_vec,
+        cf_factory_from_params=lambda p: lambda fwd: lambda u: nig_cf(u, fwd, p),
+        cumulant_factory_from_params=lambda p: lambda fwd: nig_cumulants(fwd, p),
         N=N,
         L=L,
         method=method,
