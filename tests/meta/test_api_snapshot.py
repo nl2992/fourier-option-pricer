@@ -7,8 +7,6 @@ existing ones requires an explicit snapshot update here.
 
 from __future__ import annotations
 
-import pytest
-
 import foureng
 
 # Baseline public API captured at v0.5.1-baseline (2026-05-29).

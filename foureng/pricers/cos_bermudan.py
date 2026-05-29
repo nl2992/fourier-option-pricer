@@ -23,7 +23,7 @@ At x = 0 this simplifies to:
 
 Supported models (1-D Lévy, stationary independent increments):
     bsm, vg, cgmy, nig, kou, merton_jd, bilateral_gamma,
-    generalized_hyperbolic, fmls, meixner, nts
+    generalized_hyperbolic, fmls, meixner
 """
 
 from __future__ import annotations
@@ -35,10 +35,22 @@ from ..models.registry import MODEL_REGISTRY
 from ..products.bermudan import BermudanOption
 from .cos import cos_auto_grid
 
-_SUPPORTED_MODELS = frozenset({
-    "bsm", "vg", "cgmy", "nig", "kou", "merton_jd",
-    "bilateral_gamma", "generalized_hyperbolic", "fmls", "meixner", "nts",
-})
+_trapz = getattr(np, "trapezoid", None) or np.trapz  # type: ignore[attr-defined]
+
+_SUPPORTED_MODELS = frozenset(
+    {
+        "bsm",
+        "vg",
+        "cgmy",
+        "nig",
+        "kou",
+        "merton_jd",
+        "bilateral_gamma",
+        "generalized_hyperbolic",
+        "fmls",
+        "meixner",
+    }
+)
 
 
 def _check_model(model: str) -> None:
@@ -111,7 +123,7 @@ def cos_bermudan_price(
         grid = cos_auto_grid(cums, N=N, L=L)
 
     a, b, n_cos = grid.a, grid.b, grid.N
-    x = np.linspace(a, b, n_spatial)        # spatial grid
+    x = np.linspace(a, b, n_spatial)  # spatial grid
     omega = np.arange(n_cos, dtype=float) * np.pi / (b - a)  # frequencies
 
     # ── Helper: CF for a log-return over interval Δt ────────────────────────
@@ -131,17 +143,17 @@ def cos_bermudan_price(
     def _cos_coeffs(V: np.ndarray) -> np.ndarray:
         """V_k = (2/(b-a)) * ∫_a^b V(x) cos(ω_k(x−a)) dx via trapezoidal rule."""
         cos_kx = np.cos(omega[:, None] * (x[None, :] - a))  # (N, M)
-        return (2.0 / (b - a)) * np.trapz(V[None, :] * cos_kx, x, axis=1)
+        return (2.0 / (b - a)) * _trapz(V[None, :] * cos_kx, x, axis=1)
 
     # ── Helper: continuation value on spatial grid ──────────────────────────
     def _continuation(dt: float, V_k: np.ndarray) -> np.ndarray:
         """C(x) = e^{−rΔt} Σ_k' Re[φ(ω_k) exp(iω_k(x−a))] V_k."""
-        phi_vals = _cf(dt)                       # (N,) complex
-        Z = phi_vals * V_k                       # (N,) complex: φ_k * V_k
-        Z[0] *= 0.5                              # half-weight k=0
-        z = x - a                                # (M,) relative positions
-        Re_Z = np.real(Z)                        # (N,)
-        Im_Z = np.imag(Z)                        # (N,)
+        phi_vals = _cf(dt)  # (N,) complex
+        Z = phi_vals * V_k  # (N,) complex: φ_k * V_k
+        Z[0] *= 0.5  # half-weight k=0
+        z = x - a  # (M,) relative positions
+        Re_Z = np.real(Z)  # (N,)
+        Im_Z = np.imag(Z)  # (N,)
         cos_z = np.cos(omega[:, None] * z[None, :])  # (N, M)
         sin_z = np.sin(omega[:, None] * z[None, :])  # (N, M)
         raw = (Re_Z[:, None] * cos_z - Im_Z[:, None] * sin_z).sum(axis=0)
@@ -206,10 +218,17 @@ def cos_bermudan_price_strip(
     prices = np.empty(len(strikes))
     for i, K in enumerate(strikes):
         product = BermudanOption(
-            strike=float(K), maturity=maturity, cp=cp,
+            strike=float(K),
+            maturity=maturity,
+            cp=cp,
             exercise_times=exercise_times,
         )
         prices[i] = cos_bermudan_price(
-            model, fwd, params, product, grid=grid, n_spatial=n_spatial,
+            model,
+            fwd,
+            params,
+            product,
+            grid=grid,
+            n_spatial=n_spatial,
         )
     return prices

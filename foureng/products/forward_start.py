@@ -34,9 +34,7 @@ class ForwardStartOption(ProductSpec):
 
     def __post_init__(self) -> None:
         if self.start_time < 0:
-            raise ValueError(
-                f"ForwardStartOption: start_time must be >= 0, got {self.start_time}"
-            )
+            raise ValueError(f"ForwardStartOption: start_time must be >= 0, got {self.start_time}")
         if self.maturity <= 0:
             raise ValueError(f"ForwardStartOption: maturity must be > 0, got {self.maturity}")
         if self.maturity <= self.start_time:

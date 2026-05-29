@@ -52,8 +52,7 @@ class BarrierOption(ProductSpec):
         _valid_bt = {"down_out", "up_out", "down_in", "up_in"}
         if self.barrier_type not in _valid_bt:
             raise ValueError(
-                f"BarrierOption: barrier_type must be one of {_valid_bt}, "
-                f"got {self.barrier_type!r}"
+                f"BarrierOption: barrier_type must be one of {_valid_bt}, got {self.barrier_type!r}"
             )
         if self.monitoring not in ("continuous", "discrete"):
             raise ValueError(

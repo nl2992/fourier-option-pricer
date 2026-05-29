@@ -25,7 +25,7 @@ Design principles
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import FrozenSet, Optional
+from typing import FrozenSet
 
 
 @dataclass(frozen=True)
@@ -134,8 +134,19 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
         requires_cf=False,
         requires_simulation=True,
         supports_products=frozenset(
-            {"european", "barrier", "asian", "lookback", "variance_swap",
-             "variance_option", "cliquet", "exchange", "basket", "spread", "best_of"}
+            {
+                "european",
+                "barrier",
+                "asian",
+                "lookback",
+                "variance_swap",
+                "variance_option",
+                "cliquet",
+                "exchange",
+                "basket",
+                "spread",
+                "best_of",
+            }
         ),
         supports_exercise=frozenset({"european", "american", "bermudan"}),
         supports_path_dependent=True,
@@ -170,9 +181,7 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
     ),
     "proj": MethodSpec(
         requires_cf=True,
-        supports_products=frozenset(
-            {"european", "barrier", "asian", "bermudan", "american"}
-        ),
+        supports_products=frozenset({"european", "barrier", "asian", "bermudan", "american"}),
         supports_exercise=frozenset({"european", "bermudan", "american"}),
         supports_path_dependent=False,
         notes=(
@@ -184,9 +193,7 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
     "ctmc": MethodSpec(
         requires_cf=False,
         requires_markov_state=True,
-        supports_products=frozenset(
-            {"european", "american", "barrier", "bermudan"}
-        ),
+        supports_products=frozenset({"european", "american", "barrier", "bermudan"}),
         supports_exercise=frozenset({"european", "american", "bermudan"}),
         supports_path_dependent=False,
         notes=(
@@ -205,21 +212,34 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
 # Models with one-dimensional Lévy log-price process — eligible for
 # standard COS Bermudan backward induction.
 _LEVY_1D_MODELS = {
-    "bsm", "vg", "cgmy", "nig", "kou", "merton_jd",
-    "bilateral_gamma", "generalized_hyperbolic", "fmls",
-    "meixner", "nts",
+    "bsm",
+    "vg",
+    "cgmy",
+    "nig",
+    "kou",
+    "merton_jd",
+    "bilateral_gamma",
+    "generalized_hyperbolic",
+    "fmls",
+    "meixner",
 }
 
 # Models with stochastic volatility — COS Bermudan requires 2-D extension.
 _SV_MODELS = {
-    "heston", "ousv", "sv32", "rough_heston", "garch_wmw2012",
-    "double_heston", "vgsa", "cgmysa",
+    "heston",
+    "ousv",
+    "sv32",
+    "rough_heston",
+    "garch_wmw2012",
+    "double_heston",
+    "vgsa",
 }
 
 # Jump-diffusion models that layer jumps on a SV base
 _SVJD_MODELS = {
-    "bates", "heston_kou", "heston_cgmy", "heston_nig", "heston_vg",
-    "svjj", "bns_gamma_ou",
+    "bates",
+    "heston_kou",
+    "heston_cgmy",
 }
 
 
@@ -256,9 +276,7 @@ def explain_capability(
         )
 
     if model not in MODEL_REGISTRY:
-        return (
-            f"Not supported: model={model!r} is not in the model registry."
-        )
+        return f"Not supported: model={model!r} is not in the model registry."
 
     spec = METHOD_REGISTRY[method]
 
@@ -304,19 +322,15 @@ def _product_hint(model: str, product: str, method: str) -> str:
             "lattice, or ctmc."
         ),
         "american": (
-            "American exercise requires backward induction. "
-            "Use pde_fd, lattice, lsmc, or ctmc."
+            "American exercise requires backward induction. Use pde_fd, lattice, lsmc, or ctmc."
         ),
         "variance_swap": (
             "Variance swap payoff is path-dependent. "
             "Use variance_analytic_bsm (BSM) or variance_heston (Heston)."
         ),
-        "variance_option": (
-            "Variance option payoff is path-dependent. Use variance_mc."
-        ),
+        "variance_option": ("Variance option payoff is path-dependent. Use variance_mc."),
         "cliquet": (
-            "Cliquet payoff is path-dependent across reset periods. "
-            "Use cliquet_mc or cliquet_proj."
+            "Cliquet payoff is path-dependent across reset periods. Use cliquet_mc or cliquet_proj."
         ),
         "exchange": "Use multi_asset_mc or the Margrabe closed-form.",
         "basket": "Use multi_asset_mc or log-normal basket approximation.",
@@ -349,6 +363,7 @@ def _model_restriction(model: str, product: str, method: str) -> str:
 
     if method == "pyfeng_fft":
         from foureng.models.registry import MODEL_REGISTRY
+
         if model in MODEL_REGISTRY and not MODEL_REGISTRY[model].pyfeng_fft:
             return (
                 f"model={model!r} is not backed by a PyFENG FFT pricer. "

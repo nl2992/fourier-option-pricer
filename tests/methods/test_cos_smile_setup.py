@@ -7,8 +7,8 @@ import pytest
 from pytest import approx
 
 import foureng as fe
+from foureng.pricers.cos import cos_auto_grid
 from foureng.pricers.cos_setup import COSSmileSetup
-from foureng.pricers.cos import cos_auto_grid, cos_prices
 
 
 @pytest.fixture
@@ -34,6 +34,7 @@ def vg_setup():
 
 # ── Correctness: matches vectorised cos_prices ─────────────────────────────
 
+
 def test_smile_setup_matches_vectorized_cos_heston(heston_setup):
     fwd, params = heston_setup
     strikes = np.array([80.0, 90.0, 95.0, 100.0, 105.0, 110.0, 120.0])
@@ -42,8 +43,9 @@ def test_smile_setup_matches_vectorized_cos_heston(heston_setup):
     calls_setup = setup.price_call(strikes)
 
     calls_strip = fe.price_strip("heston", "cos_improved", strikes, fwd, params)
-    np.testing.assert_allclose(calls_setup, calls_strip, rtol=1e-4,
-                               err_msg="COSSmileSetup calls should match price_strip")
+    np.testing.assert_allclose(
+        calls_setup, calls_strip, rtol=1e-4, err_msg="COSSmileSetup calls should match price_strip"
+    )
 
 
 def test_smile_setup_matches_vectorized_cos_bsm(bsm_setup):
@@ -86,6 +88,7 @@ def test_smile_setup_put_matches_call_via_parity(bsm_setup):
 
 # ── Determinism ────────────────────────────────────────────────────────────
 
+
 def test_repeated_smile_setup_is_deterministic(heston_setup):
     fwd, params = heston_setup
     strikes = np.array([95.0, 100.0, 105.0])
@@ -98,6 +101,7 @@ def test_repeated_smile_setup_is_deterministic(heston_setup):
 
 
 # ── Maturity validation ─────────────────────────────────────────────────────
+
 
 def test_smile_setup_rejects_changed_maturity(bsm_setup):
     fwd, params = bsm_setup
@@ -114,6 +118,7 @@ def test_smile_setup_validates_same_maturity(bsm_setup):
 
 # ── Error handling ──────────────────────────────────────────────────────────
 
+
 def test_smile_setup_unknown_model_raises():
     fwd = fe.ForwardSpec(S0=100.0, r=0.05, q=0.0, T=1.0)
     with pytest.raises(ValueError, match="unknown model"):
@@ -121,6 +126,7 @@ def test_smile_setup_unknown_model_raises():
 
 
 # ── VG model ───────────────────────────────────────────────────────────────
+
 
 def test_smile_setup_vg_matches_price_strip(vg_setup):
     fwd, params = vg_setup
@@ -134,6 +140,7 @@ def test_smile_setup_vg_matches_price_strip(vg_setup):
 
 
 # ── Explicit grid override ─────────────────────────────────────────────────
+
 
 def test_smile_setup_explicit_grid(bsm_setup):
     fwd, params = bsm_setup

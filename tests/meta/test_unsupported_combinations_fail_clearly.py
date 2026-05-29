@@ -11,8 +11,7 @@ from __future__ import annotations
 
 import pytest
 
-from foureng.core.capabilities import explain_capability, METHOD_REGISTRY
-
+from foureng.core.capabilities import METHOD_REGISTRY, explain_capability
 
 # Every (model, product, method) below should be "Not supported"
 _UNSUPPORTED = [
@@ -59,9 +58,7 @@ def test_unsupported_returns_not_supported_string(model, product, method):
 def test_unsupported_explanation_is_nonempty(model, product, method):
     result = explain_capability(model, product, method)
     # Should be at least 20 chars to be informative
-    assert len(result) > 20, (
-        f"Explanation too short for ({model}, {product}, {method}): {result!r}"
-    )
+    assert len(result) > 20, f"Explanation too short for ({model}, {product}, {method}): {result!r}"
 
 
 def test_price_dispatcher_raises_not_implemented_for_barrier():
@@ -79,15 +76,15 @@ def test_price_dispatcher_raises_not_implemented_for_barrier():
 
 
 def test_price_dispatcher_raises_not_implemented_for_asian():
+    import numpy as np
+
     import foureng as fe
     from foureng.pipeline import price
     from foureng.products import AsianOption
-    import numpy as np
 
     fwd = fe.ForwardSpec(S0=100.0, r=0.05, q=0.0, T=1.0)
     params = fe.BsmParams(sigma=0.20)
-    opt = AsianOption(strike=100.0, maturity=1.0, cp=1,
-                      monitoring_times=np.linspace(0.25, 1.0, 4))
+    opt = AsianOption(strike=100.0, maturity=1.0, cp=1, monitoring_times=np.linspace(0.25, 1.0, 4))
     with pytest.raises(NotImplementedError) as exc_info:
         price(opt, "bsm", "cos", fwd, params)
     assert "asian" in str(exc_info.value).lower()

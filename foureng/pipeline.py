@@ -441,6 +441,7 @@ def price_strip(
 # Product-level pricing dispatcher
 # ---------------------------------------------------------------------------
 
+
 def price(
     product,
     model: str,
@@ -483,17 +484,24 @@ def price(
     from .products.base import ProductSpec  # local import to avoid circular
 
     if not isinstance(product, ProductSpec):
-        raise TypeError(
-            f"price(): expected a ProductSpec subclass, got {type(product).__name__!r}"
-        )
+        raise TypeError(f"price(): expected a ProductSpec subclass, got {type(product).__name__!r}")
 
     pt = product.product_type
 
     if pt == "european":
         # Override fwd.T with the product's own maturity.
         from .models.base import ForwardSpec as _FwdSpec
+        from .products.european import EuropeanOption
+
+        if not isinstance(product, EuropeanOption):
+            raise TypeError(
+                "price(): product_type='european' must be represented by "
+                f"EuropeanOption, got {type(product).__name__!r}"
+            )
         fwd_t = _FwdSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=product.maturity)
-        results = price_strip(model, method, [product.strike], fwd_t, params, grid=grid, cp=product.cp)
+        results = price_strip(
+            model, method, [product.strike], fwd_t, params, grid=grid, cp=product.cp
+        )
         return float(results[0])
 
     # For future products, provide a capability hint instead of a bare NotImplementedError.
@@ -515,6 +523,4 @@ def price(
         "double_barrier": "Use barrier_mc / barrier_proj (Phase 4.2).",
     }
     hint = _HINTS.get(pt, f"No pricer is registered for product_type={pt!r}.")
-    raise NotImplementedError(
-        f"price(): product_type={pt!r} is not yet implemented.\n{hint}"
-    )
+    raise NotImplementedError(f"price(): product_type={pt!r} is not yet implemented.\n{hint}")

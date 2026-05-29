@@ -65,7 +65,4 @@ class BermudanOption(ProductSpec):
     @property
     def is_european_equivalent(self) -> bool:
         """True when there is exactly one exercise date equal to maturity."""
-        return (
-            self.n_exercise == 1
-            and abs(float(self.exercise_times[-1]) - self.maturity) < 1e-12
-        )
+        return self.n_exercise == 1 and abs(float(self.exercise_times[-1]) - self.maturity) < 1e-12

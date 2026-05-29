@@ -21,36 +21,70 @@ import pytest
 
 import foureng as fe
 
-
 # ── model fixture catalogue ────────────────────────────────────────────────
 
 ALL_MODELS = [
-    ("bsm",          fe.BsmParams(sigma=0.20)),
-    ("heston",       fe.HestonParams(kappa=2.0, theta=0.04, nu=0.5, rho=-0.5, v0=0.04)),
-    ("vg",           fe.VGParams(sigma=0.12, nu=0.3, theta=-0.14)),
-    ("cgmy",         fe.CgmyParams(C=1.0, G=5.0, M=5.0, Y=1.5)),
-    ("nig",          fe.NigParams(sigma=0.15, nu=0.3, theta=-0.14)),
-    ("kou",          fe.KouParams(sigma=0.15, lam=0.5, p=0.4, eta1=10.0, eta2=5.0)),
-    ("merton_jd",    fe.MertonJDParams(sigma=0.15, lam=0.5, muj=-0.1, sigj=0.10)),
-    ("bates",        fe.BatesParams(kappa=2.0, theta=0.04, nu=0.5, rho=-0.5, v0=0.04,
-                                    lam_j=0.5, mu_j=-0.1, sigma_j=0.1)),
-    ("heston_kou",   fe.HestonKouParams(kappa=2.0, theta=0.04, nu=0.5, rho=-0.5, v0=0.04,
-                                         lam_j=0.5, p_j=0.4, eta1=10.0, eta2=5.0)),
-    ("heston_cgmy",  fe.HestonCGMYParams(kappa=2.0, theta=0.04, nu=0.5, rho=-0.5, v0=0.04,
-                                          C=0.5, G=5.0, M=5.0, Y=1.5)),
-    ("double_heston", fe.DoubleHestonParams(kappa1=2.0, theta1=0.02, nu1=0.3, rho1=-0.4, v01=0.02,
-                                             kappa2=1.0, theta2=0.02, nu2=0.2, rho2=-0.3, v02=0.02)),
-    ("vgsa",         fe.VGSAParams(C=1.0, G=5.0, M=5.0, kappa=3.0, eta=1.0, lam=1.0)),
+    ("bsm", fe.BsmParams(sigma=0.20)),
+    ("heston", fe.HestonParams(kappa=2.0, theta=0.04, nu=0.5, rho=-0.5, v0=0.04)),
+    ("vg", fe.VGParams(sigma=0.12, nu=0.3, theta=-0.14)),
+    ("cgmy", fe.CgmyParams(C=1.0, G=5.0, M=5.0, Y=1.5)),
+    ("nig", fe.NigParams(sigma=0.15, nu=0.3, theta=-0.14)),
+    ("kou", fe.KouParams(sigma=0.15, lam=0.5, p=0.4, eta1=10.0, eta2=5.0)),
+    ("merton_jd", fe.MertonJDParams(sigma=0.15, lam=0.5, muj=-0.1, sigj=0.10)),
+    (
+        "bates",
+        fe.BatesParams(
+            kappa=2.0, theta=0.04, nu=0.5, rho=-0.5, v0=0.04, lam_j=0.5, mu_j=-0.1, sigma_j=0.1
+        ),
+    ),
+    (
+        "heston_kou",
+        fe.HestonKouParams(
+            kappa=2.0,
+            theta=0.04,
+            nu=0.5,
+            rho=-0.5,
+            v0=0.04,
+            lam_j=0.5,
+            p_j=0.4,
+            eta1=10.0,
+            eta2=5.0,
+        ),
+    ),
+    (
+        "heston_cgmy",
+        fe.HestonCGMYParams(
+            kappa=2.0, theta=0.04, nu=0.5, rho=-0.5, v0=0.04, C=0.5, G=5.0, M=5.0, Y=1.5
+        ),
+    ),
+    (
+        "double_heston",
+        fe.DoubleHestonParams(
+            kappa1=2.0,
+            theta1=0.02,
+            nu1=0.3,
+            rho1=-0.4,
+            v01=0.02,
+            kappa2=1.0,
+            theta2=0.02,
+            nu2=0.2,
+            rho2=-0.3,
+            v02=0.02,
+        ),
+    ),
+    ("vgsa", fe.VGSAParams(C=1.0, G=5.0, M=5.0, kappa=3.0, eta=1.0, lam=1.0)),
 ]
 
 
 # ── helpers ────────────────────────────────────────────────────────────────
+
 
 def _price(model: str, params, fwd: fe.ForwardSpec, K: float) -> float:
     return float(fe.price_strip(model, "cos_improved", [K], fwd, params)[0])
 
 
 # ── carry-to-forward ATM ───────────────────────────────────────────────────
+
 
 @pytest.mark.parametrize("model,params", ALL_MODELS)
 def test_carry_to_forward_atm(model, params):
@@ -65,12 +99,12 @@ def test_carry_to_forward_atm(model, params):
 
     tol = max(1e-6 * p, 1e-10)
     assert abs(p - disc * p_fwd) < tol, (
-        f"{model}: C={p:.8f} != disc*C_fwd={disc * p_fwd:.8f}  "
-        f"(disc={disc:.6f})"
+        f"{model}: C={p:.8f} != disc*C_fwd={disc * p_fwd:.8f}  (disc={disc:.6f})"
     )
 
 
 # ── carry-to-forward across strikes ───────────────────────────────────────
+
 
 @pytest.mark.parametrize("model,params", ALL_MODELS)
 def test_carry_to_forward_strip(model, params):
@@ -85,12 +119,12 @@ def test_carry_to_forward_strip(model, params):
     p_fwd = fe.price_strip(model, "cos_improved", strikes, fwd_fwd, params)
 
     np.testing.assert_allclose(
-        p, disc * p_fwd, rtol=1e-6,
-        err_msg=f"{model}: carry-to-forward strip identity failed"
+        p, disc * p_fwd, rtol=1e-6, err_msg=f"{model}: carry-to-forward strip identity failed"
     )
 
 
 # ── different rate levels give same forward-equivalent price ───────────────
+
 
 @pytest.mark.parametrize("model,params", ALL_MODELS)
 def test_different_rates_same_forward_equivalent(model, params):
@@ -108,7 +142,6 @@ def test_different_rates_same_forward_equivalent(model, params):
     # F0 = S0 * exp((r-q)*T) → 100 * exp(0.03*2) with r=0.025, q=0.01, T=2 → different
     # Nope. Let's just verify the forward-zero version from two original sets share same disc*p_fwd.
     F0 = fwd_a.F0
-    disc = fwd_a.disc
     fwd_fwd = fe.ForwardSpec(S0=F0, r=0.0, q=0.0, T=1.0)
 
     # A second parametrisation with same F0 and disc: only possible if r=0.05, q=0.02 (exact match).
@@ -119,6 +152,7 @@ def test_different_rates_same_forward_equivalent(model, params):
 
 
 # ── pure-carry: continuous dividend matches cost-of-carry ─────────────────
+
 
 @pytest.mark.parametrize("model,params", ALL_MODELS)
 def test_continuous_dividend_adjusts_forward(model, params):
@@ -134,6 +168,5 @@ def test_continuous_dividend_adjusts_forward(model, params):
     p_high = _price(model, params, fwd_high_q, 100.0)
 
     assert p_low > p_high, (
-        f"{model}: higher dividend should lower call; "
-        f"p_low={p_low:.6f} p_high={p_high:.6f}"
+        f"{model}: higher dividend should lower call; p_low={p_low:.6f} p_high={p_high:.6f}"
     )

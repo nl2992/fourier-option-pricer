@@ -21,8 +21,8 @@ import foureng as fe
 from foureng.pricers.cos_bermudan import cos_bermudan_price, cos_bermudan_price_strip
 from foureng.products.bermudan import BermudanOption
 
-
 # ── fixtures ───────────────────────────────────────────────────────────────
+
 
 @pytest.fixture
 def bsm_atm():
@@ -45,10 +45,10 @@ def _bsm_call(S, K, r, q, T, sig):
 
 # ── M=1 matches European ───────────────────────────────────────────────────
 
+
 def test_bsm_bermudan_m1_matches_european_put(bsm_atm):
     fwd, params = bsm_atm
-    product = BermudanOption(strike=100.0, maturity=1.0, cp=-1,
-                             exercise_times=np.array([1.0]))
+    product = BermudanOption(strike=100.0, maturity=1.0, cp=-1, exercise_times=np.array([1.0]))
     price = cos_bermudan_price("bsm", fwd, params, product)
     ref = _bsm_put(fwd.S0, 100.0, fwd.r, fwd.q, fwd.T, params.sigma)
     assert price == approx(ref, abs=1e-3), (
@@ -58,8 +58,7 @@ def test_bsm_bermudan_m1_matches_european_put(bsm_atm):
 
 def test_bsm_bermudan_m1_matches_european_call(bsm_atm):
     fwd, params = bsm_atm
-    product = BermudanOption(strike=100.0, maturity=1.0, cp=1,
-                             exercise_times=np.array([1.0]))
+    product = BermudanOption(strike=100.0, maturity=1.0, cp=1, exercise_times=np.array([1.0]))
     price = cos_bermudan_price("bsm", fwd, params, product)
     ref = _bsm_call(fwd.S0, 100.0, fwd.r, fwd.q, fwd.T, params.sigma)
     assert price == approx(ref, abs=1e-3), (
@@ -69,32 +68,31 @@ def test_bsm_bermudan_m1_matches_european_call(bsm_atm):
 
 # ── Bermudan ≥ European ────────────────────────────────────────────────────
 
+
 def test_bsm_bermudan_put_exceeds_european(bsm_atm):
     fwd, params = bsm_atm
     eur = _bsm_put(fwd.S0, 100.0, fwd.r, fwd.q, fwd.T, params.sigma)
-    for m, ex in [(2, np.array([0.5, 1.0])),
-                  (4, np.linspace(0.25, 1.0, 4)),
-                  (12, np.linspace(1 / 12, 1.0, 12))]:
+    for m, ex in [
+        (2, np.array([0.5, 1.0])),
+        (4, np.linspace(0.25, 1.0, 4)),
+        (12, np.linspace(1 / 12, 1.0, 12)),
+    ]:
         product = BermudanOption(strike=100.0, maturity=1.0, cp=-1, exercise_times=ex)
         price = cos_bermudan_price("bsm", fwd, params, product)
-        assert price >= eur - 1e-6, (
-            f"M={m} Bermudan put {price:.6f} < European put {eur:.6f}"
-        )
+        assert price >= eur - 1e-6, f"M={m} Bermudan put {price:.6f} < European put {eur:.6f}"
 
 
 def test_bsm_bermudan_call_exceeds_european(bsm_atm):
     fwd, params = bsm_atm
     eur = _bsm_call(fwd.S0, 100.0, fwd.r, fwd.q, fwd.T, params.sigma)
-    for m, ex in [(4, np.linspace(0.25, 1.0, 4)),
-                  (12, np.linspace(1 / 12, 1.0, 12))]:
+    for m, ex in [(4, np.linspace(0.25, 1.0, 4)), (12, np.linspace(1 / 12, 1.0, 12))]:
         product = BermudanOption(strike=100.0, maturity=1.0, cp=1, exercise_times=ex)
         price = cos_bermudan_price("bsm", fwd, params, product)
-        assert price >= eur - 1e-6, (
-            f"M={m} Bermudan call {price:.6f} < European call {eur:.6f}"
-        )
+        assert price >= eur - 1e-6, f"M={m} Bermudan call {price:.6f} < European call {eur:.6f}"
 
 
 # ── Monotone in exercise frequency ────────────────────────────────────────
+
 
 def test_bsm_bermudan_put_monotone_in_exercise_frequency(bsm_atm):
     fwd, params = bsm_atm
@@ -106,16 +104,24 @@ def test_bsm_bermudan_put_monotone_in_exercise_frequency(bsm_atm):
         prices.append(cos_bermudan_price("bsm", fwd, params, product))
     for i in range(len(prices) - 1):
         assert prices[i] <= prices[i + 1] + 1e-6, (
-            f"M={Ms[i]}: {prices[i]:.6f} > M={Ms[i+1]}: {prices[i+1]:.6f}"
+            f"M={Ms[i]}: {prices[i]:.6f} > M={Ms[i + 1]}: {prices[i + 1]:.6f}"
         )
 
 
 # ── Positive and finite ────────────────────────────────────────────────────
 
-@pytest.mark.parametrize("K,cp", [
-    (90.0, -1), (100.0, -1), (110.0, -1),
-    (90.0, 1), (100.0, 1), (110.0, 1),
-])
+
+@pytest.mark.parametrize(
+    "K,cp",
+    [
+        (90.0, -1),
+        (100.0, -1),
+        (110.0, -1),
+        (90.0, 1),
+        (100.0, 1),
+        (110.0, 1),
+    ],
+)
 def test_bsm_bermudan_prices_positive_finite(K, cp, bsm_atm):
     fwd, params = bsm_atm
     ex = np.linspace(0.25, 1.0, 4)
@@ -125,6 +131,7 @@ def test_bsm_bermudan_prices_positive_finite(K, cp, bsm_atm):
 
 
 # ── Strip consistency ──────────────────────────────────────────────────────
+
 
 def test_bsm_bermudan_strip_matches_scalar_loop(bsm_atm):
     fwd, params = bsm_atm
@@ -157,18 +164,17 @@ def test_bsm_bermudan_call_strip_monotone_in_strike(bsm_atm):
 
 # ── Error handling ─────────────────────────────────────────────────────────
 
+
 def test_bsm_bermudan_rejects_sv_model():
     fwd = fe.ForwardSpec(S0=100.0, r=0.05, q=0.0, T=1.0)
     params = fe.HestonParams(kappa=2.0, theta=0.04, nu=0.5, rho=-0.5, v0=0.04)
-    product = BermudanOption(strike=100.0, maturity=1.0, cp=-1,
-                             exercise_times=np.array([1.0]))
+    product = BermudanOption(strike=100.0, maturity=1.0, cp=-1, exercise_times=np.array([1.0]))
     with pytest.raises(NotImplementedError, match="1-D COS Bermudan"):
         cos_bermudan_price("heston", fwd, params, product)
 
 
 def test_bsm_bermudan_rejects_unknown_model():
     fwd = fe.ForwardSpec(S0=100.0, r=0.05, q=0.0, T=1.0)
-    product = BermudanOption(strike=100.0, maturity=1.0, cp=-1,
-                             exercise_times=np.array([1.0]))
+    product = BermudanOption(strike=100.0, maturity=1.0, cp=-1, exercise_times=np.array([1.0]))
     with pytest.raises(ValueError, match="unknown model"):
         cos_bermudan_price("unicorn_model", fwd, None, product)

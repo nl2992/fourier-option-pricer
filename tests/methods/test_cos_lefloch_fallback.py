@@ -13,11 +13,9 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
-from pytest import approx
 
 import foureng as fe
-from foureng.pricers.cos import cos_prices, cos_auto_grid, _LEFLOCH_B_THRESHOLD
-from foureng.utils.grids import COSGrid
+from foureng.pricers.cos import _LEFLOCH_B_THRESHOLD, cos_auto_grid, cos_prices
 
 
 @pytest.fixture
@@ -44,6 +42,7 @@ def heston_long():
 
 # ── auto formula matches lefloch on normal ranges ─────────────────────────
 
+
 def test_auto_formula_matches_lefloch_on_normal_ranges(bsm_narrow):
     fwd, params, phi, grid = bsm_narrow
     strikes = np.array([85.0, 90.0, 95.0, 100.0, 105.0, 110.0, 115.0])
@@ -55,6 +54,7 @@ def test_auto_formula_matches_lefloch_on_normal_ranges(bsm_narrow):
 
 
 # ── lefloch forced path reproduces put_parity ─────────────────────────────
+
 
 def test_forced_lefloch_path_reproduces_put_parity(bsm_narrow):
     fwd, params, phi, grid = bsm_narrow
@@ -68,6 +68,7 @@ def test_forced_lefloch_path_reproduces_put_parity(bsm_narrow):
 
 # ── fang_oosterlee forced path reproduces call_direct ─────────────────────
 
+
 def test_forced_fang_oosterlee_path_reproduces_legacy_behavior(bsm_narrow):
     fwd, params, phi, grid = bsm_narrow
     strikes = np.array([90.0, 100.0, 110.0])
@@ -79,6 +80,7 @@ def test_forced_fang_oosterlee_path_reproduces_legacy_behavior(bsm_narrow):
 
 
 # ── auto uses lefloch when b > threshold ──────────────────────────────────
+
 
 def test_auto_formula_avoids_large_b_overflow(heston_long):
     fwd, params, phi, grid = heston_long
@@ -92,8 +94,9 @@ def test_auto_formula_avoids_large_b_overflow(heston_long):
     r_lefloch = cos_prices(phi, fwd, strikes, grid, pricing_formula="lefloch").call_prices
 
     # When b is large, "auto" must route through lefloch
-    np.testing.assert_allclose(r_auto, r_lefloch, rtol=1e-12,
-                               err_msg="Auto should route to lefloch for wide grids")
+    np.testing.assert_allclose(
+        r_auto, r_lefloch, rtol=1e-12, err_msg="Auto should route to lefloch for wide grids"
+    )
 
 
 def test_large_b_fang_oosterlee_degrades_vs_lefloch(heston_long):
@@ -106,7 +109,6 @@ def test_large_b_fang_oosterlee_degrades_vs_lefloch(heston_long):
     strikes = np.array([60.0, 100.0, 150.0])
 
     r_lefloch = cos_prices(phi, fwd, strikes, grid, pricing_formula="lefloch").call_prices
-    r_fo = cos_prices(phi, fwd, strikes, grid, pricing_formula="fang_oosterlee").call_prices
 
     # lefloch prices must be non-negative and bounded
     assert np.all(r_lefloch >= 0), "Le Floc'h prices must be non-negative"
@@ -120,12 +122,12 @@ def test_large_b_fang_oosterlee_degrades_vs_lefloch(heston_long):
 
 # ── put-call parity after lefloch fallback ────────────────────────────────
 
+
 def test_put_call_parity_after_lefloch_fallback(heston_long):
     fwd, params, phi, grid = heston_long
     strikes = np.array([80.0, 100.0, 120.0])
 
     calls = cos_prices(phi, fwd, strikes, grid, pricing_formula="lefloch").call_prices
-    puts = cos_prices(phi, fwd, strikes, grid, pricing_formula="lefloch", payoff_mode="put_parity").call_prices
 
     # The lefloch path always returns calls; derive puts via parity
     puts_from_calls = calls - fwd.disc * (fwd.F0 - strikes)
@@ -134,6 +136,7 @@ def test_put_call_parity_after_lefloch_fallback(heston_long):
 
 
 # ── invalid pricing_formula rejected ──────────────────────────────────────
+
 
 def test_invalid_pricing_formula_raises():
     fwd = fe.ForwardSpec(S0=100.0, r=0.05, q=0.0, T=1.0)
@@ -163,6 +166,7 @@ def test_pricing_formula_none_uses_payoff_mode():
 
 # ── stress: CGMY near Y=2 ─────────────────────────────────────────────────
 
+
 @pytest.mark.parametrize("Y", [1.7, 1.9, 1.95])
 def test_cos_lefloch_stable_cgmy_near_y2(Y):
     fwd = fe.ForwardSpec(S0=100.0, r=0.05, q=0.0, T=1.0)
@@ -179,6 +183,7 @@ def test_cos_lefloch_stable_cgmy_near_y2(Y):
 
 
 # ── stress: VG long maturity ──────────────────────────────────────────────
+
 
 def test_cos_lefloch_stable_vg_long_maturity():
     fwd = fe.ForwardSpec(S0=100.0, r=0.03, q=0.0, T=10.0)

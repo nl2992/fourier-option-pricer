@@ -23,20 +23,18 @@ Both calls and puts produced from the same cached density coefficients.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Optional
 
 import numpy as np
 
-from ..models.base import CharFunc, ForwardSpec
+from ..models.base import ForwardSpec
 from ..models.registry import MODEL_REGISTRY
 from ..utils.grids import COSGrid
 from ..utils.spectral_filters import COSFilterSpec, cos_filter_weights
 from .cos import (
-    COSResult,
     _call_payoff_coeffs,
     _put_payoff_coeffs,
-    cos_auto_grid,
     recommended_cos_policy,
 )
 
@@ -107,6 +105,7 @@ class COSSmileSetup:
             cums = entry.cumulants(fwd, params)
             policy = recommended_cos_policy(model, params)
             from ..pricers.cos import cos_adaptive_decision
+
             decision = cos_adaptive_decision(cums, model=model, params=params, policy=policy)
             grid = decision.grid
 
@@ -114,7 +113,9 @@ class COSSmileSetup:
         k = np.arange(N)
         omega = k * np.pi / (b - a)
 
-        phi = lambda u: entry.cf(u, fwd, params)
+        def phi(u):
+            return entry.cf(u, fwd, params)
+
         phi_vals = phi(omega)
 
         center = float(getattr(grid, "center", 0.0))

@@ -7,12 +7,21 @@ import pytest
 from foureng.core.capabilities import METHOD_REGISTRY, MethodSpec
 
 _BASELINE_METHODS = {
-    "cos", "cos_improved", "cos_filtered",
-    "carr_madan", "frft", "pyfeng_fft",
+    "cos",
+    "cos_improved",
+    "cos_filtered",
+    "carr_madan",
+    "frft",
+    "pyfeng_fft",
 }
 
 _PLANNED_METHODS = {
-    "cos_bermudan", "monte_carlo", "pde_fd", "lattice", "proj", "ctmc",
+    "cos_bermudan",
+    "monte_carlo",
+    "pde_fd",
+    "lattice",
+    "proj",
+    "ctmc",
 }
 
 
@@ -33,16 +42,12 @@ def test_every_method_has_capability_spec():
 
 def test_every_method_supports_at_least_one_product():
     for key, spec in METHOD_REGISTRY.items():
-        assert len(spec.supports_products) >= 1, (
-            f"{key!r}: supports_products must be non-empty"
-        )
+        assert len(spec.supports_products) >= 1, f"{key!r}: supports_products must be non-empty"
 
 
 def test_every_method_supports_at_least_one_exercise_style():
     for key, spec in METHOD_REGISTRY.items():
-        assert len(spec.supports_exercise) >= 1, (
-            f"{key!r}: supports_exercise must be non-empty"
-        )
+        assert len(spec.supports_exercise) >= 1, f"{key!r}: supports_exercise must be non-empty"
 
 
 def test_cf_methods_require_cf():
@@ -83,4 +88,5 @@ def test_all_entries_are_frozen():
 
 def test_import_from_pricers_registry():
     from foureng.pricers.registry import METHOD_REGISTRY as MR2
+
     assert MR2 is METHOD_REGISTRY

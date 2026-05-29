@@ -47,6 +47,4 @@ class DigitalOption(ProductSpec):
                 f"'asset_or_nothing', got {self.payoff_type!r}"
             )
         if self.cash_amount <= 0:
-            raise ValueError(
-                f"DigitalOption: cash_amount must be > 0, got {self.cash_amount}"
-            )
+            raise ValueError(f"DigitalOption: cash_amount must be > 0, got {self.cash_amount}")

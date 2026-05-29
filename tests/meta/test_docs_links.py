@@ -52,7 +52,7 @@ def test_model_zoo_lists_heston():
 
 def _extract_md_links(text: str) -> list[str]:
     """Extract relative file paths from markdown links like [label](path)."""
-    return re.findall(r'\[(?:[^\]]+)\]\(([^)#http][^)]*)\)', text)
+    return re.findall(r"\[(?:[^\]]+)\]\(([^)#http][^)]*)\)", text)
 
 
 def test_validation_matrix_internal_links_resolve():

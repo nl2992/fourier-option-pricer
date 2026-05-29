@@ -8,8 +8,8 @@ import pytest
 from foureng.products import (
     AmericanOption,
     AsianOption,
-    BermudanOption,
     BarrierOption,
+    BermudanOption,
     DigitalOption,
     EuropeanOption,
     ForwardStartOption,
@@ -36,9 +36,7 @@ def test_invalid_cp_rejected(cp):
 
 
 def test_barrier_type_all_valid_values_accepted():
-    for bt, barrier in [
-        ("down_out", 80.0), ("down_in", 80.0), ("up_out", 120.0), ("up_in", 120.0)
-    ]:
+    for bt, barrier in [("down_out", 80.0), ("down_in", 80.0), ("up_out", 120.0), ("up_in", 120.0)]:
         opt = BarrierOption(strike=100.0, barrier=barrier, maturity=1.0, cp=1, barrier_type=bt)
         assert opt.barrier_type == bt
 
@@ -50,20 +48,17 @@ def test_barrier_type_invalid_string_rejected():
 
 def test_asian_empty_monitoring_times_rejected():
     with pytest.raises(ValueError, match="non-empty"):
-        AsianOption(strike=100.0, maturity=1.0, cp=1,
-                    monitoring_times=np.array([]))
+        AsianOption(strike=100.0, maturity=1.0, cp=1, monitoring_times=np.array([]))
 
 
 def test_asian_negative_monitoring_time_rejected():
     with pytest.raises(ValueError, match="> 0"):
-        AsianOption(strike=100.0, maturity=1.0, cp=1,
-                    monitoring_times=np.array([-0.5, 0.5, 1.0]))
+        AsianOption(strike=100.0, maturity=1.0, cp=1, monitoring_times=np.array([-0.5, 0.5, 1.0]))
 
 
 def test_bermudan_empty_exercise_times_rejected():
     with pytest.raises(ValueError, match="non-empty"):
-        BermudanOption(strike=100.0, maturity=1.0, cp=-1,
-                       exercise_times=np.array([]))
+        BermudanOption(strike=100.0, maturity=1.0, cp=-1, exercise_times=np.array([]))
 
 
 def test_american_basic():

@@ -53,8 +53,9 @@ def test_bermudan_exercise_times_stored_correctly():
 
 def test_asian_monitoring_times_stored_correctly():
     t = np.linspace(0.1, 1.0, 10)
-    opt = AsianOption(strike=100.0, maturity=1.0, cp=1,
-                      monitoring_times=t, average_type="geometric")
+    opt = AsianOption(
+        strike=100.0, maturity=1.0, cp=1, monitoring_times=t, average_type="geometric"
+    )
     np.testing.assert_array_almost_equal(opt.monitoring_times, t)
 
 

@@ -65,6 +65,7 @@ def test_price_strip_empty_strikes_raises():
 
 # ── price() product-level dispatcher ──────────────────────────────────────
 
+
 def test_price_european_option_scalar_result():
     fwd = fe.ForwardSpec(S0=100.0, r=0.05, q=0.0, T=0.0)  # T overridden by product
     params = fe.BsmParams(sigma=0.20)
@@ -82,9 +83,7 @@ def test_price_european_uses_product_maturity_not_fwd_T():
     result_product = price(opt, "bsm", "cos", fwd_wrong_T, params)
 
     fwd_correct = fe.ForwardSpec(S0=100.0, r=0.05, q=0.0, T=1.0)
-    result_strip = float(
-        fe.price_strip("bsm", "cos", [100.0], fwd_correct, params)[0]
-    )
+    result_strip = float(fe.price_strip("bsm", "cos", [100.0], fwd_correct, params)[0])
     assert result_product == approx(result_strip, rel=1e-6)
 
 
@@ -105,6 +104,7 @@ def test_price_strip_equivalent_to_vector_of_european_products():
 
 def test_price_unimplemented_product_type_raises_not_implemented():
     from foureng.products import BarrierOption
+
     fwd = fe.ForwardSpec(S0=100.0, r=0.05, q=0.0, T=1.0)
     params = fe.BsmParams(sigma=0.20)
     opt = BarrierOption(strike=100.0, barrier=80.0, maturity=1.0, cp=1, barrier_type="down_out")

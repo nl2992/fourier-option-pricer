@@ -3,7 +3,7 @@
 Frozen 2026-05-29 before the Sprint 2–10 expansion.
 This file is the reference point for all capability-gate tests.
 
-## Model registry (26 models)
+## Model registry (20 models)
 
 | Key | Family | PyFENG FFT | Status |
 |-----|--------|-----------|--------|
@@ -27,12 +27,6 @@ This file is the reference point for all capability-gate tests.
 | `fmls` | Lévy (FMLS) | no | stable |
 | `double_heston` | Two-factor SV | no | stable |
 | `vgsa` | VG with stochastic arrival | no | stable |
-| `heston_nig` | SV + NIG | no | stable |
-| `heston_vg` | SV + VG | no | stable |
-| `svjj` | SV with correlated jumps | no | stable |
-| `bns_gamma_ou` | BNS Gamma-OU | no | stable |
-| `nts` | Normal Tempered Stable | no | stable |
-| `cgmysa` | CGMY with stochastic arrival | no | stable |
 
 ## Pricing methods (6 engines)
 
@@ -55,7 +49,7 @@ This file is the reference point for all capability-gate tests.
 
 ## Test suite (pre-expansion)
 
-- **Collected**: 832 tests (857 total, 25 deselected/skipped)
+- **Collected**: 832 tests before Sprint 1 expansion (857 total, 25 deselected/skipped)
 - **Test directories**: features/, methods/, models/, papers/, refs/
 
 ## Validation matrix summary

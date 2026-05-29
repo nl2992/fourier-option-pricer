@@ -1,28 +1,41 @@
-"""Snapshot tests — the model registry must contain all 26 baseline models."""
+"""Snapshot tests — the model registry must contain all 20 baseline models."""
 
 from __future__ import annotations
 
-import pytest
-
 from foureng.models.registry import MODEL_REGISTRY
 
-_BASELINE_26 = {
-    "bsm", "heston", "ousv", "vg", "cgmy", "nig", "sv32", "rough_heston",
-    "kou", "bates", "heston_kou", "heston_cgmy", "garch_wmw2012",
-    "merton_jd", "meixner", "bilateral_gamma", "generalized_hyperbolic",
-    "fmls", "double_heston", "vgsa", "heston_nig", "heston_vg",
-    "svjj", "bns_gamma_ou", "nts", "cgmysa",
+_BASELINE_MODELS = {
+    "bsm",
+    "heston",
+    "ousv",
+    "vg",
+    "cgmy",
+    "nig",
+    "sv32",
+    "rough_heston",
+    "kou",
+    "bates",
+    "heston_kou",
+    "heston_cgmy",
+    "garch_wmw2012",
+    "merton_jd",
+    "meixner",
+    "bilateral_gamma",
+    "generalized_hyperbolic",
+    "fmls",
+    "double_heston",
+    "vgsa",
 }
 
 _PYFENG_BACKED = {"bsm", "heston", "ousv", "vg", "cgmy", "nig", "sv32", "rough_heston"}
 
 
-def test_all_26_models_registered():
-    assert len(MODEL_REGISTRY) >= 26
+def test_all_baseline_models_registered():
+    assert len(MODEL_REGISTRY) >= len(_BASELINE_MODELS)
 
 
 def test_baseline_model_keys_present():
-    missing = _BASELINE_26 - set(MODEL_REGISTRY)
+    missing = _BASELINE_MODELS - set(MODEL_REGISTRY)
     assert not missing, f"Missing models: {sorted(missing)}"
 
 
@@ -32,7 +45,7 @@ def test_pyfeng_backed_flags():
 
 
 def test_non_pyfeng_models_flagged_false():
-    non_pyfeng = _BASELINE_26 - _PYFENG_BACKED
+    non_pyfeng = _BASELINE_MODELS - _PYFENG_BACKED
     for key in non_pyfeng:
         assert MODEL_REGISTRY[key].pyfeng_fft is False, f"{key!r} should have pyfeng_fft=False"
 

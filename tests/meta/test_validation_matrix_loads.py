@@ -26,7 +26,8 @@ def test_validation_matrix_has_minimum_rows():
     text = (DOCS / "paper_validation_matrix.md").read_text()
     # Count table rows (lines starting with "|" that have content)
     data_rows = [
-        ln for ln in text.splitlines()
+        ln
+        for ln in text.splitlines()
         if ln.startswith("|") and "---" not in ln and ln.count("|") >= 4
     ]
     assert len(data_rows) >= 20, f"Expected >= 20 validation rows, got {len(data_rows)}"
@@ -47,9 +48,12 @@ def test_fo2008_benchmark_dir_exists():
     assert (BENCHMARKS / "paper_replications").exists()
 
 
-@pytest.mark.parametrize("relpath", [
-    "cos_method_improved/outputs/cos_method_improved_paper_compare.csv",
-])
+@pytest.mark.parametrize(
+    "relpath",
+    [
+        "cos_method_improved/outputs/cos_method_improved_paper_compare.csv",
+    ],
+)
 def test_benchmark_csv_exists(relpath):
     p = BENCHMARKS / relpath
     assert p.exists(), f"Benchmark CSV not found: {p}"
@@ -58,5 +62,6 @@ def test_benchmark_csv_exists(relpath):
 def test_benchmark_csv_has_data():
     p = BENCHMARKS / "cos_method_improved/outputs/cos_method_improved_paper_compare.csv"
     import csv
+
     rows = list(csv.DictReader(p.open()))
     assert len(rows) > 0, "Benchmark CSV is empty"

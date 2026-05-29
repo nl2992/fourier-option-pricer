@@ -6,26 +6,29 @@ import pytest
 
 from foureng.core.capabilities import explain_capability
 
-
 # ── Supported combinations ─────────────────────────────────────────────────
 
-@pytest.mark.parametrize("model,product,method", [
-    ("heston", "european", "cos"),
-    ("bsm", "european", "cos_improved"),
-    ("vg", "european", "carr_madan"),
-    ("cgmy", "european", "frft"),
-    ("bsm", "european", "pyfeng_fft"),
-    ("heston", "european", "pyfeng_fft"),
-    ("bsm", "bermudan", "cos_bermudan"),
-    ("vg", "bermudan", "cos_bermudan"),
-    ("cgmy", "bermudan", "cos_bermudan"),
-    ("kou", "bermudan", "cos_bermudan"),
-    ("bsm", "european", "monte_carlo"),
-    ("heston", "asian", "monte_carlo"),
-    ("bsm", "barrier", "pde_fd"),
-    ("bsm", "american", "lattice"),
-    ("vg", "european", "proj"),
-])
+
+@pytest.mark.parametrize(
+    "model,product,method",
+    [
+        ("heston", "european", "cos"),
+        ("bsm", "european", "cos_improved"),
+        ("vg", "european", "carr_madan"),
+        ("cgmy", "european", "frft"),
+        ("bsm", "european", "pyfeng_fft"),
+        ("heston", "european", "pyfeng_fft"),
+        ("bsm", "bermudan", "cos_bermudan"),
+        ("vg", "bermudan", "cos_bermudan"),
+        ("cgmy", "bermudan", "cos_bermudan"),
+        ("kou", "bermudan", "cos_bermudan"),
+        ("bsm", "european", "monte_carlo"),
+        ("heston", "asian", "monte_carlo"),
+        ("bsm", "barrier", "pde_fd"),
+        ("bsm", "american", "lattice"),
+        ("vg", "european", "proj"),
+    ],
+)
 def test_supported_combinations_return_supported(model, product, method):
     result = explain_capability(model, product, method)
     assert result.startswith("Supported:"), (
@@ -35,16 +38,20 @@ def test_supported_combinations_return_supported(model, product, method):
 
 # ── Unsupported combinations ───────────────────────────────────────────────
 
-@pytest.mark.parametrize("model,product,method", [
-    ("heston", "asian", "cos"),
-    ("bsm", "barrier", "cos"),
-    ("heston", "lookback", "cos_improved"),
-    ("bsm", "bermudan", "cos"),
-    ("heston", "bermudan", "cos_bermudan"),   # SV model — 2-D extension needed
-    ("bates", "bermudan", "cos_bermudan"),    # SVJD — not supported
-    ("kou", "asian", "cos"),
-    ("bsm", "cliquet", "frft"),
-])
+
+@pytest.mark.parametrize(
+    "model,product,method",
+    [
+        ("heston", "asian", "cos"),
+        ("bsm", "barrier", "cos"),
+        ("heston", "lookback", "cos_improved"),
+        ("bsm", "bermudan", "cos"),
+        ("heston", "bermudan", "cos_bermudan"),  # SV model — 2-D extension needed
+        ("bates", "bermudan", "cos_bermudan"),  # SVJD — not supported
+        ("kou", "asian", "cos"),
+        ("bsm", "cliquet", "frft"),
+    ],
+)
 def test_unsupported_combinations_return_not_supported(model, product, method):
     result = explain_capability(model, product, method)
     assert result.startswith("Not supported:"), (
@@ -53,6 +60,7 @@ def test_unsupported_combinations_return_not_supported(model, product, method):
 
 
 # ── Reason quality ─────────────────────────────────────────────────────────
+
 
 def test_asian_cos_explanation_mentions_path_dependent():
     result = explain_capability("heston", "asian", "cos")
@@ -89,6 +97,8 @@ def test_barrier_cos_suggests_alternatives():
 
 # ── Parity: same output regardless of how registry is imported ─────────────
 
+
 def test_pricers_registry_explain_capability_same():
     from foureng.pricers.registry import explain_capability as ec2
+
     assert explain_capability is ec2
