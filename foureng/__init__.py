@@ -41,7 +41,8 @@ from .iv.implied_vol import (
     implied_vol_brent,
     implied_vol_newton_safeguarded,
 )
-from .mc.black_scholes_mc import MCSpec, european_call_mc
+from .mc.black_scholes_mc import european_call_mc
+from .mc.engine import MCResult, MCSpec, mc_price
 from .mc.control_variate import CVResult, bs_call_cv, heston_call_bs_control
 from .mc.heston_conditional_mc import HestonMCScheme, heston_conditional_mc_calls
 from .models.base import CharFunc, ForwardSpec, ModelSpec
