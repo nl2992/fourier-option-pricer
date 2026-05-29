@@ -87,6 +87,14 @@ from .pricers.cos import (
     cos_prices,
     recommended_cos_policy,
 )
+from .analytics.bsm_asian import bsm_geometric_asian, bsm_geometric_asian_parity
+from .analytics.bsm_barrier import bsm_barrier_price
+from .analytics.bsm_exotics import (
+    bsm_forward_start,
+    bsm_gap_call,
+    bsm_lookback_floating,
+    margrabe_exchange,
+)
 from .pricers.cos_digital import cos_digital_price, cos_digital_price_strip
 from .pricers.filtered_cos import FilteredCOSDecision, filtered_cos_prices
 from .pricers.frft import frft_price_at_strikes, frft_prices
