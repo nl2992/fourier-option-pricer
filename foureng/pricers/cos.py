@@ -364,6 +364,12 @@ def _put_payoff_coeffs(a: float, b: float, N: int, K: np.ndarray, F0: float) -> 
     return V
 
 
+# Threshold for the Le Floc'h auto-policy: when b > this value the call
+# payoff integral contains exp(b) factors that overflow for long maturities
+# or heavy-tailed models; force put+parity instead.
+_LEFLOCH_B_THRESHOLD: float = 8.0
+
+
 def cos_prices(
     phi: CharFunc,
     fwd: ForwardSpec,
@@ -373,6 +379,7 @@ def cos_prices(
     payoff_mode: str = "put_parity",
     call_direct_width_max: float = 20.0,
     filter_spec: COSFilterSpec | None = None,
+    pricing_formula: str | None = None,
 ) -> COSResult:
     """Fang-Oosterlee (2008) COS method for European calls.
 
@@ -396,13 +403,24 @@ def cos_prices(
     where D = exp(-r*T). This avoids the catastrophic cancellation that
     plagues a direct COS-on-call for long maturities.
 
-    ``payoff_mode`` controls the coefficient side:
+    ``pricing_formula`` (preferred over ``payoff_mode``) selects the formula:
 
-    - ``"put_parity"`` : always use put coefficients + parity,
+    - ``"auto"``           — Le Floc'h policy: use put+parity when b > 8;
+                             use the direct-call coefficients on narrow intervals.
+    - ``"lefloch"``        — always use put coefficients + put-call parity.
+    - ``"fang_oosterlee"`` — always use the original direct-call coefficients.
+
+    ``payoff_mode`` (legacy) controls the coefficient side:
+
+    - ``"put_parity"``  : always use put coefficients + parity,
     - ``"call_direct"`` : use the direct call coefficients,
-    - ``"auto"`` : use put+parity generally, but allow direct-call pricing
+    - ``"auto"``        : use put+parity generally, but allow direct-call pricing
       for OTM calls when the interval is narrow enough that the ``e^b`` term
       is still numerically tame.
+
+    When both ``pricing_formula`` and ``payoff_mode`` are supplied, ``pricing_formula``
+    takes precedence (unless ``pricing_formula="auto"`` and the caller also set an
+    explicit ``payoff_mode``).
 
     ``filter_spec`` (optional): if not ``None`` and not ``COSFilterSpec("none")``,
     spectral filter weights σ_k are multiplied against the CF samples A_k
@@ -433,6 +451,25 @@ def cos_prices(
         sigma = cos_filter_weights(N, filter_spec)
         A = A * sigma
     # ------------------------------------------------------------------------------
+
+    # ── pricing_formula → payoff_mode translation ───────────────────────────
+    # pricing_formula=None (default) means "use payoff_mode as-is" — this
+    # preserves full backward compatibility with all existing callers.
+    if pricing_formula is not None:
+        if pricing_formula == "lefloch":
+            payoff_mode = "put_parity"
+        elif pricing_formula == "fang_oosterlee":
+            payoff_mode = "call_direct"
+        elif pricing_formula == "auto":
+            # Le Floc'h policy: force put+parity when truncation upper bound b is
+            # large enough that exp(b) overflows the call payoff coefficients.
+            payoff_mode = "put_parity" if b > _LEFLOCH_B_THRESHOLD else "call_direct"
+        else:
+            raise ValueError(
+                f"unknown pricing_formula {pricing_formula!r}; "
+                "choose 'auto' | 'lefloch' | 'fang_oosterlee'"
+            )
+    # ────────────────────────────────────────────────────────────────────────
 
     if payoff_mode == "call_direct":
         V_call = _call_payoff_coeffs(a, b, N, strikes, shifted_F0)
