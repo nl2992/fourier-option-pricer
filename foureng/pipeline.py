@@ -1,11 +1,12 @@
 """Unified pricing pipeline that dispatches a (model, method, strikes) request to the right engine.
 
-The main entry point is :func:`price_strip`, which accepts a model name string
-and a method string and routes to the appropriate in-house pricer (COS, FRFT,
-Carr-Madan) or, for models where PyFENG ships a native FFT class, the
-``pyfeng_fft`` path. The internal phase helpers (phase2_carr_madan, phase3_frft,
-phase4_cos) are thin wrappers used by the demo notebooks; end users will rarely
-call them directly.
+The main entry points are:
+
+* :func:`price_strip` — price a vector of strikes for a European option.
+* :func:`price` — price a single :class:`~foureng.products.ProductSpec` object.
+
+The internal phase helpers (phase2_carr_madan, phase3_frft, phase4_cos) are thin
+wrappers used by the demo notebooks; end users will rarely call them directly.
 
 The improved COS path (``method="cos_improved"``) builds the truncation interval
 and cosine-term count adaptively from model cumulants, then routes wide-interval
@@ -433,4 +434,87 @@ def price_strip(
     raise ValueError(
         f"unknown method {method!r}; choose 'cos' | 'cos_improved' | 'cos_filtered' | "
         "'frft' | 'carr_madan' | 'pyfeng_fft'"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Product-level pricing dispatcher
+# ---------------------------------------------------------------------------
+
+def price(
+    product,
+    model: str,
+    method: str,
+    fwd: "ForwardSpec",
+    params,
+    *,
+    grid: Any = None,
+) -> float | np.ndarray:
+    """Price a :class:`~foureng.products.ProductSpec` under the given model and method.
+
+    This is the product-aware counterpart to :func:`price_strip`.  Currently
+    only :class:`~foureng.products.EuropeanOption` is routed; all other product
+    types raise :class:`NotImplementedError` with an informative message
+    (including which engine would be needed once that product is implemented).
+
+    Parameters
+    ----------
+    product :
+        A frozen product dataclass from ``foureng.products``.
+    model :
+        Registry key, e.g. ``"heston"``.
+    method :
+        Pricing engine, e.g. ``"cos_improved"``.
+    fwd :
+        :class:`~foureng.models.base.ForwardSpec` — spot / rate / div / maturity.
+        The ``fwd.T`` is overridden by the product's own maturity where
+        applicable.
+    params :
+        Model-specific parameter dataclass.
+    grid :
+        Optional grid override (passed to :func:`price_strip`).
+
+    Returns
+    -------
+    float | np.ndarray
+        Scalar price for single-product calls.  Returns an ndarray only when
+        the product bundles multiple pay-offs (not yet implemented).
+    """
+    from .products.base import ProductSpec  # local import to avoid circular
+
+    if not isinstance(product, ProductSpec):
+        raise TypeError(
+            f"price(): expected a ProductSpec subclass, got {type(product).__name__!r}"
+        )
+
+    pt = product.product_type
+
+    if pt == "european":
+        # Override fwd.T with the product's own maturity.
+        from .models.base import ForwardSpec as _FwdSpec
+        fwd_t = _FwdSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=product.maturity)
+        results = price_strip(model, method, [product.strike], fwd_t, params, grid=grid, cp=product.cp)
+        return float(results[0])
+
+    # For future products, provide a capability hint instead of a bare NotImplementedError.
+    _HINTS: dict[str, str] = {
+        "digital": "Use a COS digital pricer (Phase 4.1) or analytic BSM.",
+        "barrier": "Use barrier_analytic_bsm / barrier_mc / barrier_cos (Phase 4.2).",
+        "asian": "Use asian_geometric_bsm / asian_mc / asian_proj (Phase 4.3).",
+        "bermudan": "Use cos_bermudan for Lévy models (Phase 3.3).",
+        "american": "Use american_lattice / american_pde (Phase 4.4).",
+        "lookback": "Use lookback_bsm / lookback_mc (Phase 4.5).",
+        "forward_start": "Use forward_start_bsm / forward_start_mc (Phase 4.6).",
+        "variance_swap": "Use variance_analytic_bsm / variance_heston (Phase 4.7).",
+        "variance_option": "Use variance_mc (Phase 4.7).",
+        "cliquet": "Use cliquet_mc / cliquet_proj (Phase 4.8).",
+        "exchange": "Use multi_asset_mc (Phase 4.11).",
+        "basket": "Use multi_asset_mc (Phase 4.11).",
+        "spread": "Use multi_asset_mc / Kirk approximation (Phase 4.11).",
+        "best_of": "Use multi_asset_mc (Phase 4.11).",
+        "double_barrier": "Use barrier_mc / barrier_proj (Phase 4.2).",
+    }
+    hint = _HINTS.get(pt, f"No pricer is registered for product_type={pt!r}.")
+    raise NotImplementedError(
+        f"price(): product_type={pt!r} is not yet implemented.\n{hint}"
     )
