@@ -88,3 +88,56 @@ def bsm_cumulants(fwd: ForwardSpec, p: BsmParams) -> tuple[float, float, float]:
     """
     sigma2T = p.sigma * p.sigma * fwd.T
     return (-0.5 * sigma2T, sigma2T, 0.0)
+
+
+# ---------------------------------------------------------------------------
+# Analytic digital prices  (closed-form reference)
+# ---------------------------------------------------------------------------
+
+def bsm_cash_or_nothing(
+    fwd: ForwardSpec,
+    p: BsmParams,
+    K: float,
+    cp: int = 1,
+    cash_amount: float = 1.0,
+) -> float:
+    """BSM analytic cash-or-nothing digital price.
+
+    Call (cp=+1): ``disc * N(d2)``
+    Put  (cp=-1): ``disc * N(-d2)``
+
+    where ``d2 = (log(F₀/K) - σ²T/2) / (σ√T)`` and ``disc = exp(-rT)``.
+    """
+    from scipy.stats import norm
+
+    F0 = fwd.S0 * np.exp((fwd.r - fwd.q) * fwd.T)
+    disc = np.exp(-fwd.r * fwd.T)
+    sig_sq_T = p.sigma * p.sigma * fwd.T
+    d2 = (np.log(F0 / K) - 0.5 * sig_sq_T) / np.sqrt(sig_sq_T)
+    if cp == 1:
+        return float(disc * norm.cdf(d2) * cash_amount)
+    return float(disc * norm.cdf(-d2) * cash_amount)
+
+
+def bsm_asset_or_nothing(
+    fwd: ForwardSpec,
+    p: BsmParams,
+    K: float,
+    cp: int = 1,
+) -> float:
+    """BSM analytic asset-or-nothing digital price.
+
+    Call (cp=+1): ``S₀ e^{-qT} N(d1)``
+    Put  (cp=-1): ``S₀ e^{-qT} N(-d1)``
+
+    where ``d1 = (log(F₀/K) + σ²T/2) / (σ√T)``.
+    """
+    from scipy.stats import norm
+
+    F0 = fwd.S0 * np.exp((fwd.r - fwd.q) * fwd.T)
+    sig_sq_T = p.sigma * p.sigma * fwd.T
+    d1 = (np.log(F0 / K) + 0.5 * sig_sq_T) / np.sqrt(sig_sq_T)
+    S_disc = fwd.S0 * np.exp(-fwd.q * fwd.T)
+    if cp == 1:
+        return float(S_disc * norm.cdf(d1))
+    return float(S_disc * norm.cdf(-d1))

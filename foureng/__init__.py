@@ -51,7 +51,13 @@ from .models.bilateral_gamma import (
     bilateral_gamma_cf,
     bilateral_gamma_cumulants,
 )
-from .models.bsm import BsmParams, bsm_cf, bsm_cumulants
+from .models.bsm import (
+    BsmParams,
+    bsm_asset_or_nothing,
+    bsm_cash_or_nothing,
+    bsm_cf,
+    bsm_cumulants,
+)
 from .models.cgmy import CgmyParams, cgmy_cf, cgmy_cumulants
 from .models.double_heston import DoubleHestonParams, double_heston_cf, double_heston_cumulants
 from .models.fmls import FMLSParams, fmls_cf, fmls_cumulants
@@ -80,6 +86,7 @@ from .pricers.cos import (
     cos_prices,
     recommended_cos_policy,
 )
+from .pricers.cos_digital import cos_digital_price, cos_digital_price_strip
 from .pricers.filtered_cos import FilteredCOSDecision, filtered_cos_prices
 from .pricers.frft import frft_price_at_strikes, frft_prices
 from .pricers.lewis import lewis_call_prices, lewis_prices
