@@ -128,6 +128,16 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
             "First implementation covers terminal vanilla payoffs for CF-equipped models."
         ),
     ),
+    "barrier_bsm": MethodSpec(
+        requires_cf=False,
+        supports_products=frozenset({"barrier"}),
+        supports_exercise=frozenset({"european"}),
+        supports_path_dependent=True,
+        notes=(
+            "Closed-form BSM single-barrier pricer for continuously monitored "
+            "zero-rebate knock-in/knock-out calls and puts."
+        ),
+    ),
     # ── Planned methods (not yet implemented) ────────────────────────────
     "cos_bermudan": MethodSpec(
         requires_cf=True,

@@ -22,7 +22,7 @@ where $c_1, c_2, c_4$ are the model's cumulants and $L$ is a heuristic multiplie
 
 This project implements the **improved COS truncation** of Junike & Pankrashkin (2022) and Junike (2024), which replaces the heuristic $L$ with a rigorous tail-mass bound. On the FO2008 test suite, this truncation improvement beats the paper-grid COS in 7 of 8 cases and beats the paper's own best-N result in 6 of 8 (see [`benchmarks/cos_method_improved/`](benchmarks/cos_method_improved/outputs/cos_method_improved_paper_compare.csv)). On top of that, we add an **original adaptive filtered-COS extension**: spectral weights $\sigma_k \in [0, 1]$ (Fejér, Lanczos, raised-cosine, or exponential) applied to the high-frequency COS coefficients to suppress residual oscillation from sharp density features. A policy-search selector automatically compares grid and filter combinations, returning the fastest configuration that meets the user's tolerance, with the plain Junike path always included as a fallback.
 
-The package covers **20 models** across stochastic-volatility, jump-diffusion, pure-Lévy, rough-volatility, and hybrid SVJ families, all priced through one `price_strip` dispatcher with **7 characteristic-function engines** plus BSM finite-difference and lattice baselines.
+The package covers **20 models** across stochastic-volatility, jump-diffusion, pure-Lévy, rough-volatility, and hybrid SVJ families, all priced through one `price_strip` dispatcher with **7 characteristic-function engines** plus BSM finite-difference, lattice, and analytic barrier baselines.
 
 Full methodology: [appendix.md](appendix.md) · Extension details: [docs/filtered_cos_extension.md](docs/filtered_cos_extension.md) · Package architecture: [docs/architecture_overview.md](docs/architecture_overview.md).
 
@@ -208,6 +208,8 @@ Full model details: [docs/model_zoo.md](docs/model_zoo.md).
 
 Method labels: `"cos"`, `"cos_improved"`, `"cos_filtered"`, `"carr_madan"`, `"frft"`, `"conv"`, `"pyfeng_fft"`, plus BSM-only `"pde_fd"` and `"lattice"`.
 
+Product-level pricing uses `price(product, model, method, fwd, params)`. It currently routes European options, BSM American options via `"lattice"` / `"pde_fd"`, and continuously monitored zero-rebate BSM single barriers via `"barrier_bsm"`.
+
 ### Core pricing functions
 
 | Function | Parameters | Returns |
@@ -219,6 +221,7 @@ Method labels: `"cos"`, `"cos_improved"`, `"cos_filtered"`, `"carr_madan"`, `"fr
 | `filtered_cos_prices(phi, fwd, strikes, grid, filter_spec=None)` | CF, `ForwardSpec`, strike array, `COSGrid`, optional `COSFilterSpec` | `COSResult` |
 | `bsm_lattice_price_at_strikes(fwd, params, strikes, grid=None)` | BSM inputs, `LatticeGrid`, strike array | `np.ndarray` |
 | `bsm_pde_fd_price_at_strikes(fwd, params, strikes, grid=None)` | BSM inputs, `PDEGrid`, strike array | `np.ndarray` |
+| `bsm_barrier_price(S, K, H, r, q, T, sigma, barrier_type, cp=1)` | BSM single-barrier inputs | `float` |
 
 ### Grid constructors
 

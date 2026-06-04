@@ -84,7 +84,7 @@ from .models.rough_heston import RoughHestonParams, rough_heston_cf, rough_hesto
 from .models.sv32 import Sv32Params, sv32_cf, sv32_cumulants
 from .models.variance_gamma import VGParams, vg_cf, vg_cumulants
 from .models.vgsa import VGSAParams, vgsa_cf, vgsa_cumulants
-from .pipeline import price_strip
+from .pipeline import price, price_strip
 from .pricers.carr_madan import carr_madan_fft_prices, carr_madan_price_at_strikes
 from .pricers.conv import conv_price_at_strikes
 from .pricers.cos import (
@@ -185,6 +185,7 @@ __all__ = [
     "vgsa_cf",
     "vgsa_cumulants",
     # pipeline
+    "price",
     "price_strip",
     # grids
     "COSGrid",

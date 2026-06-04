@@ -14,6 +14,7 @@ _BASELINE_METHODS = {
     "frft",
     "pyfeng_fft",
     "conv",
+    "barrier_bsm",
 }
 
 _PLANNED_METHODS = {
