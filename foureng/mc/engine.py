@@ -25,6 +25,7 @@ from .payoffs import (
     asian_arithmetic_payoff,
     asian_geometric_payoff,
     barrier_payoff,
+    double_barrier_payoff,
     european_payoff,
 )
 
@@ -141,6 +142,21 @@ def mc_price(
         paths = gbm_paths(S0, r, q, T, sigma, mc.n_paths, n_steps, rng, antithetic=mc.antithetic)
         dt = T / n_steps
         raw = barrier_payoff(paths, K, H, bt, cp, use_bb_correction=True, sigma=sigma, dt=dt)
+        disc = np.exp(-r * T)
+        return _result(raw * disc, mc.n_paths)
+
+    # ── Double Barrier ────────────────────────────────────────────────────
+    if pt == "double_barrier":
+        T, K, cp = product.maturity, product.strike, product.cp
+        paths = gbm_paths(S0, r, q, T, sigma, mc.n_paths, mc.n_steps, rng, antithetic=mc.antithetic)
+        raw = double_barrier_payoff(
+            paths,
+            K,
+            product.lower_barrier,
+            product.upper_barrier,
+            cp,
+            knockout=product.knockout,
+        )
         disc = np.exp(-r * T)
         return _result(raw * disc, mc.n_paths)
 

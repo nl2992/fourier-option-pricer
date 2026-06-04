@@ -22,7 +22,7 @@ where $c_1, c_2, c_4$ are the model's cumulants and $L$ is a heuristic multiplie
 
 This project implements the **improved COS truncation** of Junike & Pankrashkin (2022) and Junike (2024), which replaces the heuristic $L$ with a rigorous tail-mass bound. On the FO2008 test suite, this truncation improvement beats the paper-grid COS in 7 of 8 cases and beats the paper's own best-N result in 6 of 8 (see [`benchmarks/cos_method_improved/`](benchmarks/cos_method_improved/outputs/cos_method_improved_paper_compare.csv)). On top of that, we add an **original adaptive filtered-COS extension**: spectral weights $\sigma_k \in [0, 1]$ (Fejér, Lanczos, raised-cosine, or exponential) applied to the high-frequency COS coefficients to suppress residual oscillation from sharp density features. A policy-search selector automatically compares grid and filter combinations, returning the fastest configuration that meets the user's tolerance, with the plain Junike path always included as a fallback.
 
-The package covers **20 models** across stochastic-volatility, jump-diffusion, pure-Lévy, rough-volatility, and hybrid SVJ families, all priced through one `price_strip` dispatcher with **7 characteristic-function engines** plus BSM finite-difference, lattice, and analytic barrier baselines.
+The package covers **20 characteristic-function models** across stochastic-volatility, jump-diffusion, pure-Lévy, rough-volatility, and hybrid SVJ families, plus a SABR approximation surface. They are priced through one `price_strip` dispatcher with COS/FFT/FRFT/CONV, first-slice Mellin and PROJ façades, BSM finite-difference/lattice baselines, and product-level exotic routes.
 
 Full methodology: [appendix.md](appendix.md) · Extension details: [docs/filtered_cos_extension.md](docs/filtered_cos_extension.md) · Package architecture: [docs/architecture_overview.md](docs/architecture_overview.md).
 
@@ -197,6 +197,7 @@ Everything is importable from `import foureng as fe`.
 | `FMLSParams` | `alpha, sigma` | Finite Moment Log Stable |
 | `DoubleHestonParams` | `kappa1..v01, kappa2..v02` | Two-factor Heston |
 | `VGSAParams` | `C, G, M, kappa, eta, lam` | VG with stochastic activity |
+| `SabrParams` | `alpha, beta, rho, nu` | SABR implied-vol approximation |
 
 Full model details: [docs/model_zoo.md](docs/model_zoo.md).
 
@@ -206,9 +207,9 @@ Full model details: [docs/model_zoo.md](docs/model_zoo.md).
 |----------|------------|---------|
 | `price_strip(model, method, strikes, fwd, params, grid=None)` | model label, method label, strike array, `ForwardSpec`, model params, optional grid | `np.ndarray` of call prices |
 
-Method labels: `"cos"`, `"cos_improved"`, `"cos_filtered"`, `"carr_madan"`, `"frft"`, `"conv"`, `"pyfeng_fft"`, plus BSM-only `"pde_fd"` and `"lattice"`.
+Method labels: `"cos"`, `"cos_improved"`, `"cos_filtered"`, `"carr_madan"`, `"frft"`, `"conv"`, `"mellin"`, `"proj"`, `"pyfeng_fft"`, plus BSM-only `"pde_fd"` / `"lattice"` and SABR-only `"sabr_hagan"`.
 
-Product-level pricing uses `price(product, model, method, fwd, params)`. It currently routes European options, BSM American options via `"lattice"` / `"pde_fd"`, and continuously monitored zero-rebate BSM single barriers via `"barrier_bsm"`.
+Product-level pricing uses `price(product, model, method, fwd, params)`. It currently routes European options, BSM American options via `"lattice"` / `"pde_fd"`, continuously monitored zero-rebate BSM single barriers via `"barrier_bsm"`, BSM Asians via `"asian_bsm"` / `"asian_mc"`, and BSM double barriers via `"double_barrier_mc"`.
 
 ### Core pricing functions
 
@@ -222,6 +223,8 @@ Product-level pricing uses `price(product, model, method, fwd, params)`. It curr
 | `bsm_lattice_price_at_strikes(fwd, params, strikes, grid=None)` | BSM inputs, `LatticeGrid`, strike array | `np.ndarray` |
 | `bsm_pde_fd_price_at_strikes(fwd, params, strikes, grid=None)` | BSM inputs, `PDEGrid`, strike array | `np.ndarray` |
 | `bsm_barrier_price(S, K, H, r, q, T, sigma, barrier_type, cp=1)` | BSM single-barrier inputs | `float` |
+| `bsm_discrete_geometric_asian(S, K, r, q, monitoring_times, sigma, cp=1)` | BSM geometric-Asian inputs | `float` |
+| `sabr_hagan_price_at_strikes(fwd, params, strikes)` | `ForwardSpec`, `SabrParams`, strike array | `np.ndarray` |
 
 ### Grid constructors
 

@@ -15,6 +15,12 @@ _BASELINE_METHODS = {
     "pyfeng_fft",
     "conv",
     "barrier_bsm",
+    "asian_bsm",
+    "asian_mc",
+    "double_barrier_mc",
+    "mellin",
+    "proj",
+    "sabr_hagan",
 }
 
 _PLANNED_METHODS = {
@@ -22,7 +28,6 @@ _PLANNED_METHODS = {
     "monte_carlo",
     "pde_fd",
     "lattice",
-    "proj",
     "ctmc",
 }
 
@@ -53,7 +58,17 @@ def test_every_method_supports_at_least_one_exercise_style():
 
 
 def test_cf_methods_require_cf():
-    cf_methods = {"cos", "cos_improved", "cos_filtered", "carr_madan", "frft", "pyfeng_fft", "conv"}
+    cf_methods = {
+        "cos",
+        "cos_improved",
+        "cos_filtered",
+        "carr_madan",
+        "frft",
+        "pyfeng_fft",
+        "conv",
+        "mellin",
+        "proj",
+    }
     for m in cf_methods:
         assert METHOD_REGISTRY[m].requires_cf is True, f"{m!r}: requires_cf should be True"
 

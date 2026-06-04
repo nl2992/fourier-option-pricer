@@ -89,6 +89,50 @@ def bsm_geometric_asian(
         return disc * (K * norm.cdf(-d2) - fwd_adj * norm.cdf(-d1))
 
 
+def bsm_discrete_geometric_asian(
+    S: float,
+    K: float,
+    r: float,
+    q: float,
+    monitoring_times,
+    sigma: float,
+    cp: int = 1,
+) -> float:
+    """BSM closed-form for a discretely monitored geometric-average Asian option.
+
+    If ``G = exp(mean_i log S_{t_i})`` then ``log(G)`` is normally distributed.
+    The formula prices the option as a Black-style option on this lognormal
+    geometric average using its exact first two log moments.
+    """
+    t = np.asarray(monitoring_times, dtype=np.float64)
+    if t.ndim != 1 or t.size == 0:
+        raise ValueError("monitoring_times must be a non-empty 1-D array")
+    if np.any(t <= 0.0) or not np.all(np.diff(t) > 0.0):
+        raise ValueError("monitoring_times must be strictly increasing and positive")
+    if cp not in (1, -1):
+        raise ValueError(f"cp must be +1 or -1, got {cp}")
+
+    n = float(t.size)
+    t_bar = float(np.mean(t))
+    cov_sum = float(np.minimum.outer(t, t).sum())
+    variance = sigma * sigma * cov_sum / (n * n)
+    maturity = float(t[-1])
+    log_mean = np.log(S) + (r - q - 0.5 * sigma * sigma) * t_bar
+    forward_geo = np.exp(log_mean + 0.5 * variance)
+    disc = np.exp(-r * maturity)
+
+    if variance <= 0.0:
+        payoff = max(cp * (forward_geo - K), 0.0)
+        return float(disc * payoff)
+
+    vol = np.sqrt(variance)
+    d1 = (np.log(forward_geo / K) + 0.5 * variance) / vol
+    d2 = d1 - vol
+    if cp == 1:
+        return float(disc * (forward_geo * norm.cdf(d1) - K * norm.cdf(d2)))
+    return float(disc * (K * norm.cdf(-d2) - forward_geo * norm.cdf(-d1)))
+
+
 def bsm_geometric_asian_parity(
     S: float,
     K: float,

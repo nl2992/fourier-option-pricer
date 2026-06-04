@@ -129,6 +129,24 @@ def barrier_payoff(
     return np.maximum(cp * (S_T - K), 0.0) * active.astype(float)
 
 
+def double_barrier_payoff(
+    paths: np.ndarray,
+    K: float,
+    lower: float,
+    upper: float,
+    cp: int = 1,
+    *,
+    knockout: bool = True,
+) -> np.ndarray:
+    """Double-barrier payoff monitored on the stored path grid."""
+    if lower <= 0.0 or upper <= lower:
+        raise ValueError("double_barrier_payoff requires 0 < lower < upper")
+    survived = (paths.min(axis=1) > lower) & (paths.max(axis=1) < upper)
+    active = survived if knockout else ~survived
+    terminal = paths[:, -1]
+    return np.maximum(cp * (terminal - K), 0.0) * active.astype(float)
+
+
 # ── Brownian bridge correction ─────────────────────────────────────────────
 
 

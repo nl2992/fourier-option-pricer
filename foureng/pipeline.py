@@ -20,7 +20,9 @@ from typing import Any
 
 import numpy as np
 
+from .analytics.bsm_asian import bsm_discrete_geometric_asian
 from .analytics.bsm_barrier import bsm_barrier_price
+from .mc.engine import MCSpec, mc_price
 from .models.base import CharFunc, ForwardSpec
 from .models.registry import MODEL_REGISTRY
 from .pricers.carr_madan import carr_madan_price_at_strikes
@@ -35,7 +37,10 @@ from .pricers.filtered_cos import filtered_cos_prices
 from .pricers.frft import frft_price_at_strikes
 from .pricers.lattice import LatticeGrid, bsm_lattice_price, bsm_lattice_price_at_strikes
 from .pricers.lewis import lewis_call_prices
+from .pricers.mellin import MELLIN_SUPPORTED_MODELS, mellin_price_at_strikes
 from .pricers.pde_fd import PDEGrid, bsm_pde_fd_price, bsm_pde_fd_price_at_strikes
+from .pricers.proj import proj_european_price_at_strikes
+from .pricers.sabr import sabr_hagan_price_at_strikes
 from .utils.grids import CONVGrid, COSGrid, COSGridPolicy, FFTGrid, FRFTGrid
 from .utils.spectral_filters import COSFilterSpec
 
@@ -240,6 +245,11 @@ def price_strip(
     if method == "pyfeng_fft":
         return _pyfeng_fft_price(model, K, fwd, params, cp=cp)
 
+    if method == "sabr_hagan":
+        if model != "sabr":
+            raise ValueError("method='sabr_hagan' is currently implemented only for model='sabr'")
+        return sabr_hagan_price_at_strikes(fwd, params, K, cp=cp)
+
     if method == "lattice":
         if model != "bsm":
             raise ValueError("method='lattice' is currently implemented only for model='bsm'")
@@ -256,6 +266,23 @@ def price_strip(
     if method == "conv":
         conv_grid = grid if isinstance(grid, CONVGrid) else CONVGrid()
         return np.asarray(conv_price_at_strikes(phi, fwd, conv_grid, K, cp=cp), dtype=np.float64)
+
+    if method == "mellin":
+        if model not in MELLIN_SUPPORTED_MODELS:
+            raise ValueError(
+                f"method='mellin' is currently supported for {sorted(MELLIN_SUPPORTED_MODELS)}"
+            )
+        mellin_grid = grid if isinstance(grid, CONVGrid) else None
+        return mellin_price_at_strikes(phi, fwd, K, cp=cp, grid=mellin_grid)
+
+    if method == "proj":
+        return proj_european_price_at_strikes(
+            phi,
+            fwd,
+            MODEL_REGISTRY[model].cumulants(fwd, params),
+            K,
+            cp=cp,
+        )
 
     if method == "pde_fd":
         if model != "bsm":
@@ -461,7 +488,8 @@ def price_strip(
 
     raise ValueError(
         f"unknown method {method!r}; choose 'cos' | 'cos_improved' | 'cos_filtered' | "
-        "'frft' | 'carr_madan' | 'conv' | 'lattice' | 'pde_fd' | 'pyfeng_fft'"
+        "'frft' | 'carr_madan' | 'conv' | 'mellin' | 'proj' | 'lattice' | "
+        "'pde_fd' | 'sabr_hagan' | 'pyfeng_fft'"
     )
 
 
@@ -605,11 +633,69 @@ def price(
             cp=product.cp,
         )
 
+    if pt == "asian":
+        from .models.base import ForwardSpec as _FwdSpec
+        from .products.asian import AsianOption
+
+        if not isinstance(product, AsianOption):
+            raise TypeError(
+                "price(): product_type='asian' must be represented by "
+                f"AsianOption, got {type(product).__name__!r}"
+            )
+        if model != "bsm":
+            raise NotImplementedError(
+                "Asian pricing is currently implemented only for model='bsm'."
+            )
+        if method == "asian_bsm":
+            if product.average_type != "geometric" or product.strike_type != "fixed":
+                raise NotImplementedError(
+                    "method='asian_bsm' currently supports fixed-strike geometric Asians only."
+                )
+            return bsm_discrete_geometric_asian(
+                fwd.S0,
+                product.strike,
+                fwd.r,
+                fwd.q,
+                product.monitoring_times,
+                params.sigma,
+                cp=product.cp,
+            )
+        if method == "asian_mc":
+            mc_spec = grid if isinstance(grid, MCSpec) else MCSpec()
+            fwd_t = _FwdSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=product.maturity)
+            return mc_price(fwd_t, params.sigma, product, mc_spec).price
+        raise NotImplementedError(
+            "Asian pricing currently supports method='asian_bsm' or method='asian_mc'."
+        )
+
+    if pt == "double_barrier":
+        from .models.base import ForwardSpec as _FwdSpec
+        from .products.barrier import DoubleBarrierOption
+
+        if not isinstance(product, DoubleBarrierOption):
+            raise TypeError(
+                "price(): product_type='double_barrier' must be represented by "
+                f"DoubleBarrierOption, got {type(product).__name__!r}"
+            )
+        if method != "double_barrier_mc":
+            raise NotImplementedError(
+                "Double-barrier pricing currently supports method='double_barrier_mc'."
+            )
+        if model != "bsm":
+            raise NotImplementedError(
+                "method='double_barrier_mc' is currently implemented only for model='bsm'."
+            )
+        if product.rebate != 0.0:
+            raise NotImplementedError("double_barrier_mc currently supports only zero rebates.")
+        mc_spec = grid if isinstance(grid, MCSpec) else MCSpec()
+        fwd_t = _FwdSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=product.maturity)
+        return mc_price(fwd_t, params.sigma, product, mc_spec).price
+
     # For future products, provide a capability hint instead of a bare NotImplementedError.
     _HINTS: dict[str, str] = {
         "digital": "Use a COS digital pricer (Phase 4.1) or analytic BSM.",
         "barrier": "Use barrier_bsm for continuous zero-rebate BSM barriers.",
-        "asian": "Use asian_geometric_bsm / asian_mc / asian_proj (Phase 4.3).",
+        "asian": "Use asian_bsm for geometric Asians or asian_mc for BSM Monte Carlo.",
         "bermudan": "Use cos_bermudan for Lévy models (Phase 3.3).",
         "american": "Use american_lattice / american_pde (Phase 4.4).",
         "lookback": "Use lookback_bsm / lookback_mc (Phase 4.5).",
@@ -621,7 +707,7 @@ def price(
         "basket": "Use multi_asset_mc (Phase 4.11).",
         "spread": "Use multi_asset_mc / Kirk approximation (Phase 4.11).",
         "best_of": "Use multi_asset_mc (Phase 4.11).",
-        "double_barrier": "Use barrier_mc / barrier_proj (Phase 4.2).",
+        "double_barrier": "Use double_barrier_mc for BSM Monte Carlo double barriers.",
     }
     hint = _HINTS.get(pt, f"No pricer is registered for product_type={pt!r}.")
     raise NotImplementedError(f"price(): product_type={pt!r} is not yet implemented.\n{hint}")
