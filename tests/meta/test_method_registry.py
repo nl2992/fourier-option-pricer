@@ -13,6 +13,7 @@ _BASELINE_METHODS = {
     "carr_madan",
     "frft",
     "pyfeng_fft",
+    "conv",
 }
 
 _PLANNED_METHODS = {
@@ -51,7 +52,7 @@ def test_every_method_supports_at_least_one_exercise_style():
 
 
 def test_cf_methods_require_cf():
-    cf_methods = {"cos", "cos_improved", "cos_filtered", "carr_madan", "frft", "pyfeng_fft"}
+    cf_methods = {"cos", "cos_improved", "cos_filtered", "carr_madan", "frft", "pyfeng_fft", "conv"}
     for m in cf_methods:
         assert METHOD_REGISTRY[m].requires_cf is True, f"{m!r}: requires_cf should be True"
 

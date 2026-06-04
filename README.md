@@ -22,7 +22,7 @@ where $c_1, c_2, c_4$ are the model's cumulants and $L$ is a heuristic multiplie
 
 This project implements the **improved COS truncation** of Junike & Pankrashkin (2022) and Junike (2024), which replaces the heuristic $L$ with a rigorous tail-mass bound. On the FO2008 test suite, this truncation improvement beats the paper-grid COS in 7 of 8 cases and beats the paper's own best-N result in 6 of 8 (see [`benchmarks/cos_method_improved/`](benchmarks/cos_method_improved/outputs/cos_method_improved_paper_compare.csv)). On top of that, we add an **original adaptive filtered-COS extension**: spectral weights $\sigma_k \in [0, 1]$ (Fejér, Lanczos, raised-cosine, or exponential) applied to the high-frequency COS coefficients to suppress residual oscillation from sharp density features. A policy-search selector automatically compares grid and filter combinations, returning the fastest configuration that meets the user's tolerance, with the plain Junike path always included as a fallback.
 
-The package covers **20 models** across stochastic-volatility, jump-diffusion, pure-Lévy, rough-volatility, and hybrid SVJ families, all priced through one `price_strip` dispatcher with **6 interchangeable engines**.
+The package covers **20 models** across stochastic-volatility, jump-diffusion, pure-Lévy, rough-volatility, and hybrid SVJ families, all priced through one `price_strip` dispatcher with **7 characteristic-function engines** plus BSM finite-difference and lattice baselines.
 
 Full methodology: [appendix.md](appendix.md) · Extension details: [docs/filtered_cos_extension.md](docs/filtered_cos_extension.md) · Package architecture: [docs/architecture_overview.md](docs/architecture_overview.md).
 
@@ -206,7 +206,7 @@ Full model details: [docs/model_zoo.md](docs/model_zoo.md).
 |----------|------------|---------|
 | `price_strip(model, method, strikes, fwd, params, grid=None)` | model label, method label, strike array, `ForwardSpec`, model params, optional grid | `np.ndarray` of call prices |
 
-Method labels: `"cos"`, `"cos_improved"`, `"cos_filtered"`, `"carr_madan"`, `"frft"`, `"pyfeng_fft"`.
+Method labels: `"cos"`, `"cos_improved"`, `"cos_filtered"`, `"carr_madan"`, `"frft"`, `"conv"`, `"pyfeng_fft"`, plus BSM-only `"pde_fd"` and `"lattice"`.
 
 ### Core pricing functions
 
@@ -215,7 +215,10 @@ Method labels: `"cos"`, `"cos_improved"`, `"cos_filtered"`, `"carr_madan"`, `"fr
 | `cos_prices(phi, fwd, strikes, grid)` | characteristic function, `ForwardSpec`, strike array, `COSGrid` | `COSResult` with `.call_prices` |
 | `carr_madan_price_at_strikes(phi, fwd, grid, strikes)` | CF, `ForwardSpec`, `FFTGrid`, strike array | `np.ndarray` |
 | `frft_price_at_strikes(phi, fwd, grid, strikes)` | CF, `ForwardSpec`, `FRFTGrid`, strike array | `np.ndarray` |
+| `conv_price_at_strikes(phi, fwd, grid, strikes)` | CF, `ForwardSpec`, `CONVGrid`, strike array | `np.ndarray` |
 | `filtered_cos_prices(phi, fwd, strikes, grid, filter_spec=None)` | CF, `ForwardSpec`, strike array, `COSGrid`, optional `COSFilterSpec` | `COSResult` |
+| `bsm_lattice_price_at_strikes(fwd, params, strikes, grid=None)` | BSM inputs, `LatticeGrid`, strike array | `np.ndarray` |
+| `bsm_pde_fd_price_at_strikes(fwd, params, strikes, grid=None)` | BSM inputs, `PDEGrid`, strike array | `np.ndarray` |
 
 ### Grid constructors
 
@@ -225,6 +228,9 @@ Method labels: `"cos"`, `"cos_improved"`, `"cos_filtered"`, `"carr_madan"`, `"fr
 | `cos_improved_grid(cumulants, model, params)` | cumulants, model name, params | `COSGrid` via Junike truncation policy |
 | `FFTGrid(N, eta, alpha)` | FFT size, frequency spacing, damping factor | Carr-Madan FFT grid |
 | `FRFTGrid(N, eta, lam, alpha)` | size, freq spacing, strike step, damping | FRFT grid |
+| `CONVGrid(N, u_max)` | positive-frequency node count and cutoff | CONV-style Fourier inversion grid |
+| `LatticeGrid(steps)` | tree step count | BSM CRR lattice grid |
+| `PDEGrid(spot_steps, time_steps, s_max_mult)` | finite-difference grid controls | BSM implicit finite-difference grid |
 
 ### Implied volatility and Greeks
 
@@ -252,7 +258,7 @@ MIT. See [LICENSE](LICENSE).
 
 ### Supplementary notebook
 
-[`notebooks/supplementary/demo_advanced.ipynb`](notebooks/supplementary/demo_advanced.ipynb) is a **supplementary reference** for readers who want a comprehensive tour after the main demo. It covers all 20 models, all 6 pricers, Greeks, IV surface, Heston calibration, Monte Carlo, new models (Double Heston, VGSA), and validation highlights. It is **not** the recommended starting point.
+[`notebooks/supplementary/demo_advanced.ipynb`](notebooks/supplementary/demo_advanced.ipynb) is a **supplementary reference** for readers who want a comprehensive tour after the main demo. It covers all 20 models, the main Fourier pricers, Greeks, IV surface, Heston calibration, Monte Carlo, new models (Double Heston, VGSA), and validation highlights. It is **not** the recommended starting point.
 
 ---
 
@@ -286,7 +292,7 @@ MIT. See [LICENSE](LICENSE).
 | Bates NI prices | MathWorks `optByBatesNI` | atol=1e-2 | done |
 | Bates FFT/FRFT surface | MathWorks `optByBatesFFT` | atol=1e-2 | done |
 | Bates Delta | MathWorks `optSensByBatesNI` | atol=5e-3 | done |
-| BSM all-pricers baseline | Frozen derived reference | COS/COS+: 1e-8; CM/FRFT: 1e-4 | done |
+| BSM all-pricers baseline | Frozen derived reference | COS/COS+: 1e-8; CM/FRFT: 1e-4; CONV/lattice/PDE targeted tests | done |
 | 3/2 SV PyFENG surface (7×4) | Frozen PyFENG adapter reference | atol=1.5e-3 | done |
 | Merton JD | Derived reference (Poisson-BSM mixture) | atol=1e-4 | done |
 | FO2008 COS Tables 1–10 | Derived reference, paper-grid replay | see [fo2008_replication.md](docs/fo2008_replication.md) | partial |
@@ -318,7 +324,7 @@ python -m pytest -q -m "paper"
 python -m pytest -q -m "software_reference"
 ```
 
-The repository has **741 pytest cases**.
+The repository has **741+ pytest cases**.
 
 For linting and type checks:
 

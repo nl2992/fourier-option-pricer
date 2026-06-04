@@ -118,6 +118,16 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
             "CGMY, NIG, 3/2 SV, Rough Heston."
         ),
     ),
+    "conv": MethodSpec(
+        requires_cf=True,
+        supports_products=frozenset({"european"}),
+        supports_exercise=frozenset({"european"}),
+        supports_path_dependent=False,
+        notes=(
+            "CONV-style Fourier probability inversion for European calls/puts. "
+            "First implementation covers terminal vanilla payoffs for CF-equipped models."
+        ),
+    ),
     # ── Planned methods (not yet implemented) ────────────────────────────
     "cos_bermudan": MethodSpec(
         requires_cf=True,

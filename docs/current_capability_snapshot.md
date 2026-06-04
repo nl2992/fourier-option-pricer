@@ -28,7 +28,7 @@ This file is the reference point for all capability-gate tests.
 | `double_heston` | Two-factor SV | no | stable |
 | `vgsa` | VG with stochastic arrival | no | stable |
 
-## Pricing methods (6 engines)
+## Pricing methods (Sprint 1 expansion: 9 engines)
 
 | Method key | Engine | Reference |
 |------------|--------|-----------|
@@ -38,10 +38,14 @@ This file is the reference point for all capability-gate tests.
 | `carr_madan` | FFT / Carr-Madan 1999 | Carr & Madan (1999) |
 | `frft` | FRFT / Chourdakis 2004 | Chourdakis (2004) |
 | `pyfeng_fft` | PyFENG native FFT | pyfeng package |
+| `conv` | CONV-style Fourier probability inversion | Choi/Kirkby MATLAB comparison target |
+| `lattice` | BSM Cox-Ross-Rubinstein tree | Cox, Ross & Rubinstein (1979) |
+| `pde_fd` | BSM implicit finite difference | Black-Scholes PDE |
 
-## Products supported (pre-expansion)
+## Products supported
 
 - European call / put (via `price_strip`)
+- American BSM call / put (via `price(..., method="lattice"|"pde_fd")`)
 
 ## Public API object count
 

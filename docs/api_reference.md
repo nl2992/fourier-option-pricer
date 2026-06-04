@@ -100,6 +100,9 @@ from foureng.pipeline import price_strip
 | `COSGridPolicy(...)` | `mode`, `truncation`, `dx_target`, `L`, `eps_trunc` | Rule-based COS grid specification for improved / filtered COS paths. |
 | `FFTGrid(N, eta, alpha)` | FFT size, frequency spacing, damping parameter | Carr-Madan FFT grid. |
 | `FRFTGrid(N, eta, lam, alpha)` | FRFT size, spacing, strike step, damping parameter | Fractional FFT grid. |
+| `CONVGrid(N, u_max)` | positive-frequency count and integration cutoff | CONV-style Fourier inversion grid. |
+| `LatticeGrid(steps, scheme="crr")` | binomial step count | BSM Cox-Ross-Rubinstein tree grid. |
+| `PDEGrid(spot_steps, time_steps, s_max_mult)` | finite-difference controls | BSM implicit finite-difference grid. |
 | `cos_auto_grid(cumulants, N, L)` | cumulants, term count, truncation multiplier | Returns a `COSGrid` from the standard cumulant rule. |
 | `cos_improved_grid(cumulants, model=..., params=...)` | cumulants plus model context | Returns a `COSGrid` using the improved COS truncation policy. |
 | `recommended_cos_policy(model, params, mode=...)` | model name and parameter dataclass | Returns a `COSGridPolicy` for the improved COS workflow. |
@@ -113,7 +116,10 @@ from foureng.pipeline import price_strip
 | `cos_prices(phi, fwd, strikes, grid)` | CF, `ForwardSpec`, strike array, `COSGrid` | `COSResult` with `strikes` and `call_prices`. |
 | `carr_madan_price_at_strikes(phi, fwd, grid, strikes)` | CF, `ForwardSpec`, `FFTGrid`, strike array | NumPy array of call prices. |
 | `frft_price_at_strikes(phi, fwd, grid, strikes)` | CF, `ForwardSpec`, `FRFTGrid`, strike array | NumPy array of call prices. |
+| `conv_price_at_strikes(phi, fwd, grid, strikes, cp=...)` | CF, `ForwardSpec`, `CONVGrid`, strike array | NumPy array of call or put prices. |
 | `filtered_cos_prices(phi, fwd, strikes, grid, filter_spec=...)` | CF, `ForwardSpec`, strike array, grid, filter | `COSResult` with spectral filtering applied. |
+| `bsm_lattice_price_at_strikes(fwd, params, strikes, cp=..., exercise=...)` | `ForwardSpec`, `BsmParams`, strike array | BSM European/American CRR tree prices. |
+| `bsm_pde_fd_price_at_strikes(fwd, params, strikes, cp=..., exercise=...)` | `ForwardSpec`, `BsmParams`, strike array | BSM European/American finite-difference prices. |
 | `price_strip(model, method, strikes, fwd, params, grid=None, ...)` | model label, method label, strike array, market inputs, params | Unified dispatcher  -  returns NumPy array of call prices. |
 
 ### `price_strip` method labels
@@ -124,8 +130,11 @@ from foureng.pipeline import price_strip
 | `"cos_improved"` | COS with Junike-style truncation policy |
 | `"carr_madan"` | Carr-Madan FFT |
 | `"frft"` | Fractional FFT |
+| `"conv"` | CONV-style Fourier probability inversion |
 | `"cos_filtered"` | COS with spectral damping (Fejér, Lanczos, raised-cosine, or exponential filter) |
 | `"pyfeng_fft"` | PyFENG-backed Lewis-style FFT path (PyFENG-backed models only) |
+| `"lattice"` | BSM-only CRR lattice for European strips |
+| `"pde_fd"` | BSM-only implicit finite-difference solver for European strips |
 
 ---
 

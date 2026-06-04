@@ -87,6 +87,27 @@ class FRFTGrid:
 
 
 @dataclass(frozen=True)
+class CONVGrid:
+    """Fourier-inversion grid for the CONV-style European pricer.
+
+    The first implementation uses the probability-transform form behind
+    convolution/Fourier European pricing: two one-dimensional inversions for
+    the share and cash probabilities.  ``N`` controls the number of positive
+    frequency nodes and ``u_max`` the integration cutoff.
+    """
+
+    N: int = 4096
+    u_max: float = 200.0
+
+    def u(self) -> np.ndarray:
+        if self.N < 2:
+            raise ValueError("CONVGrid: N must be at least 2")
+        if self.u_max <= 0.0:
+            raise ValueError("CONVGrid: u_max must be > 0")
+        return np.linspace(1e-10, self.u_max, self.N)
+
+
+@dataclass(frozen=True)
 class COSGrid:
     """COS truncation interval [a,b] and number of cosine terms N.
 

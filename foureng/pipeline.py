@@ -23,6 +23,7 @@ import numpy as np
 from .models.base import CharFunc, ForwardSpec
 from .models.registry import MODEL_REGISTRY
 from .pricers.carr_madan import carr_madan_price_at_strikes
+from .pricers.conv import conv_price_at_strikes
 from .pricers.cos import (
     cos_adaptive_decision,
     cos_auto_grid,
@@ -31,8 +32,10 @@ from .pricers.cos import (
 )
 from .pricers.filtered_cos import filtered_cos_prices
 from .pricers.frft import frft_price_at_strikes
+from .pricers.lattice import LatticeGrid, bsm_lattice_price, bsm_lattice_price_at_strikes
 from .pricers.lewis import lewis_call_prices
-from .utils.grids import COSGrid, COSGridPolicy, FFTGrid, FRFTGrid
+from .pricers.pde_fd import PDEGrid, bsm_pde_fd_price, bsm_pde_fd_price_at_strikes
+from .utils.grids import CONVGrid, COSGrid, COSGridPolicy, FFTGrid, FRFTGrid
 from .utils.spectral_filters import COSFilterSpec
 
 
@@ -236,7 +239,31 @@ def price_strip(
     if method == "pyfeng_fft":
         return _pyfeng_fft_price(model, K, fwd, params, cp=cp)
 
+    if method == "lattice":
+        if model != "bsm":
+            raise ValueError("method='lattice' is currently implemented only for model='bsm'")
+        lattice_grid = grid if isinstance(grid, LatticeGrid) else LatticeGrid()
+        return np.asarray(
+            bsm_lattice_price_at_strikes(
+                fwd, params, K, cp=cp, exercise="european", grid=lattice_grid
+            ),
+            dtype=np.float64,
+        )
+
     phi = _cf_for(model, fwd, params)
+
+    if method == "conv":
+        conv_grid = grid if isinstance(grid, CONVGrid) else CONVGrid()
+        return np.asarray(conv_price_at_strikes(phi, fwd, conv_grid, K, cp=cp), dtype=np.float64)
+
+    if method == "pde_fd":
+        if model != "bsm":
+            raise ValueError("method='pde_fd' is currently implemented only for model='bsm'")
+        pde_grid = grid if isinstance(grid, PDEGrid) else PDEGrid()
+        return np.asarray(
+            bsm_pde_fd_price_at_strikes(fwd, params, K, cp=cp, exercise="european", grid=pde_grid),
+            dtype=np.float64,
+        )
 
     if method == "cos":
         if isinstance(grid, COSGridPolicy):
@@ -433,7 +460,7 @@ def price_strip(
 
     raise ValueError(
         f"unknown method {method!r}; choose 'cos' | 'cos_improved' | 'cos_filtered' | "
-        "'frft' | 'carr_madan' | 'pyfeng_fft'"
+        "'frft' | 'carr_madan' | 'conv' | 'lattice' | 'pde_fd' | 'pyfeng_fft'"
     )
 
 
@@ -503,6 +530,44 @@ def price(
             model, method, [product.strike], fwd_t, params, grid=grid, cp=product.cp
         )
         return float(results[0])
+
+    if pt == "american":
+        from .models.base import ForwardSpec as _FwdSpec
+        from .products.american import AmericanOption
+
+        if not isinstance(product, AmericanOption):
+            raise TypeError(
+                "price(): product_type='american' must be represented by "
+                f"AmericanOption, got {type(product).__name__!r}"
+            )
+        if model != "bsm":
+            raise NotImplementedError(
+                "American pricing is currently implemented only for model='bsm'."
+            )
+        fwd_t = _FwdSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=product.maturity)
+        if method == "lattice":
+            lattice_grid = grid if isinstance(grid, LatticeGrid) else LatticeGrid()
+            return bsm_lattice_price(
+                fwd_t,
+                params,
+                product.strike,
+                cp=product.cp,
+                exercise="american",
+                grid=lattice_grid,
+            )
+        if method == "pde_fd":
+            pde_grid = grid if isinstance(grid, PDEGrid) else PDEGrid()
+            return bsm_pde_fd_price(
+                fwd_t,
+                params,
+                product.strike,
+                cp=product.cp,
+                exercise="american",
+                grid=pde_grid,
+            )
+        raise NotImplementedError(
+            "American pricing currently supports method='lattice' or method='pde_fd'."
+        )
 
     # For future products, provide a capability hint instead of a bare NotImplementedError.
     _HINTS: dict[str, str] = {
