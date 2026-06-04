@@ -29,7 +29,11 @@ try:
 except _PNF:  # editable install without metadata yet
     __version__ = "0.4.1"
 
-from .analytics.bsm_asian import bsm_geometric_asian, bsm_geometric_asian_parity
+from .analytics.bsm_asian import (
+    bsm_discrete_geometric_asian,
+    bsm_geometric_asian,
+    bsm_geometric_asian_parity,
+)
 from .analytics.bsm_barrier import bsm_barrier_price
 from .analytics.bsm_exotics import (
     bsm_forward_start,
@@ -81,6 +85,7 @@ from .models.merton_jd import MertonJDParams, merton_jd_cf, merton_jd_cumulants
 from .models.nig import NigParams, nig_cf, nig_cumulants
 from .models.ousv import OusvParams, ousv_cf, ousv_cumulants
 from .models.rough_heston import RoughHestonParams, rough_heston_cf, rough_heston_cumulants
+from .models.sabr import SabrParams, sabr_hagan_implied_vol
 from .models.sv32 import Sv32Params, sv32_cf, sv32_cumulants
 from .models.variance_gamma import VGParams, vg_cf, vg_cumulants
 from .models.vgsa import VGSAParams, vgsa_cf, vgsa_cumulants
@@ -101,7 +106,10 @@ from .pricers.filtered_cos import FilteredCOSDecision, filtered_cos_prices
 from .pricers.frft import frft_price_at_strikes, frft_prices
 from .pricers.lattice import LatticeGrid, bsm_lattice_price, bsm_lattice_price_at_strikes
 from .pricers.lewis import lewis_call_prices, lewis_prices
+from .pricers.mellin import mellin_price_at_strikes
 from .pricers.pde_fd import PDEGrid, bsm_pde_fd_price, bsm_pde_fd_price_at_strikes
+from .pricers.proj import proj_european_price_at_strikes
+from .pricers.sabr import sabr_hagan_price_at_strikes
 from .surface import (
     CalibrationResult,
     SurfaceSpec,
@@ -184,6 +192,8 @@ __all__ = [
     "VGSAParams",
     "vgsa_cf",
     "vgsa_cumulants",
+    "SabrParams",
+    "sabr_hagan_implied_vol",
     # pipeline
     "price",
     "price_strip",
@@ -210,6 +220,9 @@ __all__ = [
     "frft_prices",
     "lewis_call_prices",
     "lewis_prices",
+    "mellin_price_at_strikes",
+    "proj_european_price_at_strikes",
+    "sabr_hagan_price_at_strikes",
     "bsm_lattice_price",
     "bsm_lattice_price_at_strikes",
     "bsm_pde_fd_price",
@@ -250,6 +263,7 @@ __all__ = [
     "heston_call_bs_control",
     "CVResult",
     # analytics
+    "bsm_discrete_geometric_asian",
     "bsm_geometric_asian",
     "bsm_geometric_asian_parity",
     "bsm_barrier_price",

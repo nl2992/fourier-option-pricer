@@ -128,6 +128,23 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
             "First implementation covers terminal vanilla payoffs for CF-equipped models."
         ),
     ),
+    "mellin": MethodSpec(
+        requires_cf=True,
+        supports_products=frozenset({"european"}),
+        supports_exercise=frozenset({"european"}),
+        supports_path_dependent=False,
+        notes=(
+            "European Mellin-method façade for VG, NIG, FMLS, and bilateral gamma. "
+            "First slice uses validated transform inversion pending model-specific contours."
+        ),
+    ),
+    "sabr_hagan": MethodSpec(
+        requires_cf=False,
+        supports_products=frozenset({"european"}),
+        supports_exercise=frozenset({"european"}),
+        supports_path_dependent=False,
+        notes="Hagan lognormal SABR implied-vol approximation plus Black pricing.",
+    ),
     "barrier_bsm": MethodSpec(
         requires_cf=False,
         supports_products=frozenset({"barrier"}),
@@ -136,6 +153,40 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
         notes=(
             "Closed-form BSM single-barrier pricer for continuously monitored "
             "zero-rebate knock-in/knock-out calls and puts."
+        ),
+    ),
+    "asian_bsm": MethodSpec(
+        requires_cf=False,
+        supports_products=frozenset({"asian"}),
+        supports_exercise=frozenset({"european"}),
+        supports_path_dependent=True,
+        notes="Closed-form BSM discretely monitored fixed-strike geometric Asian pricer.",
+    ),
+    "asian_mc": MethodSpec(
+        requires_cf=False,
+        requires_simulation=True,
+        supports_products=frozenset({"asian"}),
+        supports_exercise=frozenset({"european"}),
+        supports_path_dependent=True,
+        notes="BSM Monte Carlo arithmetic/geometric Asian pricer.",
+    ),
+    "double_barrier_mc": MethodSpec(
+        requires_cf=False,
+        requires_simulation=True,
+        supports_products=frozenset({"double_barrier"}),
+        supports_exercise=frozenset({"european"}),
+        supports_path_dependent=True,
+        notes="BSM Monte Carlo double-barrier knock-in/knock-out pricer with zero rebate.",
+    ),
+    "proj": MethodSpec(
+        requires_cf=True,
+        supports_products=frozenset({"european"}),
+        supports_exercise=frozenset({"european"}),
+        supports_path_dependent=False,
+        notes=(
+            "PROJ / Frame Projection (Kirkby). First slice exposes European vanilla "
+            "dispatch as a COS-backed projection baseline; exotic B-spline recursions "
+            "are planned."
         ),
     ),
     # ── Planned methods (not yet implemented) ────────────────────────────
@@ -157,6 +208,7 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
             {
                 "european",
                 "barrier",
+                "double_barrier",
                 "asian",
                 "lookback",
                 "variance_swap",
@@ -197,17 +249,6 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
             "Binomial / trinomial tree (CRR, Jarrow-Rudd). "
             "American exercise via backward induction. "
             "BSM and simple local-vol only."
-        ),
-    ),
-    "proj": MethodSpec(
-        requires_cf=True,
-        supports_products=frozenset({"european", "barrier", "asian", "bermudan", "american"}),
-        supports_exercise=frozenset({"european", "bermudan", "american"}),
-        supports_path_dependent=False,
-        notes=(
-            "PROJ / Frame Projection (Kirkby). Fourier frame projection with "
-            "B-spline basis. Supports Lévy models; path-dependent payoffs "
-            "via projection onto function space."
         ),
     ),
     "ctmc": MethodSpec(

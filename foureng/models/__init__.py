@@ -25,6 +25,7 @@ In-house native CFs:
     fmls           FMLSParams             -  Finite Moment Log Stable (Carr-Wu 2003)
     double_heston  DoubleHestonParams     -  Two-factor Heston SV (Christoffersen 2009)
     vgsa           VGSAParams             -  VG with Stochastic Arrival (CGMY 2003)
+    sabr           SabrParams             -  SABR Hagan implied-vol approximation
 """
 
 from .base import CharFunc, ForwardSpec, ModelSpec
@@ -45,6 +46,7 @@ from .merton_jd import MertonJDParams, merton_jd_cf, merton_jd_cumulants
 from .nig import NigParams, nig_cf, nig_cumulants
 from .ousv import OusvParams, ousv_cf, ousv_cumulants
 from .rough_heston import RoughHestonParams, rough_heston_cf, rough_heston_cumulants
+from .sabr import SabrParams, sabr_hagan_implied_vol
 from .sv32 import Sv32Params, sv32_cf, sv32_cumulants
 from .variance_gamma import VGParams, vg_cf, vg_cumulants
 from .vgsa import VGSAParams, vgsa_cf, vgsa_cumulants
@@ -137,4 +139,7 @@ __all__ = [
     "VGSAParams",
     "vgsa_cf",
     "vgsa_cumulants",
+    # SABR approximation
+    "SabrParams",
+    "sabr_hagan_implied_vol",
 ]

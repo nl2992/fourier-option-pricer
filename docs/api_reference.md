@@ -35,6 +35,7 @@ from foureng.pipeline import price, price_strip
 | `FMLSParams(alpha, sigma)` | Stability index and scale | `alpha` in `(1, 2]`, recovers BSM at `alpha=2`. |
 | `DoubleHestonParams(kappa1, theta1, nu1, rho1, v01, kappa2, theta2, nu2, rho2, v02)` | Two independent Heston variance-factor sets | CF factorises as product of two single-Heston CFs. |
 | `VGSAParams(C, G, M, kappa, eta, lam)` | VG tempering rates plus CIR activity-clock parameters | `lam=0` reduces to standard VG. |
+| `SabrParams(alpha, beta, rho, nu)` | SABR approximation parameters | Used by Hagan lognormal implied-vol pricing. |
 
 ---
 
@@ -121,6 +122,10 @@ from foureng.pipeline import price, price_strip
 | `bsm_lattice_price_at_strikes(fwd, params, strikes, cp=..., exercise=...)` | `ForwardSpec`, `BsmParams`, strike array | BSM European/American CRR tree prices. |
 | `bsm_pde_fd_price_at_strikes(fwd, params, strikes, cp=..., exercise=...)` | `ForwardSpec`, `BsmParams`, strike array | BSM European/American finite-difference prices. |
 | `bsm_barrier_price(S, K, H, r, q, T, sigma, barrier_type, cp=...)` | BSM single-barrier inputs | Closed-form continuous zero-rebate barrier price. |
+| `bsm_discrete_geometric_asian(S, K, r, q, monitoring_times, sigma, cp=...)` | BSM geometric-average inputs | Closed-form discretely monitored geometric Asian price. |
+| `proj_european_price_at_strikes(phi, fwd, cumulants, strikes, cp=...)` | CF, market inputs, cumulants, strikes | First-slice European PROJ façade using COS projection coefficients. |
+| `mellin_price_at_strikes(phi, fwd, strikes, cp=...)` | CF, market inputs, strikes | First-slice European Mellin façade for selected Lévy models. |
+| `sabr_hagan_price_at_strikes(fwd, params, strikes, cp=...)` | `ForwardSpec`, `SabrParams`, strikes | Hagan SABR implied-vol prices. |
 | `price_strip(model, method, strikes, fwd, params, grid=None, ...)` | model label, method label, strike array, market inputs, params | Unified dispatcher  -  returns NumPy array of call prices. |
 | `price(product, model, method, fwd, params, grid=None)` | product dataclass, model label, method label, market inputs, params | Product-aware dispatcher for scalar contracts. |
 
@@ -133,11 +138,14 @@ from foureng.pipeline import price, price_strip
 | `"carr_madan"` | Carr-Madan FFT |
 | `"frft"` | Fractional FFT |
 | `"conv"` | CONV-style Fourier probability inversion |
+| `"mellin"` | First-slice Mellin European façade for VG, NIG, FMLS, bilateral gamma |
+| `"proj"` | First-slice European PROJ façade using COS projection coefficients |
 | `"cos_filtered"` | COS with spectral damping (Fejér, Lanczos, raised-cosine, or exponential filter) |
 | `"pyfeng_fft"` | PyFENG-backed Lewis-style FFT path (PyFENG-backed models only) |
 | `"lattice"` | BSM-only CRR lattice for European strips |
 | `"pde_fd"` | BSM-only implicit finite-difference solver for European strips |
 | `"barrier_bsm"` | BSM-only analytic single-barrier pricing through `price()` |
+| `"sabr_hagan"` | SABR-only Hagan implied-vol approximation for European strips |
 
 ### Product-level dispatcher
 
@@ -146,6 +154,8 @@ from foureng.pipeline import price, price_strip
 | `EuropeanOption` | all compatible `price_strip` methods | Vanilla call/put. |
 | `AmericanOption` | `"lattice"`, `"pde_fd"` | BSM call/put. |
 | `BarrierOption` | `"barrier_bsm"` | Continuously monitored, zero-rebate, single-barrier BSM knock-in/knock-out call/put. |
+| `AsianOption` | `"asian_bsm"`, `"asian_mc"` | BSM fixed-strike geometric closed form or BSM arithmetic/geometric Monte Carlo. |
+| `DoubleBarrierOption` | `"double_barrier_mc"` | BSM zero-rebate double knock-in/knock-out Monte Carlo. |
 
 ---
 

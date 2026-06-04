@@ -42,12 +42,21 @@ This file is the reference point for all capability-gate tests.
 | `lattice` | BSM Cox-Ross-Rubinstein tree | Cox, Ross & Rubinstein (1979) |
 | `pde_fd` | BSM implicit finite difference | Black-Scholes PDE |
 | `barrier_bsm` | BSM closed-form single-barrier option | Reiner-Rubinstein / Haug |
+| `asian_bsm` | BSM discrete geometric Asian closed form | Kemna-Vorst style lognormal average |
+| `asian_mc` | BSM Asian Monte Carlo | GBM path simulation |
+| `double_barrier_mc` | BSM double-barrier Monte Carlo | GBM path simulation |
+| `proj` | First-slice European PROJ façade | COS-backed projection baseline |
+| `mellin` | First-slice European Mellin façade | Mellin-transform expansion target |
+| `sabr_hagan` | SABR Hagan approximation | Hagan et al. |
 
 ## Products supported
 
 - European call / put (via `price_strip`)
 - American BSM call / put (via `price(..., method="lattice"|"pde_fd")`)
 - Continuous zero-rebate BSM single-barrier call / put (via `price(..., method="barrier_bsm")`)
+- BSM Asian options (geometric closed form via `asian_bsm`; arithmetic/geometric MC via `asian_mc`)
+- BSM zero-rebate double-barrier options (via `double_barrier_mc`)
+- SABR European call / put strips (via `price_strip("sabr", "sabr_hagan", ...)`)
 
 ## Public API object count
 
