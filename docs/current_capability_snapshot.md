@@ -41,11 +41,13 @@ This file is the reference point for all capability-gate tests.
 | `conv` | CONV-style Fourier probability inversion | Choi/Kirkby MATLAB comparison target |
 | `lattice` | BSM Cox-Ross-Rubinstein tree | Cox, Ross & Rubinstein (1979) |
 | `pde_fd` | BSM implicit finite difference | Black-Scholes PDE |
+| `barrier_bsm` | BSM closed-form single-barrier option | Reiner-Rubinstein / Haug |
 
 ## Products supported
 
 - European call / put (via `price_strip`)
 - American BSM call / put (via `price(..., method="lattice"|"pde_fd")`)
+- Continuous zero-rebate BSM single-barrier call / put (via `price(..., method="barrier_bsm")`)
 
 ## Public API object count
 

@@ -20,6 +20,7 @@ from typing import Any
 
 import numpy as np
 
+from .analytics.bsm_barrier import bsm_barrier_price
 from .models.base import CharFunc, ForwardSpec
 from .models.registry import MODEL_REGISTRY
 from .pricers.carr_madan import carr_madan_price_at_strikes
@@ -569,10 +570,45 @@ def price(
             "American pricing currently supports method='lattice' or method='pde_fd'."
         )
 
+    if pt == "barrier":
+        from .products.barrier import BarrierOption
+
+        if not isinstance(product, BarrierOption):
+            raise TypeError(
+                "price(): product_type='barrier' must be represented by "
+                f"BarrierOption, got {type(product).__name__!r}"
+            )
+        if method != "barrier_bsm":
+            raise NotImplementedError(
+                "Barrier pricing currently supports method='barrier_bsm' for "
+                "closed-form BSM single-barrier contracts."
+            )
+        if model != "bsm":
+            raise NotImplementedError(
+                "method='barrier_bsm' is currently implemented only for model='bsm'."
+            )
+        if product.monitoring != "continuous":
+            raise NotImplementedError(
+                "method='barrier_bsm' currently supports only continuous monitoring."
+            )
+        if product.rebate != 0.0:
+            raise NotImplementedError("method='barrier_bsm' currently supports only zero rebates.")
+        return bsm_barrier_price(
+            fwd.S0,
+            product.strike,
+            product.barrier,
+            fwd.r,
+            fwd.q,
+            product.maturity,
+            params.sigma,
+            product.barrier_type,
+            cp=product.cp,
+        )
+
     # For future products, provide a capability hint instead of a bare NotImplementedError.
     _HINTS: dict[str, str] = {
         "digital": "Use a COS digital pricer (Phase 4.1) or analytic BSM.",
-        "barrier": "Use barrier_analytic_bsm / barrier_mc / barrier_cos (Phase 4.2).",
+        "barrier": "Use barrier_bsm for continuous zero-rebate BSM barriers.",
         "asian": "Use asian_geometric_bsm / asian_mc / asian_proj (Phase 4.3).",
         "bermudan": "Use cos_bermudan for Lévy models (Phase 3.3).",
         "american": "Use american_lattice / american_pde (Phase 4.4).",

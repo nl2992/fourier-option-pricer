@@ -5,7 +5,7 @@ Complete public API for `foureng`. All objects are importable as `import foureng
 ```python
 import foureng as fe
 # or for the unified dispatcher only:
-from foureng.pipeline import price_strip
+from foureng.pipeline import price, price_strip
 ```
 
 ---
@@ -120,7 +120,9 @@ from foureng.pipeline import price_strip
 | `filtered_cos_prices(phi, fwd, strikes, grid, filter_spec=...)` | CF, `ForwardSpec`, strike array, grid, filter | `COSResult` with spectral filtering applied. |
 | `bsm_lattice_price_at_strikes(fwd, params, strikes, cp=..., exercise=...)` | `ForwardSpec`, `BsmParams`, strike array | BSM European/American CRR tree prices. |
 | `bsm_pde_fd_price_at_strikes(fwd, params, strikes, cp=..., exercise=...)` | `ForwardSpec`, `BsmParams`, strike array | BSM European/American finite-difference prices. |
+| `bsm_barrier_price(S, K, H, r, q, T, sigma, barrier_type, cp=...)` | BSM single-barrier inputs | Closed-form continuous zero-rebate barrier price. |
 | `price_strip(model, method, strikes, fwd, params, grid=None, ...)` | model label, method label, strike array, market inputs, params | Unified dispatcher  -  returns NumPy array of call prices. |
+| `price(product, model, method, fwd, params, grid=None)` | product dataclass, model label, method label, market inputs, params | Product-aware dispatcher for scalar contracts. |
 
 ### `price_strip` method labels
 
@@ -135,6 +137,15 @@ from foureng.pipeline import price_strip
 | `"pyfeng_fft"` | PyFENG-backed Lewis-style FFT path (PyFENG-backed models only) |
 | `"lattice"` | BSM-only CRR lattice for European strips |
 | `"pde_fd"` | BSM-only implicit finite-difference solver for European strips |
+| `"barrier_bsm"` | BSM-only analytic single-barrier pricing through `price()` |
+
+### Product-level dispatcher
+
+| Product | Supported method(s) | Scope |
+|---------|---------------------|-------|
+| `EuropeanOption` | all compatible `price_strip` methods | Vanilla call/put. |
+| `AmericanOption` | `"lattice"`, `"pde_fd"` | BSM call/put. |
+| `BarrierOption` | `"barrier_bsm"` | Continuously monitored, zero-rebate, single-barrier BSM knock-in/knock-out call/put. |
 
 ---
 
