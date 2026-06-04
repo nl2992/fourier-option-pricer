@@ -86,6 +86,7 @@ from .models.variance_gamma import VGParams, vg_cf, vg_cumulants
 from .models.vgsa import VGSAParams, vgsa_cf, vgsa_cumulants
 from .pipeline import price_strip
 from .pricers.carr_madan import carr_madan_fft_prices, carr_madan_price_at_strikes
+from .pricers.conv import conv_price_at_strikes
 from .pricers.cos import (
     COSPolicyDecision,
     COSResult,
@@ -98,7 +99,9 @@ from .pricers.cos import (
 from .pricers.cos_digital import cos_digital_price, cos_digital_price_strip
 from .pricers.filtered_cos import FilteredCOSDecision, filtered_cos_prices
 from .pricers.frft import frft_price_at_strikes, frft_prices
+from .pricers.lattice import LatticeGrid, bsm_lattice_price, bsm_lattice_price_at_strikes
 from .pricers.lewis import lewis_call_prices, lewis_prices
+from .pricers.pde_fd import PDEGrid, bsm_pde_fd_price, bsm_pde_fd_price_at_strikes
 from .surface import (
     CalibrationResult,
     SurfaceSpec,
@@ -110,7 +113,7 @@ from .surface import (
     model_iv_surface,
     model_price_surface,
 )
-from .utils.grids import COSGrid, COSGridPolicy, FFTGrid, FRFTGrid
+from .utils.grids import CONVGrid, COSGrid, COSGridPolicy, FFTGrid, FRFTGrid
 from .utils.spectral_filters import COSFilterSpec, cos_filter_weights
 
 __all__ = [
@@ -188,6 +191,9 @@ __all__ = [
     "COSGridPolicy",
     "FFTGrid",
     "FRFTGrid",
+    "CONVGrid",
+    "LatticeGrid",
+    "PDEGrid",
     # pricers
     "cos_prices",
     "cos_auto_grid",
@@ -198,10 +204,15 @@ __all__ = [
     "COSPolicyDecision",
     "carr_madan_price_at_strikes",
     "carr_madan_fft_prices",
+    "conv_price_at_strikes",
     "frft_price_at_strikes",
     "frft_prices",
     "lewis_call_prices",
     "lewis_prices",
+    "bsm_lattice_price",
+    "bsm_lattice_price_at_strikes",
+    "bsm_pde_fd_price",
+    "bsm_pde_fd_price_at_strikes",
     # filtered COS extension
     "COSFilterSpec",
     "cos_filter_weights",
