@@ -28,6 +28,10 @@ from foureng.core.capabilities import explain_capability
         ("bsm", "american", "lattice"),
         ("bsm", "forward_start", "forward_start_bsm"),
         ("bsm", "lookback", "lookback_bsm"),
+        ("bsm", "lookback", "lookback_mc"),
+        ("bsm", "variance_swap", "variance_mc"),
+        ("bsm", "variance_option", "variance_mc"),
+        ("bsm", "cliquet", "cliquet_mc"),
         ("vg", "european", "proj"),
     ],
 )

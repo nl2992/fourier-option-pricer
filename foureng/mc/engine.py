@@ -1,17 +1,4 @@
-"""Unified Monte Carlo pricing engine for path-dependent products.
-
-``mc_price`` dispatches on ``product.product_type`` and calls the
-appropriate path generator + payoff function.  Variance reduction
-(antithetic variates) is available via the ``MCSpec`` flag.
-
-Supported products:
-    european      -- one-step exact GBM
-    asian         -- arithmetic or geometric average
-    barrier       -- single-barrier knock-out / knock-in
-
-Not yet supported (raise NotImplementedError):
-    bermudan, variance_swap, lookback, cliquet, …
-"""
+"""Unified Monte Carlo pricing engine for supported GBM products."""
 
 from __future__ import annotations
 
@@ -20,13 +7,17 @@ from dataclasses import dataclass
 import numpy as np
 
 from ..models.base import ForwardSpec
-from .paths import gbm_paths, gbm_terminal
+from .paths import gbm_paths, gbm_paths_on_grid, gbm_terminal
 from .payoffs import (
     asian_arithmetic_payoff,
     asian_geometric_payoff,
     barrier_payoff,
+    cliquet_payoff,
     double_barrier_payoff,
     european_payoff,
+    lookback_payoff,
+    variance_option_payoff,
+    variance_swap_payoff,
 )
 
 
@@ -93,8 +84,7 @@ def mc_price(
     sigma : float
         GBM lognormal volatility.
     product :
-        Any product with a ``product_type`` attribute.  Supported:
-        ``"european"``, ``"asian"``, ``"barrier"``, ``"bermudan"``.
+        Any product with a ``product_type`` attribute.
     mc : MCSpec or None
         MC configuration; defaults to 100K paths, 252 steps, seed=42.
 
@@ -122,7 +112,21 @@ def mc_price(
     # ── Asian ──────────────────────────────────────────────────────────────
     if pt == "asian":
         T, K, cp = product.maturity, product.strike, product.cp
-        paths = gbm_paths(S0, r, q, T, sigma, mc.n_paths, mc.n_steps, rng, antithetic=mc.antithetic)
+        if hasattr(product, "monitoring_times"):
+            paths = gbm_paths_on_grid(
+                S0,
+                r,
+                q,
+                np.asarray(product.monitoring_times, dtype=np.float64),
+                sigma,
+                mc.n_paths,
+                rng,
+                antithetic=mc.antithetic,
+            )
+        else:
+            paths = gbm_paths(
+                S0, r, q, T, sigma, mc.n_paths, mc.n_steps, rng, antithetic=mc.antithetic
+            )
         avg_type = getattr(product, "average_type", "arithmetic")
         if avg_type == "geometric":
             raw = asian_geometric_payoff(paths, K, cp)
@@ -160,6 +164,81 @@ def mc_price(
         disc = np.exp(-r * T)
         return _result(raw * disc, mc.n_paths)
 
+    # ── Lookback ───────────────────────────────────────────────────────────
+    if pt == "lookback":
+        T = product.maturity
+        paths = gbm_paths(S0, r, q, T, sigma, mc.n_paths, mc.n_steps, rng, antithetic=mc.antithetic)
+        raw = lookback_payoff(
+            paths,
+            product.cp,
+            strike_type=product.strike_type,
+            strike=product.strike,
+        )
+        disc = np.exp(-r * T)
+        return _result(raw * disc, mc.n_paths)
+
+    # ── Variance swap / option ─────────────────────────────────────────────
+    if pt == "variance_swap":
+        paths = gbm_paths_on_grid(
+            S0,
+            r,
+            q,
+            np.asarray(product.sampling_times, dtype=np.float64),
+            sigma,
+            mc.n_paths,
+            rng,
+            antithetic=mc.antithetic,
+        )
+        raw = variance_swap_payoff(paths, product.sampling_times, notional=product.notional)
+        disc = np.exp(-r * product.maturity)
+        return _result(raw * disc, mc.n_paths)
+
+    if pt == "variance_option":
+        paths = gbm_paths_on_grid(
+            S0,
+            r,
+            q,
+            np.asarray(product.sampling_times, dtype=np.float64),
+            sigma,
+            mc.n_paths,
+            rng,
+            antithetic=mc.antithetic,
+        )
+        raw = variance_option_payoff(
+            paths,
+            product.sampling_times,
+            product.strike,
+            product.cp,
+            variance_type=product.variance_type,
+            sigma=sigma,
+        )
+        disc = np.exp(-r * product.maturity)
+        return _result(raw * disc, mc.n_paths)
+
+    # ── Cliquet ────────────────────────────────────────────────────────────
+    if pt == "cliquet":
+        paths = gbm_paths_on_grid(
+            S0,
+            r,
+            q,
+            np.asarray(product.reset_times, dtype=np.float64),
+            sigma,
+            mc.n_paths,
+            rng,
+            antithetic=mc.antithetic,
+        )
+        raw = cliquet_payoff(
+            paths,
+            product.cp,
+            local_floor=product.local_floor,
+            local_cap=product.local_cap,
+            global_floor=product.global_floor,
+            global_cap=product.global_cap,
+            payoff_type=product.payoff_type,
+        )
+        disc = np.exp(-r * product.maturity)
+        return _result(raw * disc, mc.n_paths)
+
     # ── Bermudan ───────────────────────────────────────────────────────────
     if pt == "bermudan":
         # Exercise boundary requires backward induction (LSMC); not implemented here.
@@ -170,7 +249,8 @@ def mc_price(
 
     raise NotImplementedError(
         f"mc_price: product_type={pt!r} is not yet supported. "
-        "Supported: 'european', 'asian', 'barrier'."
+        "Supported: 'european', 'asian', 'barrier', 'double_barrier', "
+        "'lookback', 'variance_swap', 'variance_option', 'cliquet'."
     )
 
 

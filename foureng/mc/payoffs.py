@@ -74,6 +74,98 @@ def asian_geometric_payoff(
     return np.maximum(cp * (geo_avg - K), 0.0)
 
 
+def lookback_payoff(
+    paths: np.ndarray,
+    cp: int = 1,
+    *,
+    strike_type: str = "floating",
+    strike: float = 0.0,
+) -> np.ndarray:
+    """Lookback payoff from a full path matrix."""
+    running_min = paths.min(axis=1)
+    running_max = paths.max(axis=1)
+    s_t = paths[:, -1]
+
+    if strike_type == "floating":
+        if cp == 1:
+            return np.maximum(s_t - running_min, 0.0)
+        return np.maximum(running_max - s_t, 0.0)
+
+    if strike_type == "fixed":
+        if cp == 1:
+            return np.maximum(running_max - strike, 0.0)
+        return np.maximum(strike - running_min, 0.0)
+
+    raise ValueError(f"Unknown strike_type: {strike_type!r}")
+
+
+def realized_variance(
+    paths: np.ndarray,
+    times: np.ndarray,
+) -> np.ndarray:
+    """Annualized realized variance from log returns on observation dates."""
+    t = np.asarray(times, dtype=np.float64)
+    if t.ndim != 1 or t.size == 0:
+        raise ValueError("times must be a non-empty 1-D array")
+    log_returns = np.diff(np.log(paths), axis=1)
+    total_time = float(t[-1])
+    return np.sum(log_returns**2, axis=1) / total_time
+
+
+def variance_swap_payoff(
+    paths: np.ndarray,
+    times: np.ndarray,
+    notional: float = 1.0,
+) -> np.ndarray:
+    """Variance swap payoff under zero fair-strike convention."""
+    return notional * realized_variance(paths, times)
+
+
+def variance_option_payoff(
+    paths: np.ndarray,
+    times: np.ndarray,
+    strike: float,
+    cp: int = 1,
+    *,
+    variance_type: str = "realised",
+    sigma: float | None = None,
+) -> np.ndarray:
+    """Variance option payoff on annualized realized or integrated variance."""
+    if variance_type == "integrated":
+        if sigma is None:
+            raise ValueError("variance_option_payoff requires sigma for integrated variance")
+        underlying = np.full(paths.shape[0], sigma**2, dtype=np.float64)
+    else:
+        underlying = realized_variance(paths, times)
+    return np.maximum(cp * (underlying - strike), 0.0)
+
+
+def cliquet_payoff(
+    paths: np.ndarray,
+    cp: int = 1,
+    *,
+    local_floor: float = float("-inf"),
+    local_cap: float = float("inf"),
+    global_floor: float = float("-inf"),
+    global_cap: float = float("inf"),
+    payoff_type: str = "additive",
+) -> np.ndarray:
+    """Cliquet payoff from a path matrix observed on reset dates."""
+    gross_returns = paths[:, 1:] / paths[:, :-1] - 1.0
+    clipped = np.clip(gross_returns, local_floor, local_cap)
+
+    if payoff_type == "additive":
+        total = clipped.sum(axis=1)
+        signed = cp * total
+        return np.clip(signed, global_floor, global_cap)
+
+    if payoff_type == "multiplicative":
+        compounded = np.prod(1.0 + clipped, axis=1) - 1.0
+        return np.clip(compounded, global_floor, global_cap)
+
+    raise ValueError(f"Unknown payoff_type: {payoff_type!r}")
+
+
 def barrier_payoff(
     paths: np.ndarray,
     K: float,
