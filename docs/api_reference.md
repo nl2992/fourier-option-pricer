@@ -118,6 +118,8 @@ from foureng.pipeline import price, price_strip
 | `carr_madan_price_at_strikes(phi, fwd, grid, strikes)` | CF, `ForwardSpec`, `FFTGrid`, strike array | NumPy array of call prices. |
 | `frft_price_at_strikes(phi, fwd, grid, strikes)` | CF, `ForwardSpec`, `FRFTGrid`, strike array | NumPy array of call prices. |
 | `conv_price_at_strikes(phi, fwd, grid, strikes, cp=...)` | CF, `ForwardSpec`, `CONVGrid`, strike array | NumPy array of call or put prices. |
+| `cos_bermudan_price(model, fwd, params, product, grid=...)` | model key, market inputs, params, `BermudanOption` | Scalar Bermudan COS price for supported 1-D Levy models. |
+| `cos_bermudan_price_strip(model, fwd, params, strikes, maturity, exercise_times, cp=...)` | model key, market inputs, params, strike array | Bermudan COS strip for supported 1-D Levy models. |
 | `filtered_cos_prices(phi, fwd, strikes, grid, filter_spec=...)` | CF, `ForwardSpec`, strike array, grid, filter | `COSResult` with spectral filtering applied. |
 | `bsm_lattice_price_at_strikes(fwd, params, strikes, cp=..., exercise=...)` | `ForwardSpec`, `BsmParams`, strike array | BSM European/American CRR tree prices. |
 | `bsm_pde_fd_price_at_strikes(fwd, params, strikes, cp=..., exercise=...)` | `ForwardSpec`, `BsmParams`, strike array | BSM European/American finite-difference prices. |
@@ -138,6 +140,7 @@ from foureng.pipeline import price, price_strip
 | `"carr_madan"` | Carr-Madan FFT |
 | `"frft"` | Fractional FFT |
 | `"conv"` | CONV-style Fourier probability inversion |
+| `"cos_bermudan"` | COS Bermudan backward induction for supported 1-D Levy models |
 | `"mellin"` | First-slice Mellin European façade for VG, NIG, FMLS, bilateral gamma |
 | `"proj"` | First-slice European PROJ façade using COS projection coefficients |
 | `"cos_filtered"` | COS with spectral damping (Fejér, Lanczos, raised-cosine, or exponential filter) |
@@ -153,6 +156,7 @@ from foureng.pipeline import price, price_strip
 |---------|---------------------|-------|
 | `EuropeanOption` | all compatible `price_strip` methods | Vanilla call/put. |
 | `AmericanOption` | `"lattice"`, `"pde_fd"` | BSM call/put. |
+| `BermudanOption` | `"cos_bermudan"` | Supported 1-D Levy call/put with discrete exercise dates. |
 | `BarrierOption` | `"barrier_bsm"` | Continuously monitored, zero-rebate, single-barrier BSM knock-in/knock-out call/put. |
 | `AsianOption` | `"asian_bsm"`, `"asian_mc"` | BSM fixed-strike geometric closed form or BSM arithmetic/geometric Monte Carlo. |
 | `DoubleBarrierOption` | `"double_barrier_mc"` | BSM zero-rebate double knock-in/knock-out Monte Carlo. |

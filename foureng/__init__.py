@@ -101,6 +101,7 @@ from .pricers.cos import (
     cos_prices,
     recommended_cos_policy,
 )
+from .pricers.cos_bermudan import cos_bermudan_price, cos_bermudan_price_strip
 from .pricers.cos_digital import cos_digital_price, cos_digital_price_strip
 from .pricers.filtered_cos import FilteredCOSDecision, filtered_cos_prices
 from .pricers.frft import frft_price_at_strikes, frft_prices
@@ -216,6 +217,8 @@ __all__ = [
     "carr_madan_price_at_strikes",
     "carr_madan_fft_prices",
     "conv_price_at_strikes",
+    "cos_bermudan_price",
+    "cos_bermudan_price_strip",
     "frft_price_at_strikes",
     "frft_prices",
     "lewis_call_prices",
