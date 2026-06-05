@@ -18,6 +18,8 @@ _BASELINE_METHODS = {
     "asian_bsm",
     "asian_mc",
     "double_barrier_mc",
+    "forward_start_bsm",
+    "lookback_bsm",
     "cos_bermudan",
     "mellin",
     "proj",

@@ -26,6 +26,8 @@ from foureng.core.capabilities import explain_capability
         ("heston", "asian", "monte_carlo"),
         ("bsm", "barrier", "pde_fd"),
         ("bsm", "american", "lattice"),
+        ("bsm", "forward_start", "forward_start_bsm"),
+        ("bsm", "lookback", "lookback_bsm"),
         ("vg", "european", "proj"),
     ],
 )

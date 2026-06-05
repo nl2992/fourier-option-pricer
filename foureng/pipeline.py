@@ -22,6 +22,7 @@ import numpy as np
 
 from .analytics.bsm_asian import bsm_discrete_geometric_asian
 from .analytics.bsm_barrier import bsm_barrier_price
+from .analytics.bsm_exotics import bsm_forward_start, bsm_lookback_floating
 from .mc.engine import MCSpec, mc_price
 from .models.base import CharFunc, ForwardSpec
 from .models.registry import MODEL_REGISTRY
@@ -512,7 +513,8 @@ def price(
 
     This is the product-aware counterpart to :func:`price_strip`. It routes
     vanilla Europeans plus the currently implemented product-specific engines
-    for American, barrier, Asian, double-barrier, and Bermudan contracts.
+    for American, barrier, Asian, double-barrier, Bermudan, forward-start,
+    and lookback contracts.
 
     Parameters
     ----------
@@ -703,6 +705,66 @@ def price(
         fwd_t = _FwdSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=product.maturity)
         return mc_price(fwd_t, params.sigma, product, mc_spec).price
 
+    if pt == "forward_start":
+        from .products.forward_start import ForwardStartOption
+
+        if not isinstance(product, ForwardStartOption):
+            raise TypeError(
+                "price(): product_type='forward_start' must be represented by "
+                f"ForwardStartOption, got {type(product).__name__!r}"
+            )
+        if method != "forward_start_bsm":
+            raise NotImplementedError(
+                "Forward-start pricing currently supports method='forward_start_bsm'."
+            )
+        if model != "bsm":
+            raise NotImplementedError(
+                "method='forward_start_bsm' is currently implemented only for model='bsm'."
+            )
+        return bsm_forward_start(
+            fwd.S0,
+            product.alpha,
+            product.start_time,
+            product.maturity,
+            fwd.r,
+            fwd.q,
+            params.sigma,
+            cp=product.cp,
+        )
+
+    if pt == "lookback":
+        from .products.lookback import LookbackOption
+
+        if not isinstance(product, LookbackOption):
+            raise TypeError(
+                "price(): product_type='lookback' must be represented by "
+                f"LookbackOption, got {type(product).__name__!r}"
+            )
+        if method != "lookback_bsm":
+            raise NotImplementedError("Lookback pricing currently supports method='lookback_bsm'.")
+        if model != "bsm":
+            raise NotImplementedError(
+                "method='lookback_bsm' is currently implemented only for model='bsm'."
+            )
+        if product.monitoring != "continuous":
+            raise NotImplementedError(
+                "method='lookback_bsm' currently supports only continuous monitoring."
+            )
+        if product.strike_type != "floating":
+            raise NotImplementedError(
+                "method='lookback_bsm' currently supports only floating-strike lookbacks."
+            )
+        return bsm_lookback_floating(
+            fwd.S0,
+            S_min=fwd.S0,
+            S_max=fwd.S0,
+            r=fwd.r,
+            q=fwd.q,
+            T=product.maturity,
+            sigma=params.sigma,
+            cp=product.cp,
+        )
+
     # For future products, provide a capability hint instead of a bare NotImplementedError.
     _HINTS: dict[str, str] = {
         "digital": "Use a COS digital pricer (Phase 4.1) or analytic BSM.",
@@ -710,8 +772,8 @@ def price(
         "asian": "Use asian_bsm for geometric Asians or asian_mc for BSM Monte Carlo.",
         "bermudan": "Use cos_bermudan for supported 1-D Levy models.",
         "american": "Use american_lattice / american_pde (Phase 4.4).",
-        "lookback": "Use lookback_bsm / lookback_mc (Phase 4.5).",
-        "forward_start": "Use forward_start_bsm / forward_start_mc (Phase 4.6).",
+        "lookback": "Use lookback_bsm for continuous floating-strike BSM lookbacks.",
+        "forward_start": "Use forward_start_bsm for BSM forward-start options.",
         "variance_swap": "Use variance_analytic_bsm / variance_heston (Phase 4.7).",
         "variance_option": "Use variance_mc (Phase 4.7).",
         "cliquet": "Use cliquet_mc / cliquet_proj (Phase 4.8).",
