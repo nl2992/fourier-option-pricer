@@ -18,13 +18,13 @@ _BASELINE_METHODS = {
     "asian_bsm",
     "asian_mc",
     "double_barrier_mc",
+    "cos_bermudan",
     "mellin",
     "proj",
     "sabr_hagan",
 }
 
 _PLANNED_METHODS = {
-    "cos_bermudan",
     "monte_carlo",
     "pde_fd",
     "lattice",
@@ -66,6 +66,7 @@ def test_cf_methods_require_cf():
         "frft",
         "pyfeng_fft",
         "conv",
+        "cos_bermudan",
         "mellin",
         "proj",
     }

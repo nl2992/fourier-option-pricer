@@ -178,6 +178,17 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
         supports_path_dependent=True,
         notes="BSM Monte Carlo double-barrier knock-in/knock-out pricer with zero rebate.",
     ),
+    "cos_bermudan": MethodSpec(
+        requires_cf=True,
+        supports_products=frozenset({"bermudan", "european"}),
+        supports_exercise=frozenset({"european", "bermudan"}),
+        supports_path_dependent=False,
+        notes=(
+            "COS Bermudan via Fang & Oosterlee (2009) backward induction. "
+            "Implemented for supported 1-D Levy models; stochastic-volatility "
+            "extensions remain out of scope."
+        ),
+    ),
     "proj": MethodSpec(
         requires_cf=True,
         supports_products=frozenset({"european"}),
@@ -190,17 +201,6 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
         ),
     ),
     # ── Planned methods (not yet implemented) ────────────────────────────
-    "cos_bermudan": MethodSpec(
-        requires_cf=True,
-        supports_products=frozenset({"bermudan", "european"}),
-        supports_exercise=frozenset({"european", "bermudan"}),
-        supports_path_dependent=False,
-        notes=(
-            "COS Bermudan via Fang & Oosterlee (2009) backward induction. "
-            "Supported for 1-D Lévy models (BSM, VG, CGMY, Kou, Merton JD). "
-            "NOT available for Heston without the 2-D state extension."
-        ),
-    ),
     "monte_carlo": MethodSpec(
         requires_cf=False,
         requires_simulation=True,

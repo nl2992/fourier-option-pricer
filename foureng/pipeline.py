@@ -33,6 +33,7 @@ from .pricers.cos import (
     cos_prices,
     recommended_cos_policy,
 )
+from .pricers.cos_bermudan import cos_bermudan_price
 from .pricers.filtered_cos import filtered_cos_prices
 from .pricers.frft import frft_price_at_strikes
 from .pricers.lattice import LatticeGrid, bsm_lattice_price, bsm_lattice_price_at_strikes
@@ -509,10 +510,9 @@ def price(
 ) -> float | np.ndarray:
     """Price a :class:`~foureng.products.ProductSpec` under the given model and method.
 
-    This is the product-aware counterpart to :func:`price_strip`.  Currently
-    only :class:`~foureng.products.EuropeanOption` is routed; all other product
-    types raise :class:`NotImplementedError` with an informative message
-    (including which engine would be needed once that product is implemented).
+    This is the product-aware counterpart to :func:`price_strip`. It routes
+    vanilla Europeans plus the currently implemented product-specific engines
+    for American, barrier, Asian, double-barrier, and Bermudan contracts.
 
     Parameters
     ----------
@@ -597,6 +597,18 @@ def price(
         raise NotImplementedError(
             "American pricing currently supports method='lattice' or method='pde_fd'."
         )
+
+    if pt == "bermudan":
+        from .products.bermudan import BermudanOption
+
+        if not isinstance(product, BermudanOption):
+            raise TypeError(
+                "price(): product_type='bermudan' must be represented by "
+                f"BermudanOption, got {type(product).__name__!r}"
+            )
+        if method != "cos_bermudan":
+            raise NotImplementedError("Bermudan pricing currently supports method='cos_bermudan'.")
+        return cos_bermudan_price(model, fwd, params, product, grid=grid)
 
     if pt == "barrier":
         from .products.barrier import BarrierOption
@@ -696,7 +708,7 @@ def price(
         "digital": "Use a COS digital pricer (Phase 4.1) or analytic BSM.",
         "barrier": "Use barrier_bsm for continuous zero-rebate BSM barriers.",
         "asian": "Use asian_bsm for geometric Asians or asian_mc for BSM Monte Carlo.",
-        "bermudan": "Use cos_bermudan for Lévy models (Phase 3.3).",
+        "bermudan": "Use cos_bermudan for supported 1-D Levy models.",
         "american": "Use american_lattice / american_pde (Phase 4.4).",
         "lookback": "Use lookback_bsm / lookback_mc (Phase 4.5).",
         "forward_start": "Use forward_start_bsm / forward_start_mc (Phase 4.6).",

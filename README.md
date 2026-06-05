@@ -207,9 +207,9 @@ Full model details: [docs/model_zoo.md](docs/model_zoo.md).
 |----------|------------|---------|
 | `price_strip(model, method, strikes, fwd, params, grid=None)` | model label, method label, strike array, `ForwardSpec`, model params, optional grid | `np.ndarray` of call prices |
 
-Method labels: `"cos"`, `"cos_improved"`, `"cos_filtered"`, `"carr_madan"`, `"frft"`, `"conv"`, `"mellin"`, `"proj"`, `"pyfeng_fft"`, plus BSM-only `"pde_fd"` / `"lattice"` and SABR-only `"sabr_hagan"`.
+Method labels: `"cos"`, `"cos_improved"`, `"cos_filtered"`, `"carr_madan"`, `"frft"`, `"conv"`, `"cos_bermudan"`, `"mellin"`, `"proj"`, `"pyfeng_fft"`, plus BSM-only `"pde_fd"` / `"lattice"` and SABR-only `"sabr_hagan"`.
 
-Product-level pricing uses `price(product, model, method, fwd, params)`. It currently routes European options, BSM American options via `"lattice"` / `"pde_fd"`, continuously monitored zero-rebate BSM single barriers via `"barrier_bsm"`, BSM Asians via `"asian_bsm"` / `"asian_mc"`, and BSM double barriers via `"double_barrier_mc"`.
+Product-level pricing uses `price(product, model, method, fwd, params)`. It currently routes European options, supported 1-D Levy Bermudans via `"cos_bermudan"`, BSM American options via `"lattice"` / `"pde_fd"`, continuously monitored zero-rebate BSM single barriers via `"barrier_bsm"`, BSM Asians via `"asian_bsm"` / `"asian_mc"`, and BSM double barriers via `"double_barrier_mc"`.
 
 ### Core pricing functions
 
