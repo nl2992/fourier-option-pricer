@@ -152,6 +152,9 @@ from foureng.pipeline import price, price_strip
 | `"barrier_bsm"` | BSM-only analytic single-barrier pricing through `price()` |
 | `"forward_start_bsm"` | BSM-only analytic forward-start pricing through `price()` |
 | `"lookback_bsm"` | BSM-only analytic continuous floating-strike lookback pricing through `price()` |
+| `"lookback_mc"` | BSM-only Monte Carlo lookback pricing through `price()` |
+| `"variance_mc"` | BSM-only Monte Carlo variance swap / variance option pricing through `price()` |
+| `"cliquet_mc"` | BSM-only Monte Carlo cliquet pricing through `price()` |
 | `"sabr_hagan"` | SABR-only Hagan implied-vol approximation for European strips |
 
 ### Product-level dispatcher
@@ -164,7 +167,10 @@ from foureng.pipeline import price, price_strip
 | `BarrierOption` | `"barrier_bsm"` | Continuously monitored, zero-rebate, single-barrier BSM knock-in/knock-out call/put. |
 | `AsianOption` | `"asian_bsm"`, `"asian_mc"` | BSM fixed-strike geometric closed form or BSM arithmetic/geometric Monte Carlo. |
 | `ForwardStartOption` | `"forward_start_bsm"` | BSM forward-start call/put with strike set at `alpha * S_{t_start}`. |
-| `LookbackOption` | `"lookback_bsm"` | BSM continuous floating-strike lookback call/put priced from inception. |
+| `LookbackOption` | `"lookback_bsm"`, `"lookback_mc"` | BSM continuous floating-strike closed form or BSM Monte Carlo fixed/floating lookback. |
+| `VarianceSwap` | `"variance_mc"` | BSM Monte Carlo realized-variance swap. |
+| `VarianceOption` | `"variance_mc"` | BSM Monte Carlo realized/integrated variance option. |
+| `CliquetOption` | `"cliquet_mc"` | BSM Monte Carlo additive or multiplicative cliquet. |
 | `DoubleBarrierOption` | `"double_barrier_mc"` | BSM zero-rebate double knock-in/knock-out Monte Carlo. |
 
 ---

@@ -17,7 +17,7 @@ import pytest
 from pytest import approx
 
 import foureng as fe
-from foureng.analytics.bsm_asian import bsm_geometric_asian
+from foureng.analytics.bsm_asian import bsm_discrete_geometric_asian
 from foureng.analytics.bsm_barrier import bsm_barrier_price, bsm_call
 from foureng.mc.engine import MCResult, MCSpec, mc_price
 from foureng.mc.paths import gbm_paths, gbm_terminal
@@ -29,7 +29,10 @@ from foureng.mc.payoffs import (
 from foureng.products.asian import AsianOption
 from foureng.products.barrier import BarrierOption
 from foureng.products.bermudan import BermudanOption
+from foureng.products.cliquet import CliquetOption
 from foureng.products.european import EuropeanOption
+from foureng.products.lookback import LookbackOption
+from foureng.products.variance import VarianceOption, VarianceSwap
 
 _FWD = fe.ForwardSpec(S0=100.0, r=0.05, q=0.02, T=1.0)
 _SIGMA = 0.20
@@ -68,10 +71,9 @@ def test_mc_geometric_asian_call_within_ci():
         strike=100.0, maturity=1.0, cp=1, average_type="geometric", monitoring_times=mon
     )
     res = mc_price(_FWD, _SIGMA, prod, _MC)
-    ref = bsm_geometric_asian(100.0, 100.0, _FWD.r, _FWD.q, 1.0, _SIGMA, cp=1)
-    # MC monitors monthly (discrete); analytic is continuous — allow ±1.5% difference
-    assert abs(res.price - ref) / ref < 0.015, (
-        f"MC geo={res.price:.4f} analytic_continuous={ref:.4f}"
+    ref = bsm_discrete_geometric_asian(100.0, 100.0, _FWD.r, _FWD.q, mon, _SIGMA, cp=1)
+    assert _ci_contains(res, ref, n_sigma=4.0), (
+        f"MC geo={res.price:.4f} analytic_discrete={ref:.4f} se={res.stderr:.4f}"
     )
 
 
@@ -186,6 +188,47 @@ def test_mc_bermudan_raises():
     prod = BermudanOption(strike=100.0, maturity=1.0, cp=-1, exercise_times=np.array([0.5, 1.0]))
     with pytest.raises(NotImplementedError, match="LSMC"):
         mc_price(_FWD, _SIGMA, prod, _MC)
+
+
+def test_mc_lookback_floating_call_exceeds_vanilla_call():
+    lookback = LookbackOption(maturity=1.0, cp=1, strike_type="floating")
+    vanilla = EuropeanOption(strike=100.0, maturity=1.0, cp=1)
+    res_lb = mc_price(_FWD, _SIGMA, lookback, _MC)
+    res_van = mc_price(_FWD, _SIGMA, vanilla, _MC)
+    assert res_lb.price >= res_van.price - 3 * (res_lb.stderr + res_van.stderr)
+
+
+def test_mc_variance_swap_mean_close_to_sigma_squared():
+    sampling = np.linspace(1 / 12, 1.0, 12)
+    prod = VarianceSwap(maturity=1.0, sampling_times=sampling, notional=1.0)
+    res = mc_price(_FWD, _SIGMA, prod, _MC)
+    ref = np.exp(-_FWD.r * prod.maturity) * (_SIGMA**2)
+    assert _ci_contains(res, ref, n_sigma=5.0), (
+        f"MC variance swap={res.price:.5f} ref={ref:.5f} se={res.stderr:.5f}"
+    )
+
+
+def test_mc_variance_option_integrated_is_deterministic():
+    sampling = np.linspace(1 / 12, 1.0, 12)
+    prod = VarianceOption(
+        strike=0.03,
+        maturity=1.0,
+        cp=1,
+        sampling_times=sampling,
+        variance_type="integrated",
+    )
+    res = mc_price(_FWD, _SIGMA, prod, _MC)
+    ref = np.exp(-_FWD.r * prod.maturity) * max(_SIGMA**2 - prod.strike, 0.0)
+    assert res.price == approx(ref, abs=1e-12)
+    assert res.stderr == approx(0.0, abs=1e-15)
+
+
+def test_mc_cliquet_zero_vol_zero_payoff():
+    reset = np.array([0.25, 0.5, 0.75, 1.0])
+    prod = CliquetOption(maturity=1.0, reset_times=reset, local_cap=0.05, local_floor=-0.03)
+    flat_fwd = fe.ForwardSpec(S0=100.0, r=0.0, q=0.0, T=1.0)
+    res = mc_price(flat_fwd, 0.0, prod, _MC)
+    assert res.price == approx(0.0, abs=1e-12)
 
 
 # ── Path generator unit tests ──────────────────────────────────────────────

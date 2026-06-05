@@ -195,6 +195,30 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
             "at inception."
         ),
     ),
+    "lookback_mc": MethodSpec(
+        requires_cf=False,
+        requires_simulation=True,
+        supports_products=frozenset({"lookback"}),
+        supports_exercise=frozenset({"european"}),
+        supports_path_dependent=True,
+        notes="BSM Monte Carlo lookback pricer for fixed- or floating-strike contracts.",
+    ),
+    "variance_mc": MethodSpec(
+        requires_cf=False,
+        requires_simulation=True,
+        supports_products=frozenset({"variance_swap", "variance_option"}),
+        supports_exercise=frozenset({"european"}),
+        supports_path_dependent=True,
+        notes="BSM Monte Carlo pricer for realized-variance swaps and variance options.",
+    ),
+    "cliquet_mc": MethodSpec(
+        requires_cf=False,
+        requires_simulation=True,
+        supports_products=frozenset({"cliquet"}),
+        supports_exercise=frozenset({"european"}),
+        supports_path_dependent=True,
+        notes="BSM Monte Carlo pricer for additive or multiplicative cliquet contracts.",
+    ),
     "cos_bermudan": MethodSpec(
         requires_cf=True,
         supports_products=frozenset({"bermudan", "european"}),
@@ -455,6 +479,9 @@ def _model_restriction(model: str, product: str, method: str) -> str:
         "double_barrier_mc",
         "forward_start_bsm",
         "lookback_bsm",
+        "lookback_mc",
+        "variance_mc",
+        "cliquet_mc",
     }:
         if model != "bsm":
             return f"method={method!r} is currently implemented only for model='bsm'."

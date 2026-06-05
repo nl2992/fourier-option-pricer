@@ -23,8 +23,12 @@ _UNSUPPORTED = [
     ("bsm", "lookback", "frft"),
     ("heston", "lookback", "carr_madan"),
     ("vg", "lookback", "lookback_bsm"),
+    ("vg", "lookback", "lookback_mc"),
     ("bsm", "variance_swap", "cos"),
+    ("heston", "variance_swap", "variance_mc"),
+    ("heston", "variance_option", "variance_mc"),
     ("bsm", "cliquet", "cos_improved"),
+    ("heston", "cliquet", "cliquet_mc"),
     # COS Bermudan: SV models not supported
     ("heston", "bermudan", "cos_bermudan"),
     ("sv32", "bermudan", "cos_bermudan"),

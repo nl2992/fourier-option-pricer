@@ -733,6 +733,7 @@ def price(
         )
 
     if pt == "lookback":
+        from .models.base import ForwardSpec as _FwdSpec
         from .products.lookback import LookbackOption
 
         if not isinstance(product, LookbackOption):
@@ -740,30 +741,97 @@ def price(
                 "price(): product_type='lookback' must be represented by "
                 f"LookbackOption, got {type(product).__name__!r}"
             )
-        if method != "lookback_bsm":
-            raise NotImplementedError("Lookback pricing currently supports method='lookback_bsm'.")
         if model != "bsm":
             raise NotImplementedError(
-                "method='lookback_bsm' is currently implemented only for model='bsm'."
+                f"method={method!r} is currently implemented only for model='bsm'."
             )
-        if product.monitoring != "continuous":
-            raise NotImplementedError(
-                "method='lookback_bsm' currently supports only continuous monitoring."
+        if method == "lookback_bsm":
+            if product.monitoring != "continuous":
+                raise NotImplementedError(
+                    "method='lookback_bsm' currently supports only continuous monitoring."
+                )
+            if product.strike_type != "floating":
+                raise NotImplementedError(
+                    "method='lookback_bsm' currently supports only floating-strike lookbacks."
+                )
+            return bsm_lookback_floating(
+                fwd.S0,
+                S_min=fwd.S0,
+                S_max=fwd.S0,
+                r=fwd.r,
+                q=fwd.q,
+                T=product.maturity,
+                sigma=params.sigma,
+                cp=product.cp,
             )
-        if product.strike_type != "floating":
-            raise NotImplementedError(
-                "method='lookback_bsm' currently supports only floating-strike lookbacks."
-            )
-        return bsm_lookback_floating(
-            fwd.S0,
-            S_min=fwd.S0,
-            S_max=fwd.S0,
-            r=fwd.r,
-            q=fwd.q,
-            T=product.maturity,
-            sigma=params.sigma,
-            cp=product.cp,
+        if method == "lookback_mc":
+            mc_spec = grid if isinstance(grid, MCSpec) else MCSpec()
+            fwd_t = _FwdSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=product.maturity)
+            return mc_price(fwd_t, params.sigma, product, mc_spec).price
+        raise NotImplementedError(
+            "Lookback pricing currently supports method='lookback_bsm' or method='lookback_mc'."
         )
+
+    if pt == "variance_swap":
+        from .models.base import ForwardSpec as _FwdSpec
+        from .products.variance import VarianceSwap
+
+        if not isinstance(product, VarianceSwap):
+            raise TypeError(
+                "price(): product_type='variance_swap' must be represented by "
+                f"VarianceSwap, got {type(product).__name__!r}"
+            )
+        if method != "variance_mc":
+            raise NotImplementedError(
+                "Variance-swap pricing currently supports method='variance_mc'."
+            )
+        if model != "bsm":
+            raise NotImplementedError(
+                "method='variance_mc' is currently implemented only for model='bsm'."
+            )
+        mc_spec = grid if isinstance(grid, MCSpec) else MCSpec(n_steps=len(product.sampling_times))
+        fwd_t = _FwdSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=product.maturity)
+        return mc_price(fwd_t, params.sigma, product, mc_spec).price
+
+    if pt == "variance_option":
+        from .models.base import ForwardSpec as _FwdSpec
+        from .products.variance import VarianceOption
+
+        if not isinstance(product, VarianceOption):
+            raise TypeError(
+                "price(): product_type='variance_option' must be represented by "
+                f"VarianceOption, got {type(product).__name__!r}"
+            )
+        if method != "variance_mc":
+            raise NotImplementedError(
+                "Variance-option pricing currently supports method='variance_mc'."
+            )
+        if model != "bsm":
+            raise NotImplementedError(
+                "method='variance_mc' is currently implemented only for model='bsm'."
+            )
+        mc_spec = grid if isinstance(grid, MCSpec) else MCSpec(n_steps=len(product.sampling_times))
+        fwd_t = _FwdSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=product.maturity)
+        return mc_price(fwd_t, params.sigma, product, mc_spec).price
+
+    if pt == "cliquet":
+        from .models.base import ForwardSpec as _FwdSpec
+        from .products.cliquet import CliquetOption
+
+        if not isinstance(product, CliquetOption):
+            raise TypeError(
+                "price(): product_type='cliquet' must be represented by "
+                f"CliquetOption, got {type(product).__name__!r}"
+            )
+        if method != "cliquet_mc":
+            raise NotImplementedError("Cliquet pricing currently supports method='cliquet_mc'.")
+        if model != "bsm":
+            raise NotImplementedError(
+                "method='cliquet_mc' is currently implemented only for model='bsm'."
+            )
+        mc_spec = grid if isinstance(grid, MCSpec) else MCSpec(n_steps=len(product.reset_times))
+        fwd_t = _FwdSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=product.maturity)
+        return mc_price(fwd_t, params.sigma, product, mc_spec).price
 
     # For future products, provide a capability hint instead of a bare NotImplementedError.
     _HINTS: dict[str, str] = {
@@ -772,11 +840,11 @@ def price(
         "asian": "Use asian_bsm for geometric Asians or asian_mc for BSM Monte Carlo.",
         "bermudan": "Use cos_bermudan for supported 1-D Levy models.",
         "american": "Use american_lattice / american_pde (Phase 4.4).",
-        "lookback": "Use lookback_bsm for continuous floating-strike BSM lookbacks.",
+        "lookback": "Use lookback_bsm for continuous floating lookbacks or lookback_mc for BSM Monte Carlo.",
         "forward_start": "Use forward_start_bsm for BSM forward-start options.",
-        "variance_swap": "Use variance_analytic_bsm / variance_heston (Phase 4.7).",
-        "variance_option": "Use variance_mc (Phase 4.7).",
-        "cliquet": "Use cliquet_mc / cliquet_proj (Phase 4.8).",
+        "variance_swap": "Use variance_mc for BSM Monte Carlo variance swaps.",
+        "variance_option": "Use variance_mc for BSM Monte Carlo variance options.",
+        "cliquet": "Use cliquet_mc for BSM Monte Carlo cliquets.",
         "exchange": "Use multi_asset_mc (Phase 4.11).",
         "basket": "Use multi_asset_mc (Phase 4.11).",
         "spread": "Use multi_asset_mc / Kirk approximation (Phase 4.11).",
