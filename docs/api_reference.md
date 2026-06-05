@@ -125,6 +125,8 @@ from foureng.pipeline import price, price_strip
 | `bsm_pde_fd_price_at_strikes(fwd, params, strikes, cp=..., exercise=...)` | `ForwardSpec`, `BsmParams`, strike array | BSM European/American finite-difference prices. |
 | `bsm_barrier_price(S, K, H, r, q, T, sigma, barrier_type, cp=...)` | BSM single-barrier inputs | Closed-form continuous zero-rebate barrier price. |
 | `bsm_discrete_geometric_asian(S, K, r, q, monitoring_times, sigma, cp=...)` | BSM geometric-average inputs | Closed-form discretely monitored geometric Asian price. |
+| `bsm_forward_start(S, alpha, t_start, T, r, q, sigma, cp=...)` | BSM forward-start inputs | Closed-form forward-start price. |
+| `bsm_lookback_floating(S, S_min, S_max, r, q, T, sigma, cp=...)` | BSM floating-lookback inputs | Closed-form continuous floating-strike lookback price. |
 | `proj_european_price_at_strikes(phi, fwd, cumulants, strikes, cp=...)` | CF, market inputs, cumulants, strikes | First-slice European PROJ façade using COS projection coefficients. |
 | `mellin_price_at_strikes(phi, fwd, strikes, cp=...)` | CF, market inputs, strikes | First-slice European Mellin façade for selected Lévy models. |
 | `sabr_hagan_price_at_strikes(fwd, params, strikes, cp=...)` | `ForwardSpec`, `SabrParams`, strikes | Hagan SABR implied-vol prices. |
@@ -148,6 +150,8 @@ from foureng.pipeline import price, price_strip
 | `"lattice"` | BSM-only CRR lattice for European strips |
 | `"pde_fd"` | BSM-only implicit finite-difference solver for European strips |
 | `"barrier_bsm"` | BSM-only analytic single-barrier pricing through `price()` |
+| `"forward_start_bsm"` | BSM-only analytic forward-start pricing through `price()` |
+| `"lookback_bsm"` | BSM-only analytic continuous floating-strike lookback pricing through `price()` |
 | `"sabr_hagan"` | SABR-only Hagan implied-vol approximation for European strips |
 
 ### Product-level dispatcher
@@ -159,6 +163,8 @@ from foureng.pipeline import price, price_strip
 | `BermudanOption` | `"cos_bermudan"` | Supported 1-D Levy call/put with discrete exercise dates. |
 | `BarrierOption` | `"barrier_bsm"` | Continuously monitored, zero-rebate, single-barrier BSM knock-in/knock-out call/put. |
 | `AsianOption` | `"asian_bsm"`, `"asian_mc"` | BSM fixed-strike geometric closed form or BSM arithmetic/geometric Monte Carlo. |
+| `ForwardStartOption` | `"forward_start_bsm"` | BSM forward-start call/put with strike set at `alpha * S_{t_start}`. |
+| `LookbackOption` | `"lookback_bsm"` | BSM continuous floating-strike lookback call/put priced from inception. |
 | `DoubleBarrierOption` | `"double_barrier_mc"` | BSM zero-rebate double knock-in/knock-out Monte Carlo. |
 
 ---

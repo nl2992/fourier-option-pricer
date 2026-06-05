@@ -178,6 +178,23 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
         supports_path_dependent=True,
         notes="BSM Monte Carlo double-barrier knock-in/knock-out pricer with zero rebate.",
     ),
+    "forward_start_bsm": MethodSpec(
+        requires_cf=False,
+        supports_products=frozenset({"forward_start"}),
+        supports_exercise=frozenset({"european"}),
+        supports_path_dependent=True,
+        notes="Closed-form BSM forward-start pricer with strike set to alpha * S_tstart.",
+    ),
+    "lookback_bsm": MethodSpec(
+        requires_cf=False,
+        supports_products=frozenset({"lookback"}),
+        supports_exercise=frozenset({"european"}),
+        supports_path_dependent=True,
+        notes=(
+            "Closed-form BSM floating-strike lookback pricer for continuous monitoring "
+            "at inception."
+        ),
+    ),
     "cos_bermudan": MethodSpec(
         requires_cf=True,
         supports_products=frozenset({"bermudan", "european"}),
@@ -430,5 +447,16 @@ def _model_restriction(model: str, product: str, method: str) -> str:
                 f"model={model!r} is not backed by a PyFENG FFT pricer. "
                 f"Use 'cos', 'cos_improved', 'frft', or 'carr_madan'."
             )
+
+    if method in {
+        "barrier_bsm",
+        "asian_bsm",
+        "asian_mc",
+        "double_barrier_mc",
+        "forward_start_bsm",
+        "lookback_bsm",
+    }:
+        if model != "bsm":
+            return f"method={method!r} is currently implemented only for model='bsm'."
 
     return ""

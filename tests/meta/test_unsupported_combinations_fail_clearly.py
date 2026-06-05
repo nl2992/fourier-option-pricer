@@ -22,6 +22,7 @@ _UNSUPPORTED = [
     ("cgmy", "barrier", "cos"),
     ("bsm", "lookback", "frft"),
     ("heston", "lookback", "carr_madan"),
+    ("vg", "lookback", "lookback_bsm"),
     ("bsm", "variance_swap", "cos"),
     ("bsm", "cliquet", "cos_improved"),
     # COS Bermudan: SV models not supported
@@ -31,6 +32,7 @@ _UNSUPPORTED = [
     ("rough_heston", "bermudan", "cos_bermudan"),
     ("bates", "bermudan", "cos_bermudan"),
     ("heston_kou", "bermudan", "cos_bermudan"),
+    ("heston", "forward_start", "forward_start_bsm"),
     # pyfeng_fft: non-pyfeng models
     ("kou", "european", "pyfeng_fft"),
     ("merton_jd", "european", "pyfeng_fft"),
