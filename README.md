@@ -207,9 +207,9 @@ Full model details: [docs/model_zoo.md](docs/model_zoo.md).
 |----------|------------|---------|
 | `price_strip(model, method, strikes, fwd, params, grid=None)` | model label, method label, strike array, `ForwardSpec`, model params, optional grid | `np.ndarray` of call prices |
 
-Method labels: `"cos"`, `"cos_improved"`, `"cos_filtered"`, `"carr_madan"`, `"frft"`, `"conv"`, `"cos_bermudan"`, `"mellin"`, `"proj"`, `"pyfeng_fft"`, plus BSM-only `"pde_fd"` / `"lattice"` / `"forward_start_bsm"` / `"lookback_bsm"` / `"lookback_mc"` / `"variance_mc"` / `"cliquet_mc"` and SABR-only `"sabr_hagan"`.
+Method labels: `"cos"`, `"cos_improved"`, `"cos_filtered"`, `"carr_madan"`, `"frft"`, `"conv"`, `"cos_bermudan"`, `"mellin"`, `"proj"`, `"pyfeng_fft"`, plus product-aware `"cos_digital"` / `"digital_bsm"` / `"barrier_bsm"` / `"asian_bsm"` / `"asian_mc"` / `"double_barrier_mc"` / `"forward_start_bsm"` / `"lookback_bsm"` / `"lookback_mc"` / `"variance_mc"` / `"cliquet_mc"` and SABR-only `"sabr_hagan"`.
 
-Product-level pricing uses `price(product, model, method, fwd, params)`. It currently routes European options, supported 1-D Levy Bermudans via `"cos_bermudan"`, BSM American options via `"lattice"` / `"pde_fd"`, continuously monitored zero-rebate BSM single barriers via `"barrier_bsm"`, BSM Asians via `"asian_bsm"` / `"asian_mc"`, BSM forward-start options via `"forward_start_bsm"`, BSM lookbacks via `"lookback_bsm"` / `"lookback_mc"`, BSM variance swaps and variance options via `"variance_mc"`, BSM cliquets via `"cliquet_mc"`, and BSM double barriers via `"double_barrier_mc"`.
+Product-level pricing uses `price(product, model, method, fwd, params)`. It currently routes European options, cash-or-nothing and asset-or-nothing digitals via `"cos_digital"` or BSM `"digital_bsm"`, supported 1-D Levy Bermudans via `"cos_bermudan"`, BSM American options via `"lattice"` / `"pde_fd"`, continuously monitored zero-rebate BSM single barriers via `"barrier_bsm"`, BSM Asians via `"asian_bsm"` / `"asian_mc"`, BSM forward-start options via `"forward_start_bsm"`, BSM lookbacks via `"lookback_bsm"` / `"lookback_mc"`, BSM variance swaps and variance options via `"variance_mc"`, BSM cliquets via `"cliquet_mc"`, and BSM double barriers via `"double_barrier_mc"`.
 
 ### Core pricing functions
 

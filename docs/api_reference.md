@@ -120,6 +120,8 @@ from foureng.pipeline import price, price_strip
 | `conv_price_at_strikes(phi, fwd, grid, strikes, cp=...)` | CF, `ForwardSpec`, `CONVGrid`, strike array | NumPy array of call or put prices. |
 | `cos_bermudan_price(model, fwd, params, product, grid=...)` | model key, market inputs, params, `BermudanOption` | Scalar Bermudan COS price for supported 1-D Levy models. |
 | `cos_bermudan_price_strip(model, fwd, params, strikes, maturity, exercise_times, cp=...)` | model key, market inputs, params, strike array | Bermudan COS strip for supported 1-D Levy models. |
+| `cos_digital_price(model, fwd, params, product, grid=...)` | model key, market inputs, params, `DigitalOption` | Scalar COS digital price for cash-or-nothing or asset-or-nothing payoffs. |
+| `cos_digital_price_strip(model, fwd, params, strikes, maturity, cp=...)` | model key, market inputs, params, strike array | COS digital strip at a shared maturity. |
 | `filtered_cos_prices(phi, fwd, strikes, grid, filter_spec=...)` | CF, `ForwardSpec`, strike array, grid, filter | `COSResult` with spectral filtering applied. |
 | `bsm_lattice_price_at_strikes(fwd, params, strikes, cp=..., exercise=...)` | `ForwardSpec`, `BsmParams`, strike array | BSM European/American CRR tree prices. |
 | `bsm_pde_fd_price_at_strikes(fwd, params, strikes, cp=..., exercise=...)` | `ForwardSpec`, `BsmParams`, strike array | BSM European/American finite-difference prices. |
@@ -147,6 +149,8 @@ from foureng.pipeline import price, price_strip
 | `"proj"` | First-slice European PROJ façade using COS projection coefficients |
 | `"cos_filtered"` | COS with spectral damping (Fejér, Lanczos, raised-cosine, or exponential filter) |
 | `"pyfeng_fft"` | PyFENG-backed Lewis-style FFT path (PyFENG-backed models only) |
+| `"cos_digital"` | COS digital pricing through `price()` for `DigitalOption` |
+| `"digital_bsm"` | BSM-only analytic digital pricing through `price()` |
 | `"lattice"` | BSM-only CRR lattice for European strips |
 | `"pde_fd"` | BSM-only implicit finite-difference solver for European strips |
 | `"barrier_bsm"` | BSM-only analytic single-barrier pricing through `price()` |
@@ -162,6 +166,7 @@ from foureng.pipeline import price, price_strip
 | Product | Supported method(s) | Scope |
 |---------|---------------------|-------|
 | `EuropeanOption` | all compatible `price_strip` methods | Vanilla call/put. |
+| `DigitalOption` | `"cos_digital"`, `"digital_bsm"` | Cash-or-nothing or asset-or-nothing digitals; analytic closed form is BSM-only. |
 | `AmericanOption` | `"lattice"`, `"pde_fd"` | BSM call/put. |
 | `BermudanOption` | `"cos_bermudan"` | Supported 1-D Levy call/put with discrete exercise dates. |
 | `BarrierOption` | `"barrier_bsm"` | Continuously monitored, zero-rebate, single-barrier BSM knock-in/knock-out call/put. |
