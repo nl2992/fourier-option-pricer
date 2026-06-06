@@ -50,6 +50,7 @@ This file is the reference point for all capability-gate tests.
 | `forward_start_bsm` | BSM analytic forward-start option | Rubinstein-style forward-start closed form |
 | `lookback_bsm` | BSM analytic floating-strike lookback | Goldman-Sosin-Gatto closed form |
 | `lookback_mc` | BSM Monte Carlo lookback | GBM path simulation |
+| `variance_analytic_bsm` | BSM analytic variance products | Exact realised-variance expectation / deterministic integrated variance |
 | `variance_mc` | BSM Monte Carlo variance products | GBM path simulation |
 | `cliquet_mc` | BSM Monte Carlo cliquet | GBM path simulation |
 | `proj` | First-slice European PROJ façade | COS-backed projection baseline |
@@ -65,7 +66,7 @@ This file is the reference point for all capability-gate tests.
 - BSM Asian options (geometric closed form via `asian_bsm`; arithmetic/geometric MC via `asian_mc`)
 - BSM forward-start call / put (via `price(..., method="forward_start_bsm")`)
 - BSM lookback call / put (continuous floating closed form via `lookback_bsm`; Monte Carlo via `lookback_mc`)
-- BSM variance swaps and variance options (via `variance_mc`)
+- BSM variance swaps (via `variance_analytic_bsm` or `variance_mc`) and integrated-variance options (via `variance_analytic_bsm`; Monte Carlo via `variance_mc`)
 - BSM cliquets (via `cliquet_mc`)
 - BSM zero-rebate double-barrier options (via `double_barrier_mc`)
 - SABR European call / put strips (via `price_strip("sabr", "sabr_hagan", ...)`)
