@@ -19,6 +19,8 @@ from foureng.core.capabilities import explain_capability
         ("bsm", "european", "pyfeng_fft"),
         ("heston", "european", "pyfeng_fft"),
         ("bsm", "bermudan", "cos_bermudan"),
+        ("bsm", "digital", "digital_bsm"),
+        ("heston", "digital", "cos_digital"),
         ("vg", "bermudan", "cos_bermudan"),
         ("cgmy", "bermudan", "cos_bermudan"),
         ("kou", "bermudan", "cos_bermudan"),
@@ -56,6 +58,7 @@ def test_supported_combinations_return_supported(model, product, method):
         ("bates", "bermudan", "cos_bermudan"),  # SVJD — not supported
         ("kou", "asian", "cos"),
         ("bsm", "cliquet", "frft"),
+        ("heston", "digital", "digital_bsm"),
     ],
 )
 def test_unsupported_combinations_return_not_supported(model, product, method):
@@ -99,6 +102,11 @@ def test_pyfeng_fft_unsupported_model():
 def test_barrier_cos_suggests_alternatives():
     result = explain_capability("bsm", "barrier", "cos")
     assert any(word in result.lower() for word in ["pde", "lattice", "mc", "monte"])
+
+
+def test_digital_bsm_explanation_mentions_bsm_only():
+    result = explain_capability("heston", "digital", "digital_bsm")
+    assert "model='bsm'" in result
 
 
 # ── Parity: same output regardless of how registry is imported ─────────────

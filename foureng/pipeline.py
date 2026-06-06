@@ -513,8 +513,8 @@ def price(
 
     This is the product-aware counterpart to :func:`price_strip`. It routes
     vanilla Europeans plus the currently implemented product-specific engines
-    for American, barrier, Asian, double-barrier, Bermudan, forward-start,
-    and lookback contracts.
+    for digitals, Americans, barriers, Asians, double-barriers, Bermudans,
+    forward-starts, lookbacks, and selected variance-linked contracts.
 
     Parameters
     ----------
@@ -561,6 +561,38 @@ def price(
             model, method, [product.strike], fwd_t, params, grid=grid, cp=product.cp
         )
         return float(results[0])
+
+    if pt == "digital":
+        from .models.base import ForwardSpec as _FwdSpec
+        from .models.bsm import bsm_asset_or_nothing, bsm_cash_or_nothing
+        from .pricers.cos_digital import cos_digital_price
+        from .products.digital import DigitalOption
+
+        if not isinstance(product, DigitalOption):
+            raise TypeError(
+                "price(): product_type='digital' must be represented by "
+                f"DigitalOption, got {type(product).__name__!r}"
+            )
+        fwd_t = _FwdSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=product.maturity)
+        if method == "digital_bsm":
+            if model != "bsm":
+                raise NotImplementedError(
+                    "method='digital_bsm' is currently implemented only for model='bsm'."
+                )
+            if product.payoff_type == "cash_or_nothing":
+                return bsm_cash_or_nothing(
+                    fwd_t,
+                    params,
+                    product.strike,
+                    cp=product.cp,
+                    cash_amount=product.cash_amount,
+                )
+            return bsm_asset_or_nothing(fwd_t, params, product.strike, cp=product.cp)
+        if method == "cos_digital":
+            return cos_digital_price(model, fwd_t, params, product, grid=grid)
+        raise NotImplementedError(
+            "Digital pricing currently supports method='digital_bsm' or method='cos_digital'."
+        )
 
     if pt == "american":
         from .models.base import ForwardSpec as _FwdSpec
@@ -835,7 +867,7 @@ def price(
 
     # For future products, provide a capability hint instead of a bare NotImplementedError.
     _HINTS: dict[str, str] = {
-        "digital": "Use a COS digital pricer (Phase 4.1) or analytic BSM.",
+        "digital": "Use method='cos_digital' or method='digital_bsm' for BSM closed form.",
         "barrier": "Use barrier_bsm for continuous zero-rebate BSM barriers.",
         "asian": "Use asian_bsm for geometric Asians or asian_mc for BSM Monte Carlo.",
         "bermudan": "Use cos_bermudan for supported 1-D Levy models.",

@@ -155,6 +155,20 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
             "zero-rebate knock-in/knock-out calls and puts."
         ),
     ),
+    "digital_bsm": MethodSpec(
+        requires_cf=False,
+        supports_products=frozenset({"digital"}),
+        supports_exercise=frozenset({"european"}),
+        supports_path_dependent=False,
+        notes="Closed-form BSM cash-or-nothing and asset-or-nothing digital pricer.",
+    ),
+    "cos_digital": MethodSpec(
+        requires_cf=True,
+        supports_products=frozenset({"digital"}),
+        supports_exercise=frozenset({"european"}),
+        supports_path_dependent=False,
+        notes="COS digital pricer for cash-or-nothing and asset-or-nothing European digitals.",
+    ),
     "asian_bsm": MethodSpec(
         requires_cf=False,
         supports_products=frozenset({"asian"}),
@@ -474,6 +488,7 @@ def _model_restriction(model: str, product: str, method: str) -> str:
 
     if method in {
         "barrier_bsm",
+        "digital_bsm",
         "asian_bsm",
         "asian_mc",
         "double_barrier_mc",

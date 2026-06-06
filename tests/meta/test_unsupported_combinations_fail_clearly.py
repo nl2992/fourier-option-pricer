@@ -43,6 +43,7 @@ _UNSUPPORTED = [
     ("bilateral_gamma", "european", "pyfeng_fft"),
     ("generalized_hyperbolic", "european", "pyfeng_fft"),
     ("fmls", "european", "pyfeng_fft"),
+    ("heston", "digital", "digital_bsm"),
     # PDE/lattice: CF-only models without state-space
     # (these are 'planned' methods; their specs say they require markov state)
     # The registry still says they support european — so these should be Supported.

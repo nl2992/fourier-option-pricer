@@ -41,6 +41,8 @@ This file is the reference point for all capability-gate tests.
 | `conv` | CONV-style Fourier probability inversion | Choi/Kirkby MATLAB comparison target |
 | `lattice` | BSM Cox-Ross-Rubinstein tree | Cox, Ross & Rubinstein (1979) |
 | `pde_fd` | BSM implicit finite difference | Black-Scholes PDE |
+| `digital_bsm` | BSM closed-form digital option | Black-Scholes closed form |
+| `cos_digital` | COS digital option pricing | Fang-Oosterlee payoff extension |
 | `barrier_bsm` | BSM closed-form single-barrier option | Reiner-Rubinstein / Haug |
 | `asian_bsm` | BSM discrete geometric Asian closed form | Kemna-Vorst style lognormal average |
 | `asian_mc` | BSM Asian Monte Carlo | GBM path simulation |
@@ -57,6 +59,7 @@ This file is the reference point for all capability-gate tests.
 ## Products supported
 
 - European call / put (via `price_strip`)
+- Digital cash-or-nothing and asset-or-nothing options (via `price(..., method="cos_digital"|"digital_bsm")`)
 - American BSM call / put (via `price(..., method="lattice"|"pde_fd")`)
 - Continuous zero-rebate BSM single-barrier call / put (via `price(..., method="barrier_bsm")`)
 - BSM Asian options (geometric closed form via `asian_bsm`; arithmetic/geometric MC via `asian_mc`)

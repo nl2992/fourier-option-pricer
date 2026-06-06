@@ -27,6 +27,8 @@ _BASELINE_METHODS = {
     "mellin",
     "proj",
     "sabr_hagan",
+    "digital_bsm",
+    "cos_digital",
 }
 
 _PLANNED_METHODS = {
@@ -74,6 +76,7 @@ def test_cf_methods_require_cf():
         "cos_bermudan",
         "mellin",
         "proj",
+        "cos_digital",
     }
     for m in cf_methods:
         assert METHOD_REGISTRY[m].requires_cf is True, f"{m!r}: requires_cf should be True"
