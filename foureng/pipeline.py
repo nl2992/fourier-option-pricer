@@ -22,7 +22,7 @@ import numpy as np
 
 from .analytics.bsm_asian import bsm_discrete_geometric_asian
 from .analytics.bsm_barrier import bsm_barrier_price
-from .analytics.bsm_exotics import bsm_forward_start, bsm_lookback_floating
+from .analytics.bsm_exotics import bsm_forward_start, bsm_lookback_floating, margrabe_exchange
 from .mc.engine import MCSpec, mc_price
 from .models.base import CharFunc, ForwardSpec
 from .models.registry import MODEL_REGISTRY
@@ -764,6 +764,31 @@ def price(
             cp=product.cp,
         )
 
+    if pt == "exchange":
+        from .products.multi_asset import ExchangeOption
+
+        if not isinstance(product, ExchangeOption):
+            raise TypeError(
+                "price(): product_type='exchange' must be represented by "
+                f"ExchangeOption, got {type(product).__name__!r}"
+            )
+        if method != "exchange_bsm":
+            raise NotImplementedError("Exchange pricing currently supports method='exchange_bsm'.")
+        if model != "bsm":
+            raise NotImplementedError(
+                "method='exchange_bsm' is currently implemented only for model='bsm'."
+            )
+        return margrabe_exchange(
+            fwd.S0,
+            product.spot2,
+            fwd.q,
+            product.q2,
+            product.maturity,
+            params.sigma,
+            product.sigma2,
+            product.rho,
+        )
+
     if pt == "lookback":
         from .models.base import ForwardSpec as _FwdSpec
         from .products.lookback import LookbackOption
@@ -893,7 +918,7 @@ def price(
             "variance_mc for realised/integrated variance options."
         ),
         "cliquet": "Use cliquet_mc for BSM Monte Carlo cliquets.",
-        "exchange": "Use multi_asset_mc (Phase 4.11).",
+        "exchange": "Use exchange_bsm for the two-asset Margrabe closed form.",
         "basket": "Use multi_asset_mc (Phase 4.11).",
         "spread": "Use multi_asset_mc / Kirk approximation (Phase 4.11).",
         "best_of": "Use multi_asset_mc (Phase 4.11).",

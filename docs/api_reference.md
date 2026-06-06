@@ -157,6 +157,7 @@ from foureng.pipeline import price, price_strip
 | `"pde_fd"` | BSM-only implicit finite-difference solver for European strips |
 | `"barrier_bsm"` | BSM-only analytic single-barrier pricing through `price()` |
 | `"forward_start_bsm"` | BSM-only analytic forward-start pricing through `price()` |
+| `"exchange_bsm"` | BSM-only Margrabe exchange-option pricing through `price()` |
 | `"lookback_bsm"` | BSM-only analytic continuous floating-strike lookback pricing through `price()` |
 | `"lookback_mc"` | BSM-only Monte Carlo lookback pricing through `price()` |
 | `"variance_analytic_bsm"` | BSM-only analytic variance swap / integrated-variance option pricing through `price()` |
@@ -175,6 +176,7 @@ from foureng.pipeline import price, price_strip
 | `BarrierOption` | `"barrier_bsm"` | Continuously monitored, zero-rebate, single-barrier BSM knock-in/knock-out call/put. |
 | `AsianOption` | `"asian_bsm"`, `"asian_mc"` | BSM fixed-strike geometric closed form or BSM arithmetic/geometric Monte Carlo. |
 | `ForwardStartOption` | `"forward_start_bsm"` | BSM forward-start call/put with strike set at `alpha * S_{t_start}`. |
+| `ExchangeOption` | `"exchange_bsm"` | BSM Margrabe exchange option using asset-1 inputs from `fwd`/`params` and asset-2 inputs on the product. |
 | `LookbackOption` | `"lookback_bsm"`, `"lookback_mc"` | BSM continuous floating-strike closed form or BSM Monte Carlo fixed/floating lookback. |
 | `VarianceSwap` | `"variance_analytic_bsm"`, `"variance_mc"` | Exact BSM realised-variance expectation or BSM Monte Carlo variance swap. |
 | `VarianceOption` | `"variance_analytic_bsm"`, `"variance_mc"` | Deterministic integrated-variance BSM closed form or BSM Monte Carlo realised/integrated variance option. |

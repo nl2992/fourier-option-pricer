@@ -29,6 +29,7 @@ _UNSUPPORTED = [
     ("heston", "variance_swap", "variance_mc"),
     ("heston", "variance_option", "variance_mc"),
     ("bsm", "cliquet", "cos_improved"),
+    ("heston", "exchange", "exchange_bsm"),
     ("heston", "cliquet", "cliquet_mc"),
     # COS Bermudan: SV models not supported
     ("heston", "bermudan", "cos_bermudan"),
