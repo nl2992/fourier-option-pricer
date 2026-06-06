@@ -805,6 +805,7 @@ def price(
         )
 
     if pt == "variance_swap":
+        from .analytics.bsm_variance import bsm_variance_swap
         from .models.base import ForwardSpec as _FwdSpec
         from .products.variance import VarianceSwap
 
@@ -813,19 +814,23 @@ def price(
                 "price(): product_type='variance_swap' must be represented by "
                 f"VarianceSwap, got {type(product).__name__!r}"
             )
-        if method != "variance_mc":
-            raise NotImplementedError(
-                "Variance-swap pricing currently supports method='variance_mc'."
-            )
         if model != "bsm":
             raise NotImplementedError(
-                "method='variance_mc' is currently implemented only for model='bsm'."
+                f"method={method!r} is currently implemented only for model='bsm'."
+            )
+        fwd_t = _FwdSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=product.maturity)
+        if method == "variance_analytic_bsm":
+            return bsm_variance_swap(fwd_t, params, product)
+        if method != "variance_mc":
+            raise NotImplementedError(
+                "Variance-swap pricing currently supports method='variance_analytic_bsm' "
+                "or method='variance_mc'."
             )
         mc_spec = grid if isinstance(grid, MCSpec) else MCSpec(n_steps=len(product.sampling_times))
-        fwd_t = _FwdSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=product.maturity)
         return mc_price(fwd_t, params.sigma, product, mc_spec).price
 
     if pt == "variance_option":
+        from .analytics.bsm_variance import bsm_variance_option_integrated
         from .models.base import ForwardSpec as _FwdSpec
         from .products.variance import VarianceOption
 
@@ -834,16 +839,24 @@ def price(
                 "price(): product_type='variance_option' must be represented by "
                 f"VarianceOption, got {type(product).__name__!r}"
             )
-        if method != "variance_mc":
-            raise NotImplementedError(
-                "Variance-option pricing currently supports method='variance_mc'."
-            )
         if model != "bsm":
             raise NotImplementedError(
-                "method='variance_mc' is currently implemented only for model='bsm'."
+                f"method={method!r} is currently implemented only for model='bsm'."
+            )
+        fwd_t = _FwdSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=product.maturity)
+        if method == "variance_analytic_bsm":
+            if product.variance_type != "integrated":
+                raise NotImplementedError(
+                    "method='variance_analytic_bsm' currently supports integrated-variance "
+                    "options only."
+                )
+            return bsm_variance_option_integrated(fwd_t, params, product)
+        if method != "variance_mc":
+            raise NotImplementedError(
+                "Variance-option pricing currently supports method='variance_analytic_bsm' "
+                "or method='variance_mc'."
             )
         mc_spec = grid if isinstance(grid, MCSpec) else MCSpec(n_steps=len(product.sampling_times))
-        fwd_t = _FwdSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=product.maturity)
         return mc_price(fwd_t, params.sigma, product, mc_spec).price
 
     if pt == "cliquet":
@@ -874,8 +887,11 @@ def price(
         "american": "Use american_lattice / american_pde (Phase 4.4).",
         "lookback": "Use lookback_bsm for continuous floating lookbacks or lookback_mc for BSM Monte Carlo.",
         "forward_start": "Use forward_start_bsm for BSM forward-start options.",
-        "variance_swap": "Use variance_mc for BSM Monte Carlo variance swaps.",
-        "variance_option": "Use variance_mc for BSM Monte Carlo variance options.",
+        "variance_swap": "Use variance_analytic_bsm or variance_mc for BSM variance swaps.",
+        "variance_option": (
+            "Use variance_analytic_bsm for integrated-variance options or "
+            "variance_mc for realised/integrated variance options."
+        ),
         "cliquet": "Use cliquet_mc for BSM Monte Carlo cliquets.",
         "exchange": "Use multi_asset_mc (Phase 4.11).",
         "basket": "Use multi_asset_mc (Phase 4.11).",

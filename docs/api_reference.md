@@ -129,6 +129,8 @@ from foureng.pipeline import price, price_strip
 | `bsm_discrete_geometric_asian(S, K, r, q, monitoring_times, sigma, cp=...)` | BSM geometric-average inputs | Closed-form discretely monitored geometric Asian price. |
 | `bsm_forward_start(S, alpha, t_start, T, r, q, sigma, cp=...)` | BSM forward-start inputs | Closed-form forward-start price. |
 | `bsm_lookback_floating(S, S_min, S_max, r, q, T, sigma, cp=...)` | BSM floating-lookback inputs | Closed-form continuous floating-strike lookback price. |
+| `bsm_variance_swap(fwd, params, product)` | `ForwardSpec`, `BsmParams`, `VarianceSwap` | Exact BSM expectation of the repo's realised-variance swap payoff. |
+| `bsm_variance_option_integrated(fwd, params, product)` | `ForwardSpec`, `BsmParams`, `VarianceOption` | Deterministic integrated-variance option price under constant-vol BSM. |
 | `proj_european_price_at_strikes(phi, fwd, cumulants, strikes, cp=...)` | CF, market inputs, cumulants, strikes | First-slice European PROJ façade using COS projection coefficients. |
 | `mellin_price_at_strikes(phi, fwd, strikes, cp=...)` | CF, market inputs, strikes | First-slice European Mellin façade for selected Lévy models. |
 | `sabr_hagan_price_at_strikes(fwd, params, strikes, cp=...)` | `ForwardSpec`, `SabrParams`, strikes | Hagan SABR implied-vol prices. |
@@ -157,6 +159,7 @@ from foureng.pipeline import price, price_strip
 | `"forward_start_bsm"` | BSM-only analytic forward-start pricing through `price()` |
 | `"lookback_bsm"` | BSM-only analytic continuous floating-strike lookback pricing through `price()` |
 | `"lookback_mc"` | BSM-only Monte Carlo lookback pricing through `price()` |
+| `"variance_analytic_bsm"` | BSM-only analytic variance swap / integrated-variance option pricing through `price()` |
 | `"variance_mc"` | BSM-only Monte Carlo variance swap / variance option pricing through `price()` |
 | `"cliquet_mc"` | BSM-only Monte Carlo cliquet pricing through `price()` |
 | `"sabr_hagan"` | SABR-only Hagan implied-vol approximation for European strips |
@@ -173,8 +176,8 @@ from foureng.pipeline import price, price_strip
 | `AsianOption` | `"asian_bsm"`, `"asian_mc"` | BSM fixed-strike geometric closed form or BSM arithmetic/geometric Monte Carlo. |
 | `ForwardStartOption` | `"forward_start_bsm"` | BSM forward-start call/put with strike set at `alpha * S_{t_start}`. |
 | `LookbackOption` | `"lookback_bsm"`, `"lookback_mc"` | BSM continuous floating-strike closed form or BSM Monte Carlo fixed/floating lookback. |
-| `VarianceSwap` | `"variance_mc"` | BSM Monte Carlo realized-variance swap. |
-| `VarianceOption` | `"variance_mc"` | BSM Monte Carlo realized/integrated variance option. |
+| `VarianceSwap` | `"variance_analytic_bsm"`, `"variance_mc"` | Exact BSM realised-variance expectation or BSM Monte Carlo variance swap. |
+| `VarianceOption` | `"variance_analytic_bsm"`, `"variance_mc"` | Deterministic integrated-variance BSM closed form or BSM Monte Carlo realised/integrated variance option. |
 | `CliquetOption` | `"cliquet_mc"` | BSM Monte Carlo additive or multiplicative cliquet. |
 | `DoubleBarrierOption` | `"double_barrier_mc"` | BSM zero-rebate double knock-in/knock-out Monte Carlo. |
 

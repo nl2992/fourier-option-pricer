@@ -25,6 +25,7 @@ _UNSUPPORTED = [
     ("vg", "lookback", "lookback_bsm"),
     ("vg", "lookback", "lookback_mc"),
     ("bsm", "variance_swap", "cos"),
+    ("heston", "variance_swap", "variance_analytic_bsm"),
     ("heston", "variance_swap", "variance_mc"),
     ("heston", "variance_option", "variance_mc"),
     ("bsm", "cliquet", "cos_improved"),

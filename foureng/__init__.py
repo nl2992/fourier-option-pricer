@@ -41,6 +41,7 @@ from .analytics.bsm_exotics import (
     bsm_lookback_floating,
     margrabe_exchange,
 )
+from .analytics.bsm_variance import bsm_variance_option_integrated, bsm_variance_swap
 from .greeks import (
     COSGreeks,
     cos_delta_gamma,
@@ -195,6 +196,8 @@ __all__ = [
     "vgsa_cumulants",
     "SabrParams",
     "sabr_hagan_implied_vol",
+    "bsm_variance_swap",
+    "bsm_variance_option_integrated",
     # pipeline
     "price",
     "price_strip",

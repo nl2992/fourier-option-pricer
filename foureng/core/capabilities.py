@@ -217,6 +217,16 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
         supports_path_dependent=True,
         notes="BSM Monte Carlo lookback pricer for fixed- or floating-strike contracts.",
     ),
+    "variance_analytic_bsm": MethodSpec(
+        requires_cf=False,
+        supports_products=frozenset({"variance_swap", "variance_option"}),
+        supports_exercise=frozenset({"european"}),
+        supports_path_dependent=True,
+        notes=(
+            "BSM analytic variance pricer for realised-variance swaps and "
+            "deterministic integrated-variance options."
+        ),
+    ),
     "variance_mc": MethodSpec(
         requires_cf=False,
         requires_simulation=True,
@@ -495,6 +505,7 @@ def _model_restriction(model: str, product: str, method: str) -> str:
         "forward_start_bsm",
         "lookback_bsm",
         "lookback_mc",
+        "variance_analytic_bsm",
         "variance_mc",
         "cliquet_mc",
     }:

@@ -21,6 +21,7 @@ _BASELINE_METHODS = {
     "forward_start_bsm",
     "lookback_bsm",
     "lookback_mc",
+    "variance_analytic_bsm",
     "variance_mc",
     "cliquet_mc",
     "cos_bermudan",
