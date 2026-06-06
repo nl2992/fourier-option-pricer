@@ -17,6 +17,15 @@ class ExchangeOption(ProductSpec):
     ----------
     maturity : float
         Time to expiry in years. Must be > 0.
+    spot2 : float
+        Current spot of asset 2. Must be > 0.
+    q2 : float
+        Continuous dividend yield of asset 2.
+    sigma2 : float
+        Lognormal volatility of asset 2. Must be >= 0.
+    rho : float
+        Instantaneous correlation between the two asset log returns.
+        Must lie in [-1, 1].
 
     Notes
     -----
@@ -27,10 +36,20 @@ class ExchangeOption(ProductSpec):
 
     product_type: str = field(default="exchange", init=False, repr=False)
     maturity: float = 0.0
+    spot2: float = 100.0
+    q2: float = 0.0
+    sigma2: float = 0.2
+    rho: float = 0.0
 
     def __post_init__(self) -> None:
         if self.maturity <= 0:
             raise ValueError(f"ExchangeOption: maturity must be > 0, got {self.maturity}")
+        if self.spot2 <= 0:
+            raise ValueError(f"ExchangeOption: spot2 must be > 0, got {self.spot2}")
+        if self.sigma2 < 0:
+            raise ValueError(f"ExchangeOption: sigma2 must be >= 0, got {self.sigma2}")
+        if not (-1.0 <= self.rho <= 1.0):
+            raise ValueError(f"ExchangeOption: rho must lie in [-1, 1], got {self.rho}")
 
 
 @dataclass(frozen=True)

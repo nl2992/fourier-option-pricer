@@ -199,6 +199,13 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
         supports_path_dependent=True,
         notes="Closed-form BSM forward-start pricer with strike set to alpha * S_tstart.",
     ),
+    "exchange_bsm": MethodSpec(
+        requires_cf=False,
+        supports_products=frozenset({"exchange"}),
+        supports_exercise=frozenset({"european"}),
+        supports_path_dependent=False,
+        notes="Closed-form BSM Margrabe exchange-option pricer for two correlated assets.",
+    ),
     "lookback_bsm": MethodSpec(
         requires_cf=False,
         supports_products=frozenset({"lookback"}),
@@ -503,6 +510,7 @@ def _model_restriction(model: str, product: str, method: str) -> str:
         "asian_mc",
         "double_barrier_mc",
         "forward_start_bsm",
+        "exchange_bsm",
         "lookback_bsm",
         "lookback_mc",
         "variance_analytic_bsm",

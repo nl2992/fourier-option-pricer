@@ -29,6 +29,7 @@ from foureng.core.capabilities import explain_capability
         ("bsm", "barrier", "pde_fd"),
         ("bsm", "american", "lattice"),
         ("bsm", "forward_start", "forward_start_bsm"),
+        ("bsm", "exchange", "exchange_bsm"),
         ("bsm", "lookback", "lookback_bsm"),
         ("bsm", "lookback", "lookback_mc"),
         ("bsm", "variance_swap", "variance_analytic_bsm"),
@@ -62,6 +63,7 @@ def test_supported_combinations_return_supported(model, product, method):
         ("bsm", "cliquet", "frft"),
         ("heston", "digital", "digital_bsm"),
         ("heston", "variance_swap", "variance_analytic_bsm"),
+        ("heston", "exchange", "exchange_bsm"),
     ],
 )
 def test_unsupported_combinations_return_not_supported(model, product, method):

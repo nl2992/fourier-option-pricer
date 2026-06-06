@@ -259,8 +259,13 @@ class TestCliquetOption:
 
 class TestMultiAssetProducts:
     def test_exchange_option(self):
-        opt = ExchangeOption(maturity=1.0)
+        opt = ExchangeOption(maturity=1.0, spot2=95.0, q2=0.01, sigma2=0.25, rho=0.4)
         assert opt.product_type == "exchange"
+        assert opt.spot2 == 95.0
+
+    def test_exchange_invalid_rho_rejected(self):
+        with pytest.raises(ValueError, match="rho"):
+            ExchangeOption(maturity=1.0, rho=1.5)
 
     def test_basket_equal_weights(self):
         w = np.array([0.5, 0.5])

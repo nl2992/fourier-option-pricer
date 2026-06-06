@@ -19,6 +19,7 @@ _BASELINE_METHODS = {
     "asian_mc",
     "double_barrier_mc",
     "forward_start_bsm",
+    "exchange_bsm",
     "lookback_bsm",
     "lookback_mc",
     "variance_analytic_bsm",
