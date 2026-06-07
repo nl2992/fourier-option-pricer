@@ -2,6 +2,7 @@
 
 Covers:
   * Margrabe (1978) exchange option: max(S₁_T − S₂_T, 0)
+  * Kirk (1995) spread option approximation
   * Goldman-Sosin-Gatto (1979) lookback options (floating strike)
   * BSM forward-start option (Rubinstein 1990)
   * BSM gap option (digital with offset payoff)
@@ -58,6 +59,49 @@ def margrabe_exchange(
     d1 = (np.log(S1 / S2) + (q2 - q1 + 0.5 * sigma**2) * T) / (sigma * np.sqrt(T))
     d2 = d1 - sigma * np.sqrt(T)
     return S1 * np.exp(-q1 * T) * norm.cdf(d1) - S2 * np.exp(-q2 * T) * norm.cdf(d2)
+
+
+# ── Kirk (1995) spread approximation ──────────────────────────────────────
+
+
+def kirk_spread(
+    S1: float,
+    S2: float,
+    K: float,
+    r: float,
+    q1: float,
+    q2: float,
+    T: float,
+    sigma1: float,
+    sigma2: float,
+    rho: float,
+    cp: int = 1,
+) -> float:
+    """Kirk approximation for a European spread option on ``S1_T - S2_T - K``."""
+    if cp not in (1, -1):
+        raise ValueError(f"kirk_spread: cp must be +1 or -1, got {cp}")
+    if K < 0.0:
+        raise ValueError(f"kirk_spread: K must be >= 0, got {K}")
+    if T <= 0.0:
+        return float(max(cp * (S1 - S2 - K), 0.0))
+
+    s1_disc = S1 * np.exp(-q1 * T)
+    s2k_disc = S2 * np.exp(-q2 * T) + K * np.exp(-r * T)
+    if s2k_disc <= 0.0:
+        return float(max(cp * (s1_disc - s2k_disc), 0.0))
+
+    weight = (S2 * np.exp(-q2 * T)) / s2k_disc
+    sigma_k = np.sqrt(sigma1**2 + (weight * sigma2) ** 2 - 2.0 * rho * sigma1 * sigma2 * weight)
+    if sigma_k <= 0.0:
+        return float(max(cp * (s1_disc - s2k_disc), 0.0))
+
+    vol_term = sigma_k * np.sqrt(T)
+    d1 = (np.log(s1_disc / s2k_disc) + 0.5 * sigma_k**2 * T) / vol_term
+    d2 = d1 - vol_term
+
+    if cp == 1:
+        return float(s1_disc * norm.cdf(d1) - s2k_disc * norm.cdf(d2))
+    return float(s2k_disc * norm.cdf(-d2) - s1_disc * norm.cdf(-d1))
 
 
 # ── BSM forward-start option ──────────────────────────────────────────────

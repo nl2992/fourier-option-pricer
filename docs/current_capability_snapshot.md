@@ -1,7 +1,7 @@
-# Current Capability Snapshot — v0.5.1-baseline
+# Current Capability Snapshot — expanded baseline
 
-Frozen 2026-05-29 before the Sprint 2–10 expansion.
-This file is the reference point for all capability-gate tests.
+Updated 2026-06-07 after the multi-asset expansion.
+This file tracks the capability surface used by the registry and dispatcher tests.
 
 ## Model registry (20 models)
 
@@ -28,7 +28,7 @@ This file is the reference point for all capability-gate tests.
 | `double_heston` | Two-factor SV | no | stable |
 | `vgsa` | VG with stochastic arrival | no | stable |
 
-## Pricing methods (Sprint 1 expansion: 9 engines)
+## Pricing methods
 
 | Method key | Engine | Reference |
 |------------|--------|-----------|
@@ -49,6 +49,8 @@ This file is the reference point for all capability-gate tests.
 | `double_barrier_mc` | BSM double-barrier Monte Carlo | GBM path simulation |
 | `forward_start_bsm` | BSM analytic forward-start option | Rubinstein-style forward-start closed form |
 | `exchange_bsm` | BSM analytic exchange option | Margrabe closed form |
+| `spread_bsm` | BSM analytic spread option | Kirk approximation |
+| `multi_asset_mc` | BSM correlated multi-asset Monte Carlo | Terminal GBM simulation |
 | `lookback_bsm` | BSM analytic floating-strike lookback | Goldman-Sosin-Gatto closed form |
 | `lookback_mc` | BSM Monte Carlo lookback | GBM path simulation |
 | `variance_analytic_bsm` | BSM analytic variance products | Exact realised-variance expectation / deterministic integrated variance |
@@ -66,7 +68,10 @@ This file is the reference point for all capability-gate tests.
 - Continuous zero-rebate BSM single-barrier call / put (via `price(..., method="barrier_bsm")`)
 - BSM Asian options (geometric closed form via `asian_bsm`; arithmetic/geometric MC via `asian_mc`)
 - BSM forward-start call / put (via `price(..., method="forward_start_bsm")`)
-- BSM exchange options on two correlated assets (via `price(..., method="exchange_bsm")`)
+- BSM exchange options on two correlated assets (via `price(..., method="exchange_bsm"|"multi_asset_mc")`)
+- BSM basket options on correlated assets (via `price(..., method="multi_asset_mc")`)
+- BSM spread options on two correlated assets (via `price(..., method="spread_bsm"|"multi_asset_mc")`)
+- BSM best-of options on correlated assets (via `price(..., method="multi_asset_mc")`)
 - BSM lookback call / put (continuous floating closed form via `lookback_bsm`; Monte Carlo via `lookback_mc`)
 - BSM variance swaps (via `variance_analytic_bsm` or `variance_mc`) and integrated-variance options (via `variance_analytic_bsm`; Monte Carlo via `variance_mc`)
 - BSM cliquets (via `cliquet_mc`)
@@ -75,27 +80,14 @@ This file is the reference point for all capability-gate tests.
 
 ## Public API object count
 
-117 public names exported from `foureng` at freeze time.
+Public exports include the multi-asset analytic helper `kirk_spread` alongside the prior dispatcher and analytics surface.
 
-## Test suite (pre-expansion)
+## Test suite
 
-- **Collected**: 832 tests before Sprint 1 expansion (857 total, 25 deselected/skipped)
-- **Test directories**: features/, methods/, models/, papers/, refs/
+- Capability, product, and dispatcher tests now include multi-asset exchange/basket/spread/best-of coverage.
+- Broad CI continues to validate lint, typing, package build, paper/reference checks, and the Python version matrix.
 
-## Validation matrix summary
+## Notes
 
-| Status | Count |
-|--------|-------|
-| `done` | 13 |
-| `partial` | 19 |
-| `xfail-if-unstable` | 1 |
-| **Total rows** | **33** |
-
-Exact paper anchors: Carr-Madan (1999), Lewis (2001), FO2008 Heston ATM,
-Kelly (2025 Double Heston), MathWorks Bates NI/FFT/delta.
-
-## Benchmark CSVs (pre-expansion)
-
-Located in `benchmarks/`:
-- `benchmarks/cos_method_improved/outputs/cos_method_improved_paper_compare.csv`
-- `benchmarks/paper_replications/fo2008_cos/`
+- `proj` remains a European first slice, not the full exotic PROJ recursion family.
+- `mellin` remains a validated European façade rather than the full model-specific contour implementation set.

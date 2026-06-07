@@ -272,6 +272,16 @@ class TestMultiAssetProducts:
         opt = BasketOption(strike=100.0, maturity=1.0, cp=1, weights=w)
         assert opt.product_type == "basket"
 
+    def test_basket_rejects_bad_corr_shape(self):
+        with pytest.raises(ValueError, match="corr_matrix"):
+            BasketOption(
+                strike=100.0,
+                maturity=1.0,
+                cp=1,
+                weights=np.array([0.4, 0.6]),
+                corr_matrix=np.eye(3),
+            )
+
     def test_basket_zero_total_weight_rejected(self):
         with pytest.raises(ValueError, match="sum to a positive"):
             BasketOption(strike=100.0, maturity=1.0, cp=1, weights=np.array([0.0, 0.0]))
@@ -280,6 +290,10 @@ class TestMultiAssetProducts:
         opt = SpreadOption(strike=0.0, maturity=1.0, cp=1)
         assert opt.strike == 0.0
 
+    def test_spread_invalid_rho_rejected(self):
+        with pytest.raises(ValueError, match="rho"):
+            SpreadOption(strike=0.0, maturity=1.0, cp=1, rho=2.0)
+
     def test_spread_negative_strike_rejected(self):
         with pytest.raises(ValueError, match="strike"):
             SpreadOption(strike=-1.0, maturity=1.0, cp=1)
@@ -287,3 +301,12 @@ class TestMultiAssetProducts:
     def test_best_of_one_asset_rejected(self):
         with pytest.raises(ValueError, match="n_assets"):
             BestOfOption(strike=100.0, maturity=1.0, cp=1, n_assets=1)
+
+    def test_best_of_rejects_nonsymmetric_corr(self):
+        with pytest.raises(ValueError, match="symmetric"):
+            BestOfOption(
+                strike=100.0,
+                maturity=1.0,
+                cp=1,
+                corr_matrix=np.array([[1.0, 0.2], [0.1, 1.0]]),
+            )

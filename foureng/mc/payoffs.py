@@ -25,6 +25,31 @@ def european_payoff(S_T: np.ndarray, K: float, cp: int = 1) -> np.ndarray:
     return np.maximum(cp * (S_T - K), 0.0)
 
 
+def basket_payoff(S_T: np.ndarray, K: float, weights: np.ndarray, cp: int = 1) -> np.ndarray:
+    """Basket payoff on a terminal spot matrix of shape ``(n_paths, n_assets)``."""
+    basket_terminal = np.asarray(S_T, dtype=np.float64) @ np.asarray(weights, dtype=np.float64)
+    return np.maximum(cp * (basket_terminal - K), 0.0)
+
+
+def spread_payoff(S_T: np.ndarray, K: float, cp: int = 1) -> np.ndarray:
+    """Spread payoff ``max(cp * (S1_T - S2_T - K), 0)``."""
+    terminal = np.asarray(S_T, dtype=np.float64)
+    if terminal.ndim != 2 or terminal.shape[1] != 2:
+        raise ValueError("spread_payoff expects a (n_paths, 2) terminal matrix")
+    spread_terminal = terminal[:, 0] - terminal[:, 1]
+    return np.maximum(cp * (spread_terminal - K), 0.0)
+
+
+def best_of_payoff(S_T: np.ndarray, K: float, cp: int = 1) -> np.ndarray:
+    """Best-of payoff on a terminal spot matrix of shape ``(n_paths, n_assets)``."""
+    terminal = np.asarray(S_T, dtype=np.float64)
+    if cp == 1:
+        underlying = terminal.max(axis=1)
+    else:
+        underlying = terminal.min(axis=1)
+    return np.maximum(cp * (underlying - K), 0.0)
+
+
 # ── path-dependent payoffs ─────────────────────────────────────────────────
 
 

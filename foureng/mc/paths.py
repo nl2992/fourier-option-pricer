@@ -94,6 +94,51 @@ def gbm_terminal(
     return S0 * np.exp((r - q - 0.5 * sigma**2) * T + sigma * np.sqrt(T) * Z)
 
 
+def correlated_gbm_terminal(
+    spots: np.ndarray,
+    r: float,
+    dividend_yields: np.ndarray,
+    T: float,
+    volatilities: np.ndarray,
+    corr_matrix: np.ndarray,
+    n_paths: int,
+    rng: np.random.Generator,
+    *,
+    antithetic: bool = False,
+) -> np.ndarray:
+    """Draw correlated terminal GBM asset values.
+
+    Returns
+    -------
+    np.ndarray shape (n_paths, n_assets)
+    """
+    s = np.asarray(spots, dtype=np.float64)
+    q = np.asarray(dividend_yields, dtype=np.float64)
+    sig = np.asarray(volatilities, dtype=np.float64)
+    corr = np.asarray(corr_matrix, dtype=np.float64)
+
+    n_assets = len(s)
+    if q.shape != (n_assets,):
+        raise ValueError("dividend_yields must match spots shape")
+    if sig.shape != (n_assets,):
+        raise ValueError("volatilities must match spots shape")
+    if corr.shape != (n_assets, n_assets):
+        raise ValueError("corr_matrix must have shape (n_assets, n_assets)")
+
+    chol = np.linalg.cholesky(corr)
+    if antithetic:
+        half = n_paths // 2
+        z_half = rng.standard_normal((half, n_assets))
+        z = np.concatenate([z_half, -z_half], axis=0)
+    else:
+        z = rng.standard_normal((n_paths, n_assets))
+
+    correlated = z @ chol.T
+    drift = (r - q - 0.5 * sig**2) * T
+    diffusion = sig * np.sqrt(T)
+    return s[None, :] * np.exp(drift[None, :] + diffusion[None, :] * correlated)
+
+
 def gbm_paths_on_grid(
     S0: float,
     r: float,

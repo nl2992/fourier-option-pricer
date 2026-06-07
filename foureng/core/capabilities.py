@@ -206,6 +206,13 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
         supports_path_dependent=False,
         notes="Closed-form BSM Margrabe exchange-option pricer for two correlated assets.",
     ),
+    "spread_bsm": MethodSpec(
+        requires_cf=False,
+        supports_products=frozenset({"spread"}),
+        supports_exercise=frozenset({"european"}),
+        supports_path_dependent=False,
+        notes="BSM Kirk spread-option approximation for two correlated assets.",
+    ),
     "lookback_bsm": MethodSpec(
         requires_cf=False,
         supports_products=frozenset({"lookback"}),
@@ -249,6 +256,17 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
         supports_exercise=frozenset({"european"}),
         supports_path_dependent=True,
         notes="BSM Monte Carlo pricer for additive or multiplicative cliquet contracts.",
+    ),
+    "multi_asset_mc": MethodSpec(
+        requires_cf=False,
+        requires_simulation=True,
+        supports_products=frozenset({"exchange", "basket", "spread", "best_of"}),
+        supports_exercise=frozenset({"european"}),
+        supports_path_dependent=False,
+        notes=(
+            "BSM Monte Carlo pricer for correlated multi-asset European payoffs "
+            "(exchange, basket, spread, best-of)."
+        ),
     ),
     "cos_bermudan": MethodSpec(
         requires_cf=True,
@@ -511,11 +529,13 @@ def _model_restriction(model: str, product: str, method: str) -> str:
         "double_barrier_mc",
         "forward_start_bsm",
         "exchange_bsm",
+        "spread_bsm",
         "lookback_bsm",
         "lookback_mc",
         "variance_analytic_bsm",
         "variance_mc",
         "cliquet_mc",
+        "multi_asset_mc",
     }:
         if model != "bsm":
             return f"method={method!r} is currently implemented only for model='bsm'."
