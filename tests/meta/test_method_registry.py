@@ -26,6 +26,7 @@ _BASELINE_METHODS = {
     "variance_analytic_bsm",
     "variance_mc",
     "cliquet_mc",
+    "monte_carlo",
     "multi_asset_mc",
     "cos_bermudan",
     "mellin",
@@ -35,12 +36,7 @@ _BASELINE_METHODS = {
     "cos_digital",
 }
 
-_PLANNED_METHODS = {
-    "monte_carlo",
-    "pde_fd",
-    "lattice",
-    "ctmc",
-}
+_PLANNED_METHODS = {"pde_fd", "lattice", "ctmc"}
 
 
 def test_all_baseline_methods_registered():

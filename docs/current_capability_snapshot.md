@@ -1,6 +1,6 @@
 # Current Capability Snapshot — expanded baseline
 
-Updated 2026-06-07 after the multi-asset expansion.
+Updated 2026-06-08 after the Monte Carlo / LSMC expansion.
 This file tracks the capability surface used by the registry and dispatcher tests.
 
 ## Model registry (20 models)
@@ -43,6 +43,7 @@ This file tracks the capability surface used by the registry and dispatcher test
 | `pde_fd` | BSM implicit finite difference | Black-Scholes PDE |
 | `digital_bsm` | BSM closed-form digital option | Black-Scholes closed form |
 | `cos_digital` | COS digital option pricing | Fang-Oosterlee payoff extension |
+| `monte_carlo` | BSM Monte Carlo / Longstaff-Schwartz | GBM simulation plus early-exercise regression |
 | `barrier_bsm` | BSM closed-form single-barrier option | Reiner-Rubinstein / Haug |
 | `asian_bsm` | BSM discrete geometric Asian closed form | Kemna-Vorst style lognormal average |
 | `asian_mc` | BSM Asian Monte Carlo | GBM path simulation |
@@ -64,18 +65,19 @@ This file tracks the capability surface used by the registry and dispatcher test
 
 - European call / put (via `price_strip`)
 - Digital cash-or-nothing and asset-or-nothing options (via `price(..., method="cos_digital"|"digital_bsm")`)
-- American BSM call / put (via `price(..., method="lattice"|"pde_fd")`)
-- Continuous zero-rebate BSM single-barrier call / put (via `price(..., method="barrier_bsm")`)
-- BSM Asian options (geometric closed form via `asian_bsm`; arithmetic/geometric MC via `asian_mc`)
+- American BSM call / put (via `price(..., method="lattice"|"pde_fd"|"monte_carlo")`)
+- Bermudan BSM call / put (via `price(..., method="monte_carlo")`) alongside the existing 1-D Levy `cos_bermudan` route
+- Continuous zero-rebate BSM single-barrier call / put (via `price(..., method="barrier_bsm"|"monte_carlo")`)
+- BSM Asian options (geometric closed form via `asian_bsm`; arithmetic/geometric MC via `asian_mc` or `monte_carlo`)
 - BSM forward-start call / put (via `price(..., method="forward_start_bsm")`)
-- BSM exchange options on two correlated assets (via `price(..., method="exchange_bsm"|"multi_asset_mc")`)
-- BSM basket options on correlated assets (via `price(..., method="multi_asset_mc")`)
-- BSM spread options on two correlated assets (via `price(..., method="spread_bsm"|"multi_asset_mc")`)
-- BSM best-of options on correlated assets (via `price(..., method="multi_asset_mc")`)
-- BSM lookback call / put (continuous floating closed form via `lookback_bsm`; Monte Carlo via `lookback_mc`)
-- BSM variance swaps (via `variance_analytic_bsm` or `variance_mc`) and integrated-variance options (via `variance_analytic_bsm`; Monte Carlo via `variance_mc`)
-- BSM cliquets (via `cliquet_mc`)
-- BSM zero-rebate double-barrier options (via `double_barrier_mc`)
+- BSM exchange options on two correlated assets (via `price(..., method="exchange_bsm"|"multi_asset_mc"|"monte_carlo")`)
+- BSM basket options on correlated assets (via `price(..., method="multi_asset_mc"|"monte_carlo")`)
+- BSM spread options on two correlated assets (via `price(..., method="spread_bsm"|"multi_asset_mc"|"monte_carlo")`)
+- BSM best-of options on correlated assets (via `price(..., method="multi_asset_mc"|"monte_carlo")`)
+- BSM lookback call / put (continuous floating closed form via `lookback_bsm`; Monte Carlo via `lookback_mc` or `monte_carlo`)
+- BSM variance swaps (via `variance_analytic_bsm` or `variance_mc` / `monte_carlo`) and integrated-variance options (via `variance_analytic_bsm`; Monte Carlo via `variance_mc` / `monte_carlo`)
+- BSM cliquets (via `cliquet_mc` or `monte_carlo`)
+- BSM zero-rebate double-barrier options (via `double_barrier_mc` or `monte_carlo`)
 - SABR European call / put strips (via `price_strip("sabr", "sabr_hagan", ...)`)
 
 ## Public API object count
@@ -84,7 +86,7 @@ Public exports include the multi-asset analytic helper `kirk_spread` alongside t
 
 ## Test suite
 
-- Capability, product, and dispatcher tests now include multi-asset exchange/basket/spread/best-of coverage.
+- Capability, product, and dispatcher tests now include multi-asset coverage plus generic Monte Carlo / LSMC dispatch for Americans and Bermudans.
 - Broad CI continues to validate lint, typing, package build, paper/reference checks, and the Python version matrix.
 
 ## Notes

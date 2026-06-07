@@ -38,12 +38,15 @@ class MCSpec:
         RNG seed for reproducibility.
     antithetic : bool
         Antithetic-variates variance reduction (``n_paths`` must be even).
+    basis_degree : int
+        Polynomial degree for Longstaff-Schwartz continuation regression.
     """
 
     n_paths: int = 100_000
     n_steps: int = 252
     seed: int | None = 42
     antithetic: bool = True
+    basis_degree: int = 2
 
 
 @dataclass(frozen=True)
@@ -111,6 +114,54 @@ def mc_price(
         raw = european_payoff(S_T, K, cp)
         disc = np.exp(-r * T)
         return _result(raw * disc, n_paths)
+
+    # ── American / Bermudan via Longstaff-Schwartz ───────────────────────
+    if pt == "american":
+        exercise_times = np.linspace(
+            product.maturity / mc.n_steps,
+            product.maturity,
+            mc.n_steps,
+            dtype=np.float64,
+        )
+        paths = gbm_paths_on_grid(
+            S0,
+            r,
+            q,
+            exercise_times,
+            sigma,
+            mc.n_paths,
+            rng,
+            antithetic=mc.antithetic,
+        )
+        return _lsmc_result(
+            paths,
+            exercise_times,
+            strike=product.strike,
+            cp=product.cp,
+            r=r,
+            basis_degree=mc.basis_degree,
+        )
+
+    if pt == "bermudan":
+        exercise_times = np.asarray(product.exercise_times, dtype=np.float64)
+        paths = gbm_paths_on_grid(
+            S0,
+            r,
+            q,
+            exercise_times,
+            sigma,
+            mc.n_paths,
+            rng,
+            antithetic=mc.antithetic,
+        )
+        return _lsmc_result(
+            paths,
+            exercise_times,
+            strike=product.strike,
+            cp=product.cp,
+            r=r,
+            basis_degree=mc.basis_degree,
+        )
 
     # ── Asian ──────────────────────────────────────────────────────────────
     if pt == "asian":
@@ -323,17 +374,9 @@ def mc_price(
         disc = np.exp(-r * product.maturity)
         return _result(raw * disc, mc.n_paths)
 
-    # ── Bermudan ───────────────────────────────────────────────────────────
-    if pt == "bermudan":
-        # Exercise boundary requires backward induction (LSMC); not implemented here.
-        raise NotImplementedError(
-            "mc_price: Bermudan options require LSMC (Longstaff-Schwartz). "
-            "Use cos_bermudan_price instead for the COS backward-induction method."
-        )
-
     raise NotImplementedError(
         f"mc_price: product_type={pt!r} is not yet supported. "
-        "Supported: 'european', 'asian', 'barrier', 'double_barrier', "
+        "Supported: 'european', 'american', 'bermudan', 'asian', 'barrier', 'double_barrier', "
         "'lookback', 'variance_swap', 'variance_option', 'cliquet', "
         "'exchange', 'basket', 'spread', 'best_of'."
     )
@@ -351,3 +394,58 @@ def _result(discounted_payoffs: np.ndarray, n_paths: int) -> MCResult:
         ci_95=(price - 1.96 * se, price + 1.96 * se),
         n_paths=n_paths,
     )
+
+
+def _lsmc_result(
+    paths: np.ndarray,
+    exercise_times: np.ndarray,
+    *,
+    strike: float,
+    cp: int,
+    r: float,
+    basis_degree: int,
+) -> MCResult:
+    """Longstaff-Schwartz price for vanilla American/Bermudan options."""
+    if cp not in (1, -1):
+        raise ValueError(f"cp must be +1 or -1, got {cp}")
+    if basis_degree < 0:
+        raise ValueError(f"basis_degree must be >= 0, got {basis_degree}")
+
+    intrinsic = np.maximum(cp * (paths[:, 1:] - strike), 0.0)
+    cashflow = intrinsic[:, -1].copy()
+    exercise_time = np.full(paths.shape[0], exercise_times[-1], dtype=np.float64)
+
+    for j in range(len(exercise_times) - 2, -1, -1):
+        t_j = exercise_times[j]
+        s_j = paths[:, j + 1]
+        immediate = intrinsic[:, j]
+        alive = exercise_time > t_j + 1e-12
+        itm = alive & (immediate > 0.0)
+        if not np.any(itm):
+            continue
+
+        discounted_cont = cashflow[alive] * np.exp(-r * (exercise_time[alive] - t_j))
+        s_alive = s_j[alive]
+        continuation_hat = np.zeros(np.count_nonzero(alive), dtype=np.float64)
+
+        fit_mask = immediate[alive] > 0.0
+        if np.count_nonzero(fit_mask) > basis_degree:
+            x_fit = s_alive[fit_mask]
+            y_fit = discounted_cont[fit_mask]
+            design_fit = np.polynomial.polynomial.polyvander(x_fit, basis_degree)
+            coeffs, *_ = np.linalg.lstsq(design_fit, y_fit, rcond=None)
+            continuation_hat = np.polynomial.polynomial.polyvander(s_alive, basis_degree) @ coeffs
+        else:
+            continuation_hat.fill(float(discounted_cont.mean()))
+
+        exercise_now_alive = fit_mask & (immediate[alive] >= continuation_hat)
+        if not np.any(exercise_now_alive):
+            continue
+
+        alive_idx = np.flatnonzero(alive)
+        exercise_idx = alive_idx[exercise_now_alive]
+        cashflow[exercise_idx] = immediate[exercise_idx]
+        exercise_time[exercise_idx] = t_j
+
+    discounted = cashflow * np.exp(-r * exercise_time)
+    return _result(discounted, paths.shape[0])

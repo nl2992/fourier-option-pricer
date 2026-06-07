@@ -153,6 +153,7 @@ from foureng.pipeline import price, price_strip
 | `"pyfeng_fft"` | PyFENG-backed Lewis-style FFT path (PyFENG-backed models only) |
 | `"cos_digital"` | COS digital pricing through `price()` for `DigitalOption` |
 | `"digital_bsm"` | BSM-only analytic digital pricing through `price()` |
+| `"monte_carlo"` | BSM-only generic Monte Carlo / Longstaff-Schwartz pricing through `price()` |
 | `"lattice"` | BSM-only CRR lattice for European strips |
 | `"pde_fd"` | BSM-only implicit finite-difference solver for European strips |
 | `"barrier_bsm"` | BSM-only analytic single-barrier pricing through `price()` |
@@ -173,20 +174,20 @@ from foureng.pipeline import price, price_strip
 |---------|---------------------|-------|
 | `EuropeanOption` | all compatible `price_strip` methods | Vanilla call/put. |
 | `DigitalOption` | `"cos_digital"`, `"digital_bsm"` | Cash-or-nothing or asset-or-nothing digitals; analytic closed form is BSM-only. |
-| `AmericanOption` | `"lattice"`, `"pde_fd"` | BSM call/put. |
-| `BermudanOption` | `"cos_bermudan"` | Supported 1-D Levy call/put with discrete exercise dates. |
-| `BarrierOption` | `"barrier_bsm"` | Continuously monitored, zero-rebate, single-barrier BSM knock-in/knock-out call/put. |
-| `AsianOption` | `"asian_bsm"`, `"asian_mc"` | BSM fixed-strike geometric closed form or BSM arithmetic/geometric Monte Carlo. |
+| `AmericanOption` | `"lattice"`, `"pde_fd"`, `"monte_carlo"` | BSM call/put via lattice, PDE, or Longstaff-Schwartz Monte Carlo. |
+| `BermudanOption` | `"cos_bermudan"`, `"monte_carlo"` | Supported 1-D Levy COS Bermudan or BSM Longstaff-Schwartz Monte Carlo. |
+| `BarrierOption` | `"barrier_bsm"`, `"monte_carlo"` | Continuously monitored zero-rebate BSM closed form or BSM Monte Carlo knock-in/knock-out call/put. |
+| `AsianOption` | `"asian_bsm"`, `"asian_mc"`, `"monte_carlo"` | BSM fixed-strike geometric closed form or BSM arithmetic/geometric Monte Carlo. |
 | `ForwardStartOption` | `"forward_start_bsm"` | BSM forward-start call/put with strike set at `alpha * S_{t_start}`. |
-| `ExchangeOption` | `"exchange_bsm"`, `"multi_asset_mc"` | BSM Margrabe exchange option or correlated Monte Carlo using asset-1 inputs from `fwd`/`params` and asset-2 inputs on the product. |
-| `BasketOption` | `"multi_asset_mc"` | Correlated BSM Monte Carlo basket option with asset-1 inputs from `fwd`/`params` and asset-2..n inputs on the product. |
-| `SpreadOption` | `"spread_bsm"`, `"multi_asset_mc"` | Two-asset BSM Kirk spread approximation or correlated Monte Carlo spread option. |
-| `BestOfOption` | `"multi_asset_mc"` | Correlated BSM Monte Carlo best-of / worst-of style option. |
-| `LookbackOption` | `"lookback_bsm"`, `"lookback_mc"` | BSM continuous floating-strike closed form or BSM Monte Carlo fixed/floating lookback. |
-| `VarianceSwap` | `"variance_analytic_bsm"`, `"variance_mc"` | Exact BSM realised-variance expectation or BSM Monte Carlo variance swap. |
-| `VarianceOption` | `"variance_analytic_bsm"`, `"variance_mc"` | Deterministic integrated-variance BSM closed form or BSM Monte Carlo realised/integrated variance option. |
-| `CliquetOption` | `"cliquet_mc"` | BSM Monte Carlo additive or multiplicative cliquet. |
-| `DoubleBarrierOption` | `"double_barrier_mc"` | BSM zero-rebate double knock-in/knock-out Monte Carlo. |
+| `ExchangeOption` | `"exchange_bsm"`, `"multi_asset_mc"`, `"monte_carlo"` | BSM Margrabe exchange option or correlated Monte Carlo using asset-1 inputs from `fwd`/`params` and asset-2 inputs on the product. |
+| `BasketOption` | `"multi_asset_mc"`, `"monte_carlo"` | Correlated BSM Monte Carlo basket option with asset-1 inputs from `fwd`/`params` and asset-2..n inputs on the product. |
+| `SpreadOption` | `"spread_bsm"`, `"multi_asset_mc"`, `"monte_carlo"` | Two-asset BSM Kirk spread approximation or correlated Monte Carlo spread option. |
+| `BestOfOption` | `"multi_asset_mc"`, `"monte_carlo"` | Correlated BSM Monte Carlo best-of / worst-of style option. |
+| `LookbackOption` | `"lookback_bsm"`, `"lookback_mc"`, `"monte_carlo"` | BSM continuous floating-strike closed form or BSM Monte Carlo fixed/floating lookback. |
+| `VarianceSwap` | `"variance_analytic_bsm"`, `"variance_mc"`, `"monte_carlo"` | Exact BSM realised-variance expectation or BSM Monte Carlo variance swap. |
+| `VarianceOption` | `"variance_analytic_bsm"`, `"variance_mc"`, `"monte_carlo"` | Deterministic integrated-variance BSM closed form or BSM Monte Carlo realised/integrated variance option. |
+| `CliquetOption` | `"cliquet_mc"`, `"monte_carlo"` | BSM Monte Carlo additive or multiplicative cliquet. |
+| `DoubleBarrierOption` | `"double_barrier_mc"`, `"monte_carlo"` | BSM zero-rebate double knock-in/knock-out Monte Carlo. |
 
 ---
 
