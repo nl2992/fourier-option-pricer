@@ -22,7 +22,12 @@ import numpy as np
 
 from .analytics.bsm_asian import bsm_discrete_geometric_asian
 from .analytics.bsm_barrier import bsm_barrier_price
-from .analytics.bsm_exotics import bsm_forward_start, bsm_lookback_floating, margrabe_exchange
+from .analytics.bsm_exotics import (
+    bsm_forward_start,
+    bsm_lookback_floating,
+    kirk_spread,
+    margrabe_exchange,
+)
 from .mc.engine import MCSpec, mc_price
 from .models.base import CharFunc, ForwardSpec
 from .models.registry import MODEL_REGISTRY
@@ -772,22 +777,103 @@ def price(
                 "price(): product_type='exchange' must be represented by "
                 f"ExchangeOption, got {type(product).__name__!r}"
             )
-        if method != "exchange_bsm":
-            raise NotImplementedError("Exchange pricing currently supports method='exchange_bsm'.")
         if model != "bsm":
             raise NotImplementedError(
-                "method='exchange_bsm' is currently implemented only for model='bsm'."
+                f"method={method!r} is currently implemented only for model='bsm'."
             )
-        return margrabe_exchange(
-            fwd.S0,
-            product.spot2,
-            fwd.q,
-            product.q2,
-            product.maturity,
-            params.sigma,
-            product.sigma2,
-            product.rho,
+        if method == "exchange_bsm":
+            return margrabe_exchange(
+                fwd.S0,
+                product.spot2,
+                fwd.q,
+                product.q2,
+                product.maturity,
+                params.sigma,
+                product.sigma2,
+                product.rho,
+            )
+        if method == "multi_asset_mc":
+            from .models.base import ForwardSpec as _FwdSpec
+
+            mc_spec = grid if isinstance(grid, MCSpec) else MCSpec()
+            fwd_t = _FwdSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=product.maturity)
+            return mc_price(fwd_t, params.sigma, product, mc_spec).price
+        raise NotImplementedError(
+            "Exchange pricing currently supports method='exchange_bsm' or method='multi_asset_mc'."
         )
+
+    if pt == "basket":
+        from .models.base import ForwardSpec as _FwdSpec
+        from .products.multi_asset import BasketOption
+
+        if not isinstance(product, BasketOption):
+            raise TypeError(
+                "price(): product_type='basket' must be represented by "
+                f"BasketOption, got {type(product).__name__!r}"
+            )
+        if method != "multi_asset_mc":
+            raise NotImplementedError("Basket pricing currently supports method='multi_asset_mc'.")
+        if model != "bsm":
+            raise NotImplementedError(
+                "method='multi_asset_mc' is currently implemented only for model='bsm'."
+            )
+        mc_spec = grid if isinstance(grid, MCSpec) else MCSpec()
+        fwd_t = _FwdSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=product.maturity)
+        return mc_price(fwd_t, params.sigma, product, mc_spec).price
+
+    if pt == "spread":
+        from .models.base import ForwardSpec as _FwdSpec
+        from .products.multi_asset import SpreadOption
+
+        if not isinstance(product, SpreadOption):
+            raise TypeError(
+                "price(): product_type='spread' must be represented by "
+                f"SpreadOption, got {type(product).__name__!r}"
+            )
+        if model != "bsm":
+            raise NotImplementedError(
+                f"method={method!r} is currently implemented only for model='bsm'."
+            )
+        if method == "spread_bsm":
+            return kirk_spread(
+                fwd.S0,
+                product.spot2,
+                product.strike,
+                fwd.r,
+                fwd.q,
+                product.q2,
+                product.maturity,
+                params.sigma,
+                product.sigma2,
+                product.rho,
+                cp=product.cp,
+            )
+        if method == "multi_asset_mc":
+            mc_spec = grid if isinstance(grid, MCSpec) else MCSpec()
+            fwd_t = _FwdSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=product.maturity)
+            return mc_price(fwd_t, params.sigma, product, mc_spec).price
+        raise NotImplementedError(
+            "Spread pricing currently supports method='spread_bsm' or method='multi_asset_mc'."
+        )
+
+    if pt == "best_of":
+        from .models.base import ForwardSpec as _FwdSpec
+        from .products.multi_asset import BestOfOption
+
+        if not isinstance(product, BestOfOption):
+            raise TypeError(
+                "price(): product_type='best_of' must be represented by "
+                f"BestOfOption, got {type(product).__name__!r}"
+            )
+        if method != "multi_asset_mc":
+            raise NotImplementedError("Best-of pricing currently supports method='multi_asset_mc'.")
+        if model != "bsm":
+            raise NotImplementedError(
+                "method='multi_asset_mc' is currently implemented only for model='bsm'."
+            )
+        mc_spec = grid if isinstance(grid, MCSpec) else MCSpec()
+        fwd_t = _FwdSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=product.maturity)
+        return mc_price(fwd_t, params.sigma, product, mc_spec).price
 
     if pt == "lookback":
         from .models.base import ForwardSpec as _FwdSpec
@@ -919,9 +1005,9 @@ def price(
         ),
         "cliquet": "Use cliquet_mc for BSM Monte Carlo cliquets.",
         "exchange": "Use exchange_bsm for the two-asset Margrabe closed form.",
-        "basket": "Use multi_asset_mc (Phase 4.11).",
-        "spread": "Use multi_asset_mc / Kirk approximation (Phase 4.11).",
-        "best_of": "Use multi_asset_mc (Phase 4.11).",
+        "basket": "Use multi_asset_mc for correlated multi-asset Monte Carlo.",
+        "spread": "Use spread_bsm for Kirk's approximation or multi_asset_mc for Monte Carlo.",
+        "best_of": "Use multi_asset_mc for correlated multi-asset Monte Carlo.",
         "double_barrier": "Use double_barrier_mc for BSM Monte Carlo double barriers.",
     }
     hint = _HINTS.get(pt, f"No pricer is registered for product_type={pt!r}.")

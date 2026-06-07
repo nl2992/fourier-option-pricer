@@ -39,6 +39,7 @@ from .analytics.bsm_exotics import (
     bsm_forward_start,
     bsm_gap_call,
     bsm_lookback_floating,
+    kirk_spread,
     margrabe_exchange,
 )
 from .analytics.bsm_variance import bsm_variance_option_integrated, bsm_variance_swap
@@ -276,6 +277,7 @@ __all__ = [
     "bsm_forward_start",
     "bsm_gap_call",
     "bsm_lookback_floating",
+    "kirk_spread",
     "margrabe_exchange",
     # digital
     "bsm_asset_or_nothing",

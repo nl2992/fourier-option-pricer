@@ -30,6 +30,11 @@ from foureng.core.capabilities import explain_capability
         ("bsm", "american", "lattice"),
         ("bsm", "forward_start", "forward_start_bsm"),
         ("bsm", "exchange", "exchange_bsm"),
+        ("bsm", "exchange", "multi_asset_mc"),
+        ("bsm", "basket", "multi_asset_mc"),
+        ("bsm", "spread", "spread_bsm"),
+        ("bsm", "spread", "multi_asset_mc"),
+        ("bsm", "best_of", "multi_asset_mc"),
         ("bsm", "lookback", "lookback_bsm"),
         ("bsm", "lookback", "lookback_mc"),
         ("bsm", "variance_swap", "variance_analytic_bsm"),
@@ -64,6 +69,8 @@ def test_supported_combinations_return_supported(model, product, method):
         ("heston", "digital", "digital_bsm"),
         ("heston", "variance_swap", "variance_analytic_bsm"),
         ("heston", "exchange", "exchange_bsm"),
+        ("heston", "exchange", "multi_asset_mc"),
+        ("heston", "spread", "spread_bsm"),
     ],
 )
 def test_unsupported_combinations_return_not_supported(model, product, method):

@@ -7,15 +7,18 @@ from dataclasses import dataclass
 import numpy as np
 
 from ..models.base import ForwardSpec
-from .paths import gbm_paths, gbm_paths_on_grid, gbm_terminal
+from .paths import correlated_gbm_terminal, gbm_paths, gbm_paths_on_grid, gbm_terminal
 from .payoffs import (
     asian_arithmetic_payoff,
     asian_geometric_payoff,
     barrier_payoff,
+    basket_payoff,
+    best_of_payoff,
     cliquet_payoff,
     double_barrier_payoff,
     european_payoff,
     lookback_payoff,
+    spread_payoff,
     variance_option_payoff,
     variance_swap_payoff,
 )
@@ -239,6 +242,87 @@ def mc_price(
         disc = np.exp(-r * product.maturity)
         return _result(raw * disc, mc.n_paths)
 
+    # ── Multi-asset terminal payoffs ──────────────────────────────────────
+    if pt in {"exchange", "basket", "spread", "best_of"}:
+        if pt == "exchange":
+            terminal = correlated_gbm_terminal(
+                np.array([S0, product.spot2], dtype=np.float64),
+                r,
+                np.array([q, product.q2], dtype=np.float64),
+                product.maturity,
+                np.array([sigma, product.sigma2], dtype=np.float64),
+                np.array([[1.0, product.rho], [product.rho, 1.0]], dtype=np.float64),
+                mc.n_paths,
+                rng,
+                antithetic=mc.antithetic,
+            )
+            raw = spread_payoff(terminal, 0.0, 1)
+            disc = np.exp(-r * product.maturity)
+            return _result(raw * disc, mc.n_paths)
+
+        if pt == "basket":
+            spots = np.concatenate(([S0], np.asarray(product.other_spots, dtype=np.float64)))
+            dividend_yields = np.concatenate(
+                ([q], np.asarray(product.other_dividend_yields, dtype=np.float64))
+            )
+            volatilities = np.concatenate(
+                ([sigma], np.asarray(product.other_volatilities, dtype=np.float64))
+            )
+            corr_matrix = np.asarray(product.corr_matrix, dtype=np.float64)
+            terminal = correlated_gbm_terminal(
+                spots,
+                r,
+                dividend_yields,
+                product.maturity,
+                volatilities,
+                corr_matrix,
+                mc.n_paths,
+                rng,
+                antithetic=mc.antithetic,
+            )
+            raw = basket_payoff(terminal, product.strike, product.weights, product.cp)
+            disc = np.exp(-r * product.maturity)
+            return _result(raw * disc, mc.n_paths)
+
+        if pt == "spread":
+            terminal = correlated_gbm_terminal(
+                np.array([S0, product.spot2], dtype=np.float64),
+                r,
+                np.array([q, product.q2], dtype=np.float64),
+                product.maturity,
+                np.array([sigma, product.sigma2], dtype=np.float64),
+                np.array([[1.0, product.rho], [product.rho, 1.0]], dtype=np.float64),
+                mc.n_paths,
+                rng,
+                antithetic=mc.antithetic,
+            )
+            raw = spread_payoff(terminal, product.strike, product.cp)
+            disc = np.exp(-r * product.maturity)
+            return _result(raw * disc, mc.n_paths)
+
+        spots = np.concatenate(([S0], np.asarray(product.other_spots, dtype=np.float64)))
+        dividend_yields = np.concatenate(
+            ([q], np.asarray(product.other_dividend_yields, dtype=np.float64))
+        )
+        volatilities = np.concatenate(
+            ([sigma], np.asarray(product.other_volatilities, dtype=np.float64))
+        )
+        corr_matrix = np.asarray(product.corr_matrix, dtype=np.float64)
+        terminal = correlated_gbm_terminal(
+            spots,
+            r,
+            dividend_yields,
+            product.maturity,
+            volatilities,
+            corr_matrix,
+            mc.n_paths,
+            rng,
+            antithetic=mc.antithetic,
+        )
+        raw = best_of_payoff(terminal, product.strike, product.cp)
+        disc = np.exp(-r * product.maturity)
+        return _result(raw * disc, mc.n_paths)
+
     # ── Bermudan ───────────────────────────────────────────────────────────
     if pt == "bermudan":
         # Exercise boundary requires backward induction (LSMC); not implemented here.
@@ -250,7 +334,8 @@ def mc_price(
     raise NotImplementedError(
         f"mc_price: product_type={pt!r} is not yet supported. "
         "Supported: 'european', 'asian', 'barrier', 'double_barrier', "
-        "'lookback', 'variance_swap', 'variance_option', 'cliquet'."
+        "'lookback', 'variance_swap', 'variance_option', 'cliquet', "
+        "'exchange', 'basket', 'spread', 'best_of'."
     )
 
 
