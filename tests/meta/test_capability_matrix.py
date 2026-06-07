@@ -25,7 +25,10 @@ from foureng.core.capabilities import explain_capability
         ("cgmy", "bermudan", "cos_bermudan"),
         ("kou", "bermudan", "cos_bermudan"),
         ("bsm", "european", "monte_carlo"),
-        ("heston", "asian", "monte_carlo"),
+        ("bsm", "american", "monte_carlo"),
+        ("bsm", "bermudan", "monte_carlo"),
+        ("bsm", "asian", "monte_carlo"),
+        ("bsm", "barrier", "monte_carlo"),
         ("bsm", "barrier", "pde_fd"),
         ("bsm", "american", "lattice"),
         ("bsm", "forward_start", "forward_start_bsm"),
@@ -71,6 +74,9 @@ def test_supported_combinations_return_supported(model, product, method):
         ("heston", "exchange", "exchange_bsm"),
         ("heston", "exchange", "multi_asset_mc"),
         ("heston", "spread", "spread_bsm"),
+        ("heston", "asian", "monte_carlo"),
+        ("heston", "american", "monte_carlo"),
+        ("heston", "bermudan", "monte_carlo"),
     ],
 )
 def test_unsupported_combinations_return_not_supported(model, product, method):

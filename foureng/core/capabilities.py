@@ -257,6 +257,34 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
         supports_path_dependent=True,
         notes="BSM Monte Carlo pricer for additive or multiplicative cliquet contracts.",
     ),
+    "monte_carlo": MethodSpec(
+        requires_cf=False,
+        requires_simulation=True,
+        supports_products=frozenset(
+            {
+                "european",
+                "american",
+                "bermudan",
+                "asian",
+                "barrier",
+                "double_barrier",
+                "lookback",
+                "variance_swap",
+                "variance_option",
+                "cliquet",
+                "exchange",
+                "basket",
+                "spread",
+                "best_of",
+            }
+        ),
+        supports_exercise=frozenset({"european", "american", "bermudan"}),
+        supports_path_dependent=True,
+        notes=(
+            "BSM Monte Carlo / Longstaff-Schwartz engine for vanilla and exotic "
+            "products, including American and Bermudan early exercise."
+        ),
+    ),
     "multi_asset_mc": MethodSpec(
         requires_cf=False,
         requires_simulation=True,
@@ -291,33 +319,6 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
         ),
     ),
     # ── Planned methods (not yet implemented) ────────────────────────────
-    "monte_carlo": MethodSpec(
-        requires_cf=False,
-        requires_simulation=True,
-        supports_products=frozenset(
-            {
-                "european",
-                "barrier",
-                "double_barrier",
-                "asian",
-                "lookback",
-                "variance_swap",
-                "variance_option",
-                "cliquet",
-                "exchange",
-                "basket",
-                "spread",
-                "best_of",
-            }
-        ),
-        supports_exercise=frozenset({"european", "american", "bermudan"}),
-        supports_path_dependent=True,
-        notes=(
-            "Path-simulation Monte Carlo. Supports path-dependent payoffs via "
-            "explicit simulation; variance reduction by antithetic variates, "
-            "control variates, and Sobol QMC."
-        ),
-    ),
     "pde_fd": MethodSpec(
         requires_cf=False,
         requires_markov_state=True,
@@ -528,6 +529,7 @@ def _model_restriction(model: str, product: str, method: str) -> str:
         "asian_mc",
         "double_barrier_mc",
         "forward_start_bsm",
+        "monte_carlo",
         "exchange_bsm",
         "spread_bsm",
         "lookback_bsm",

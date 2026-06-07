@@ -562,6 +562,13 @@ def price(
                 f"EuropeanOption, got {type(product).__name__!r}"
             )
         fwd_t = _FwdSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=product.maturity)
+        if method == "monte_carlo":
+            if model != "bsm":
+                raise NotImplementedError(
+                    "method='monte_carlo' is currently implemented only for model='bsm'."
+                )
+            mc_spec = grid if isinstance(grid, MCSpec) else MCSpec()
+            return mc_price(fwd_t, params.sigma, product, mc_spec).price
         results = price_strip(
             model, method, [product.strike], fwd_t, params, grid=grid, cp=product.cp
         )
@@ -613,6 +620,9 @@ def price(
                 "American pricing is currently implemented only for model='bsm'."
             )
         fwd_t = _FwdSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=product.maturity)
+        if method == "monte_carlo":
+            mc_spec = grid if isinstance(grid, MCSpec) else MCSpec()
+            return mc_price(fwd_t, params.sigma, product, mc_spec).price
         if method == "lattice":
             lattice_grid = grid if isinstance(grid, LatticeGrid) else LatticeGrid()
             return bsm_lattice_price(
@@ -634,7 +644,8 @@ def price(
                 grid=pde_grid,
             )
         raise NotImplementedError(
-            "American pricing currently supports method='lattice' or method='pde_fd'."
+            "American pricing currently supports method='lattice', method='pde_fd', "
+            "or method='monte_carlo'."
         )
 
     if pt == "bermudan":
@@ -645,9 +656,23 @@ def price(
                 "price(): product_type='bermudan' must be represented by "
                 f"BermudanOption, got {type(product).__name__!r}"
             )
-        if method != "cos_bermudan":
-            raise NotImplementedError("Bermudan pricing currently supports method='cos_bermudan'.")
-        return cos_bermudan_price(model, fwd, params, product, grid=grid)
+        if method == "cos_bermudan":
+            return cos_bermudan_price(model, fwd, params, product, grid=grid)
+        if method == "monte_carlo":
+            if model != "bsm":
+                raise NotImplementedError(
+                    "method='monte_carlo' is currently implemented only for model='bsm'."
+                )
+            from .models.base import ForwardSpec as _FwdSpec
+
+            mc_spec = (
+                grid if isinstance(grid, MCSpec) else MCSpec(n_steps=len(product.exercise_times))
+            )
+            fwd_t = _FwdSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=product.maturity)
+            return mc_price(fwd_t, params.sigma, product, mc_spec).price
+        raise NotImplementedError(
+            "Bermudan pricing currently supports method='cos_bermudan' or method='monte_carlo'."
+        )
 
     if pt == "barrier":
         from .products.barrier import BarrierOption
@@ -657,10 +682,20 @@ def price(
                 "price(): product_type='barrier' must be represented by "
                 f"BarrierOption, got {type(product).__name__!r}"
             )
+        if method == "monte_carlo":
+            if model != "bsm":
+                raise NotImplementedError(
+                    "method='monte_carlo' is currently implemented only for model='bsm'."
+                )
+            from .models.base import ForwardSpec as _FwdSpec
+
+            mc_spec = grid if isinstance(grid, MCSpec) else MCSpec()
+            fwd_t = _FwdSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=product.maturity)
+            return mc_price(fwd_t, params.sigma, product, mc_spec).price
         if method != "barrier_bsm":
             raise NotImplementedError(
                 "Barrier pricing currently supports method='barrier_bsm' for "
-                "closed-form BSM single-barrier contracts."
+                "closed-form BSM single-barrier contracts or method='monte_carlo'."
             )
         if model != "bsm":
             raise NotImplementedError(
@@ -715,8 +750,13 @@ def price(
             mc_spec = grid if isinstance(grid, MCSpec) else MCSpec()
             fwd_t = _FwdSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=product.maturity)
             return mc_price(fwd_t, params.sigma, product, mc_spec).price
+        if method == "monte_carlo":
+            mc_spec = grid if isinstance(grid, MCSpec) else MCSpec()
+            fwd_t = _FwdSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=product.maturity)
+            return mc_price(fwd_t, params.sigma, product, mc_spec).price
         raise NotImplementedError(
-            "Asian pricing currently supports method='asian_bsm' or method='asian_mc'."
+            "Asian pricing currently supports method='asian_bsm', method='asian_mc', "
+            "or method='monte_carlo'."
         )
 
     if pt == "double_barrier":
@@ -728,13 +768,14 @@ def price(
                 "price(): product_type='double_barrier' must be represented by "
                 f"DoubleBarrierOption, got {type(product).__name__!r}"
             )
-        if method != "double_barrier_mc":
+        if method not in {"double_barrier_mc", "monte_carlo"}:
             raise NotImplementedError(
-                "Double-barrier pricing currently supports method='double_barrier_mc'."
+                "Double-barrier pricing currently supports method='double_barrier_mc' "
+                "or method='monte_carlo'."
             )
         if model != "bsm":
             raise NotImplementedError(
-                "method='double_barrier_mc' is currently implemented only for model='bsm'."
+                f"method={method!r} is currently implemented only for model='bsm'."
             )
         if product.rebate != 0.0:
             raise NotImplementedError("double_barrier_mc currently supports only zero rebates.")
@@ -792,14 +833,15 @@ def price(
                 product.sigma2,
                 product.rho,
             )
-        if method == "multi_asset_mc":
+        if method in {"multi_asset_mc", "monte_carlo"}:
             from .models.base import ForwardSpec as _FwdSpec
 
             mc_spec = grid if isinstance(grid, MCSpec) else MCSpec()
             fwd_t = _FwdSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=product.maturity)
             return mc_price(fwd_t, params.sigma, product, mc_spec).price
         raise NotImplementedError(
-            "Exchange pricing currently supports method='exchange_bsm' or method='multi_asset_mc'."
+            "Exchange pricing currently supports method='exchange_bsm', "
+            "method='multi_asset_mc', or method='monte_carlo'."
         )
 
     if pt == "basket":
@@ -811,11 +853,13 @@ def price(
                 "price(): product_type='basket' must be represented by "
                 f"BasketOption, got {type(product).__name__!r}"
             )
-        if method != "multi_asset_mc":
-            raise NotImplementedError("Basket pricing currently supports method='multi_asset_mc'.")
+        if method not in {"multi_asset_mc", "monte_carlo"}:
+            raise NotImplementedError(
+                "Basket pricing currently supports method='multi_asset_mc' or method='monte_carlo'."
+            )
         if model != "bsm":
             raise NotImplementedError(
-                "method='multi_asset_mc' is currently implemented only for model='bsm'."
+                f"method={method!r} is currently implemented only for model='bsm'."
             )
         mc_spec = grid if isinstance(grid, MCSpec) else MCSpec()
         fwd_t = _FwdSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=product.maturity)
@@ -848,12 +892,13 @@ def price(
                 product.rho,
                 cp=product.cp,
             )
-        if method == "multi_asset_mc":
+        if method in {"multi_asset_mc", "monte_carlo"}:
             mc_spec = grid if isinstance(grid, MCSpec) else MCSpec()
             fwd_t = _FwdSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=product.maturity)
             return mc_price(fwd_t, params.sigma, product, mc_spec).price
         raise NotImplementedError(
-            "Spread pricing currently supports method='spread_bsm' or method='multi_asset_mc'."
+            "Spread pricing currently supports method='spread_bsm', method='multi_asset_mc', "
+            "or method='monte_carlo'."
         )
 
     if pt == "best_of":
@@ -865,11 +910,13 @@ def price(
                 "price(): product_type='best_of' must be represented by "
                 f"BestOfOption, got {type(product).__name__!r}"
             )
-        if method != "multi_asset_mc":
-            raise NotImplementedError("Best-of pricing currently supports method='multi_asset_mc'.")
+        if method not in {"multi_asset_mc", "monte_carlo"}:
+            raise NotImplementedError(
+                "Best-of pricing currently supports method='multi_asset_mc' or method='monte_carlo'."
+            )
         if model != "bsm":
             raise NotImplementedError(
-                "method='multi_asset_mc' is currently implemented only for model='bsm'."
+                f"method={method!r} is currently implemented only for model='bsm'."
             )
         mc_spec = grid if isinstance(grid, MCSpec) else MCSpec()
         fwd_t = _FwdSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=product.maturity)
@@ -907,12 +954,13 @@ def price(
                 sigma=params.sigma,
                 cp=product.cp,
             )
-        if method == "lookback_mc":
+        if method in {"lookback_mc", "monte_carlo"}:
             mc_spec = grid if isinstance(grid, MCSpec) else MCSpec()
             fwd_t = _FwdSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=product.maturity)
             return mc_price(fwd_t, params.sigma, product, mc_spec).price
         raise NotImplementedError(
-            "Lookback pricing currently supports method='lookback_bsm' or method='lookback_mc'."
+            "Lookback pricing currently supports method='lookback_bsm', method='lookback_mc', "
+            "or method='monte_carlo'."
         )
 
     if pt == "variance_swap":
@@ -932,10 +980,10 @@ def price(
         fwd_t = _FwdSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=product.maturity)
         if method == "variance_analytic_bsm":
             return bsm_variance_swap(fwd_t, params, product)
-        if method != "variance_mc":
+        if method not in {"variance_mc", "monte_carlo"}:
             raise NotImplementedError(
                 "Variance-swap pricing currently supports method='variance_analytic_bsm' "
-                "or method='variance_mc'."
+                "or method='variance_mc' / method='monte_carlo'."
             )
         mc_spec = grid if isinstance(grid, MCSpec) else MCSpec(n_steps=len(product.sampling_times))
         return mc_price(fwd_t, params.sigma, product, mc_spec).price
@@ -962,10 +1010,10 @@ def price(
                     "options only."
                 )
             return bsm_variance_option_integrated(fwd_t, params, product)
-        if method != "variance_mc":
+        if method not in {"variance_mc", "monte_carlo"}:
             raise NotImplementedError(
                 "Variance-option pricing currently supports method='variance_analytic_bsm' "
-                "or method='variance_mc'."
+                "or method='variance_mc' / method='monte_carlo'."
             )
         mc_spec = grid if isinstance(grid, MCSpec) else MCSpec(n_steps=len(product.sampling_times))
         return mc_price(fwd_t, params.sigma, product, mc_spec).price
@@ -979,11 +1027,13 @@ def price(
                 "price(): product_type='cliquet' must be represented by "
                 f"CliquetOption, got {type(product).__name__!r}"
             )
-        if method != "cliquet_mc":
-            raise NotImplementedError("Cliquet pricing currently supports method='cliquet_mc'.")
+        if method not in {"cliquet_mc", "monte_carlo"}:
+            raise NotImplementedError(
+                "Cliquet pricing currently supports method='cliquet_mc' or method='monte_carlo'."
+            )
         if model != "bsm":
             raise NotImplementedError(
-                "method='cliquet_mc' is currently implemented only for model='bsm'."
+                f"method={method!r} is currently implemented only for model='bsm'."
             )
         mc_spec = grid if isinstance(grid, MCSpec) else MCSpec(n_steps=len(product.reset_times))
         fwd_t = _FwdSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=product.maturity)
@@ -992,23 +1042,23 @@ def price(
     # For future products, provide a capability hint instead of a bare NotImplementedError.
     _HINTS: dict[str, str] = {
         "digital": "Use method='cos_digital' or method='digital_bsm' for BSM closed form.",
-        "barrier": "Use barrier_bsm for continuous zero-rebate BSM barriers.",
-        "asian": "Use asian_bsm for geometric Asians or asian_mc for BSM Monte Carlo.",
-        "bermudan": "Use cos_bermudan for supported 1-D Levy models.",
-        "american": "Use american_lattice / american_pde (Phase 4.4).",
-        "lookback": "Use lookback_bsm for continuous floating lookbacks or lookback_mc for BSM Monte Carlo.",
+        "barrier": "Use barrier_bsm or monte_carlo for BSM barriers.",
+        "asian": "Use asian_bsm for geometric Asians or asian_mc / monte_carlo for BSM Monte Carlo.",
+        "bermudan": "Use cos_bermudan for supported 1-D Levy models or monte_carlo (BSM).",
+        "american": "Use lattice, pde_fd, or monte_carlo (Longstaff-Schwartz) for BSM Americans.",
+        "lookback": "Use lookback_bsm for continuous floating lookbacks or lookback_mc / monte_carlo for BSM Monte Carlo.",
         "forward_start": "Use forward_start_bsm for BSM forward-start options.",
-        "variance_swap": "Use variance_analytic_bsm or variance_mc for BSM variance swaps.",
+        "variance_swap": "Use variance_analytic_bsm or variance_mc / monte_carlo for BSM variance swaps.",
         "variance_option": (
             "Use variance_analytic_bsm for integrated-variance options or "
-            "variance_mc for realised/integrated variance options."
+            "variance_mc / monte_carlo for realised/integrated variance options."
         ),
-        "cliquet": "Use cliquet_mc for BSM Monte Carlo cliquets.",
-        "exchange": "Use exchange_bsm for the two-asset Margrabe closed form.",
-        "basket": "Use multi_asset_mc for correlated multi-asset Monte Carlo.",
-        "spread": "Use spread_bsm for Kirk's approximation or multi_asset_mc for Monte Carlo.",
-        "best_of": "Use multi_asset_mc for correlated multi-asset Monte Carlo.",
-        "double_barrier": "Use double_barrier_mc for BSM Monte Carlo double barriers.",
+        "cliquet": "Use cliquet_mc or monte_carlo for BSM Monte Carlo cliquets.",
+        "exchange": "Use exchange_bsm for the two-asset Margrabe closed form or monte_carlo.",
+        "basket": "Use multi_asset_mc or monte_carlo for correlated multi-asset Monte Carlo.",
+        "spread": "Use spread_bsm for Kirk's approximation or multi_asset_mc / monte_carlo for Monte Carlo.",
+        "best_of": "Use multi_asset_mc or monte_carlo for correlated multi-asset Monte Carlo.",
+        "double_barrier": "Use double_barrier_mc or monte_carlo for BSM Monte Carlo double barriers.",
     }
     hint = _HINTS.get(pt, f"No pricer is registered for product_type={pt!r}.")
     raise NotImplementedError(f"price(): product_type={pt!r} is not yet implemented.\n{hint}")

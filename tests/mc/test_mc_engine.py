@@ -13,7 +13,6 @@ Structural (non-statistical) tests:
 from __future__ import annotations
 
 import numpy as np
-import pytest
 from pytest import approx
 
 import foureng as fe
@@ -26,6 +25,7 @@ from foureng.mc.payoffs import (
     barrier_payoff,
     european_payoff,
 )
+from foureng.products.american import AmericanOption
 from foureng.products.asian import AsianOption
 from foureng.products.barrier import BarrierOption
 from foureng.products.bermudan import BermudanOption
@@ -184,10 +184,20 @@ def test_mc_deterministic():
 # ── Error handling ─────────────────────────────────────────────────────────
 
 
-def test_mc_bermudan_raises():
+def test_mc_bermudan_put_is_above_european():
     prod = BermudanOption(strike=100.0, maturity=1.0, cp=-1, exercise_times=np.array([0.5, 1.0]))
-    with pytest.raises(NotImplementedError, match="LSMC"):
-        mc_price(_FWD, _SIGMA, prod, _MC)
+    eur = EuropeanOption(strike=100.0, maturity=1.0, cp=-1)
+    res_berm = mc_price(_FWD, _SIGMA, prod, _MC)
+    res_eur = mc_price(_FWD, _SIGMA, eur, _MC)
+    assert res_berm.price >= res_eur.price - 3 * (res_berm.stderr + res_eur.stderr)
+
+
+def test_mc_american_put_is_above_european():
+    prod = AmericanOption(strike=100.0, maturity=1.0, cp=-1)
+    eur = EuropeanOption(strike=100.0, maturity=1.0, cp=-1)
+    res_am = mc_price(_FWD, _SIGMA, prod, _MC)
+    res_eur = mc_price(_FWD, _SIGMA, eur, _MC)
+    assert res_am.price >= res_eur.price - 3 * (res_am.stderr + res_eur.stderr)
 
 
 def test_mc_lookback_floating_call_exceeds_vanilla_call():
