@@ -111,7 +111,12 @@ from .pricers.lattice import LatticeGrid, bsm_lattice_price, bsm_lattice_price_a
 from .pricers.lewis import lewis_call_prices, lewis_prices
 from .pricers.mellin import mellin_price_at_strikes
 from .pricers.pde_fd import PDEGrid, bsm_pde_fd_price, bsm_pde_fd_price_at_strikes
-from .pricers.proj import proj_european_price_at_strikes
+from .pricers.proj import (
+    proj_auto_grid,
+    proj_bermudan_put,
+    proj_european_price_at_strikes,
+    proj_price_at_strikes,
+)
 from .pricers.sabr import sabr_hagan_price_at_strikes
 from .surface import (
     CalibrationResult,
@@ -124,7 +129,7 @@ from .surface import (
     model_iv_surface,
     model_price_surface,
 )
-from .utils.grids import CONVGrid, COSGrid, COSGridPolicy, FFTGrid, FRFTGrid
+from .utils.grids import CONVGrid, COSGrid, COSGridPolicy, FFTGrid, FRFTGrid, ProjGrid
 from .utils.spectral_filters import COSFilterSpec, cos_filter_weights
 
 __all__ = [
@@ -229,6 +234,10 @@ __all__ = [
     "lewis_prices",
     "mellin_price_at_strikes",
     "proj_european_price_at_strikes",
+    "proj_price_at_strikes",
+    "proj_auto_grid",
+    "proj_bermudan_put",
+    "ProjGrid",
     "sabr_hagan_price_at_strikes",
     "bsm_lattice_price",
     "bsm_lattice_price_at_strikes",

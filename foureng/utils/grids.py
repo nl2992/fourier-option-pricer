@@ -108,6 +108,39 @@ class CONVGrid:
 
 
 @dataclass(frozen=True)
+class ProjGrid:
+    """Grid for the PROJ (frame-projection) pricer of Kirkby (2015, 2017).
+
+    PROJ expands the risk-neutral density on a uniform grid of shifted
+    B-spline generators of a given ``order`` and recovers the coefficients
+    from the characteristic function via a single FFT.
+
+    Parameters
+    ----------
+    N : int
+        Number of grid / basis points. Power of two (e.g. ``2**12``) so the
+        FFT is efficient. Effective spatial resolution is ``2*alph/(N-1)``.
+    alph : float
+        Half-width of the log-return grid; the grid spans ``[-alph, alph]``
+        around the (cumulant-centered) mean. Choose ``alph`` large enough to
+        cover the tails — a few times ``sqrt(c2)`` plus skew/kurtosis slack.
+    order : int
+        B-spline order: ``0`` Haar, ``1`` linear, ``2`` quadratic, ``3`` cubic.
+        Cubic (the default) gives the highest convergence order and is the
+        standard PROJ choice.
+    """
+
+    N: int = 1 << 12
+    alph: float = 0.5
+    order: int = 3
+
+    @property
+    def dx(self) -> float:
+        """Grid spacing ``2*alph/(N-1)``."""
+        return 2.0 * self.alph / (self.N - 1)
+
+
+@dataclass(frozen=True)
 class COSGrid:
     """COS truncation interval [a,b] and number of cosine terms N.
 

@@ -313,9 +313,11 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
         supports_exercise=frozenset({"european"}),
         supports_path_dependent=False,
         notes=(
-            "PROJ / Frame Projection (Kirkby). First slice exposes European vanilla "
-            "dispatch as a COS-backed projection baseline; exotic B-spline recursions "
-            "are planned."
+            "PROJ / Frame Projection (Kirkby 2015, 2017). Real B-spline frame "
+            "projection (Haar/linear/quadratic/cubic) for European vanilla "
+            "calls/puts on CF-equipped Lévy models, validated against COS to "
+            "~1e-7. A Bermudan-put recursion (proj_bermudan_put) is available "
+            "directly; further path-dependent exotics are planned."
         ),
     ),
     # ── Planned methods (not yet implemented) ────────────────────────────

@@ -22,7 +22,7 @@ flowchart LR
         api["Public API<br/>import foureng as fe<br/>price_strip(...)"]
         dispatch["Dispatch + registry<br/>pipeline.py<br/>models/registry.py"]
         models["Model layer<br/>in-house CFs + PyFENG adapters"]
-        engines["Pricing stack<br/>COS / FFT / FRFT / Lewis / filters"]
+        engines["Pricing stack<br/>COS / FFT / FRFT / Lewis / CONV / PROJ / filters"]
         features["Higher-level modules<br/>iv / greeks / surface / mc"]
     end
 

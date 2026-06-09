@@ -131,7 +131,10 @@ from foureng.pipeline import price, price_strip
 | `bsm_lookback_floating(S, S_min, S_max, r, q, T, sigma, cp=...)` | BSM floating-lookback inputs | Closed-form continuous floating-strike lookback price. |
 | `bsm_variance_swap(fwd, params, product)` | `ForwardSpec`, `BsmParams`, `VarianceSwap` | Exact BSM expectation of the repo's realised-variance swap payoff. |
 | `bsm_variance_option_integrated(fwd, params, product)` | `ForwardSpec`, `BsmParams`, `VarianceOption` | Deterministic integrated-variance option price under constant-vol BSM. |
-| `proj_european_price_at_strikes(phi, fwd, cumulants, strikes, cp=...)` | CF, market inputs, cumulants, strikes | First-slice European PROJ façade using COS projection coefficients. |
+| `proj_european_price_at_strikes(phi, fwd, cumulants, strikes, cp=..., N=..., L=...)` | CF, market inputs, cumulants, strikes | European PROJ price via the real B-spline frame-projection engine on a cumulant-driven auto grid (dispatcher entry point). |
+| `proj_price_at_strikes(phi, fwd, grid, strikes, cp=..., c1=...)` | CF, market inputs, `ProjGrid`, strikes | European PROJ frame-projection price (Kirkby 2015/2017) for any CF-equipped Lévy model; explicit grid control. |
+| `proj_auto_grid(cumulants, N=..., L=..., order=...)` | cumulants | Build a `ProjGrid` (half-width `alph = L·√(c2+√\|c4\|)`) from forward cumulants. |
+| `proj_bermudan_put(step_cf, S0, r, T, W, M, N=..., alph=...)` | one-step CF, market/contract inputs | Bermudan-put price via the PROJ Toeplitz-FFT backward recursion (Kirkby `PROJ_Bermudan_Put.m`). |
 | `mellin_price_at_strikes(phi, fwd, strikes, cp=...)` | CF, market inputs, strikes | First-slice European Mellin façade for selected Lévy models. |
 | `sabr_hagan_price_at_strikes(fwd, params, strikes, cp=...)` | `ForwardSpec`, `SabrParams`, strikes | Hagan SABR implied-vol prices. |
 | `price_strip(model, method, strikes, fwd, params, grid=None, ...)` | model label, method label, strike array, market inputs, params | Unified dispatcher  -  returns NumPy array of call prices. |
@@ -148,7 +151,7 @@ from foureng.pipeline import price, price_strip
 | `"conv"` | CONV-style Fourier probability inversion |
 | `"cos_bermudan"` | COS Bermudan backward induction for supported 1-D Levy models |
 | `"mellin"` | First-slice Mellin European façade for VG, NIG, FMLS, bilateral gamma |
-| `"proj"` | First-slice European PROJ façade using COS projection coefficients |
+| `"proj"` | Real PROJ B-spline frame projection (European) for CF-equipped Lévy models |
 | `"cos_filtered"` | COS with spectral damping (Fejér, Lanczos, raised-cosine, or exponential filter) |
 | `"pyfeng_fft"` | PyFENG-backed Lewis-style FFT path (PyFENG-backed models only) |
 | `"cos_digital"` | COS digital pricing through `price()` for `DigitalOption` |
