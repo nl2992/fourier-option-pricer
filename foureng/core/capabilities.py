@@ -309,15 +309,16 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
     ),
     "proj": MethodSpec(
         requires_cf=True,
-        supports_products=frozenset({"european"}),
-        supports_exercise=frozenset({"european"}),
+        supports_products=frozenset({"european", "bermudan"}),
+        supports_exercise=frozenset({"european", "bermudan"}),
         supports_path_dependent=False,
         notes=(
             "PROJ / Frame Projection (Kirkby 2015, 2017). Real B-spline frame "
             "projection (Haar/linear/quadratic/cubic) for European vanilla "
             "calls/puts on CF-equipped Lévy models, validated against COS to "
-            "~1e-7. A Bermudan-put recursion (proj_bermudan_put) is available "
-            "directly; further path-dependent exotics are planned."
+            "~1e-7. Bermudan puts on a uniform monitoring grid are priced via "
+            "the PROJ Toeplitz-FFT recursion (proj_bermudan_put) for the same "
+            "1-D Lévy family; further path-dependent exotics are planned."
         ),
     ),
     # ── Planned methods (not yet implemented) ────────────────────────────
