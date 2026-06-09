@@ -57,7 +57,7 @@ This file tracks the capability surface used by the registry and dispatcher test
 | `variance_analytic_bsm` | BSM analytic variance products | Exact realised-variance expectation / deterministic integrated variance |
 | `variance_mc` | BSM Monte Carlo variance products | GBM path simulation |
 | `cliquet_mc` | BSM Monte Carlo cliquet | GBM path simulation |
-| `proj` | First-slice European PROJ façade | COS-backed projection baseline |
+| `proj` | Real PROJ frame projection (European) | B-spline (Haar/linear/quad/cubic) frame duality, Kirkby 2015/2017 |
 | `mellin` | First-slice European Mellin façade | Mellin-transform expansion target |
 | `sabr_hagan` | SABR Hagan approximation | Hagan et al. |
 
@@ -91,5 +91,5 @@ Public exports include the multi-asset analytic helper `kirk_spread` alongside t
 
 ## Notes
 
-- `proj` remains a European first slice, not the full exotic PROJ recursion family.
+- `proj` is now a real B-spline frame-projection engine for European vanillas (validated against COS to ~1e-7), with a standalone Bermudan-put recursion (`proj_bermudan_put`) cross-validated against `cos_bermudan`. The broader exotic PROJ recursion family (barrier, Asian, lookback, step, cliquet) is still planned — see [proj_parity_roadmap.md](proj_parity_roadmap.md).
 - `mellin` remains a validated European façade rather than the full model-specific contour implementation set.
