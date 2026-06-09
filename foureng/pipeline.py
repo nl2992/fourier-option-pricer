@@ -5,9 +5,6 @@ The main entry points are:
 * :func:`price_strip` — price a vector of strikes for a European option.
 * :func:`price` — price a single :class:`~foureng.products.ProductSpec` object.
 
-The internal phase helpers (phase2_carr_madan, phase3_frft, phase4_cos) are thin
-wrappers used by the demo notebooks; end users will rarely call them directly.
-
 The improved COS path (``method="cos_improved"``) builds the truncation interval
 and cosine-term count adaptively from model cumulants, then routes wide-interval
 cases to Lewis or Carr-Madan rather than forcing COS into an unfavorable geometry.
@@ -15,7 +12,6 @@ cases to Lewis or Carr-Madan rather than forcing COS into an unfavorable geometr
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Any
 
 import numpy as np
@@ -29,7 +25,7 @@ from .analytics.bsm_exotics import (
     margrabe_exchange,
 )
 from .mc.engine import MCSpec, mc_price
-from .models.base import CharFunc, ForwardSpec
+from .models.base import ForwardSpec
 from .models.registry import MODEL_REGISTRY
 from .pricers.carr_madan import carr_madan_price_at_strikes
 from .pricers.conv import conv_price_at_strikes
@@ -46,36 +42,10 @@ from .pricers.lattice import LatticeGrid, bsm_lattice_price, bsm_lattice_price_a
 from .pricers.lewis import lewis_call_prices
 from .pricers.mellin import MELLIN_SUPPORTED_MODELS, mellin_price_at_strikes
 from .pricers.pde_fd import PDEGrid, bsm_pde_fd_price, bsm_pde_fd_price_at_strikes
-from .pricers.proj import proj_european_price_at_strikes
+from .pricers.proj import proj_auto_grid, proj_bermudan_put, proj_european_price_at_strikes
 from .pricers.sabr import sabr_hagan_price_at_strikes
-from .utils.grids import CONVGrid, COSGrid, COSGridPolicy, FFTGrid, FRFTGrid
+from .utils.grids import CONVGrid, COSGrid, COSGridPolicy, FFTGrid
 from .utils.spectral_filters import COSFilterSpec
-
-
-@dataclass(frozen=True)
-class PhaseOutputs:
-    strikes: np.ndarray
-    prices: np.ndarray
-
-
-def phase2_carr_madan(
-    phi: CharFunc, fwd: ForwardSpec, strikes: np.ndarray, grid: FFTGrid
-) -> PhaseOutputs:
-    prices = carr_madan_price_at_strikes(phi, fwd, grid, strikes)
-    return PhaseOutputs(strikes=np.asarray(strikes, float), prices=prices)
-
-
-def phase3_frft(
-    phi: CharFunc, fwd: ForwardSpec, strikes: np.ndarray, grid: FRFTGrid
-) -> PhaseOutputs:
-    prices = frft_price_at_strikes(phi, fwd, grid, strikes)
-    return PhaseOutputs(strikes=np.asarray(strikes, float), prices=prices)
-
-
-def phase4_cos(phi: CharFunc, fwd: ForwardSpec, strikes: np.ndarray, grid: COSGrid) -> PhaseOutputs:
-    res = cos_prices(phi, fwd, strikes, grid)
-    return PhaseOutputs(strikes=res.strikes, prices=res.call_prices)
-
 
 # ---------------------------------------------------------------------------
 # Unified strip pricing  -  one call that the notebook / scoreboard goes
@@ -214,32 +184,34 @@ def price_strip(
     Parameters
     ----------
     model :
-        One of the supported model keys: ``"bsm"``, ``"heston"``, ``"ousv"``,
-        ``"vg"``, ``"cgmy"``, ``"nig"``, ``"kou"``, ``"bates"``,
-        ``"heston_kou"``, ``"heston_cgmy"``, ``"sv32"``.
+        Any key in :data:`~foureng.models.registry.MODEL_REGISTRY` (e.g.
+        ``"bsm"``, ``"heston"``, ``"vg"``, ``"cgmy"``, ``"nig"``, ``"kou"`` …),
+        or ``"sabr"`` when ``method="sabr_hagan"``.
     method :
-        * ``"cos"``  -  in-house COS (Fang-Oosterlee 2008),
-        * ``"cos_improved"``  -  adaptive COS policy with centered intervals,
-          coupled N/L selection, and wide-interval fallback,
-        * ``"frft"``  -  in-house FRFT (Chourdakis 2004),
-        * ``"carr_madan"``  -  in-house Carr-Madan FFT (1999),
-        * ``"pyfeng_fft"``  -  PyFENG's own native FFT pricer. Available for:
-          BSM, Heston, OUSV, VG, CGMY, NIG, 3/2 SV (``sv32``), Rough Heston.
-          Not available for Kou, Bates, Heston-Kou, Heston-CGMY, GARCH,
-          Merton JD, Meixner, Bilateral Gamma, GH, or FMLS.
+        Characteristic-function engines:
+        ``"cos"`` / ``"cos_improved"`` / ``"cos_filtered"`` (Fang-Oosterlee 2008
+        and the adaptive/filtered extensions), ``"carr_madan"`` (FFT, 1999),
+        ``"frft"`` (Chourdakis 2004), ``"conv"`` (Fourier inversion),
+        ``"mellin"`` (Mellin transform, selected Lévy models), ``"proj"`` (PROJ
+        frame projection, Kirkby 2015/2017), and ``"pyfeng_fft"`` (PyFENG native
+        FFT for BSM/Heston/OUSV/VG/CGMY/NIG/3-2 SV/Rough Heston).
+        Non-CF baselines: ``"lattice"`` and ``"pde_fd"`` (BSM only),
+        ``"sabr_hagan"`` (``model="sabr"``).
     strikes :
         1-D iterable of strikes.
     fwd, params :
         Forward spec and model-specific parameter dataclass.
     grid :
-        Grid object appropriate to ``method``  -  :class:`FFTGrid` for
-        ``"carr_madan"``, :class:`FRFTGrid` for ``"frft"``,
-        :class:`COSGrid` for ``"cos"``. ``method='cos_improved'`` also accepts
-        :class:`COSGridPolicy`. If ``None`` and ``method='cos'``, an auto grid
-        is built from the model cumulants with :func:`cos_auto_grid`.
+        Grid object appropriate to ``method`` — :class:`FFTGrid` for
+        ``"carr_madan"``, :class:`FRFTGrid` for ``"frft"``, :class:`CONVGrid`
+        for ``"conv"``, :class:`COSGrid` for ``"cos"`` (with
+        :class:`COSGridPolicy` also accepted by ``"cos_improved"`` /
+        ``"cos_filtered"``), :class:`LatticeGrid` / :class:`PDEGrid` for the
+        BSM baselines. If ``None``, a sensible engine-specific grid is built
+        (e.g. ``cos_auto_grid`` / ``proj_auto_grid`` from the model cumulants).
     cp :
-        ``+1`` calls, ``-1`` puts (consulted only by ``pyfeng_fft``; the
-        in-house pricers return calls and the caller applies parity).
+        ``+1`` calls, ``-1`` puts. The CF engines return calls and apply
+        put-call parity internally where needed.
 
     Returns
     -------
@@ -505,6 +477,62 @@ def price_strip(
 # ---------------------------------------------------------------------------
 
 
+def _proj_bermudan_put_price(model: str, fwd: ForwardSpec, params, product) -> float:
+    """PROJ Bermudan **put** for 1-D Lévy models on a uniform monitoring grid.
+
+    Builds the one-step risk-neutral CF from the model registry and drives the
+    PROJ Toeplitz-FFT recursion (:func:`~foureng.pricers.proj.proj_bermudan_put`).
+    Supports the same 1-D Lévy family as ``cos_bermudan``; calls and arbitrary
+    (non-uniform) exercise schedules are deferred to ``method='cos_bermudan'``.
+    """
+    from .pricers.cos_bermudan import _SUPPORTED_MODELS
+
+    if product.cp != -1:
+        raise NotImplementedError(
+            "method='proj' for Bermudans currently supports puts (cp=-1); "
+            "use method='cos_bermudan' for calls."
+        )
+    if model not in _SUPPORTED_MODELS:
+        raise NotImplementedError(
+            f"method='proj' Bermudan supports 1-D Lévy models {sorted(_SUPPORTED_MODELS)}; "
+            f"got model={model!r}. Use method='cos_bermudan' or method='monte_carlo'."
+        )
+
+    T = float(product.maturity)
+    ex = np.sort(np.asarray(product.exercise_times, dtype=float))
+    M = ex.size
+    # PROJ assumes a uniform monitoring grid t = dt, 2dt, ..., M*dt = T.
+    expected = np.arange(1, M + 1) * (T / M)
+    if not np.allclose(ex, expected, rtol=1e-6, atol=1e-9):
+        raise NotImplementedError(
+            "method='proj' Bermudan requires a uniform monitoring schedule "
+            "(t = dt, 2dt, ..., T); use method='cos_bermudan' for arbitrary dates."
+        )
+
+    dt = T / M
+    cf = MODEL_REGISTRY[model].cf
+    fwd_dt = ForwardSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=dt)
+    drift = (fwd.r - fwd.q) * dt
+
+    def step_cf(u):
+        return np.exp(1j * u * drift) * np.asarray(cf(u, fwd_dt, params), dtype=np.complex128)
+
+    fwd_T = ForwardSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=T)
+    grid = proj_auto_grid(MODEL_REGISTRY[model].cumulants(fwd_T, params), N=1 << 14)
+    return float(
+        proj_bermudan_put(
+            step_cf,
+            S0=fwd.S0,
+            r=fwd.r,
+            T=T,
+            W=float(product.strike),
+            M=M,
+            N=grid.N,
+            alph=grid.alph,
+        )
+    )
+
+
 def price(
     product,
     model: str,
@@ -658,6 +686,8 @@ def price(
             )
         if method == "cos_bermudan":
             return cos_bermudan_price(model, fwd, params, product, grid=grid)
+        if method == "proj":
+            return _proj_bermudan_put_price(model, fwd, params, product)
         if method == "monte_carlo":
             if model != "bsm":
                 raise NotImplementedError(
@@ -671,7 +701,8 @@ def price(
             fwd_t = _FwdSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=product.maturity)
             return mc_price(fwd_t, params.sigma, product, mc_spec).price
         raise NotImplementedError(
-            "Bermudan pricing currently supports method='cos_bermudan' or method='monte_carlo'."
+            "Bermudan pricing currently supports method='cos_bermudan', method='proj' "
+            "(1-D Lévy puts), or method='monte_carlo'."
         )
 
     if pt == "barrier":
@@ -1039,26 +1070,8 @@ def price(
         fwd_t = _FwdSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=product.maturity)
         return mc_price(fwd_t, params.sigma, product, mc_spec).price
 
-    # For future products, provide a capability hint instead of a bare NotImplementedError.
-    _HINTS: dict[str, str] = {
-        "digital": "Use method='cos_digital' or method='digital_bsm' for BSM closed form.",
-        "barrier": "Use barrier_bsm or monte_carlo for BSM barriers.",
-        "asian": "Use asian_bsm for geometric Asians or asian_mc / monte_carlo for BSM Monte Carlo.",
-        "bermudan": "Use cos_bermudan for supported 1-D Levy models or monte_carlo (BSM).",
-        "american": "Use lattice, pde_fd, or monte_carlo (Longstaff-Schwartz) for BSM Americans.",
-        "lookback": "Use lookback_bsm for continuous floating lookbacks or lookback_mc / monte_carlo for BSM Monte Carlo.",
-        "forward_start": "Use forward_start_bsm for BSM forward-start options.",
-        "variance_swap": "Use variance_analytic_bsm or variance_mc / monte_carlo for BSM variance swaps.",
-        "variance_option": (
-            "Use variance_analytic_bsm for integrated-variance options or "
-            "variance_mc / monte_carlo for realised/integrated variance options."
-        ),
-        "cliquet": "Use cliquet_mc or monte_carlo for BSM Monte Carlo cliquets.",
-        "exchange": "Use exchange_bsm for the two-asset Margrabe closed form or monte_carlo.",
-        "basket": "Use multi_asset_mc or monte_carlo for correlated multi-asset Monte Carlo.",
-        "spread": "Use spread_bsm for Kirk's approximation or multi_asset_mc / monte_carlo for Monte Carlo.",
-        "best_of": "Use multi_asset_mc or monte_carlo for correlated multi-asset Monte Carlo.",
-        "double_barrier": "Use double_barrier_mc or monte_carlo for BSM Monte Carlo double barriers.",
-    }
-    hint = _HINTS.get(pt, f"No pricer is registered for product_type={pt!r}.")
-    raise NotImplementedError(f"price(): product_type={pt!r} is not yet implemented.\n{hint}")
+    # Every supported product_type is handled by an explicit branch above; reaching
+    # here means the product_type is unknown / not yet routed.
+    raise NotImplementedError(
+        f"price(): product_type={pt!r} is not recognized or has no registered pricer."
+    )

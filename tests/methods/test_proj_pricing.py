@@ -160,3 +160,44 @@ def test_proj_bermudan_dominates_european():
     )
     euro = price_strip("bsm", "proj", np.array([W]), fwd, params, cp=-1)[0]
     assert berm >= euro - 1e-6
+
+
+@pytest.mark.parametrize(
+    "model,params,tol",
+    [
+        ("bsm", fe.BsmParams(sigma=0.2), 1e-3),
+        ("vg", fe.VGParams(sigma=0.12, nu=0.2, theta=-0.14), 3e-3),
+        ("kou", fe.KouParams(sigma=0.15, lam=1.0, p=0.4, eta1=10.0, eta2=5.0), 2e-3),
+    ],
+)
+def test_price_proj_bermudan_dispatch_matches_cos(model, params, tol):
+    """The product-level price(..., method='proj') Bermudan route matches cos_bermudan."""
+    from foureng.pricers.cos_bermudan import cos_bermudan_price
+    from foureng.products.bermudan import BermudanOption
+
+    fwd = ForwardSpec(S0=100.0, r=0.05, q=0.0, T=1.0)
+    M = 50
+    ex = np.arange(1, M + 1) * (1.0 / M)
+    prod = BermudanOption(strike=100.0, maturity=1.0, cp=-1, exercise_times=ex)
+
+    proj = fe.price(prod, model, "proj", fwd, params)
+    cos = cos_bermudan_price(model, fwd, params, prod)
+    assert abs(proj - cos) < tol
+
+
+def test_price_proj_bermudan_guards():
+    """PROJ Bermudan dispatch rejects calls, non-Lévy models, and non-uniform grids."""
+    from foureng.products.bermudan import BermudanOption
+
+    fwd = ForwardSpec(S0=100.0, r=0.05, q=0.0, T=1.0)
+    M = 20
+    ex = np.arange(1, M + 1) * (1.0 / M)
+    bsm = fe.BsmParams(sigma=0.2)
+
+    with pytest.raises(NotImplementedError):  # calls not supported
+        fe.price(BermudanOption(100.0, 1.0, 1, ex), "bsm", "proj", fwd, bsm)
+    with pytest.raises(NotImplementedError):  # non-Lévy model
+        heston = fe.HestonParams(kappa=2.0, theta=0.04, nu=0.3, rho=-0.6, v0=0.04)
+        fe.price(BermudanOption(100.0, 1.0, -1, ex), "heston", "proj", fwd, heston)
+    with pytest.raises(NotImplementedError):  # non-uniform schedule
+        fe.price(BermudanOption(100.0, 1.0, -1, np.array([0.3, 0.5, 1.0])), "bsm", "proj", fwd, bsm)
