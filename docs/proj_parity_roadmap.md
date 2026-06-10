@@ -20,13 +20,13 @@ near-Fourier speed, plus a **CTMC** engine for SV/SLV exotics. We are pursuing
 
 ## Phases
 
-- **Phase 1 — PROJ European core.** ✅ **DONE.**
+- **Phase 1: PROJ European core.** ✅ **DONE.**
   `foureng/pricers/proj.py` ports Kirkby's `PROJ_European.m` (Haar / linear /
   quadratic / cubic B-spline orders). `proj_auto_grid` sizes the half-width from
   cumulants. Wired as `method="proj"` in `price_strip`. Validated against COS to
   ~1e-7 across BSM/VG/CGMY/Kou/Merton-JD/NIG, calls+puts, T∈{0.5,1,2}; parity to
   machine precision. Tests: `tests/methods/test_proj_pricing.py` (29 cases).
-- **Phase 2 — PROJ exotics (1-D Lévy).** *In progress.*
+- **Phase 2: PROJ exotics (1-D Lévy).** *In progress.*
   - **Bermudan put** ✅ **DONE.** `proj_bermudan_put` in `foureng/pricers/proj.py`
     ports `PROJ_Bermudan_Put.m` (Toeplitz-FFT backward recursion, linear-spline
     projection, Gaussian-quadrature early-exercise stencils). Cross-validated vs
@@ -35,14 +35,14 @@ near-Fourier speed, plus a **CTMC** engine for SV/SLV exotics. We are pursuing
   - **TODO:** Bermudan/American call (or general cp), single/double barrier,
     arithmetic Asian, lookback, step, cliquet. Port from `PROJ/LEVY/*_Options`.
     Then wire Bermudan into the product-level `price()` dispatcher.
-- **Phase 3 — CTMC.** `foureng/pricers/ctmc.py`: generator + matrix-exponential
+- **Phase 3: CTMC.** `foureng/pricers/ctmc.py`: generator + matrix-exponential
   pricer for 1-D diffusion European/barrier/Bermudan; then 2-D SV/SLV (Heston,
   SABR) for barrier + Bermudan.
-- **Phase 4 — New models.** 4/2 SV, SABR, regime-switching; finish wiring the
+- **Phase 4: New models.** 4/2 SV, SABR, regime-switching; finish wiring the
   already-present `models/nts.py` and `models/stein_stein.py`.
-- **Phase 5 — Remaining Fourier pricers.** Hilbert-transform (barrier-friendly),
+- **Phase 5: Remaining Fourier pricers.** Hilbert-transform (barrier-friendly),
   Mellin-transform.
-- **Phase 6 — Long-tail exotics.** Parisian, swing, fader/range-accrual,
+- **Phase 6: Long-tail exotics.** Parisian, swing, fader/range-accrual,
   variance/vol swap via PROJ, CDS.
 
 ## Cross-cutting

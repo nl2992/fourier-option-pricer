@@ -22,7 +22,7 @@ where $c_1, c_2, c_4$ are the model's cumulants and $L$ is a heuristic multiplie
 
 This project implements the **improved COS truncation** of Junike & Pankrashkin (2022) and Junike (2024), which replaces the heuristic $L$ with a rigorous tail-mass bound. On the FO2008 test suite, this truncation improvement beats the paper-grid COS in 7 of 8 cases and beats the paper's own best-N result in 6 of 8 (see [`benchmarks/cos_method_improved/`](benchmarks/cos_method_improved/outputs/cos_method_improved_paper_compare.csv)). On top of that, we add an **original adaptive filtered-COS extension**: spectral weights $\sigma_k \in [0, 1]$ (Fejér, Lanczos, raised-cosine, or exponential) applied to the high-frequency COS coefficients to suppress residual oscillation from sharp density features. A policy-search selector automatically compares grid and filter combinations, returning the fastest configuration that meets the user's tolerance, with the plain Junike path always included as a fallback.
 
-The package covers **20 characteristic-function models** across stochastic-volatility, jump-diffusion, pure-Lévy, rough-volatility, and hybrid SVJ families, plus a SABR approximation surface. They are priced through one `price_strip` dispatcher with COS/FFT/FRFT/CONV, a first-slice Mellin façade, a real **PROJ frame-projection engine** (Kirkby 2015/2017 — European vanilla plus a Bermudan-put recursion), BSM finite-difference/lattice baselines, and product-level exotic routes.
+The package covers **20 characteristic-function models** across stochastic-volatility, jump-diffusion, pure-Lévy, rough-volatility, and hybrid SVJ families, plus a SABR approximation surface. They are priced through one `price_strip` dispatcher with COS/FFT/FRFT/CONV, a first-slice Mellin façade, a real **PROJ frame-projection engine** (Kirkby 2015/2017, European vanilla plus a Bermudan-put recursion), BSM finite-difference/lattice baselines, and product-level exotic routes.
 
 Full methodology: [appendix.md](appendix.md) · Extension details: [docs/filtered_cos_extension.md](docs/filtered_cos_extension.md) · Package architecture: [docs/architecture_overview.md](docs/architecture_overview.md).
 
@@ -34,14 +34,14 @@ Choose the path that fits your goal:
 
 | Goal | Recommended path |
 |------|-----------------|
-| Run notebooks, reproduce results, contribute | **Option A** — fork + venv or conda |
-| Quick experiment without keeping a copy | **Option B** — direct clone + venv or conda |
-| Browser-only, no local install | **Option C** — Google Colab |
-| Import `foureng` in your own project | **Option D** — PyPI |
+| Run notebooks, reproduce results, contribute | **Option A** (fork + venv or conda) |
+| Quick experiment without keeping a copy | **Option B** (direct clone + venv or conda) |
+| Browser-only, no local install | **Option C** (Google Colab) |
+| Import `foureng` in your own project | **Option D** (PyPI) |
 
 ---
 
-### Option A — fork and run everything (recommended)
+### Option A: fork and run everything (recommended)
 
 Forking gives you your own copy on GitHub so you can save changes and push them back.
 
@@ -54,7 +54,7 @@ git clone https://github.com/YOUR-USERNAME/fourier-option-pricer.git
 cd fourier-option-pricer
 ```
 
-**2a. Set up the environment — pip + venv**
+**2a. Set up the environment (pip + venv)**
 
 ```bash
 python -m venv .venv
@@ -62,7 +62,7 @@ source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements.txt  # installs foureng + notebook + test deps
 ```
 
-**2b. Set up the environment — conda**
+**2b. Set up the environment (conda)**
 
 ```bash
 conda env create -f environment.yml
@@ -92,7 +92,7 @@ git rebase upstream/main
 
 ---
 
-### Option B — clone without forking (pip + venv or conda)
+### Option B: clone without forking (pip + venv or conda)
 
 Use this if you just want to run locally and do not need your own GitHub copy.
 
@@ -105,15 +105,15 @@ Then follow step 2a (venv) or 2b (conda) from Option A above.
 
 ---
 
-### Option C — Google Colab (no local setup)
+### Option C: Google Colab (no local setup)
 
-Click the **Open in Colab** badge in the [Demo notebook](#demo-notebook) section. The first cell installs all dependencies automatically — no local Python needed.
+Click the **Open in Colab** badge in the [Demo notebook](#demo-notebook) section. The first cell installs all dependencies automatically. No local Python needed.
 
-> **Note:** Colab's Python 3.12 runtime ships with numpy 2.0.0, which has a known import bug. Cell 1 automatically upgrades numpy to a compatible version and clears the module cache — no manual restart needed.
+> **Note:** Colab's Python 3.12 runtime ships with numpy 2.0.0, which has a known import bug. Cell 1 automatically upgrades numpy to a compatible version and clears the module cache. No manual restart needed.
 
 ---
 
-### Option D — library only (PyPI)
+### Option D: library only (PyPI)
 
 Use this if you want to `import foureng` in your own code without cloning the repo.
 
@@ -133,7 +133,7 @@ Requires Python 3.10+.
 | Runtime | `numpy>=1.26`, `scipy>=1.10`, `matplotlib>=3.7`, `statsmodels>=0.14`, `pyfeng>=0.4.0` |
 | Notebooks | `pandas>=2.0`, `jupyter>=1.0`, `ipykernel>=6.0`, `nbformat>=5.10` |
 | Tests | `pytest>=7.4`, `pytest-cov>=4.0`, `hypothesis>=6.112`, `nbmake>=1.5` |
-| Dev tools | `ruff`, `mypy>=1.10`, `pyperf>=2.7` — install via `pip install -e ".[dev]"` |
+| Dev tools | `ruff`, `mypy>=1.10`, `pyperf>=2.7` (install via `pip install -e ".[dev]"` |
 
 `requirements.txt` covers runtime + notebook + test deps in one file. `environment.yml` is the conda equivalent.
 
@@ -246,7 +246,7 @@ Product-level pricing uses `price(product, model, method, fwd, params)`. It curr
 | `implied_vol_brent(price, inputs)` | option price, `BSInputs` | `float` |
 | `cos_price_and_greeks(phi, fwd, strikes, grid)` | CF, `ForwardSpec`, strikes, grid | `COSGreeks` with prices, delta, gamma |
 
-Full reference for all 70+ public objects: [docs/api_reference.md](docs/api_reference.md).
+Full reference for all public objects: [docs/api_reference.md](docs/api_reference.md).
 
 ---
 
@@ -317,7 +317,7 @@ Full per-paper matrix: [docs/paper_validation_matrix.md](docs/paper_validation_m
 After cloning and installing (see [Installation](#installation) above):
 
 ```bash
-# fast CI suite — skips slow Monte Carlo and notebook-execution tests
+# fast CI suite (skips slow Monte Carlo and notebook-execution tests)
 python -m pytest -q -m "not slow"
 
 # full suite including notebook execution guards
@@ -330,7 +330,7 @@ python -m pytest -q -m "paper"
 python -m pytest -q -m "software_reference"
 ```
 
-The repository has **741+ pytest cases**.
+The repository has 800+ pytest cases.
 
 For linting and type checks:
 
