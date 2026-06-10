@@ -1,228 +1,313 @@
-# API Reference
+﻿# API Reference
 
-Complete public API for `foureng`. All objects are importable as `import foureng as fe`.
-
-```python
-import foureng as fe
-# or for the unified dispatcher only:
-from foureng.pipeline import price, price_strip
-```
+All public names are accessible from the top-level `foureng` namespace after `import foureng`.
 
 ---
 
-## Market inputs and model parameters
+## Version
 
-| Object | Parameters | Purpose |
-|--------|------------|---------|
-| `ForwardSpec(S0, r, q, T)` | `S0: float`, `r: float`, `q: float`, `T: float` | Market inputs. Provides derived `F0` and discount factor `disc`. |
-| `BsmParams(sigma)` | Black-Scholes volatility | Diffusion baseline model dataclass. |
-| `HestonParams(kappa, theta, nu, rho, v0)` | Heston stochastic-volatility parameters | Heston model parameter dataclass. |
-| `OusvParams(sigma0, kappa, theta, nu, rho)` | Schobel-Zhu / OUSV parameters | OUSV model parameter dataclass. |
-| `VGParams(sigma, nu, theta)` | Variance Gamma parameters | VG parameter dataclass. |
-| `CgmyParams(C, G, M, Y)` | CGMY Lévy parameters | CGMY model parameter dataclass. |
-| `NigParams(sigma, nu, theta)` | NIG Lévy parameters | NIG model parameter dataclass. |
-| `KouParams(sigma, lam, p, eta1, eta2)` | Diffusion plus jump parameters | Kou double-exponential jump-diffusion dataclass. |
-| `BatesParams(kappa, theta, nu, rho, v0, lam_j, mu_j, sigma_j)` | Heston block plus Merton jump parameters | Bates SVJ dataclass. |
-| `HestonKouParams(kappa, theta, nu, rho, v0, lam_j, p_j, eta1, eta2)` | Heston block plus Kou jump parameters | Heston-Kou composite dataclass. |
-| `HestonCGMYParams(kappa, theta, nu, rho, v0, C, G, M, Y)` | Heston block plus CGMY jump parameters | Heston-CGMY composite dataclass. |
-| `Sv32Params(v0, kappa, theta, nu, rho)` | 3/2 model parameters | 3/2 SV parameter dataclass. |
-| `GarchWMW2012Params(v0, kappa, theta, nu, rho)` | GARCH diffusion parameters | Wu-Ma-Wang (2012) GARCH option pricing dataclass. |
-| `RoughHestonParams(sigma, vov, mr, rho, theta, alpha)` | Rough Heston parameters | `alpha` in `(0, 1)` (fractional exponent). |
-| `MertonJDParams(sigma, lam, mu_j, sigma_j)` | Diffusion volatility plus jump parameters | Merton jump-diffusion dataclass. |
-| `MeixnerParams(a, b, delta)` | Meixner Lévy parameters | Meixner process dataclass. |
-| `BilateralGammaParams(alpha_p, lambda_p, alpha_m, lambda_m)` | Bilateral Gamma parameters | Separate up/down Gamma processes. |
-| `GHParams(lam, alpha, beta, delta)` | Generalised Hyperbolic parameters | `lam=-0.5` gives NIG, `lam=1` gives Hyperbolic. |
-| `FMLSParams(alpha, sigma)` | Stability index and scale | `alpha` in `(1, 2]`, recovers BSM at `alpha=2`. |
-| `DoubleHestonParams(kappa1, theta1, nu1, rho1, v01, kappa2, theta2, nu2, rho2, v02)` | Two independent Heston variance-factor sets | CF factorises as product of two single-Heston CFs. |
-| `VGSAParams(C, G, M, kappa, eta, lam)` | VG tempering rates plus CIR activity-clock parameters | `lam=0` reduces to standard VG. |
-| `SabrParams(alpha, beta, rho, nu)` | SABR approximation parameters | Used by Hagan lognormal implied-vol pricing. |
+| Name | Type | Description |
+|------|------|-------------|
+| `__version__` | str | Package version string, e.g. `"0.5.0"`. |
 
 ---
 
-## Characteristic functions and cumulants
+## Base types
 
-### Characteristic functions
+| Class | Purpose |
+|-------|---------|
+| `BSInputs` | Black-Scholes forward inputs: `S0`, `r`, `q`, `T`, `K`, `sigma`. |
+| `CharFunc` | Protocol for characteristic-function callables. |
+| `ForwardSpec` | Forward-measure specification: `S0`, `r`, `q`, `T`. |
+| `ModelSpec` | Tagged union of all model parameter dataclasses. |
+
+---
+
+## Model parameter dataclasses
+
+Each dataclass holds the calibrated parameters for one stochastic-volatility or jump model.
+
+| Dataclass | Model |
+|-----------|-------|
+| `BsmParams` | Black-Scholes-Merton |
+| `HestonParams` | Heston (1993) |
+| `OusvParams` | Ornstein-Uhlenbeck stochastic volatility |
+| `VGParams` | Variance Gamma |
+| `CgmyParams` | CGMY / KoBoL |
+| `NigParams` | Normal Inverse Gaussian |
+| `Sv32Params` | 3/2 stochastic-volatility model |
+| `RoughHestonParams` | Rough Heston (El Euch and Rosenbaum) |
+| `KouParams` | Kou double-exponential jump diffusion |
+| `BatesParams` | Bates (Heston + Merton jumps) |
+| `HestonKouParams` | Heston with Kou jumps |
+| `HestonCGMYParams` | Heston with CGMY jumps |
+| `GarchWMW2012Params` | GARCH option model (Whaley-Mrozek-Weiss 2012) |
+| `MertonJDParams` | Merton jump-diffusion |
+| `MeixnerParams` | Meixner process |
+| `BilateralGammaParams` | Bilateral Gamma |
+| `GHParams` | Generalised Hyperbolic |
+| `FMLSParams` | Finite Moment Log-Stable |
+| `DoubleHestonParams` | Double Heston |
+| `VGSAParams` | Variance Gamma with stochastic arrival |
+| `SabrParams` | SABR: `alpha`, `beta`, `rho`, `nu`, `F`, `T`. |
+
+---
+
+## Characteristic functions
+
+All characteristic functions accept a model parameter dataclass and a complex-valued frequency array.
+
+| Function | Model |
+|----------|-------|
+| `bsm_cf` | BSM |
+| `heston_cf_form2` | Heston form-2 |
+| `ousv_cf` | OUSV |
+| `vg_cf` | Variance Gamma |
+| `cgmy_cf` | CGMY |
+| `nig_cf` | NIG |
+| `sv32_cf` | 3/2 |
+| `rough_heston_cf` | Rough Heston |
+| `kou_cf` | Kou |
+| `bates_cf` | Bates |
+| `heston_kou_cf` | Heston-Kou |
+| `heston_cgmy_cf` | Heston-CGMY |
+| `garch_wmw2012_cf` | GARCH WMW2012 |
+| `merton_jd_cf` | Merton JD |
+| `meixner_cf` | Meixner |
+| `bilateral_gamma_cf` | Bilateral Gamma |
+| `gh_cf` | Generalised Hyperbolic |
+| `fmls_cf` | FMLS |
+| `double_heston_cf` | Double Heston |
+| `vgsa_cf` | VGSA |
+
+### SABR implied volatility
 
 | Function | Signature | Purpose |
 |----------|-----------|---------|
-| `bsm_cf` | `(u, fwd, params)` | Black-Scholes CF in log-forward coordinates. |
-| `heston_cf_form2` | `(u, fwd, params)` | Heston CF, stable Formulation 2 (Little Heston Trap). |
-| `ousv_cf` | `(u, fwd, params)` | OUSV / Schobel-Zhu CF. |
-| `vg_cf` | `(u, fwd, params)` | Variance Gamma CF. |
-| `cgmy_cf` | `(u, fwd, params)` | CGMY CF. |
-| `nig_cf` | `(u, fwd, params)` | Normal Inverse Gaussian CF. |
-| `kou_cf` | `(u, fwd, params)` | Kou double-exponential jump-diffusion CF. |
-| `bates_cf` | `(u, fwd, params)` | Bates CF (Heston × Merton-jump block). |
-| `heston_kou_cf` | `(u, fwd, params)` | Heston-Kou CF. |
-| `heston_cgmy_cf` | `(u, fwd, params)` | Heston-CGMY CF. |
-| `sv32_cf` | `(u, fwd, params)` | 3/2 SV CF. |
-| `garch_wmw2012_cf` | `(u, fwd, params)` | GARCH CF (Wu-Ma-Wang 2012). |
-| `rough_heston_cf` | `(u, fwd, params)` | Rough Heston CF via Adams scheme. |
-| `merton_jd_cf` | `(u, fwd, params)` | Merton jump-diffusion CF. |
-| `meixner_cf` | `(u, fwd, params)` | Meixner CF. |
-| `bilateral_gamma_cf` | `(u, fwd, params)` | Bilateral Gamma CF. |
-| `gh_cf` | `(u, fwd, params)` | Generalised Hyperbolic CF (uses Bessel K). |
-| `fmls_cf` | `(u, fwd, params)` | FMLS CF via principal branch of `(iu)^alpha`. |
-| `double_heston_cf` | `(u, fwd, params)` | Double Heston CF; product of two single-Heston CFs. |
-| `vgsa_cf` | `(u, fwd, params)` | VGSA CF via CIR Laplace transform of the VG Lévy exponent. |
+| `sabr_hagan_implied_vol(F, K, T, params)` | forward, strike, maturity, `SabrParams` | Hagan et al. (2002) lognormal SABR implied-vol approximation. Returns a float. |
 
 ### Cumulants
 
-| Function | Parameters | Notes |
-|----------|------------|-------|
-| `bsm_cumulants(fwd, params)` | `ForwardSpec`, `BsmParams` | Black-Scholes cumulants for COS grid construction. |
-| `heston_cumulants(fwd, params)` | `ForwardSpec`, `HestonParams` | Heston cumulants for COS truncation intervals. |
-| `ousv_cumulants(fwd, params)` | `ForwardSpec`, `OusvParams` | OUSV cumulants. |
-| `vg_cumulants(fwd, params)` | `ForwardSpec`, `VGParams` | VG cumulants. |
-| `cgmy_cumulants(fwd, params)` | `ForwardSpec`, `CgmyParams` | CGMY cumulants. |
-| `nig_cumulants(fwd, params)` | `ForwardSpec`, `NigParams` | NIG cumulants. |
-| `kou_cumulants(fwd, params)` | `ForwardSpec`, `KouParams` | Kou cumulants. |
-| `bates_cumulants(fwd, params)` | `ForwardSpec`, `BatesParams` | Bates cumulants. |
-| `heston_kou_cumulants(fwd, params)` | `ForwardSpec`, `HestonKouParams` | Heston-Kou cumulants. |
-| `heston_cgmy_cumulants(fwd, params)` | `ForwardSpec`, `HestonCGMYParams` | Heston-CGMY cumulants. |
-| `sv32_cumulants(fwd, params)` | `ForwardSpec`, `Sv32Params` | 3/2 model cumulants. |
-| `garch_wmw2012_cumulants(fwd, params)` | `ForwardSpec`, `GarchWMW2012Params` | GARCH cumulants. |
-| `rough_heston_cumulants(fwd, params)` | `ForwardSpec`, `RoughHestonParams` | Rough Heston cumulants. |
-| `merton_jd_cumulants(fwd, params)` | `ForwardSpec`, `MertonJDParams` | Merton JD cumulants. |
-| `meixner_cumulants(fwd, params)` | `ForwardSpec`, `MeixnerParams` | Meixner cumulants. |
-| `bilateral_gamma_cumulants(fwd, params)` | `ForwardSpec`, `BilateralGammaParams` | Bilateral Gamma cumulants (closed form). |
-| `gh_cumulants(fwd, params)` | `ForwardSpec`, `GHParams` | GH cumulants. |
-| `fmls_cumulants(fwd, params)` | `ForwardSpec`, `FMLSParams` | FMLS cumulants via numerical Cauchy integration. **Note:** COS is not recommended for α<2 (power-law tails); prefer Carr-Madan or FRFT. |
-| `double_heston_cumulants(fwd, params)` | `ForwardSpec`, `DoubleHestonParams` | Sum of the two single-factor Heston cumulants. |
-| `vgsa_cumulants(fwd, params)` | `ForwardSpec`, `VGSAParams` | VGSA cumulants via CIR moment formulas. |
+Each model exposes a cumulant function that returns the first four log-return cumulants. Used internally by grid builders.
+
+| Function | Model |
+|----------|-------|
+| `bsm_cumulants` | BSM |
+| `heston_cumulants` | Heston |
+| `ousv_cumulants` | OUSV (returns four cumulants by numerical integration) |
+| `vg_cumulants` | VG |
+| `cgmy_cumulants` | CGMY |
+| `nig_cumulants` | NIG |
+| `sv32_cumulants` | 3/2 |
+| `rough_heston_cumulants` | Rough Heston |
+| `kou_cumulants` | Kou |
+| `bates_cumulants` | Bates |
+| `heston_kou_cumulants` | Heston-Kou |
+| `heston_cgmy_cumulants` | Heston-CGMY |
+| `garch_wmw2012_cumulants` | GARCH WMW2012 |
+| `merton_jd_cumulants` | Merton JD |
+| `meixner_cumulants` | Meixner |
+| `bilateral_gamma_cumulants` | Bilateral Gamma |
+| `gh_cumulants` | GH |
+| `fmls_cumulants` | FMLS |
+| `double_heston_cumulants` | Double Heston |
+| `vg_cumulants` | VG |
+| `vgsa_cumulants` | VGSA |
+
+### Miscellaneous model helpers
+
+| Function | Purpose |
+|----------|---------|
+| `heston_riccati_cd` | Riccati ODE coefficients used in the Heston CF derivation. |
 
 ---
 
-## Grid objects and grid builders
+## Pipeline dispatchers
 
-| Object | Parameters | Purpose |
-|--------|------------|---------|
-| `COSGrid(a, b, N)` | truncation interval and term count | Concrete COS grid used by `cos_prices`. |
-| `COSGridPolicy(...)` | `mode`, `truncation`, `dx_target`, `L`, `eps_trunc` | Rule-based COS grid specification for improved / filtered COS paths. |
-| `FFTGrid(N, eta, alpha)` | FFT size, frequency spacing, damping parameter | Carr-Madan FFT grid. |
-| `FRFTGrid(N, eta, lam, alpha)` | FRFT size, spacing, strike step, damping parameter | Fractional FFT grid. |
-| `CONVGrid(N, u_max)` | positive-frequency count and integration cutoff | CONV-style Fourier inversion grid. |
-| `LatticeGrid(steps, scheme="crr")` | binomial step count | BSM Cox-Ross-Rubinstein tree grid. |
-| `PDEGrid(spot_steps, time_steps, s_max_mult)` | finite-difference controls | BSM implicit finite-difference grid. |
-| `cos_auto_grid(cumulants, N, L)` | cumulants, term count, truncation multiplier | Returns a `COSGrid` from the standard cumulant rule. |
-| `cos_improved_grid(cumulants, model=..., params=...)` | cumulants plus model context | Returns a `COSGrid` using the improved COS truncation policy. |
-| `recommended_cos_policy(model, params, mode=...)` | model name and parameter dataclass | Returns a `COSGridPolicy` for the improved COS workflow. |
-
----
-
-## Core pricing functions
-
-| Function | Signature | Returns |
+| Function | Signature | Purpose |
 |----------|-----------|---------|
-| `cos_prices(phi, fwd, strikes, grid)` | CF, `ForwardSpec`, strike array, `COSGrid` | `COSResult` with `strikes` and `call_prices`. |
-| `carr_madan_price_at_strikes(phi, fwd, grid, strikes)` | CF, `ForwardSpec`, `FFTGrid`, strike array | NumPy array of call prices. |
-| `frft_price_at_strikes(phi, fwd, grid, strikes)` | CF, `ForwardSpec`, `FRFTGrid`, strike array | NumPy array of call prices. |
-| `conv_price_at_strikes(phi, fwd, grid, strikes, cp=...)` | CF, `ForwardSpec`, `CONVGrid`, strike array | NumPy array of call or put prices. |
-| `cos_bermudan_price(model, fwd, params, product, grid=...)` | model key, market inputs, params, `BermudanOption` | Scalar Bermudan COS price for supported 1-D Levy models. |
-| `cos_bermudan_price_strip(model, fwd, params, strikes, maturity, exercise_times, cp=...)` | model key, market inputs, params, strike array | Bermudan COS strip for supported 1-D Levy models. |
-| `cos_digital_price(model, fwd, params, product, grid=...)` | model key, market inputs, params, `DigitalOption` | Scalar COS digital price for cash-or-nothing or asset-or-nothing payoffs. |
-| `cos_digital_price_strip(model, fwd, params, strikes, maturity, cp=...)` | model key, market inputs, params, strike array | COS digital strip at a shared maturity. |
-| `filtered_cos_prices(phi, fwd, strikes, grid, filter_spec=...)` | CF, `ForwardSpec`, strike array, grid, filter | `COSResult` with spectral filtering applied. |
-| `bsm_lattice_price_at_strikes(fwd, params, strikes, cp=..., exercise=...)` | `ForwardSpec`, `BsmParams`, strike array | BSM European/American CRR tree prices. |
-| `bsm_pde_fd_price_at_strikes(fwd, params, strikes, cp=..., exercise=...)` | `ForwardSpec`, `BsmParams`, strike array | BSM European/American finite-difference prices. |
-| `bsm_barrier_price(S, K, H, r, q, T, sigma, barrier_type, cp=...)` | BSM single-barrier inputs | Closed-form continuous zero-rebate barrier price. |
-| `bsm_discrete_geometric_asian(S, K, r, q, monitoring_times, sigma, cp=...)` | BSM geometric-average inputs | Closed-form discretely monitored geometric Asian price. |
-| `bsm_forward_start(S, alpha, t_start, T, r, q, sigma, cp=...)` | BSM forward-start inputs | Closed-form forward-start price. |
-| `bsm_lookback_floating(S, S_min, S_max, r, q, T, sigma, cp=...)` | BSM floating-lookback inputs | Closed-form continuous floating-strike lookback price. |
-| `bsm_variance_swap(fwd, params, product)` | `ForwardSpec`, `BsmParams`, `VarianceSwap` | Exact BSM expectation of the repo's realised-variance swap payoff. |
-| `bsm_variance_option_integrated(fwd, params, product)` | `ForwardSpec`, `BsmParams`, `VarianceOption` | Deterministic integrated-variance option price under constant-vol BSM. |
-| `proj_european_price_at_strikes(phi, fwd, cumulants, strikes, cp=..., N=..., L=...)` | CF, market inputs, cumulants, strikes | European PROJ price via the real B-spline frame-projection engine on a cumulant-driven auto grid (dispatcher entry point). |
-| `proj_price_at_strikes(phi, fwd, grid, strikes, cp=..., c1=...)` | CF, market inputs, `ProjGrid`, strikes | European PROJ frame-projection price (Kirkby 2015/2017) for any CF-equipped Lévy model; explicit grid control. |
-| `proj_auto_grid(cumulants, N=..., L=..., order=...)` | cumulants | Build a `ProjGrid` (half-width `alph = L·√(c2+√\|c4\|)`) from forward cumulants. |
-| `proj_bermudan_put(step_cf, S0, r, T, W, M, N=..., alph=...)` | one-step CF, market/contract inputs | Bermudan-put price via the PROJ Toeplitz-FFT backward recursion (Kirkby `PROJ_Bermudan_Put.m`). |
-| `mellin_price_at_strikes(phi, fwd, strikes, cp=...)` | CF, market inputs, strikes | First-slice European Mellin façade for selected Lévy models. |
-| `sabr_hagan_price_at_strikes(fwd, params, strikes, cp=...)` | `ForwardSpec`, `SabrParams`, strikes | Hagan SABR implied-vol prices. |
-| `price_strip(model, method, strikes, fwd, params, grid=None, ...)` | model label, method label, strike array, market inputs, params | Unified dispatcher  -  returns NumPy array of call prices. |
-| `price(product, model, method, fwd, params, grid=None)` | product dataclass, model label, method label, market inputs, params | Product-aware dispatcher for scalar contracts. |
-
-### `price_strip` method labels
-
-| Label | Pricer |
-|-------|--------|
-| `"cos"` | Plain COS |
-| `"cos_improved"` | COS with Junike-style truncation policy |
-| `"carr_madan"` | Carr-Madan FFT |
-| `"frft"` | Fractional FFT |
-| `"conv"` | CONV-style Fourier probability inversion |
-| `"cos_bermudan"` | COS Bermudan backward induction for supported 1-D Levy models |
-| `"mellin"` | First-slice Mellin European façade for VG, NIG, FMLS, bilateral gamma |
-| `"proj"` | Real PROJ B-spline frame projection (European) for CF-equipped Lévy models |
-| `"cos_filtered"` | COS with spectral damping (Fejér, Lanczos, raised-cosine, or exponential filter) |
-| `"pyfeng_fft"` | PyFENG-backed Lewis-style FFT path (PyFENG-backed models only) |
-| `"cos_digital"` | COS digital pricing through `price()` for `DigitalOption` |
-| `"digital_bsm"` | BSM-only analytic digital pricing through `price()` |
-| `"monte_carlo"` | BSM-only generic Monte Carlo / Longstaff-Schwartz pricing through `price()` |
-| `"lattice"` | BSM-only CRR lattice for European strips |
-| `"pde_fd"` | BSM-only implicit finite-difference solver for European strips |
-| `"barrier_bsm"` | BSM-only analytic single-barrier pricing through `price()` |
-| `"forward_start_bsm"` | BSM-only analytic forward-start pricing through `price()` |
-| `"exchange_bsm"` | BSM-only Margrabe exchange-option pricing through `price()` |
-| `"spread_bsm"` | BSM-only Kirk spread approximation through `price()` |
-| `"multi_asset_mc"` | BSM-only correlated multi-asset Monte Carlo through `price()` |
-| `"lookback_bsm"` | BSM-only analytic continuous floating-strike lookback pricing through `price()` |
-| `"lookback_mc"` | BSM-only Monte Carlo lookback pricing through `price()` |
-| `"variance_analytic_bsm"` | BSM-only analytic variance swap / integrated-variance option pricing through `price()` |
-| `"variance_mc"` | BSM-only Monte Carlo variance swap / variance option pricing through `price()` |
-| `"cliquet_mc"` | BSM-only Monte Carlo cliquet pricing through `price()` |
-| `"sabr_hagan"` | SABR-only Hagan implied-vol approximation for European strips |
-
-### Product-level dispatcher
-
-| Product | Supported method(s) | Scope |
-|---------|---------------------|-------|
-| `EuropeanOption` | all compatible `price_strip` methods | Vanilla call/put. |
-| `DigitalOption` | `"cos_digital"`, `"digital_bsm"` | Cash-or-nothing or asset-or-nothing digitals; analytic closed form is BSM-only. |
-| `AmericanOption` | `"lattice"`, `"pde_fd"`, `"monte_carlo"` | BSM call/put via lattice, PDE, or Longstaff-Schwartz Monte Carlo. |
-| `BermudanOption` | `"cos_bermudan"`, `"monte_carlo"` | Supported 1-D Levy COS Bermudan or BSM Longstaff-Schwartz Monte Carlo. |
-| `BarrierOption` | `"barrier_bsm"`, `"monte_carlo"` | Continuously monitored zero-rebate BSM closed form or BSM Monte Carlo knock-in/knock-out call/put. |
-| `AsianOption` | `"asian_bsm"`, `"asian_mc"`, `"monte_carlo"` | BSM fixed-strike geometric closed form or BSM arithmetic/geometric Monte Carlo. |
-| `ForwardStartOption` | `"forward_start_bsm"` | BSM forward-start call/put with strike set at `alpha * S_{t_start}`. |
-| `ExchangeOption` | `"exchange_bsm"`, `"multi_asset_mc"`, `"monte_carlo"` | BSM Margrabe exchange option or correlated Monte Carlo using asset-1 inputs from `fwd`/`params` and asset-2 inputs on the product. |
-| `BasketOption` | `"multi_asset_mc"`, `"monte_carlo"` | Correlated BSM Monte Carlo basket option with asset-1 inputs from `fwd`/`params` and asset-2..n inputs on the product. |
-| `SpreadOption` | `"spread_bsm"`, `"multi_asset_mc"`, `"monte_carlo"` | Two-asset BSM Kirk spread approximation or correlated Monte Carlo spread option. |
-| `BestOfOption` | `"multi_asset_mc"`, `"monte_carlo"` | Correlated BSM Monte Carlo best-of / worst-of style option. |
-| `LookbackOption` | `"lookback_bsm"`, `"lookback_mc"`, `"monte_carlo"` | BSM continuous floating-strike closed form or BSM Monte Carlo fixed/floating lookback. |
-| `VarianceSwap` | `"variance_analytic_bsm"`, `"variance_mc"`, `"monte_carlo"` | Exact BSM realised-variance expectation or BSM Monte Carlo variance swap. |
-| `VarianceOption` | `"variance_analytic_bsm"`, `"variance_mc"`, `"monte_carlo"` | Deterministic integrated-variance BSM closed form or BSM Monte Carlo realised/integrated variance option. |
-| `CliquetOption` | `"cliquet_mc"`, `"monte_carlo"` | BSM Monte Carlo additive or multiplicative cliquet. |
-| `DoubleBarrierOption` | `"double_barrier_mc"`, `"monte_carlo"` | BSM zero-rebate double knock-in/knock-out Monte Carlo. |
+| `price(product, model_params, fwd_spec, **kwargs)` | product spec, model dataclass, forward spec | Product-aware dispatcher: routes to the correct pricer based on product type and model. Returns a scalar price. |
+| `price_strip(strikes, option_type, model_params, fwd_spec, method=..., **kwargs)` | strike array, "call"/"put", model dataclass, forward spec | Prices a strip of European options at multiple strikes. Returns an array. |
 
 ---
 
-## Filtered-COS helpers
+## Grid objects and builders
 
-| Object | Parameters | Purpose |
-|--------|------------|---------|
-| `COSFilterSpec(name, order=..., alpha=...)` | filter family and optional shape parameters | Filter specification for the filtered COS method. |
-| `cos_filter_weights(N, filter_spec)` | term count and filter spec | NumPy array of spectral weights `sigma_k`. |
-| `cos_adaptive_decision(...)` | model context and COS policy inputs | Returns `COSPolicyDecision` summarizing the improved COS grid choice. |
+### Grid dataclasses
+
+| Class | Fields | Purpose |
+|-------|--------|---------|
+| `COSGrid` | `N`, `L` | COS grid: number of terms and truncation half-width. |
+| `COSGridPolicy` | `N_base`, `L_base`, `overrides` | Policy-based COS grid selector. |
+| `FFTGrid` | `N`, `eta`, `alpha` | Carr-Madan FFT grid. |
+| `FRFTGrid` | `N`, `eta`, `alpha`, `lambda_` | FRFT grid. |
+| `CONVGrid` | `N`, `L` | CONV method grid. |
+| `LatticeGrid` | `n_steps` | Binomial/trinomial lattice grid. |
+| `PDEGrid` | `n_steps`, `n_spot`, `theta` | Finite-difference PDE grid. |
+| `ProjGrid` | `N`, `alph`, `order` | PROJ frame-projection grid (Haar/linear/quadratic/cubic B-spline). |
+
+### Grid builders
+
+| Function | Inputs | Output |
+|----------|--------|--------|
+| `cos_auto_grid(cumulants, N, L)` | cumulants | Builds a `COSGrid` from forward cumulants. |
+| `cos_improved_grid(cumulants, ...)` | cumulants | Builds a `COSGrid` with improved truncation bounds. |
+| `proj_auto_grid(cumulants, N=..., L=..., order=...)` | cumulants | Builds a `ProjGrid` from forward cumulants. |
+| `recommended_cos_policy(model, params, mode=...)` | model name, params dataclass | Returns a `COSGridPolicy` for the given model and accuracy mode. |
+
+---
+
+## COS pricing
+
+| Name | Type | Description |
+|------|------|-------------|
+| `COSResult` | dataclass | Holds prices, Greeks, and diagnostics from a COS computation. |
+| `COSPolicyDecision` | dataclass | Stores the resolved `COSGrid` and the policy that produced it. |
+| `cos_adaptive_decision(model, params, T, ...)` | function | Returns a `COSPolicyDecision` for a given model, adapting to accuracy requirements. |
+| `cos_prices(cf, grid, fwd_spec, strikes, ...)` | function | Core COS pricer. Returns an array of call/put prices. |
+| `cos_bermudan_price(cf, grid, fwd_spec, ...)` | function | COS Bermudan pricing via backward induction. |
+| `cos_bermudan_price_strip(...)` | function | COS Bermudan pricer over a strike strip. |
+| `cos_digital_price(cf, grid, fwd_spec, ...)` | function | COS pricing for cash-or-nothing and asset-or-nothing digitals. |
+| `cos_digital_price_strip(...)` | function | COS digital pricer over a strike strip. |
+
+---
+
+## Fourier pricers
+
+| Function | Signature | Purpose |
+|----------|-----------|---------|
+| `carr_madan_fft_prices(cf, grid, fwd_spec)` | CF, `FFTGrid`, forward spec | Carr-Madan (1999) FFT pricer. Returns prices on the FFT log-strike grid. |
+| `carr_madan_price_at_strikes(cf, grid, fwd_spec, strikes)` | CF, `FFTGrid`, forward spec, strikes | FFT pricer interpolated to specific strikes. |
+| `frft_prices(cf, grid, fwd_spec)` | CF, `FRFTGrid`, forward spec | Fractional FFT pricer. Returns prices on the FRFT log-strike grid. |
+| `frft_price_at_strikes(cf, grid, fwd_spec, strikes)` | CF, `FRFTGrid`, forward spec, strikes | FRFT pricer interpolated to specific strikes. |
+| `lewis_prices(cf, grid, fwd_spec, strikes)` | CF, `COSGrid`, forward spec, strikes | Lewis (2001) call integral formula. |
+| `lewis_call_prices(cf, grid, fwd_spec, strikes)` | CF, `COSGrid`, forward spec, strikes | Lewis pricer returning call prices. |
+| `conv_price_at_strikes(cf, grid, fwd_spec, strikes)` | CF, `CONVGrid`, forward spec, strikes | CONV method (Lord et al. 2008) evaluated at specific strikes. |
+| `mellin_price_at_strikes(cf, grid, fwd_spec, strikes)` | CF, forward spec, strikes | Mellin-transform pricer evaluated at specific strikes. |
+| `filtered_cos_prices(cf, grid, fwd_spec, strikes, spec)` | CF, `COSGrid`, forward spec, strikes, `COSFilterSpec` | COS with Conze-Viswanathan or exponential filters to suppress Gibbs oscillations. |
+
+---
+
+## PROJ frame-projection pricers
+
+| Function | Signature | Purpose |
+|----------|-----------|---------|
+| `proj_european_price_at_strikes(cf, grid, fwd_spec, strikes)` | CF, `ProjGrid`, forward spec, strikes | PROJ European pricer (Kirkby 2015). Matches `carr_madan_price_at_strikes` to ~1e-7 across the Levy family. |
+| `proj_price_at_strikes(cf, grid, fwd_spec, strikes, ...)` | CF, `ProjGrid`, forward spec, strikes | General PROJ European dispatch (entry point used by `price_strip`). |
+| `proj_bermudan_put(cf, grid, fwd_spec, strikes, n_ex)` | CF, `ProjGrid`, forward spec, strikes, exercise count | PROJ Bermudan put via Toeplitz-FFT backward recursion (Kirkby 2017). |
+
+---
+
+## BSM lattice and PDE
+
+| Function | Signature | Purpose |
+|----------|-----------|---------|
+| `bsm_lattice_price(product, bsm_params, fwd_spec, grid)` | product spec, `BsmParams`, forward spec, `LatticeGrid` | European or American option via binomial lattice. |
+| `bsm_lattice_price_at_strikes(strikes, ..., grid)` | strikes, model params, forward spec, `LatticeGrid` | Lattice pricer over a strike strip. |
+| `bsm_pde_fd_price(product, bsm_params, fwd_spec, grid)` | product spec, `BsmParams`, forward spec, `PDEGrid` | European or American option via Crank-Nicolson finite differences. |
+| `bsm_pde_fd_price_at_strikes(strikes, ..., grid)` | strikes, model params, forward spec, `PDEGrid` | PDE pricer over a strike strip. |
+
+---
+
+## SABR pricer
+
+| Function | Signature | Purpose |
+|----------|-----------|---------|
+| `sabr_hagan_price_at_strikes(strikes, params, fwd_spec)` | strikes, `SabrParams`, forward spec | Prices a strip of calls via SABR Hagan implied vol then BSM. |
+
+---
+
+## Filtered COS helpers
+
+| Name | Type | Description |
+|------|------|-------------|
+| `COSFilterSpec` | dataclass | Filter type and strength parameters for filtered COS. |
+| `FilteredCOSDecision` | dataclass | Holds the filter weights alongside the resolved `COSGrid`. |
+| `cos_filter_weights(N, spec)` | function | Returns a weight array of length `N` for the given filter spec. |
 
 ---
 
 ## Implied volatility
 
-| Object | Parameters | Purpose |
-|--------|------------|---------|
-| `BSInputs(F0, K, T, r, q, is_call)` | Black-style inversion inputs | Dataclass for implied-vol routines. |
-| `bs_price_from_fwd(sigma, inputs)` | volatility and `BSInputs` | Black-Scholes price from forward inputs. |
-| `implied_vol_newton_safeguarded(price, inputs)` | option price and `BSInputs` | Implied vol via safeguarded Newton. |
-| `implied_vol_brent(price, inputs)` | option price and `BSInputs` | Implied vol via bracketing solver. |
+| Function | Signature | Purpose |
+|----------|-----------|---------|
+| `bs_price_from_fwd(fwd_spec, K, sigma, option_type)` | forward spec, strike, vol, type | BSM call or put price from forward inputs. |
+| `implied_vol_brent(fwd_spec, K, price, option_type)` | forward spec, strike, price, type | Implied vol via Brent root-finding. Safe for deep-ITM/OTM. |
+| `implied_vol_newton_safeguarded(fwd_spec, K, price, option_type)` | forward spec, strike, price, type | Newton-Raphson with Brent fallback. Faster for near-ATM. |
 
 ---
 
-## Surfaces, calibration, and Greeks
+## Surface and calibration
 
-| Object | Parameters | Purpose |
-|--------|------------|---------|
-| `SurfaceSpec(S0, r, q, maturities, strikes)` | market inputs plus maturity/strike grids | Surface input container. |
-| `model_price_surface(...)` | surface spec plus pricing callbacks | Price surface over maturity and strike grids. |
-| `model_iv_surface(...)` | surface spec plus pricing callbacks | Implied-volatility surface. |
-| `calibrate_heston(...)`, `calibrate_vg(...)`, `calibrate_kou(...)` | market targets, grid inputs, initial guesses | Return `CalibrationResult` for the chosen model. |
-| `cos_price_and_greeks(phi, fwd, strikes, grid)` | CF, market inputs, strike array, grid | `COSGreeks` with prices and sensitivity arrays. |
-| `cos_delta_gamma(phi, fwd, strikes, grid)` | CF, market inputs, strike array, grid | Delta and gamma arrays. |
-| `cos_parameter_sensitivity(...)` | model setup plus parameter perturbation inputs | COS-based parameter sensitivities. |
+| Name | Type | Description |
+|------|------|-------------|
+| `SurfaceSpec` | dataclass | Defines the moneyness-tenor grid used in calibration targets. |
+| `CalibrationResult` | dataclass | Holds calibrated parameter dataclass, residuals, and optimizer diagnostics. |
+| `model_iv_surface(model_params, fwd_spec, surface_spec)` | function | Evaluates a model implied-vol surface on a `SurfaceSpec` grid. |
+| `model_price_surface(model_params, fwd_spec, surface_spec)` | function | Evaluates a model price surface on a `SurfaceSpec` grid. |
+| `calibrate_heston(...)` | function | Calibrates Heston parameters to market targets. Returns `CalibrationResult`. |
+| `calibrate_vg(...)` | function | Calibrates VG parameters to market targets. Returns `CalibrationResult`. |
+| `calibrate_kou(...)` | function | Calibrates Kou parameters to market targets. Returns `CalibrationResult`. |
+| `calibrate_cgmy(...)` | function | Calibrates CGMY parameters to market targets. Returns `CalibrationResult`. |
+| `calibrate_nig(...)` | function | Calibrates NIG parameters to market targets. Returns `CalibrationResult`. |
+
+---
+
+## Greeks
+
+| Name | Type | Description |
+|------|------|-------------|
+| `COSGreeks` | dataclass | Delta, gamma, and vega computed via the COS method. |
+| `cos_price_and_greeks(cf, grid, fwd_spec, strikes)` | function | Returns prices and `COSGreeks` in a single pass. |
+| `cos_delta_gamma(cf, grid, fwd_spec, strikes)` | function | Returns delta and gamma arrays from the COS expansion. |
+| `cos_parameter_sensitivity(cf, grid, fwd_spec, strikes, params, ...)` | function | Finite-difference parameter sensitivities (model-parameter Greeks). |
+
+---
+
+## Monte Carlo
+
+| Name | Type | Description |
+|------|------|-------------|
+| `MCSpec` | dataclass | Monte Carlo specification: product, model, paths, time steps, random seed, antithetics, control-variate flag. |
+| `MCResult` | dataclass | Output of `mc_price`: estimated price, standard error, confidence interval, paths used. |
+| `mc_price(spec, model_params, fwd_spec)` | function | Generic MC dispatcher. Routes to the correct simulation engine based on `spec.model` and `spec.product`. |
+| `european_call_mc(bsm_params, fwd_spec, K, n_paths, n_steps, seed)` | function | Vectorised BSM European call MC. |
+| `heston_conditional_mc_calls(heston_params, fwd_spec, strikes, n_paths, seed)` | function | Heston exact conditional simulation (Broadie-Kaya scheme). |
+| `HestonMCScheme` | enum | Discretisation scheme selector: `EULER`, `MILSTEIN`, `QE`. |
+| `bs_call_cv` | function | BSM control-variate correction for a Monte Carlo estimate. |
+| `heston_call_bs_control` | function | Heston MC pricer with a BSM control variate. |
+| `CVResult` | dataclass | Control-variate result: raw estimate, corrected estimate, variance reduction ratio. |
+
+---
+
+## BSM closed-form analytics
+
+Exact closed-form prices for non-vanilla payoffs under BSM dynamics.
+
+### Exotic single-asset options
+
+| Function | Signature | Purpose |
+|----------|-----------|---------|
+| `bsm_barrier_price(fwd_spec, K, H, barrier_type, option_type)` | forward spec, strike, barrier level, barrier type, option type | Analytical up/down in/out barrier option. |
+| `bsm_forward_start(fwd_spec, alpha, T_start, T_end)` | forward spec, moneyness, start date, end date | Rubinstein (1991) forward-start call. |
+| `bsm_lookback_floating(fwd_spec, option_type)` | forward spec, option type | Floating-strike lookback call or put (Goldman-Sosin-Gatto). |
+| `bsm_geometric_asian(fwd_spec, K, n)` | forward spec, strike, number of fixings | Geometric-average Asian option closed form. |
+| `bsm_geometric_asian_parity(fwd_spec, K, n)` | forward spec, strike, number of fixings | Put-call parity check for geometric Asian. |
+| `bsm_variance_swap(fwd_spec)` | forward spec | Fair variance swap strike under BSM (equals `sigma^2`). |
+| `bsm_variance_option_integrated(fwd_spec, K_var, option_type)` | forward spec, variance strike, option type | Variance call or put price via integrated BSM formula. |
+| `bsm_gap_call(fwd_spec, K1, K2)` | forward spec, trigger strike, payoff strike | Gap call: pays `S - K2` if `S > K1`. |
+| `bsm_discrete_geometric_asian(fwd_spec, K, fixing_times)` | forward spec, strike, fixing schedule | Geometric Asian with an explicit fixing schedule. |
+
+### Digital options
+
+| Function | Signature | Purpose |
+|----------|-----------|---------|
+| `bsm_cash_or_nothing(fwd_spec, K, option_type)` | forward spec, strike, option type | Cash-or-nothing digital: pays 1 unit if `S_T > K`. |
+| `bsm_asset_or_nothing(fwd_spec, K, option_type)` | forward spec, strike, option type | Asset-or-nothing digital: pays `S_T` if `S_T > K`. |
+
+### Multi-asset analytics
+
+| Function | Signature | Purpose |
+|----------|-----------|---------|
+| `margrabe_exchange(fwd_spec_1, fwd_spec_2, sigma_1, sigma_2, rho)` | two forward specs, vols, correlation | Margrabe (1978) exchange option: pays `max(S2 - S1, 0)`. |
+| `kirk_spread(fwd_spec_1, fwd_spec_2, K, sigma_1, sigma_2, rho)` | two forward specs, strike, vols, correlation | Kirk (1995) spread option approximation: pays `max(S2 - S1 - K, 0)`. |

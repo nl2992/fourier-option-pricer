@@ -22,11 +22,11 @@ tracked as out of scope rather than as missing work.
 | 2 | `expm1` for `exp(x)−1`, `log1p` for `log(1+x)` | ✅ fixed | `bates.py` zeta formula fixed (was `np.exp(x) - 1`). |
 | 3 | `np.isfinite` guards on outputs and MC inputs | ✅ pass | `validity.py`, `implied_vol.py`, surface layer, and MC entry points guard finite values. |
 | 4 | No `log(sum(exp(...)))` pattern | ✅ pass | `logsumexp` not needed; no such pattern found in codebase. |
-| 5 | Greeks via analytic formula, not FD | ✅ pass | `greeks/cos_greeks.py` — analytic ∂/∂F₀ and ∂²/∂F₀². |
+| 5 | Greeks via analytic formula, not FD | ✅ pass | `greeks/cos_greeks.py` (analytic ∂/∂F₀ and ∂²/∂F₀²). |
 | 6 | Central-difference step ∝ √ε | ✅ pass | `cumulants.py` 5-point central FD on imaginary axis uses `finfo.eps`. |
 | 7 | Variance floor prevents MC NaN | ✅ pass | `heston_conditional_mc.py`: `np.maximum(sigma2, 1e-16)`. |
 | 8 | RNG via `np.random.default_rng(seed)` | ✅ pass | All MC engines (BS, Heston, control variate) use `default_rng`. |
-| 9 | Vectorised MC — no Python path loops | ✅ pass | `black_scholes_mc.py`, `heston_conditional_mc.py` batch-generate. |
+| 9 | Vectorised MC, no Python path loops | ✅ pass | `black_scholes_mc.py`, `heston_conditional_mc.py` batch-generate. |
 | 10 | No `np.prod(U)` underflow risk | ✅ pass | No `np.prod` on probability arrays found in `foureng/`. |
 | 11 | `float64` dtype on pricer output | ✅ pass | `price_strip` → `np.ndarray` of `dtype=float64`. |
 | 12 | Input validation raises `ValueError` | ✅ pass | `models/fmls.py`, `meixner.py`, `merton_jd.py`, `bilateral_gamma.py`, `generalized_hyperbolic.py`. |
@@ -43,7 +43,7 @@ tracked as out of scope rather than as missing work.
 
 ## Detailed findings
 
-### Item 2 — `expm1` fix in `bates.py` (bug fixed)
+### Item 2: `expm1` fix in `bates.py` (bug fixed)
 
 **File:** `foureng/models/bates.py`, lines 143 and 184.
 
@@ -73,7 +73,7 @@ Applied to both `bates_cf` (CF computation) and `bates_cumulants`.
 
 ---
 
-### Item 5 — Analytic Greeks (better than FD requirement)
+### Item 5: Analytic Greeks (better than FD requirement)
 
 `foureng/greeks/cos_greeks.py` computes Delta and Gamma analytically by
 differentiating the COS put-coefficient formula:
@@ -88,7 +88,7 @@ sensitivity. Spot Delta/Gamma follow via the chain rule `dF_0/dS_0 = e^{(r−q)T
 
 ---
 
-### Item 6 — Central FD with machine-epsilon step size
+### Item 6: Central FD with machine-epsilon step size
 
 `foureng/utils/cumulants.py` computes second cumulants numerically via a
 5-point central finite-difference scheme on the imaginary axis of the CF:
@@ -103,7 +103,7 @@ Step size is tied to machine epsilon, not hardcoded.
 
 ---
 
-### Item 7 — Variance floor in Heston MC
+### Item 7: Variance floor in Heston MC
 
 `foureng/mc/heston_conditional_mc.py`:
 ```python
@@ -117,7 +117,7 @@ when numerical noise drives `V_T` marginally negative.
 
 ---
 
-### Item 8 — RNG pattern
+### Item 8: RNG pattern
 
 All MC engines pass `rng = np.random.default_rng(seed)` created once at the
 top of the pricing function and accept an integer seed at the API boundary:
@@ -132,7 +132,7 @@ No `np.random.seed()` call exists anywhere in `foureng/`.
 
 ---
 
-### Item 9 — Vectorised MC
+### Item 9: Vectorised MC
 
 Both MC engines batch-generate all paths in a single NumPy call:
 ```python
