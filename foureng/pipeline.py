@@ -42,7 +42,13 @@ from .pricers.lattice import LatticeGrid, bsm_lattice_price, bsm_lattice_price_a
 from .pricers.lewis import lewis_call_prices
 from .pricers.mellin import MELLIN_SUPPORTED_MODELS, mellin_price_at_strikes
 from .pricers.pde_fd import PDEGrid, bsm_pde_fd_price, bsm_pde_fd_price_at_strikes
-from .pricers.proj import proj_auto_grid, proj_bermudan_put, proj_european_price_at_strikes
+from .pricers.proj import (
+    proj_asian_price_cv,
+    proj_auto_grid,
+    proj_barrier_price,
+    proj_bermudan_put,
+    proj_european_price_at_strikes,
+)
 from .pricers.sabr import sabr_hagan_price_at_strikes
 from .utils.grids import CONVGrid, COSGrid, COSGridPolicy, FFTGrid
 from .utils.spectral_filters import COSFilterSpec
@@ -533,6 +539,94 @@ def _proj_bermudan_put_price(model: str, fwd: ForwardSpec, params, product) -> f
     )
 
 
+def _proj_barrier_price_dispatch(model: str, fwd: ForwardSpec, params, product) -> float:
+    """PROJ single-barrier pricer for 1-D Lévy models.
+
+    Builds the one-step risk-neutral CF and drives ``proj_barrier_price``.
+    Supports all 4 barrier types (knock-in via in-out parity) for the same
+    1-D Lévy model family as the PROJ Bermudan pricer.
+    """
+    from .pricers.cos_bermudan import _SUPPORTED_MODELS
+
+    if model not in _SUPPORTED_MODELS:
+        raise NotImplementedError(
+            f"method='proj_barrier' supports 1-D Lévy models {sorted(_SUPPORTED_MODELS)}; "
+            f"got model={model!r}. Use method='barrier_bsm' or method='monte_carlo'."
+        )
+    if product.rebate != 0.0:
+        raise NotImplementedError("method='proj_barrier' currently supports only zero rebates.")
+
+    T = float(product.maturity)
+    M = 252  # default: approximately continuous (daily monitoring)
+    dt = T / M
+    cf = MODEL_REGISTRY[model].cf
+    fwd_dt = ForwardSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=dt)
+    drift = (fwd.r - fwd.q) * dt
+
+    def step_cf(u: np.ndarray) -> np.ndarray:
+        return np.exp(1j * u * drift) * np.asarray(cf(u, fwd_dt, params), dtype=np.complex128)
+
+    fwd_T = ForwardSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=T)
+    grid = proj_auto_grid(MODEL_REGISTRY[model].cumulants(fwd_T, params), N=1 << 14)
+
+    return proj_barrier_price(
+        step_cf,
+        S0=fwd.S0,
+        r=fwd.r,
+        T=T,
+        K=float(product.strike),
+        H=float(product.barrier),
+        M=M,
+        barrier_type=product.barrier_type,
+        cp=product.cp,
+        N=grid.N,
+        alph=grid.alph,
+    )
+
+
+def _proj_asian_price_dispatch(model: str, fwd: ForwardSpec, params, product) -> float:
+    """PROJ arithmetic Asian pricer (geometric control variate) for 1-D Lévy models.
+
+    Estimates the arithmetic Asian price using Monte Carlo paths with a
+    PROJ-computed geometric Asian as control variate. Only fixed-strike
+    arithmetic Asians on uniform monitoring grids are supported.
+    """
+    from .pricers.cos_bermudan import _SUPPORTED_MODELS
+
+    if model not in _SUPPORTED_MODELS:
+        raise NotImplementedError(
+            f"method='proj_asian' supports 1-D Lévy models {sorted(_SUPPORTED_MODELS)}; "
+            f"got model={model!r}. Use method='asian_mc' or method='monte_carlo'."
+        )
+    if product.average_type != "arithmetic":
+        raise NotImplementedError(
+            "method='proj_asian' currently supports arithmetic average Asians only."
+        )
+    if product.strike_type != "fixed":
+        raise NotImplementedError(
+            "method='proj_asian' currently supports fixed-strike Asians only."
+        )
+
+    T = float(product.maturity)
+    mon_times = np.asarray(product.monitoring_times, dtype=float)
+    M = len(mon_times)
+
+    phi = _cf_for(model, ForwardSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=T), params)
+
+    return proj_asian_price_cv(
+        phi,
+        ForwardSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=T),
+        params,
+        model,
+        K=float(product.strike),
+        T=T,
+        M=M,
+        cp=product.cp,
+        n_paths=20_000,
+        seed=42,
+    )
+
+
 def price(
     product,
     model: str,
@@ -723,10 +817,13 @@ def price(
             mc_spec = grid if isinstance(grid, MCSpec) else MCSpec()
             fwd_t = _FwdSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=product.maturity)
             return mc_price(fwd_t, params.sigma, product, mc_spec).price
+        if method == "proj_barrier":
+            return _proj_barrier_price_dispatch(model, fwd, params, product)
         if method != "barrier_bsm":
             raise NotImplementedError(
                 "Barrier pricing currently supports method='barrier_bsm' for "
-                "closed-form BSM single-barrier contracts or method='monte_carlo'."
+                "closed-form BSM single-barrier contracts, method='proj_barrier' "
+                "for 1-D Lévy models, or method='monte_carlo'."
             )
         if model != "bsm":
             raise NotImplementedError(
@@ -759,9 +856,12 @@ def price(
                 "price(): product_type='asian' must be represented by "
                 f"AsianOption, got {type(product).__name__!r}"
             )
+        if method == "proj_asian":
+            return _proj_asian_price_dispatch(model, fwd, params, product)
         if model != "bsm":
             raise NotImplementedError(
-                "Asian pricing is currently implemented only for model='bsm'."
+                "Asian pricing is currently implemented only for model='bsm' "
+                "(use method='proj_asian' for 1-D Lévy models)."
             )
         if method == "asian_bsm":
             if product.average_type != "geometric" or product.strike_type != "fixed":
@@ -787,6 +887,7 @@ def price(
             return mc_price(fwd_t, params.sigma, product, mc_spec).price
         raise NotImplementedError(
             "Asian pricing currently supports method='asian_bsm', method='asian_mc', "
+            "method='proj_asian' (1-D Lévy arithmetic Asian with geometric CV), "
             "or method='monte_carlo'."
         )
 

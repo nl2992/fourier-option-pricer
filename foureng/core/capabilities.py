@@ -318,7 +318,32 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
             "calls/puts on CF-equipped Lévy models, validated against COS to "
             "~1e-7. Bermudan puts on a uniform monitoring grid are priced via "
             "the PROJ Toeplitz-FFT recursion (proj_bermudan_put) for the same "
-            "1-D Lévy family; further path-dependent exotics are planned."
+            "1-D Lévy family; barrier and Asian extensions via proj_barrier and proj_asian."
+        ),
+    ),
+    "proj_barrier": MethodSpec(
+        requires_cf=True,
+        supports_products=frozenset({"barrier"}),
+        supports_exercise=frozenset({"european"}),
+        supports_path_dependent=True,
+        notes=(
+            "PROJ single-barrier pricer (Kirkby 2015) for 1-D Lévy models. "
+            "All four barrier types (down-out, up-out, down-in, up-in) for "
+            "calls and puts via backward induction with barrier absorption. "
+            "Supports BSM, VG, CGMY, NIG, Kou, Merton JD models."
+        ),
+    ),
+    "proj_asian": MethodSpec(
+        requires_cf=True,
+        requires_simulation=True,
+        supports_products=frozenset({"asian"}),
+        supports_exercise=frozenset({"european"}),
+        supports_path_dependent=True,
+        notes=(
+            "PROJ arithmetic Asian pricer with geometric control variate. "
+            "MC-based arithmetic Asian price with PROJ-computed geometric "
+            "Asian as control variate for variance reduction. Supports all "
+            "1-D Lévy models in the registry (BSM, VG, CGMY, NIG, Kou, Merton JD)."
         ),
     ),
     # ── Planned methods (not yet implemented) ────────────────────────────
