@@ -64,3 +64,11 @@ class TestVarianceMC:
         price_low = variance_option_mc(S0, r, q, 0.1, T, K_var, 252, cp=1, spec=spec)
         price_high = variance_option_mc(S0, r, q, 0.3, T, K_var, 252, cp=1, spec=spec)
         assert price_high > price_low
+
+    def test_variance_option_zero_vol(self):
+        """Variance call with K_var > 0 at sigma→0 converges to zero (deeply OTM)."""
+        sigma_tiny = 1e-4
+        spec = GBMPathSpec(n_paths=5_000, n_steps=252, seed=11, antithetic=True)
+        K_var = 0.01  # positive strike far above realized variance ≈ sigma_tiny^2
+        price = variance_option_mc(S0, r, q, sigma_tiny, T, K_var, 252, cp=1, spec=spec)
+        assert price < 1e-6

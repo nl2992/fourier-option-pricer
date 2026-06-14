@@ -64,3 +64,12 @@ class TestLookbackMC:
         mc_price = lookback_mc(S0, r, q, sigma, T, 2000, cp=1, spec=spec, K=K)
         analytic = bsm_lookback_fixed(S0, K, S0, r, q, sigma, T, cp=1)
         assert abs(mc_price - analytic) / analytic < 0.04
+
+    def test_lookback_positive(self):
+        """All lookback MC prices (floating and fixed) are non-negative."""
+        spec = GBMPathSpec(n_paths=5_000, n_steps=50, seed=7, antithetic=True)
+        for cp in [1, -1]:
+            price_float = lookback_mc(S0, r, q, sigma, T, 50, cp=cp, spec=spec)
+            assert price_float >= 0.0, f"floating cp={cp} price={price_float}"
+            price_fixed = lookback_mc(S0, r, q, sigma, T, 50, cp=cp, spec=spec, K=100.0)
+            assert price_fixed >= 0.0, f"fixed cp={cp} price={price_fixed}"
