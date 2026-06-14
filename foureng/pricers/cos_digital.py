@@ -223,3 +223,32 @@ def cos_digital_prices(
         prices = fwd.disc * (A[:, None] * V).sum(axis=0)
 
     return np.asarray(prices, dtype=float)
+
+
+# Aliases expected by __init__.py (main-branch API compat)
+def cos_digital_price(
+    phi: CharFunc,
+    fwd: ForwardSpec,
+    strike: float,
+    grid: COSGrid,
+    digital_type: str = "cash_or_nothing",
+    cp: int = 1,
+    cash: float = 1.0,
+) -> float:
+    """Single-strike wrapper around cos_digital_prices."""
+    return float(cos_digital_prices(phi, fwd, np.array([strike]), grid, digital_type, cp, cash)[0])
+
+
+def cos_digital_price_strip(
+    phi: CharFunc,
+    fwd: ForwardSpec,
+    strikes: np.ndarray,
+    grid: COSGrid,
+    digital_type: str = "cash_or_nothing",
+    cp: int = 1,
+    cash: float = 1.0,
+) -> np.ndarray:
+    """Multi-strike wrapper around cos_digital_prices."""
+    return cos_digital_prices(
+        phi, fwd, np.asarray(strikes, dtype=float), grid, digital_type, cp, cash
+    )
