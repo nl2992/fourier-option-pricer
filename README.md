@@ -211,6 +211,18 @@ Method labels: `"cos"`, `"cos_improved"`, `"cos_filtered"`, `"carr_madan"`, `"fr
 
 Product-level pricing uses `price(product, model, method, fwd, params)`. It currently routes European options, cash-or-nothing and asset-or-nothing digitals via `"cos_digital"` or BSM `"digital_bsm"`, supported 1-D Levy Bermudans via `"cos_bermudan"`, BSM generic Monte Carlo / Longstaff-Schwartz via `"monte_carlo"` for Europeans, Americans, Bermudans, and the GBM-simulated exotic book, continuously monitored zero-rebate BSM single barriers via `"barrier_bsm"`, BSM Asians via `"asian_bsm"` / `"asian_mc"`, BSM forward-start options via `"forward_start_bsm"`, BSM two-asset exchange options via `"exchange_bsm"` / `"multi_asset_mc"`, BSM basket and best-of options via `"multi_asset_mc"`, BSM spread options via `"spread_bsm"` / `"multi_asset_mc"`, BSM lookbacks via `"lookback_bsm"` / `"lookback_mc"`, BSM variance swaps via `"variance_analytic_bsm"` / `"variance_mc"`, integrated-variance BSM options via `"variance_analytic_bsm"` and realised/integrated BSM variance options via `"variance_mc"`, BSM cliquets via `"cliquet_mc"`, and BSM double barriers via `"double_barrier_mc"`.
 
+### Path-dependent MC engines (`foureng.mc`)
+
+| Function | Product | Notes |
+|----------|---------|-------|
+| `asian_mc(S0, K, r, q, sigma, T, N_mon, cp, spec)` | Arithmetic Asian | Geometric-average control variate |
+| `barrier_mc(S0, K, H, r, q, sigma, T, n_steps, barrier_type, rebate, cp, spec)` | Single barrier | BGK (1999) continuity correction |
+| `lookback_mc(S0, r, q, sigma, T, n_steps, cp, spec, K=None)` | Floating/fixed lookback | K=None → floating-strike |
+| `variance_swap_mc(S0, r, q, sigma, T, n_steps, spec)` | Variance swap | Returns fair rate E[RV] |
+| `variance_option_mc(S0, r, q, sigma, T, K_var, n_steps, cp, spec)` | Variance option | Payoff max(cp*(RV-K_var), 0) |
+
+All MC functions take a `GBMPathSpec(n_paths, n_steps, seed, antithetic)` configuration object.
+
 ### Core pricing functions
 
 | Function | Parameters | Returns |

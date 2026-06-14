@@ -1,4 +1,4 @@
-﻿# Changelog
+# Changelog
 
 ## 0.5.0 - 2026-06-10
 
@@ -14,6 +14,12 @@
 - Added `calibrate_cgmy` and `calibrate_nig` surface calibration functions.
 - Added `bsm_geometric_asian` and `bsm_geometric_asian_parity` to the public analytics API.
 - Added `bsm_gap_call`, `bsm_cash_or_nothing`, and `bsm_asset_or_nothing` to the public analytics API.
+- Added Sprint 3 BSM closed-form exotics: `analytic_bsm.py` (digital, geometric Asian,
+  forward-start, single-barrier Reiner-Rubinstein 1991, lookback Conze-Viswanathan 1991);
+  lookback floating-strike formula corrected and MC-verified; 6 product test files.
+- Added Sprint 4 path-dependent MC engines: `GBMPathSpec`/`simulate_gbm_paths`, arithmetic
+  Asian MC (geometric-average CV), barrier MC (BGK 1999 continuity correction), lookback MC,
+  variance swap/option MC; `mc_gbm` registered in `METHOD_REGISTRY`; 4 product test files.
 - Added repository-wide quality gates for `tests/` linting with documented test-specific exceptions.
 - Added `mypy` type-checking support for the `foureng/` package.
 - Added Hypothesis-backed property tests for numerical invariants and model reductions.
