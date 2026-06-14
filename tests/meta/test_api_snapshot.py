@@ -1,4 +1,4 @@
-﻿"""Snapshot tests for the public API surface.
+"""Snapshot tests for the public API surface.
 
 These tests lock in the set of names exported from the top-level `foureng`
 package. Adding new public names is fine; removing existing ones requires an

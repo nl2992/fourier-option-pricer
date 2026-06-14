@@ -112,7 +112,9 @@ from .pricers.lewis import lewis_call_prices, lewis_prices
 from .pricers.mellin import mellin_price_at_strikes
 from .pricers.pde_fd import PDEGrid, bsm_pde_fd_price, bsm_pde_fd_price_at_strikes
 from .pricers.proj import (
+    proj_asian_price_cv,
     proj_auto_grid,
+    proj_barrier_price,
     proj_bermudan_put,
     proj_european_price_at_strikes,
     proj_price_at_strikes,
@@ -237,6 +239,8 @@ __all__ = [
     "proj_price_at_strikes",
     "proj_auto_grid",
     "proj_bermudan_put",
+    "proj_barrier_price",
+    "proj_asian_price_cv",
     "ProjGrid",
     "sabr_hagan_price_at_strikes",
     "bsm_lattice_price",
