@@ -46,7 +46,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from typing import Callable, Literal
+from typing import Callable, Literal, TypeAlias
 
 import numpy as np
 
@@ -56,8 +56,8 @@ from .base import BasePricer
 # so the module runs under NumPy 1.x (CI had 1.26 historically) and 2.x.
 _trapz = getattr(np, "trapezoid", None) or np.trapz  # type: ignore[attr-defined]
 
-ArrayLike = np.ndarray | list[float] | tuple[float, ...]
-ComplexOrArray = complex | np.ndarray
+ArrayLike: TypeAlias = np.ndarray | list[float] | tuple[float, ...]
+ComplexOrArray: TypeAlias = complex | np.ndarray
 CF = Callable[[ComplexOrArray], ComplexOrArray]
 
 
