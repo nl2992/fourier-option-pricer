@@ -216,6 +216,20 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
             "(Goldman-Sosin-Gatto 1979). BSM model only."
         ),
     ),
+    "mc_gbm": MethodSpec(
+        requires_cf=False,
+        supports_products=frozenset(
+            {"european", "asian", "barrier", "lookback", "variance"}
+        ),
+        supports_exercise=frozenset({"european"}),
+        supports_path_dependent=True,
+        notes=(
+            "GBM log-Euler path Monte Carlo with antithetic variates. "
+            "Arithmetic Asian (geometric-average CV), single-barrier with "
+            "BGK (1999) continuity correction, floating/fixed lookback, "
+            "and variance swap/option pricing. BSM model only."
+        ),
+    ),
 }
 
 

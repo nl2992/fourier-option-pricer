@@ -206,7 +206,19 @@ Full model details: [docs/model_zoo.md](docs/model_zoo.md).
 |----------|------------|---------|
 | `price_strip(model, method, strikes, fwd, params, grid=None)` | model label, method label, strike array, `ForwardSpec`, model params, optional grid | `np.ndarray` of call prices |
 
-Method labels: `"cos"`, `"cos_improved"`, `"cos_filtered"`, `"carr_madan"`, `"frft"`, `"pyfeng_fft"`.
+Method labels: `"cos"`, `"cos_improved"`, `"cos_filtered"`, `"carr_madan"`, `"frft"`, `"pyfeng_fft"`, `"bsm_analytic"`, `"mc_gbm"`.
+
+### Path-dependent MC engines (`foureng.mc`)
+
+| Function | Product | Notes |
+|----------|---------|-------|
+| `asian_mc(S0, K, r, q, sigma, T, N_mon, cp, spec)` | Arithmetic Asian | Geometric-average control variate |
+| `barrier_mc(S0, K, H, r, q, sigma, T, n_steps, barrier_type, rebate, cp, spec)` | Single barrier | BGK (1999) continuity correction |
+| `lookback_mc(S0, r, q, sigma, T, n_steps, cp, spec, K=None)` | Floating/fixed lookback | K=None → floating-strike |
+| `variance_swap_mc(S0, r, q, sigma, T, n_steps, spec)` | Variance swap | Returns fair rate E[RV] |
+| `variance_option_mc(S0, r, q, sigma, T, K_var, n_steps, cp, spec)` | Variance option | Payoff max(cp*(RV−K_var), 0) |
+
+All MC functions take a `GBMPathSpec(n_paths, n_steps, seed, antithetic)` configuration object.
 
 ### Core pricing functions
 
