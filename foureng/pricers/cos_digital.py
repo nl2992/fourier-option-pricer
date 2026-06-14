@@ -206,3 +206,57 @@ def cos_digital_price_strip(
         )
         prices[i] = cos_digital_price(model, fwd, params, product, grid=grid)
     return prices
+
+
+# ---------------------------------------------------------------------------
+# Low-level CF-based batch pricer (used by Sprint 3 pipeline dispatch and tests)
+# ---------------------------------------------------------------------------
+
+
+def cos_digital_prices(
+    phi,
+    fwd: ForwardSpec,
+    strikes: np.ndarray,
+    grid,
+    digital_type: str = "cash_or_nothing",
+    cp: int = 1,
+    cash: float = 1.0,
+) -> np.ndarray:
+    """Low-level COS digital pricer operating directly on a CF and COSGrid.
+
+    Parameters
+    ----------
+    phi          : callable(omega) → complex array, characteristic function
+    fwd          : ForwardSpec
+    strikes      : array of strike prices
+    grid         : COSGrid with .a, .b, .N attributes
+    digital_type : "cash_or_nothing" or "asset_or_nothing"
+    cp           : +1 call, -1 put
+    cash         : cash amount for cash-or-nothing (default 1.0)
+    """
+    a, b, N = grid.a, grid.b, grid.N
+    strikes = np.atleast_1d(np.asarray(strikes, dtype=float))
+    T = fwd.T
+    S0, r, q = fwd.S0, fwd.r, fwd.q
+    disc = np.exp(-r * T)
+    F_T = S0 * np.exp((r - q) * T)
+
+    omega = np.arange(N) * np.pi / (b - a)
+    phi_vals = phi(omega)
+    A = np.real(phi_vals * np.exp(-1j * omega * a))
+    A[0] *= 0.5
+
+    prices = np.empty(len(strikes))
+    for i, K in enumerate(strikes):
+        k_star = np.log(K / F_T)
+        k_star = max(a, min(b, k_star))
+        if cp == 1:
+            c1, c2 = k_star, b
+        else:
+            c1, c2 = a, k_star
+        if digital_type == "cash_or_nothing":
+            V_k = _chi(omega, c1, c2, a, b) * cash
+        else:
+            V_k = _psi(omega, c1, c2, a, b, F_T)
+        prices[i] = disc * float(np.dot(A, V_k))
+    return prices

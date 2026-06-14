@@ -61,6 +61,9 @@ def _execute_notebook_in_current_env(nb: Path, output_path: str) -> None:
 
 @pytest.mark.slow
 def test_bates_replication_notebook_executes():
+    pytest.importorskip(
+        "ipykernel", reason="ipykernel not installed; skipping notebook execution tests"
+    )
     nb = Path("notebooks/paper_replications/bates_mathworks_replication.ipynb")
     assert nb.exists(), f"Notebook not found: {nb}"
     _execute_notebook_in_current_env(nb, "/tmp/bates_mathworks_replication.executed.ipynb")
@@ -68,6 +71,9 @@ def test_bates_replication_notebook_executes():
 
 @pytest.mark.slow
 def test_three_halves_replication_notebook_executes():
+    pytest.importorskip(
+        "ipykernel", reason="ipykernel not installed; skipping notebook execution tests"
+    )
     nb = Path("notebooks/paper_replications/three_halves_replication.ipynb")
     assert nb.exists(), f"Notebook not found: {nb}"
     _execute_notebook_in_current_env(nb, "/tmp/three_halves_replication.executed.ipynb")
