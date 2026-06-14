@@ -1,254 +1,262 @@
-"""COS-method pricer for digital (binary) options.
+"""COS digital option pricing via Fang-Oosterlee payoff integrals.
 
-Implements Fourier-cosine payoff coefficients for cash-or-nothing and
-asset-or-nothing digital options, as an extension of the Fang-Oosterlee
-(2008) COS method.
+Supports both payoff types for any registered model whose CF is available:
 
-For the COS expansion on [a, b] with variable x = log(S_T / F0):
+  cash_or_nothing : pays ``cash_amount`` when the exercise condition is met.
+  asset_or_nothing: pays S_T when the exercise condition is met.
 
-    Cash-or-nothing call payoff: 1 if x > k_s, 0 otherwise
-    Cash-or-nothing put payoff:  1 if x < k_s, 0 otherwise
-    Asset-or-nothing call payoff: F0*exp(x) if x > k_s, 0 otherwise
-    Asset-or-nothing put payoff:  F0*exp(x) if x < k_s, 0 otherwise
+For a call (cp=+1) the condition is S_T > K; for a put (cp=-1) it is S_T < K.
 
-where k_s = log(K / F0).
+COS formulas
+------------
+Let x = log(S_T / F_T), a < x < b the truncation interval, ω_k = kπ/(b-a),
+A_k = Re[φ(ω_k) exp(-iω_k a)] with A_0 halved (the density coefficients).
+
+k_star = log(K / F_T)   (log-moneyness of the option)
+
+Cash-or-nothing call payoff integral (cp=+1):
+    χ_k = (2/(b-a)) ∫_{k*}^{b} cos(ω_k(x-a)) dx
+        = 2/(kπ)  * [sin(ω_k(b-a)) - sin(ω_k(k*-a))]    k > 0
+        = 2(b - k*) / (b - a)                              k = 0
+
+Asset-or-nothing call payoff integral (cp=+1):
+    ψ_k = (2/(b-a)) F_T * ∫_{k*}^{b} e^x cos(ω_k(x-a)) dx
+        = F_T * Re[e^{-iω_k a}/(1+iω_k) * (e^{b(1+iω_k)} - e^{k*(1+iω_k)})]
+          * 2/(b-a)
+
+Put variants integrate over (a, k*) instead.
+
+Price = disc * Σ_k' A_k * χ_k  (cash-or-nothing)
+Price = disc * Σ_k' A_k * ψ_k  (asset-or-nothing)
 """
 
 from __future__ import annotations
 
+from typing import Literal
+
 import numpy as np
 
-from ..models.base import CharFunc, ForwardSpec
-from ..utils.grids import COSGrid
+from ..models.base import ForwardSpec
+from ..models.registry import MODEL_REGISTRY
+from ..products.digital import DigitalOption
+from .cos import cos_auto_grid
 
-# ---------------------------------------------------------------------------
-# Payoff coefficient helpers
-# ---------------------------------------------------------------------------
+# ── payoff coefficient helpers ─────────────────────────────────────────────
 
 
-def _psi_integral(a: float, b: float, N: int, c: np.ndarray, d: np.ndarray) -> np.ndarray:
-    """Integral psi_k = integral_{c}^{d} cos(k*pi*(x-a)/(b-a)) dx.
+def _chi(omega: np.ndarray, c1: float, c2: float, a: float, b: float) -> np.ndarray:
+    """COS indicator coefficients (2/(b-a)) ∫_{c1}^{c2} cos(ω(x-a)) dx.
 
-    For k=0: psi_0 = d - c
-    For k>=1: psi_k = (b-a)/(k*pi) * [sin(k*pi*(d-a)/(b-a)) - sin(k*pi*(c-a)/(b-a))]
-
-    Parameters
-    ----------
-    a, b  : COS truncation bounds
-    N     : number of terms
-    c, d  : lower and upper integration limits (shape: n_strikes,)
-
-    Returns
-    -------
-    psi : shape (N, n_strikes)
+    Exact result:
+        k=0 : 2(c2-c1)/(b-a)
+        k≥1 : (2/(b-a)) · [sin(ω(c2-a)) - sin(ω(c1-a))] / ω
     """
-    k = np.arange(N)
-    ba = b - a
-    omega = k * np.pi / ba  # (N,)
-
-    da = d[None, :] - a  # (1, n_strikes)
-    ca = c[None, :] - a  # (1, n_strikes)
-
-    sin_d = np.sin(omega[:, None] * da)  # (N, n_strikes)
-    sin_c = np.sin(omega[:, None] * ca)
-
-    psi = np.empty((N, len(c)))
-    psi[0, :] = d - c
-    with np.errstate(divide="ignore", invalid="ignore"):
-        psi[1:, :] = (sin_d[1:, :] - sin_c[1:, :]) / omega[1:, None]
-    psi = psi * (2.0 / ba)
-    return psi
-
-
-def _chi_integral(a: float, b: float, N: int, c: np.ndarray, d: np.ndarray) -> np.ndarray:
-    """Integral chi_k = integral_{c}^{d} exp(x)*cos(k*pi*(x-a)/(b-a)) dx * (2/(b-a)).
-
-    Using integration by parts twice:
-        integral exp(x) cos(omega*x) dx = exp(x)*(cos(omega*x) + omega*sin(omega*x))/(1+omega^2) + const
-
-    where omega = k*pi/(b-a).
-
-    Parameters
-    ----------
-    a, b  : COS truncation bounds
-    N     : number of terms
-    c, d  : lower and upper integration limits (shape: n_strikes,)
-
-    Returns
-    -------
-    chi : shape (N, n_strikes)
-    """
-    k = np.arange(N)
-    ba = b - a
-    omega = k * np.pi / ba  # (N,)
-
-    ec = np.exp(c)  # (n_strikes,)
-    ed = np.exp(d)  # (n_strikes,)
-
-    da = d[None, :] - a  # (1, n_strikes)
-    ca = c[None, :] - a  # (1, n_strikes)
-
-    cos_d = np.cos(omega[:, None] * da)
-    sin_d = np.sin(omega[:, None] * da)
-    cos_c = np.cos(omega[:, None] * ca)
-    sin_c = np.sin(omega[:, None] * ca)
-
-    denom = 1.0 + omega[:, None] ** 2  # (N, 1)
-
-    chi = (
-        (cos_d * ed[None, :] + omega[:, None] * sin_d * ed[None, :])
-        - (cos_c * ec[None, :] + omega[:, None] * sin_c * ec[None, :])
-    ) / denom
-    chi = chi * (2.0 / ba)
+    chi = np.empty(len(omega))
+    chi[0] = 2.0 * (c2 - c1) / (b - a)
+    w = omega[1:]  # ω_k = kπ/(b-a) for k >= 1
+    chi[1:] = (2.0 / (b - a)) * (np.sin(w * (c2 - a)) - np.sin(w * (c1 - a))) / w
     return chi
 
 
-def _cash_or_nothing_call_coeffs(a: float, b: float, N: int, k_strike: np.ndarray) -> np.ndarray:
-    """COS payoff coefficients for cash-or-nothing call: pays 1 if x > k_strike.
+def _psi(omega: np.ndarray, c1: float, c2: float, a: float, b: float, F_T: float) -> np.ndarray:
+    """COS asset-weighting coefficients (2/(b-a)) F_T ∫_{c1}^{c2} e^x cos(ω(x-a)) dx.
 
-    Integration is over [max(k_strike,a), b]:
-        G_k = psi_k integrated over [c, b]   where c = clip(k_strike, a, b)
+    Uses the exact integral:
+        ∫_{c1}^{c2} e^x cos(ω(x-a)) dx = Re[ e^{-iωa}/(1+iω) * (e^{c2(1+iω)} - e^{c1(1+iω)}) ]
     """
-    c = np.clip(k_strike, a, b)
-    d = np.full_like(c, b)
-    return _psi_integral(a, b, N, c, d)
+    psi = np.empty(len(omega))
+    # k = 0 term: ∫_{c1}^{c2} e^x dx = e^{c2} - e^{c1}
+    psi[0] = 2.0 * F_T * (np.exp(c2) - np.exp(c1)) / (b - a)
+    k = omega[1:]  # ω_k for k >= 1
+    phase = np.exp(-1j * k * a)  # e^{-iωa}
+    denom = 1.0 + 1j * k  # 1 + iω
+    upper = np.exp(c2 * (1.0 + 1j * k))  # e^{c2(1+iω)}
+    lower = np.exp(c1 * (1.0 + 1j * k))  # e^{c1(1+iω)}
+    integral = np.real(phase / denom * (upper - lower))
+    psi[1:] = 2.0 * F_T * integral / (b - a)
+    return psi
 
 
-def _cash_or_nothing_put_coeffs(a: float, b: float, N: int, k_strike: np.ndarray) -> np.ndarray:
-    """COS payoff coefficients for cash-or-nothing put: pays 1 if x < k_strike.
+# ── main pricer ────────────────────────────────────────────────────────────
 
-    Integration is over [a, min(k_strike,b)]:
-        G_k = psi_k integrated over [a, d]   where d = clip(k_strike, a, b)
+
+def cos_digital_price(
+    model: str,
+    fwd: ForwardSpec,
+    params,
+    product: DigitalOption,
+    *,
+    grid=None,
+    N: int = 256,
+    L: float = 12.0,
+) -> float:
+    """Price a digital option via the COS method.
+
+    Parameters
+    ----------
+    model : str
+        Any model registered in ``MODEL_REGISTRY``.
+    fwd : ForwardSpec
+        Market inputs.
+    params :
+        Model parameter dataclass.
+    product : DigitalOption
+        Digital option spec (strike, maturity, cp, payoff_type, cash_amount).
+    grid :
+        Optional pre-built :class:`~foureng.utils.grids.COSGrid`.
+    N : int
+        COS terms (used when ``grid`` is None).
+    L : float
+        Truncation multiplier (used when ``grid`` is None).
+
+    Returns
+    -------
+    float
+        Digital option price.
     """
-    c = np.full_like(k_strike, a)
-    d = np.clip(k_strike, a, b)
-    return _psi_integral(a, b, N, c, d)
+    if model not in MODEL_REGISTRY:
+        raise ValueError(f"cos_digital_price: unknown model {model!r}")
+
+    entry = MODEL_REGISTRY[model]
+    K = product.strike
+    T = product.maturity
+    cp = product.cp
+    r, q, S0 = fwd.r, fwd.q, fwd.S0
+
+    fwd_T = ForwardSpec(S0=S0, r=r, q=q, T=T)
+
+    if grid is None:
+        cums = entry.cumulants(fwd_T, params)
+        grid = cos_auto_grid(cums, N=N, L=L)
+
+    a, b, n_cos = grid.a, grid.b, grid.N
+    omega = np.arange(n_cos, dtype=float) * np.pi / (b - a)
+
+    # Characteristic function at grid frequencies
+    phi_vals = entry.cf(omega, fwd_T, params)
+    A = np.real(phi_vals * np.exp(-1j * omega * a))
+    A[0] *= 0.5
+
+    # Forward price and discount
+    F_T = S0 * np.exp((r - q) * T)
+    disc = np.exp(-r * T)
+
+    # Integration bounds (log-moneyness breakpoint)
+    k_star = np.log(K / F_T)
+    k_star = float(np.clip(k_star, a, b))  # clamp to [a, b]
+
+    if cp == 1:  # call: exercise when x > k_star
+        c1, c2 = k_star, b
+    else:  # put: exercise when x < k_star
+        c1, c2 = a, k_star
+
+    # Payoff integrals
+    if product.payoff_type == "cash_or_nothing":
+        V_k = _chi(omega, c1, c2, a, b) * product.cash_amount
+    else:  # asset_or_nothing
+        V_k = _psi(omega, c1, c2, a, b, F_T)
+
+    # COS sum  (half-weight already in A[0])
+    price = disc * float(np.dot(A, V_k))
+
+    # Digital prices are bounded: cash ∈ [0, cash_amount*disc], asset ∈ [0, S0]
+    if product.payoff_type == "cash_or_nothing":
+        price = float(np.clip(price, 0.0, product.cash_amount))
+    else:
+        price = float(np.clip(price, 0.0, S0 * np.exp(-q * T) + 1e-6))
+
+    return price
 
 
-def _asset_or_nothing_call_coeffs(
-    a: float, b: float, N: int, k_strike: np.ndarray, F0: float
+def cos_digital_price_strip(
+    model: str,
+    fwd: ForwardSpec,
+    params,
+    strikes: np.ndarray,
+    maturity: float,
+    cp: int = 1,
+    payoff_type: Literal["cash_or_nothing", "asset_or_nothing"] = "cash_or_nothing",
+    cash_amount: float = 1.0,
+    *,
+    grid=None,
+    N: int = 256,
+    L: float = 12.0,
 ) -> np.ndarray:
-    """COS payoff coefficients for asset-or-nothing call: pays F0*exp(x) if x > k_strike.
+    """Price a strip of digital options at different strikes.
 
-    Integration is over [max(k_strike,a), b]:
-        G_k = F0 * chi_k integrated over [c, b]   where c = clip(k_strike, a, b)
+    Builds the grid and evaluates the CF once, then loops over strikes.
     """
-    c = np.clip(k_strike, a, b)
-    d = np.full_like(c, b)
-    return F0 * _chi_integral(a, b, N, c, d)
+    strikes = np.asarray(strikes, dtype=float)
+    if model not in MODEL_REGISTRY:
+        raise ValueError(f"cos_digital_price_strip: unknown model {model!r}")
 
+    fwd_T = ForwardSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=maturity)
+    if grid is None:
+        cums = MODEL_REGISTRY[model].cumulants(fwd_T, params)
+        grid = cos_auto_grid(cums, N=N, L=L)
 
-def _asset_or_nothing_put_coeffs(
-    a: float, b: float, N: int, k_strike: np.ndarray, F0: float
-) -> np.ndarray:
-    """COS payoff coefficients for asset-or-nothing put: pays F0*exp(x) if x < k_strike.
-
-    Integration is over [a, min(k_strike,b)]:
-        G_k = F0 * chi_k integrated over [a, d]   where d = clip(k_strike, a, b)
-    """
-    c = np.full_like(k_strike, a)
-    d = np.clip(k_strike, a, b)
-    return F0 * _chi_integral(a, b, N, c, d)
+    prices = np.empty(len(strikes))
+    for i, K in enumerate(strikes):
+        product = DigitalOption(
+            strike=float(K),
+            maturity=maturity,
+            cp=cp,
+            payoff_type=payoff_type,
+            cash_amount=cash_amount,
+        )
+        prices[i] = cos_digital_price(model, fwd, params, product, grid=grid)
+    return prices
 
 
 # ---------------------------------------------------------------------------
-# Public pricing function
+# Low-level CF-based batch pricer (used by Sprint 3 pipeline dispatch and tests)
 # ---------------------------------------------------------------------------
 
 
 def cos_digital_prices(
-    phi: CharFunc,
+    phi,
     fwd: ForwardSpec,
     strikes: np.ndarray,
-    grid: COSGrid,
+    grid,
     digital_type: str = "cash_or_nothing",
     cp: int = 1,
     cash: float = 1.0,
 ) -> np.ndarray:
-    """COS-method prices for digital (binary) options.
+    """Low-level COS digital pricer operating directly on a CF and COSGrid.
 
     Parameters
     ----------
-    phi          : characteristic function of log-return X_T = log(S_T/F0)
-    fwd          : forward specification (spot, rate, div, maturity)
+    phi          : callable(omega) → complex array, characteristic function
+    fwd          : ForwardSpec
     strikes      : array of strike prices
-    grid         : COSGrid with truncation interval [a, b] and N terms
+    grid         : COSGrid with .a, .b, .N attributes
     digital_type : "cash_or_nothing" or "asset_or_nothing"
     cp           : +1 call, -1 put
-    cash         : cash amount for cash-or-nothing contracts (default 1.0)
-
-    Returns
-    -------
-    np.ndarray
-        Digital option prices, one per strike.
+    cash         : cash amount for cash-or-nothing (default 1.0)
     """
-    if digital_type not in {"cash_or_nothing", "asset_or_nothing"}:
-        raise ValueError(
-            f"cos_digital_prices: digital_type must be 'cash_or_nothing' or "
-            f"'asset_or_nothing'; got {digital_type!r}"
-        )
-    if cp not in (1, -1):
-        raise ValueError(f"cos_digital_prices: cp must be +1 or -1, got {cp}")
-
     a, b, N = grid.a, grid.b, grid.N
     strikes = np.atleast_1d(np.asarray(strikes, dtype=float))
-    center = float(getattr(grid, "center", 0.0))
-    shifted_F0 = fwd.F0 * np.exp(center)
+    T = fwd.T
+    S0, r, q = fwd.S0, fwd.r, fwd.q
+    disc = np.exp(-r * T)
+    F_T = S0 * np.exp((r - q) * T)
 
-    k = np.arange(N)
-    omega = k * np.pi / (b - a)
-
-    # Characteristic function samples
+    omega = np.arange(N) * np.pi / (b - a)
     phi_vals = phi(omega)
-    if center != 0.0:
-        phi_vals = phi_vals * np.exp(-1j * omega * center)
     A = np.real(phi_vals * np.exp(-1j * omega * a))
     A[0] *= 0.5
 
-    # Log-strike array
-    k_strike = np.log(strikes / shifted_F0)
-
-    if digital_type == "cash_or_nothing":
+    prices = np.empty(len(strikes))
+    for i, K in enumerate(strikes):
+        k_star = np.log(K / F_T)
+        k_star = max(a, min(b, k_star))
         if cp == 1:
-            V = _cash_or_nothing_call_coeffs(a, b, N, k_strike)
+            c1, c2 = k_star, b
         else:
-            V = _cash_or_nothing_put_coeffs(a, b, N, k_strike)
-        prices = cash * fwd.disc * (A[:, None] * V).sum(axis=0)
-    else:
-        # asset_or_nothing
-        if cp == 1:
-            V = _asset_or_nothing_call_coeffs(a, b, N, k_strike, shifted_F0)
+            c1, c2 = a, k_star
+        if digital_type == "cash_or_nothing":
+            V_k = _chi(omega, c1, c2, a, b) * cash
         else:
-            V = _asset_or_nothing_put_coeffs(a, b, N, k_strike, shifted_F0)
-        prices = fwd.disc * (A[:, None] * V).sum(axis=0)
-
-    return np.asarray(prices, dtype=float)
-
-
-# Aliases expected by __init__.py (main-branch API compat)
-def cos_digital_price(
-    phi: CharFunc,
-    fwd: ForwardSpec,
-    strike: float,
-    grid: COSGrid,
-    digital_type: str = "cash_or_nothing",
-    cp: int = 1,
-    cash: float = 1.0,
-) -> float:
-    """Single-strike wrapper around cos_digital_prices."""
-    return float(cos_digital_prices(phi, fwd, np.array([strike]), grid, digital_type, cp, cash)[0])
-
-
-def cos_digital_price_strip(
-    phi: CharFunc,
-    fwd: ForwardSpec,
-    strikes: np.ndarray,
-    grid: COSGrid,
-    digital_type: str = "cash_or_nothing",
-    cp: int = 1,
-    cash: float = 1.0,
-) -> np.ndarray:
-    """Multi-strike wrapper around cos_digital_prices."""
-    return cos_digital_prices(
-        phi, fwd, np.asarray(strikes, dtype=float), grid, digital_type, cp, cash
-    )
+            V_k = _psi(omega, c1, c2, a, b, F_T)
+        prices[i] = disc * float(np.dot(A, V_k))
+    return prices
