@@ -65,6 +65,7 @@ class TestVarianceMC:
         price_high = variance_option_mc(S0, r, q, 0.3, T, K_var, 252, cp=1, spec=spec)
         assert price_high > price_low
 
+
     def test_variance_option_zero_vol(self):
         """Variance call with K_var > 0 at sigma→0 converges to zero (deeply OTM)."""
         sigma_tiny = 1e-4
