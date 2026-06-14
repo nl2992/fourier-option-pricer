@@ -202,6 +202,20 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
             "via matrix-exponent / generator methods."
         ),
     ),
+    "bsm_analytic": MethodSpec(
+        requires_cf=False,
+        supports_products=frozenset(
+            {"european", "digital", "barrier", "asian", "lookback", "forward_start"}
+        ),
+        supports_exercise=frozenset({"european"}),
+        supports_path_dependent=False,
+        notes=(
+            "BSM closed-form reference pricers. "
+            "European, cash/asset digitals, geometric Asian, forward-start, "
+            "single-barrier (Reiner-Rubinstein 1991), and lookback "
+            "(Goldman-Sosin-Gatto 1979). BSM model only."
+        ),
+    ),
 }
 
 

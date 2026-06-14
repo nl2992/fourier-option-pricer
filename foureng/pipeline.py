@@ -504,6 +504,83 @@ def price(
         )
         return float(results[0])
 
+    if pt == "digital":
+        from .models.base import ForwardSpec as _FwdSpec
+        from .products.digital import DigitalOption
+
+        if not isinstance(product, DigitalOption):
+            raise TypeError(
+                "price(): product_type='digital' must be represented by "
+                f"DigitalOption, got {type(product).__name__!r}"
+            )
+
+        fwd_t = _FwdSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=product.maturity)
+
+        if method == "bsm_analytic":
+            from .models.bsm import BsmParams
+            from .pricers.analytic_bsm import bsm_asset_or_nothing, bsm_cash_or_nothing
+
+            if not isinstance(params, BsmParams):
+                raise ValueError(
+                    "price(): method='bsm_analytic' requires BsmParams, "
+                    f"got {type(params).__name__!r}"
+                )
+            if product.payoff_type == "cash_or_nothing":
+                return bsm_cash_or_nothing(
+                    fwd_t.S0,
+                    product.strike,
+                    fwd_t.r,
+                    fwd_t.q,
+                    params.sigma,
+                    fwd_t.T,
+                    product.cp,
+                    product.cash_amount,
+                )
+            else:
+                return (
+                    bsm_asset_or_nothing(
+                        fwd_t.S0,
+                        product.strike,
+                        fwd_t.r,
+                        fwd_t.q,
+                        params.sigma,
+                        fwd_t.T,
+                        product.cp,
+                    )
+                    * product.cash_amount
+                )
+
+        if method in {"cos", "cos_improved", "cos_filtered"}:
+            from .models.registry import MODEL_REGISTRY as _MR
+            from .pricers.cos_digital import cos_digital_prices
+            from .utils.grids import COSGrid as _COSGrid
+
+            phi = _cf_for(model, fwd_t, params)
+
+            # Build grid: use explicit grid if provided, else auto-grid from cumulants
+            if isinstance(grid, _COSGrid):
+                cos_grid = grid
+            else:
+                from .pricers.cos import cos_auto_grid
+
+                cos_grid = cos_auto_grid(_MR[model].cumulants(fwd_t, params), N=256, L=10.0)
+
+            prices = cos_digital_prices(
+                phi,
+                fwd_t,
+                np.array([product.strike]),
+                cos_grid,
+                digital_type=product.payoff_type,
+                cp=product.cp,
+                cash=product.cash_amount,
+            )
+            return float(prices[0])
+
+        raise NotImplementedError(
+            f"price(): method={method!r} is not supported for product_type='digital'. "
+            "Use 'bsm_analytic', 'cos', 'cos_improved', or 'cos_filtered'."
+        )
+
     # For future products, provide a capability hint instead of a bare NotImplementedError.
     _HINTS: dict[str, str] = {
         "digital": "Use a COS digital pricer (Phase 4.1) or analytic BSM.",
