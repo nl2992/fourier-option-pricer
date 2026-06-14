@@ -222,52 +222,7 @@ def cos_digital_prices(
             V = _asset_or_nothing_put_coeffs(a, b, N, k_strike, shifted_F0)
         prices = fwd.disc * (A[:, None] * V).sum(axis=0)
 
-    return price
-
-
-def cos_digital_price_strip(
-    model: str,
-    fwd: ForwardSpec,
-    params,
-    strikes: np.ndarray,
-    maturity: float,
-    cp: int = 1,
-    payoff_type: Literal["cash_or_nothing", "asset_or_nothing"] = "cash_or_nothing",
-    cash_amount: float = 1.0,
-    *,
-    grid=None,
-    N: int = 256,
-    L: float = 12.0,
-) -> np.ndarray:
-    """Price a strip of digital options at different strikes.
-
-    Builds the grid and evaluates the CF once, then loops over strikes.
-    """
-    strikes = np.asarray(strikes, dtype=float)
-    if model not in MODEL_REGISTRY:
-        raise ValueError(f"cos_digital_price_strip: unknown model {model!r}")
-
-    fwd_T = ForwardSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=maturity)
-    if grid is None:
-        cums = MODEL_REGISTRY[model].cumulants(fwd_T, params)
-        grid = cos_auto_grid(cums, N=N, L=L)
-
-    prices = np.empty(len(strikes))
-    for i, K in enumerate(strikes):
-        product = DigitalOption(
-            strike=float(K),
-            maturity=maturity,
-            cp=cp,
-            payoff_type=payoff_type,
-            cash_amount=cash_amount,
-        )
-        prices[i] = cos_digital_price(model, fwd, params, product, grid=grid)
-    return prices
-
-
-# ---------------------------------------------------------------------------
-# Low-level CF-based batch pricer (used by Sprint 3 pipeline dispatch and tests)
-# ---------------------------------------------------------------------------
+    return np.asarray(prices, dtype=float)
 
 
 def cos_digital_prices(
