@@ -97,7 +97,7 @@ _BASELINE_API = {
 
 
 def _public(module) -> set[str]:
-    return {name for name in dir(module) if not name.startswith("_")}
+    return {name for name in dir(module) if not name.startswith("_") or name == "__version__"}
 
 
 def test_no_baseline_names_removed():
