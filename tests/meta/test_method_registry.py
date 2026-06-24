@@ -31,6 +31,8 @@ _BASELINE_METHODS = {
     "cos_bermudan",
     "mellin",
     "proj",
+    "proj_barrier",
+    "proj_asian",
     "sabr_hagan",
     "digital_bsm",
     "cos_digital",

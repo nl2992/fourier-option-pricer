@@ -514,16 +514,16 @@ def _product_hint(model: str, product: str, method: str) -> str:
         "asian": (
             "Asian arithmetic payoff is path-dependent; COS implementation "
             "currently handles terminal-payoff transforms only. "
-            "Use Monte Carlo or PROJ Asian when implemented."
+            "Use asian_mc / monte_carlo, or proj_asian for supported 1-D Levy models."
         ),
         "barrier": (
             "Barrier monitoring requires path knowledge between payoff dates. "
-            "Use barrier_analytic_bsm (BSM), barrier_mc, barrier_proj, "
+            "Use barrier_bsm (BSM), monte_carlo, proj_barrier, "
             "pde_fd, lattice, or ctmc."
         ),
         "lookback": (
             "Lookback payoff is path-dependent. "
-            "Use lookback_bsm (BSM closed-form), lookback_mc, or PROJ."
+            "Use lookback_bsm (BSM closed-form) or lookback_mc / monte_carlo."
         ),
         "bermudan": (
             "Bermudan early-exercise requires backward induction. "
@@ -535,11 +535,11 @@ def _product_hint(model: str, product: str, method: str) -> str:
         ),
         "variance_swap": (
             "Variance swap payoff is path-dependent. "
-            "Use variance_analytic_bsm (BSM) or variance_heston (Heston)."
+            "Use variance_analytic_bsm (BSM) or variance_mc."
         ),
         "variance_option": ("Variance option payoff is path-dependent. Use variance_mc."),
         "cliquet": (
-            "Cliquet payoff is path-dependent across reset periods. Use cliquet_mc or cliquet_proj."
+            "Cliquet payoff is path-dependent across reset periods. Use cliquet_mc."
         ),
         "exchange": "Use multi_asset_mc or the Margrabe closed-form.",
         "basket": "Use multi_asset_mc or log-normal basket approximation.",

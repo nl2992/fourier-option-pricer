@@ -91,5 +91,7 @@ Public exports include the multi-asset analytic helper `kirk_spread` alongside t
 
 ## Notes
 
-- `proj` is now a real B-spline frame-projection engine for European vanillas (validated against COS to ~1e-7), with a standalone Bermudan-put recursion (`proj_bermudan_put`) cross-validated against `cos_bermudan`. The broader exotic PROJ recursion family (barrier, Asian, lookback, step, cliquet) is still planned; see [proj_parity_roadmap.md](proj_parity_roadmap.md).
+- `proj` is now a real B-spline frame-projection engine for European vanillas (validated against COS to ~1e-7), with a standalone Bermudan-put recursion (`proj_bermudan_put`) cross-validated against `cos_bermudan`.
+- `proj_barrier` now prices 1-D Lévy single barriers, and `proj_asian` now prices fixed-strike arithmetic Asians through a PROJ-assisted geometric control variate.
+- The remaining PROJ backlog is narrower now: general Bermudan/American call support, double barrier, lookback, step, cliquet, CTMC, and the longer-tail exotic families tracked in [proj_parity_roadmap.md](proj_parity_roadmap.md).
 - `mellin` remains a validated European façade rather than the full model-specific contour implementation set.
