@@ -318,7 +318,9 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
             "calls/puts on CF-equipped Lévy models, validated against COS to "
             "~1e-7. Bermudan puts on a uniform monitoring grid are priced via "
             "the PROJ Toeplitz-FFT recursion (proj_bermudan_put) for the same "
-            "1-D Lévy family; barrier and Asian extensions via proj_barrier and proj_asian."
+            "1-D Lévy family; non-dividend Bermudan calls collapse to the "
+            "matching European call. Barrier and Asian extensions via "
+            "proj_barrier and proj_asian."
         ),
     ),
     "proj_barrier": MethodSpec(

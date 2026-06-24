@@ -32,6 +32,11 @@ near-Fourier speed, plus a **CTMC** engine for SV/SLV exotics. We are pursuing
     projection, Gaussian-quadrature early-exercise stencils). Cross-validated vs
     `cos_bermudan` to 1e-5 (BSM/Kou) and ~1e-3 (VG/CGMY), M∈{10,50}. Tests in
     `tests/methods/test_proj_pricing.py`.
+  - **Bermudan call (non-dividend case)** ✅ **DONE.** The product-level
+    `price(..., method="proj")` route now supports `cp=+1` when `q<=0`, using
+    the standard result that Bermudan call value equals European call value in
+    the absence of dividends/carry drag. Dividend-sensitive calls still fall
+    back to the remaining backlog below.
   - **Single barrier** ✅ **DONE.** `proj_barrier_price` ports
     `PROJ_Barrier.m` for the 1-D Lévy family with all four single-barrier types
     (knock-in via in-out parity), and is wired into `price(..., method="proj_barrier")`.
@@ -41,7 +46,8 @@ near-Fourier speed, plus a **CTMC** engine for SV/SLV exotics. We are pursuing
     variance in arithmetic-Asian Monte Carlo, and is wired into
     `price(..., method="proj_asian")` for fixed-strike arithmetic Asians on the
     supported 1-D Lévy models.
-  - **TODO:** Bermudan/American call (or general cp), double barrier, lookback,
+  - **TODO:** Dividend-sensitive Bermudan/American call (general `cp` case),
+    double barrier, lookback,
     step, cliquet. Port from `PROJ/LEVY/*_Options`.
 - **Phase 3: CTMC.** `foureng/pricers/ctmc.py`: generator + matrix-exponential
   pricer for 1-D diffusion European/barrier/Bermudan; then 2-D SV/SLV (Heston,

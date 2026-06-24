@@ -483,20 +483,22 @@ def price_strip(
 # ---------------------------------------------------------------------------
 
 
-def _proj_bermudan_put_price(model: str, fwd: ForwardSpec, params, product) -> float:
-    """PROJ Bermudan **put** for 1-D Lévy models on a uniform monitoring grid.
+def _proj_bermudan_price(model: str, fwd: ForwardSpec, params, product) -> float:
+    """PROJ Bermudan route for 1-D Lévy models on a uniform monitoring grid.
 
     Builds the one-step risk-neutral CF from the model registry and drives the
-    PROJ Toeplitz-FFT recursion (:func:`~foureng.pricers.proj.proj_bermudan_put`).
-    Supports the same 1-D Lévy family as ``cos_bermudan``; calls and arbitrary
-    (non-uniform) exercise schedules are deferred to ``method='cos_bermudan'``.
+    PROJ Toeplitz-FFT recursion (:func:`~foureng.pricers.proj.proj_bermudan_put`)
+    for puts. For Bermudan calls on non-dividend-paying underlyings (``q<=0``),
+    early exercise is suboptimal and the value collapses to the corresponding
+    European call, so we reuse the PROJ European engine. Arbitrary
+    (non-uniform) exercise schedules and dividend-sensitive calls are deferred
+    to ``method='cos_bermudan'``.
     """
     from .pricers.cos_bermudan import _SUPPORTED_MODELS
 
-    if product.cp != -1:
+    if product.cp not in {-1, 1}:
         raise NotImplementedError(
-            "method='proj' for Bermudans currently supports puts (cp=-1); "
-            "use method='cos_bermudan' for calls."
+            f"method='proj' Bermudan requires cp in {{-1, +1}}; got cp={product.cp!r}."
         )
     if model not in _SUPPORTED_MODELS:
         raise NotImplementedError(
@@ -513,6 +515,24 @@ def _proj_bermudan_put_price(model: str, fwd: ForwardSpec, params, product) -> f
         raise NotImplementedError(
             "method='proj' Bermudan requires a uniform monitoring schedule "
             "(t = dt, 2dt, ..., T); use method='cos_bermudan' for arbitrary dates."
+        )
+
+    if product.cp == 1:
+        if fwd.q > 1e-14:
+            raise NotImplementedError(
+                "method='proj' Bermudan call currently supports only non-dividend-paying "
+                "underlyings (q<=0), where early exercise is suboptimal; "
+                "use method='cos_bermudan' for q>0 calls."
+            )
+        return float(
+            price_strip(
+                model,
+                "proj",
+                np.array([float(product.strike)]),
+                ForwardSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=T),
+                params,
+                cp=1,
+            )[0]
         )
 
     dt = T / M
@@ -781,7 +801,7 @@ def price(
         if method == "cos_bermudan":
             return cos_bermudan_price(model, fwd, params, product, grid=grid)
         if method == "proj":
-            return _proj_bermudan_put_price(model, fwd, params, product)
+            return _proj_bermudan_price(model, fwd, params, product)
         if method == "monte_carlo":
             if model != "bsm":
                 raise NotImplementedError(
@@ -796,7 +816,7 @@ def price(
             return mc_price(fwd_t, params.sigma, product, mc_spec).price
         raise NotImplementedError(
             "Bermudan pricing currently supports method='cos_bermudan', method='proj' "
-            "(1-D Lévy puts), or method='monte_carlo'."
+            "(1-D Lévy puts and non-dividend calls), or method='monte_carlo'."
         )
 
     if pt == "barrier":

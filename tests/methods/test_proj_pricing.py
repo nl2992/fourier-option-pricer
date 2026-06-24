@@ -185,8 +185,30 @@ def test_price_proj_bermudan_dispatch_matches_cos(model, params, tol):
     assert abs(proj - cos) < tol
 
 
+@pytest.mark.parametrize(
+    "model,params",
+    [
+        ("bsm", fe.BsmParams(sigma=0.2)),
+        ("vg", fe.VGParams(sigma=0.12, nu=0.2, theta=-0.14)),
+        ("kou", fe.KouParams(sigma=0.15, lam=1.0, p=0.4, eta1=10.0, eta2=5.0)),
+    ],
+)
+def test_price_proj_bermudan_call_no_dividend_matches_european(model, params):
+    """For q=0, Bermudan calls equal European calls and the PROJ route should use that."""
+    from foureng.products.bermudan import BermudanOption
+
+    fwd = ForwardSpec(S0=100.0, r=0.05, q=0.0, T=1.0)
+    M = 50
+    ex = np.arange(1, M + 1) * (1.0 / M)
+    prod = BermudanOption(strike=100.0, maturity=1.0, cp=1, exercise_times=ex)
+
+    proj = fe.price(prod, model, "proj", fwd, params)
+    euro = price_strip(model, "proj", np.array([100.0]), fwd, params, cp=1)[0]
+    assert abs(proj - euro) < 1e-10
+
+
 def test_price_proj_bermudan_guards():
-    """PROJ Bermudan dispatch rejects calls, non-Lévy models, and non-uniform grids."""
+    """PROJ Bermudan dispatch rejects dividend-sensitive calls, non-Lévy models, and non-uniform grids."""
     from foureng.products.bermudan import BermudanOption
 
     fwd = ForwardSpec(S0=100.0, r=0.05, q=0.0, T=1.0)
@@ -194,8 +216,9 @@ def test_price_proj_bermudan_guards():
     ex = np.arange(1, M + 1) * (1.0 / M)
     bsm = fe.BsmParams(sigma=0.2)
 
-    with pytest.raises(NotImplementedError):  # calls not supported
-        fe.price(BermudanOption(100.0, 1.0, 1, ex), "bsm", "proj", fwd, bsm)
+    with pytest.raises(NotImplementedError):  # dividend-sensitive calls still deferred
+        fwd_div = ForwardSpec(S0=100.0, r=0.05, q=0.02, T=1.0)
+        fe.price(BermudanOption(100.0, 1.0, 1, ex), "bsm", "proj", fwd_div, bsm)
     with pytest.raises(NotImplementedError):  # non-Lévy model
         heston = fe.HestonParams(kappa=2.0, theta=0.04, nu=0.3, rho=-0.6, v0=0.04)
         fe.price(BermudanOption(100.0, 1.0, -1, ex), "heston", "proj", fwd, heston)
