@@ -921,7 +921,7 @@ def price(
                 product.maturity,
                 params.sigma,
                 cp=product.cp,
-                barrier_type="double_out",
+                knockout=True,
             )
         if method not in {"double_barrier_mc", "monte_carlo"}:
             raise NotImplementedError(

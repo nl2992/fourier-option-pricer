@@ -20,13 +20,16 @@ def sabr_hagan_price_at_strikes(
     if cp not in (1, -1):
         raise ValueError(f"cp must be +1 or -1, got {cp}")
     K = np.ascontiguousarray(np.asarray(strikes, dtype=np.float64))
-    vols = sabr_hagan_implied_vol(fwd.F0, K, fwd.T, params)
+    vols = sabr_hagan_implied_vol(
+        fwd.F0, K, fwd.T,
+        params.alpha, params.beta, params.rho, params.nu,
+    )
     prices = [
         bs_price_from_fwd(
             float(vol),
             BSInputs(fwd.F0, float(k), fwd.T, fwd.r, fwd.q, is_call=(cp == 1)),
         )
-        for vol, k in zip(vols, K)
+        for vol, k in zip(np.atleast_1d(vols), K)
     ]
     return np.asarray(prices, dtype=np.float64)
 

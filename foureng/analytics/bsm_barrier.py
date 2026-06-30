@@ -188,7 +188,7 @@ def bsm_barrier_price(
             return max(B(phi) - C(phi, eta) + D(phi, eta), 0.0)
 
 
-# ── double barrier (eigenfunction expansion) ───────────────────────────────
+# ── double-barrier (eigenfunction expansion) ───────────────────────────────
 
 
 def bsm_double_barrier_price(
@@ -200,106 +200,133 @@ def bsm_double_barrier_price(
     q: float,
     T: float,
     sigma: float,
-    *,
     cp: int = 1,
-    barrier_type: str = "double_out",
-    n_terms: int = 100,
+    knockout: bool = True,
+    n_max: int = 150,
 ) -> float:
-    """Double barrier option price via eigenfunction expansion of absorbed GBM.
+    """BSM double-barrier option price via eigenfunction expansion.
 
-    Prices a European call or put that is knocked out (``barrier_type="double_out"``)
-    or knocked in (``barrier_type="double_in"``) when the spot touches either the
-    lower barrier *L* or the upper barrier *U*.
+    Prices a double knock-out (DKO) or double knock-in (DKI) option with
+    lower barrier L and upper barrier U.
 
-    The eigenfunction series of the absorbed GBM transition density between *L*
-    and *U* converges exponentially.  ``n_terms=100`` gives machine precision for
-    all practical parameter combinations.
+    The GBM log-price X = log(S_t/S) is absorbed at a = log(L/S) < 0 and
+    b = log(U/S) > 0.  The transition density absorbed at both barriers is
+    expanded in a sine-series (Karatzas & Shreve 1991, Kunitomo-Ikeda 1992,
+    Haug 2007 Ch. 2.17):
 
-    Reference
-    ---------
-    Kunitomo, N. & Ikeda, M. (1992). *Pricing Options with Curved Boundaries*.
-    Mathematical Finance 2(4): 275–298.
+        p(x, T | 0) = (2/M) exp(ν x) exp(-ν²σ²T/2)
+                      Σ_{n=1}^∞ sin(nπy₀/M) sin(nπ(x-a)/M)
+                                 exp(-n²π²σ²T / (2M²))
+
+    where M = log(U/L), y₀ = log(S/L), a = -y₀, ν = (r-q)/σ² - 1/2.
 
     Parameters
     ----------
-    S, K : spot, strike
-    L, U : lower and upper barriers (must satisfy 0 < L < S < U)
-    r, q : risk-free rate, dividend yield
-    T    : time to maturity (years)
-    sigma : lognormal volatility
-    cp   : +1 call, −1 put
-    barrier_type : ``"double_out"`` (knockout at either barrier) or
-        ``"double_in"`` (knockin; uses in-out parity internally).
-    n_terms : truncation of eigenfunction series (default 100).
+    S, K, L, U : float
+        Spot, strike, lower barrier, upper barrier.  Must satisfy 0 < L < U.
+    r, q, T, sigma : float
+        Risk-free rate, dividend yield, maturity, lognormal vol.
+    cp : int
+        +1 call, -1 put.
+    knockout : bool
+        True → DKO price;  False → DKI price (= vanilla - DKO).
+    n_max : int
+        Maximum number of eigenfunction terms.  Convergence is accelerated
+        by early termination when the n-th decay factor falls below 1e-14.
 
     Returns
     -------
     float
-        Option price.  ``double_out + double_in = vanilla`` by construction.
+        Option price.  In-out parity holds: DKO + DKI = vanilla.
+
+    Notes
+    -----
+    DKI price is computed via in-out parity:  DKI = vanilla - DKO.
+
+    The series converges rapidly for T > 0;  more terms are needed for
+    small T or large (U-L)/S.
     """
-    if L <= 0.0 or U <= 0.0 or L >= U:
-        raise ValueError(f"bsm_double_barrier_price: must have 0 < L < U; got L={L}, U={U}")
-    if cp not in (1, -1):
-        raise ValueError(f"bsm_double_barrier_price: cp must be +1 or -1; got {cp}")
-    if barrier_type not in ("double_out", "double_in"):
-        raise ValueError(
-            f"bsm_double_barrier_price: barrier_type must be 'double_out' or 'double_in'; "
-            f"got {barrier_type!r}"
-        )
+    if L <= 0 or U <= L:
+        raise ValueError(f"Must have 0 < L < U; got L={L}, U={U}")
+    if sigma <= 0 or T <= 0:
+        raise ValueError(f"sigma and T must be strictly positive; got sigma={sigma}, T={T}")
 
     vanilla = bsm_call(S, K, r, q, T, sigma) if cp == 1 else bsm_put(S, K, r, q, T, sigma)
 
-    # Spot already breached a barrier
+    # ── already knocked-out or impossible payoff ───────────────────────────
     if S <= L or S >= U:
-        return 0.0 if barrier_type == "double_out" else vanilla
+        dko_price = 0.0
+        return dko_price if knockout else vanilla
 
-    a, b, x0 = np.log(L), np.log(U), np.log(S)
-    mu = r - q - 0.5 * sigma**2
-    span = b - a  # log(U/L)
+    # Call can never finish in-the-money if K ≥ U (spot absorbed before exercise region)
+    # Put can never finish in-the-money if K ≤ L
+    if cp == 1 and K >= U:
+        return 0.0 if knockout else vanilla
+    if cp == -1 and K <= L:
+        return 0.0 if knockout else vanilla
 
-    n_arr = np.arange(1, n_terms + 1, dtype=float)
-    omega = n_arr * np.pi / span  # ω_n = n π / (b−a)
-    lambda_n = 0.5 * sigma**2 * omega**2  # λ_n
+    # ── log-space geometry ─────────────────────────────────────────────────
+    M = np.log(U / L)          # width of barrier interval in log-space
+    y0 = np.log(S / L)         # log(S/L) > 0 since L < S
+    a = np.log(L / S)          # = -y0  (lower barrier in X-space)
+    b_bar = np.log(U / S)      # upper barrier in X-space
+    mu = r - q - 0.5 * sigma ** 2   # drift of log-price
+    nu = mu / sigma ** 2             # convenience: μ/σ²
 
-    # Eigenfunction and density pre-factor
-    decay = np.exp(-lambda_n * T)
-    sin_x0 = np.sin(omega * (x0 - a))
-    pre = (
-        np.exp(-r * T)
-        * (2.0 / span)
-        * np.exp(-mu * x0 / sigma**2 - mu**2 * T / (2.0 * sigma**2))
-    )
-
-    alpha1 = 1.0 + mu / sigma**2  # exponent for e^x payoff term
-    alpha2 = mu / sigma**2         # exponent for constant K payoff term
-
-    def _F(alpha: float, x: float) -> np.ndarray:
-        """Antiderivative of e^{alpha*x} sin(omega*(x-a)) at point x."""
-        denom = alpha**2 + omega**2
-        return (
-            np.exp(alpha * x) / denom
-            * (alpha * np.sin(omega * (x - a)) - omega * np.cos(omega * (x - a)))
-        )
-
+    # ── integration limits for the payoff integral ─────────────────────────
+    log_K_S = np.log(K / S)   # log(K/S)
     if cp == 1:
-        # Call: ∫_{l}^{b} (e^x − K) e^{mu*x/sigma²} sin(omega*(x−a)) dx
-        l = max(np.log(K), a)
-        if np.log(K) >= b:
-            # Strike above upper barrier: call always OTM when survived
-            ko_price = 0.0
-        else:
-            I_n = (_F(alpha1, b) - _F(alpha1, l)) - K * (_F(alpha2, b) - _F(alpha2, l))
-            ko_price = max(float(pre * np.sum(decay * sin_x0 * I_n)), 0.0)
+        # Call: payoff = S·e^x − K  for x > log(K/S)
+        xi_low = max(log_K_S, a)
+        xi_high = b_bar
     else:
-        # Put: ∫_{a}^{u} (K − e^x) e^{mu*x/sigma²} sin(omega*(x−a)) dx
-        u = min(np.log(K), b)
-        if np.log(K) <= a:
-            # Strike below lower barrier: put always OTM when survived
-            ko_price = 0.0
-        else:
-            I_n = K * (_F(alpha2, u) - _F(alpha2, a)) - (_F(alpha1, u) - _F(alpha1, a))
-            ko_price = max(float(pre * np.sum(decay * sin_x0 * I_n)), 0.0)
+        # Put: payoff = K − S·e^x  for x < log(K/S)
+        xi_low = a
+        xi_high = min(log_K_S, b_bar)
 
-    if barrier_type == "double_out":
-        return ko_price
-    return max(vanilla - ko_price, 0.0)
+    if xi_low >= xi_high:
+        # Integration region is empty → DKO = 0
+        return 0.0 if knockout else vanilla
+
+    # ── common prefactor ───────────────────────────────────────────────────
+    disc = np.exp(-r * T)
+    global_factor = (2.0 / M) * disc * np.exp(-nu ** 2 * sigma ** 2 * T / 2.0)
+
+    # ── closed-form helper: ∫_c^d exp(α x) sin(η_n (x - a)) dx ───────────
+    # J(α, c, d) = [exp(αx)(α sin(η_n(x-a)) − η_n cos(η_n(x-a)))] / (α² + η_n²) |_c^d
+    def _antideriv(alpha: float, eta_n: float, x: float) -> float:
+        """Antiderivative of exp(αx) sin(ηn(x-a)) evaluated at x."""
+        denom = alpha ** 2 + eta_n ** 2
+        phase = eta_n * (x - a)
+        return np.exp(alpha * x) * (alpha * np.sin(phase) - eta_n * np.cos(phase)) / denom
+
+    def _J(alpha: float, eta_n: float, c: float, d: float) -> float:
+        return _antideriv(alpha, eta_n, d) - _antideriv(alpha, eta_n, c)
+
+    # ── eigenfunction series ───────────────────────────────────────────────
+    series_sum = 0.0
+    for n in range(1, n_max + 1):
+        decay = np.exp(-n ** 2 * np.pi ** 2 * sigma ** 2 * T / (2.0 * M ** 2))
+        if decay < 1e-14:
+            break  # remaining terms negligible
+
+        gamma_n = np.sin(n * np.pi * y0 / M)   # Γ_n = sin(nπy₀/M)
+        eta_n = n * np.pi / M
+
+        # I_n = S·J(ν+1, ξ_low, ξ_high) − K·J(ν, ξ_low, ξ_high)
+        # (with appropriate sign for puts)
+        if cp == 1:
+            I_n = S * _J(nu + 1.0, eta_n, xi_low, xi_high) - K * _J(nu, eta_n, xi_low, xi_high)
+        else:
+            # Put payoff: (K − S·e^x) → I_n = K·J(ν, ...) − S·J(ν+1, ...)
+            I_n = K * _J(nu, eta_n, xi_low, xi_high) - S * _J(nu + 1.0, eta_n, xi_low, xi_high)
+
+        series_sum += gamma_n * decay * I_n
+
+    dko_price = max(global_factor * series_sum, 0.0)
+
+    if knockout:
+        return dko_price
+    else:
+        # DKI = vanilla - DKO  (in-out parity)
+        return max(vanilla - dko_price, 0.0)
