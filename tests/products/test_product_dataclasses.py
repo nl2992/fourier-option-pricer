@@ -11,7 +11,9 @@ from foureng.products import (
     BasketOption,
     BermudanOption,
     BestOfOption,
+    ChooserOption,
     CliquetOption,
+    CompoundOption,
     DigitalOption,
     EuropeanOption,
     ExchangeOption,
@@ -310,3 +312,116 @@ class TestMultiAssetProducts:
                 cp=1,
                 corr_matrix=np.array([[1.0, 0.2], [0.1, 1.0]]),
             )
+
+
+# ── CompoundOption ─────────────────────────────────────────────────────────
+
+
+class TestCompoundOption:
+    def test_call_on_call(self):
+        opt = CompoundOption(
+            strike_outer=5.0, strike_inner=100.0,
+            maturity_outer=0.5, maturity_inner=1.0,
+            cp_outer=1, cp_inner=1,
+        )
+        assert opt.product_type == "compound"
+        assert opt.cp_outer == 1
+        assert opt.cp_inner == 1
+
+    def test_put_on_put(self):
+        opt = CompoundOption(
+            strike_outer=3.0, strike_inner=100.0,
+            maturity_outer=0.25, maturity_inner=0.75,
+            cp_outer=-1, cp_inner=-1,
+        )
+        assert opt.cp_outer == -1
+        assert opt.cp_inner == -1
+
+    def test_frozen(self):
+        opt = CompoundOption(
+            strike_outer=5.0, strike_inner=100.0,
+            maturity_outer=0.5, maturity_inner=1.0,
+        )
+        with pytest.raises((AttributeError, TypeError)):
+            opt.strike_outer = 10.0  # type: ignore[misc]
+
+    def test_outer_maturity_ge_inner_rejected(self):
+        with pytest.raises(ValueError):
+            CompoundOption(
+                strike_outer=5.0, strike_inner=100.0,
+                maturity_outer=1.0, maturity_inner=1.0,
+            )
+
+    def test_outer_maturity_after_inner_rejected(self):
+        with pytest.raises(ValueError):
+            CompoundOption(
+                strike_outer=5.0, strike_inner=100.0,
+                maturity_outer=1.5, maturity_inner=1.0,
+            )
+
+    def test_negative_outer_strike_rejected(self):
+        with pytest.raises(ValueError):
+            CompoundOption(
+                strike_outer=-1.0, strike_inner=100.0,
+                maturity_outer=0.5, maturity_inner=1.0,
+            )
+
+    def test_zero_outer_strike_allowed(self):
+        opt = CompoundOption(
+            strike_outer=0.0, strike_inner=100.0,
+            maturity_outer=0.5, maturity_inner=1.0,
+        )
+        assert opt.strike_outer == 0.0
+
+    def test_invalid_cp_outer_rejected(self):
+        with pytest.raises(ValueError):
+            CompoundOption(
+                strike_outer=5.0, strike_inner=100.0,
+                maturity_outer=0.5, maturity_inner=1.0,
+                cp_outer=0,
+            )
+
+    def test_invalid_cp_inner_rejected(self):
+        with pytest.raises(ValueError):
+            CompoundOption(
+                strike_outer=5.0, strike_inner=100.0,
+                maturity_outer=0.5, maturity_inner=1.0,
+                cp_inner=2,
+            )
+
+
+# ── ChooserOption ──────────────────────────────────────────────────────────
+
+
+class TestChooserOption:
+    def test_basic(self):
+        opt = ChooserOption(strike=100.0, maturity_choice=0.5, maturity_expiry=1.0)
+        assert opt.product_type == "chooser"
+        assert opt.strike == 100.0
+        assert opt.maturity_choice == 0.5
+        assert opt.maturity_expiry == 1.0
+
+    def test_frozen(self):
+        opt = ChooserOption(strike=100.0, maturity_choice=0.5, maturity_expiry=1.0)
+        with pytest.raises((AttributeError, TypeError)):
+            opt.strike = 110.0  # type: ignore[misc]
+
+    def test_choice_ge_expiry_rejected(self):
+        with pytest.raises(ValueError):
+            ChooserOption(strike=100.0, maturity_choice=1.0, maturity_expiry=1.0)
+
+    def test_choice_after_expiry_rejected(self):
+        with pytest.raises(ValueError):
+            ChooserOption(strike=100.0, maturity_choice=1.5, maturity_expiry=1.0)
+
+    def test_zero_choice_time_rejected(self):
+        with pytest.raises(ValueError):
+            ChooserOption(strike=100.0, maturity_choice=0.0, maturity_expiry=1.0)
+
+    def test_zero_strike_rejected(self):
+        with pytest.raises(ValueError):
+            ChooserOption(strike=0.0, maturity_choice=0.5, maturity_expiry=1.0)
+
+    def test_negative_strike_rejected(self):
+        with pytest.raises(ValueError):
+            ChooserOption(strike=-10.0, maturity_choice=0.5, maturity_expiry=1.0)

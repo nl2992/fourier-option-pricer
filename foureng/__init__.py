@@ -35,6 +35,18 @@ from .analytics.bsm_asian import (
     bsm_geometric_asian_parity,
 )
 from .analytics.bsm_barrier import bsm_barrier_price
+from .analytics.bsm_chooser import bsm_chooser_price
+from .analytics.bsm_compound import geske_compound_price
+from .analytics.bsm_greeks import (
+    bsm_all_greeks,
+    bsm_delta,
+    bsm_gamma,
+    bsm_rho,
+    bsm_theta,
+    bsm_vanna,
+    bsm_vega,
+    bsm_volga,
+)
 from .analytics.bsm_exotics import (
     bsm_forward_start,
     bsm_gap_call,
@@ -120,13 +132,17 @@ from .pricers.proj import (
     proj_price_at_strikes,
 )
 from .pricers.sabr import sabr_hagan_price_at_strikes
+from .products.chooser import ChooserOption
+from .products.compound import CompoundOption
 from .surface import (
     CalibrationResult,
+    SabrSmileCalibResult,
     SurfaceSpec,
     calibrate_cgmy,
     calibrate_heston,
     calibrate_kou,
     calibrate_nig,
+    calibrate_sabr_smile,
     calibrate_vg,
     model_iv_surface,
     model_price_surface,
@@ -262,11 +278,13 @@ __all__ = [
     "model_iv_surface",
     "model_price_surface",
     "CalibrationResult",
+    "SabrSmileCalibResult",
     "calibrate_heston",
     "calibrate_cgmy",
     "calibrate_vg",
     "calibrate_kou",
     "calibrate_nig",
+    "calibrate_sabr_smile",
     # greeks
     "COSGreeks",
     "cos_delta_gamma",
@@ -292,6 +310,20 @@ __all__ = [
     "bsm_lookback_floating",
     "kirk_spread",
     "margrabe_exchange",
+    # BSM greeks
+    "bsm_delta",
+    "bsm_gamma",
+    "bsm_vega",
+    "bsm_theta",
+    "bsm_rho",
+    "bsm_vanna",
+    "bsm_volga",
+    "bsm_all_greeks",
+    # compound + chooser
+    "geske_compound_price",
+    "bsm_chooser_price",
+    "CompoundOption",
+    "ChooserOption",
     # digital
     "bsm_asset_or_nothing",
     "bsm_cash_or_nothing",

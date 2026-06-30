@@ -90,6 +90,14 @@ _BASELINE_API = {
     "bsm_geometric_asian", "bsm_geometric_asian_parity",
     "bsm_lookback_floating", "bsm_variance_option_integrated",
     "bsm_variance_swap",
+    # BSM greeks
+    "bsm_all_greeks", "bsm_delta", "bsm_gamma", "bsm_rho",
+    "bsm_theta", "bsm_vanna", "bsm_vega", "bsm_volga",
+    # compound + chooser
+    "geske_compound_price", "bsm_chooser_price",
+    "CompoundOption", "ChooserOption",
+    # SABR smile calibration
+    "SabrSmileCalibResult", "calibrate_sabr_smile",
     # multi-asset analytics
     "kirk_spread", "margrabe_exchange",
 }

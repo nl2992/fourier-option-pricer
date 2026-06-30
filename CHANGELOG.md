@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.7.0 - 2026-07-01
+
+- Added BSM Greeks: `bsm_delta`, `bsm_gamma`, `bsm_vega`, `bsm_theta`, `bsm_rho`, `bsm_vanna`, `bsm_volga`, `bsm_all_greeks` in `foureng/analytics/bsm_greeks.py`. All Greeks are validated against finite-difference benchmarks; `bsm_theta` returns dV/dt (time, not calendar), `bsm_rho` is scaled by 1/100. BSM PDE identity verified at machine precision across a spot/maturity/vol grid.
+- Added compound option pricing: `geske_compound_price` in `foureng/analytics/bsm_compound.py`, implementing the Geske (1979) / Haug (2007) formula for all four types (call-on-call, put-on-call, call-on-put, put-on-put). Critical stock price solved via Brent's method; bivariate normal CDF via `scipy.stats.multivariate_normal.cdf`. Put-call parity and lower-bound identities pass to 1e-6.
+- Added `CompoundOption` product dataclass in `foureng/products/compound.py`, wired via `method="geske"` in `price()`.
+- Added chooser option pricing: `bsm_chooser_price` in `foureng/analytics/bsm_chooser.py` via the Rubinstein (1991) decomposition `chooser = call(S, K*, T_choice) + put(S, K, T_exp)` where `K* = K * exp(-(r-q)*(T_exp-T_choice))`. Rubinstein decomposition holds to 1e-12.
+- Added `ChooserOption` product dataclass in `foureng/products/chooser.py`, wired via `method="analytic"` in `price()`.
+- Added SABR smile calibration: `calibrate_sabr_smile` and `SabrSmileCalibResult` in `foureng/surface/calibration.py`, fitting SABR (alpha, nu, rho) to a single-maturity implied-vol smile with optional beta specification.
+- Added demo notebooks: `notebooks/supplementary/bsm_greeks.ipynb` (6-section Greeks explorer with BSM PDE verification and delta-hedging simulation), `notebooks/supplementary/compound_and_chooser.ipynb` (Geske compound pricing, put-call parity, spot sweep, chooser vs straddle), `notebooks/supplementary/calibration.ipynb` (Heston, VG, SABR, and multi-model calibration to IV surface).
+- Exported all new public symbols from `foureng/__init__.py`; updated `tests/meta/test_api_snapshot.py` baseline to include all new names.
+- Added tests: `tests/analytics/test_bsm_greeks.py` (37 tests), `tests/analytics/test_bsm_compound.py` (33 tests), `tests/analytics/test_bsm_chooser.py` (25 tests).
+- Added `CompoundOption` and `ChooserOption` to `foureng/products/__init__.py` and to `tests/products/test_product_dataclasses.py`.
+
 ## 0.6.0 - 2026-06-14
 
 - Added `proj_barrier_price`: PROJ single-barrier European option pricer for all 1-D Lévy models (Kirkby 2015 backward induction with barrier absorption). Supports all four barrier types (down-out, up-out, down-in via in-out parity, up-in) for calls and puts. Wired as `method="proj_barrier"` in `price()`.

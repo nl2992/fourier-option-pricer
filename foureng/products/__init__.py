@@ -14,7 +14,9 @@ from .asian import AsianOption
 from .barrier import BarrierOption, DoubleBarrierOption
 from .base import ProductSpec
 from .bermudan import BermudanOption
+from .chooser import ChooserOption
 from .cliquet import CliquetOption
+from .compound import CompoundOption
 from .digital import DigitalOption
 from .european import EuropeanOption
 from .forward_start import ForwardStartOption
@@ -42,4 +44,6 @@ __all__ = [
     "SpreadOption",
     "BestOfOption",
     "ParisianOption",
+    "CompoundOption",
+    "ChooserOption",
 ]

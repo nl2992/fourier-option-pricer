@@ -9,10 +9,12 @@ sum-of-squared-IV-residuals objective.
 
 from .calibration import (
     CalibrationResult,
+    SabrSmileCalibResult,
     calibrate_cgmy,
     calibrate_heston,
     calibrate_kou,
     calibrate_nig,
+    calibrate_sabr_smile,
     calibrate_vg,
 )
 from .vol_surface import SurfaceSpec, model_iv_surface, model_price_surface
@@ -22,9 +24,11 @@ __all__ = [
     "model_iv_surface",
     "model_price_surface",
     "CalibrationResult",
+    "SabrSmileCalibResult",
     "calibrate_heston",
     "calibrate_vg",
     "calibrate_kou",
     "calibrate_cgmy",
     "calibrate_nig",
+    "calibrate_sabr_smile",
 ]
