@@ -17,6 +17,11 @@ from .calibration import (
     calibrate_sabr_smile,
     calibrate_vg,
 )
+from .local_vol import (
+    LocalVolSurface,
+    dupire_local_vol_from_svi,
+    dupire_local_vol_grid,
+)
 from .svi import SVIFitResult, SVIParams, fit_svi_smile, svi_butterfly_density
 from .svi import svi_check_butterfly_arbitrage, svi_implied_vol, svi_total_variance
 from .vol_surface import SurfaceSpec, model_iv_surface, model_price_surface
@@ -40,4 +45,8 @@ __all__ = [
     "svi_butterfly_density",
     "svi_check_butterfly_arbitrage",
     "fit_svi_smile",
+    # local volatility (Dupire)
+    "LocalVolSurface",
+    "dupire_local_vol_from_svi",
+    "dupire_local_vol_grid",
 ]

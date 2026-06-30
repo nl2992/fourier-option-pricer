@@ -103,6 +103,8 @@ _BASELINE_API = {
     "svi_total_variance", "svi_implied_vol",
     "svi_butterfly_density", "svi_check_butterfly_arbitrage",
     "fit_svi_smile",
+    # local volatility (Dupire 1994)
+    "LocalVolSurface", "dupire_local_vol_from_svi", "dupire_local_vol_grid",
     # multi-asset analytics
     "kirk_spread", "margrabe_exchange",
 }

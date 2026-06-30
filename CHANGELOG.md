@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.8.0 - 2026-07-01
+
+- Added Dupire (1994) local volatility surface extraction in `foureng/surface/local_vol.py`: `LocalVolSurface` dataclass, `dupire_local_vol_from_svi` (analytical k-derivatives from SVI, FD T-derivative between adjacent maturities), `dupire_local_vol_grid` (full numerical FD on an IV grid with optional Gaussian smoothing). Gatheral-Jacquier (2014) denominator `g(k,w)` used throughout; negative local variance clipped to zero.
+- Added 21 tests in `tests/surface/test_local_vol.py`: shape, midpoint maturities, flat-IV -> flat-LV identity, non-negativity, finiteness, two-maturity minimum, error handling (too few maturities, mismatched SVI params, non-increasing grids), grid route shape/flat-IV/raises, SVI-vs-grid consistency, public API.
+- Added demo notebook `notebooks/supplementary/local_vol.ipynb` (5 sections): Dupire formula intuition, flat-IV sanity check, SVI-calibrated LV from Heston, analytical vs. numerical route comparison, 3D surface and heatmap visualizations.
+- Exported `LocalVolSurface`, `dupire_local_vol_from_svi`, `dupire_local_vol_grid` from `foureng/__init__.py` and `foureng/surface/__init__.py`; added all three to `_BASELINE_API` in `tests/meta/test_api_snapshot.py`.
+
 ## 0.7.0 - 2026-07-01
 
 - Added BSM Greeks: `bsm_delta`, `bsm_gamma`, `bsm_vega`, `bsm_theta`, `bsm_rho`, `bsm_vanna`, `bsm_volga`, `bsm_all_greeks` in `foureng/analytics/bsm_greeks.py`. All Greeks are validated against finite-difference benchmarks; `bsm_theta` returns dV/dt (time, not calendar), `bsm_rho` is scaled by 1/100. BSM PDE identity verified at machine precision across a spot/maturity/vol grid.

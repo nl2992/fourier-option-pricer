@@ -136,6 +136,7 @@ from .products.chooser import ChooserOption
 from .products.compound import CompoundOption
 from .surface import (
     CalibrationResult,
+    LocalVolSurface,
     SVIFitResult,
     SVIParams,
     SabrSmileCalibResult,
@@ -146,6 +147,8 @@ from .surface import (
     calibrate_nig,
     calibrate_sabr_smile,
     calibrate_vg,
+    dupire_local_vol_from_svi,
+    dupire_local_vol_grid,
     fit_svi_smile,
     model_iv_surface,
     model_price_surface,
@@ -300,6 +303,10 @@ __all__ = [
     "svi_butterfly_density",
     "svi_check_butterfly_arbitrage",
     "fit_svi_smile",
+    # local volatility (Dupire)
+    "LocalVolSurface",
+    "dupire_local_vol_from_svi",
+    "dupire_local_vol_grid",
     # greeks
     "COSGreeks",
     "cos_delta_gamma",
