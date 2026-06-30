@@ -20,6 +20,7 @@ from .european import EuropeanOption
 from .forward_start import ForwardStartOption
 from .lookback import LookbackOption
 from .multi_asset import BasketOption, BestOfOption, ExchangeOption, SpreadOption
+from .parisian import ParisianOption
 from .variance import VarianceOption, VarianceSwap
 
 __all__ = [
@@ -40,4 +41,5 @@ __all__ = [
     "BasketOption",
     "SpreadOption",
     "BestOfOption",
+    "ParisianOption",
 ]

@@ -1171,6 +1171,39 @@ def price(
         fwd_t = _FwdSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=product.maturity)
         return mc_price(fwd_t, params.sigma, product, mc_spec).price
 
+    if pt == "parisian":
+        from .products.parisian import ParisianOption
+
+        if not isinstance(product, ParisianOption):
+            raise TypeError(
+                "price(): product_type='parisian' must be represented by "
+                f"ParisianOption, got {type(product).__name__!r}"
+            )
+        if method not in {"parisian_mc", "monte_carlo"}:
+            raise NotImplementedError(
+                "Parisian pricing currently supports method='parisian_mc' or method='monte_carlo'."
+            )
+        if model != "bsm":
+            raise NotImplementedError(
+                f"method={method!r} for Parisian options is currently implemented only for model='bsm'."
+            )
+        from .mc.parisian_mc import parisian_mc_price_from_product
+
+        n_paths = getattr(grid, "n_paths", 50_000) if grid is not None else 50_000
+        n_steps = getattr(grid, "n_steps", 500) if grid is not None else 500
+        seed = getattr(grid, "seed", None) if grid is not None else None
+        price_val, _ = parisian_mc_price_from_product(
+            product,
+            S0=fwd.S0,
+            r=fwd.r,
+            q=fwd.q,
+            sigma=params.sigma,
+            n_paths=n_paths,
+            n_steps=n_steps,
+            seed=seed,
+        )
+        return price_val
+
     # Every supported product_type is handled by an explicit branch above; reaching
     # here means the product_type is unknown / not yet routed.
     raise NotImplementedError(
