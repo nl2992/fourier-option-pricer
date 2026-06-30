@@ -37,6 +37,7 @@ from .analytics.bsm_asian import (
 from .analytics.bsm_barrier import bsm_barrier_price
 from .analytics.bsm_chooser import bsm_chooser_price
 from .analytics.bsm_compound import geske_compound_price
+from .analytics.bsm_quanto import bsm_quanto_forward, bsm_quanto_option
 from .analytics.bsm_greeks import (
     bsm_all_greeks,
     bsm_delta,
@@ -134,6 +135,7 @@ from .pricers.proj import (
 from .pricers.sabr import sabr_hagan_price_at_strikes
 from .products.chooser import ChooserOption
 from .products.compound import CompoundOption
+from .products.quanto import QuantoOption
 from .surface import (
     CalibrationResult,
     LocalVolSurface,
@@ -346,6 +348,10 @@ __all__ = [
     "bsm_chooser_price",
     "CompoundOption",
     "ChooserOption",
+    # quanto
+    "bsm_quanto_forward",
+    "bsm_quanto_option",
+    "QuantoOption",
     # digital
     "bsm_asset_or_nothing",
     "bsm_cash_or_nothing",

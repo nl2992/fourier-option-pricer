@@ -19,6 +19,7 @@ from foureng.products import (
     ExchangeOption,
     ForwardStartOption,
     LookbackOption,
+    QuantoOption,
     SpreadOption,
     VarianceOption,
     VarianceSwap,
@@ -425,3 +426,41 @@ class TestChooserOption:
     def test_negative_strike_rejected(self):
         with pytest.raises(ValueError):
             ChooserOption(strike=-10.0, maturity_choice=0.5, maturity_expiry=1.0)
+
+
+class TestQuantoOption:
+    _BASE = dict(
+        S=100.0, K=105.0, T=1.0,
+        r_dom=0.05, r_for=0.03, q_for=0.02,
+        rho=-0.3, sigma_S=0.20, sigma_X=0.10, cp=1,
+    )
+
+    def test_default_call(self):
+        q = QuantoOption(**self._BASE)
+        assert q.cp == 1
+
+    def test_put_allowed(self):
+        q = QuantoOption(**{**self._BASE, 'cp': -1})
+        assert q.cp == -1
+
+    def test_zero_rho_allowed(self):
+        QuantoOption(**{**self._BASE, 'rho': 0.0})
+
+    def test_zero_sigma_X_allowed(self):
+        QuantoOption(**{**self._BASE, 'sigma_X': 0.0})
+
+    def test_negative_S_rejected(self):
+        with pytest.raises(ValueError):
+            QuantoOption(**{**self._BASE, 'S': -1.0})
+
+    def test_negative_K_rejected(self):
+        with pytest.raises(ValueError):
+            QuantoOption(**{**self._BASE, 'K': -5.0})
+
+    def test_rho_out_of_range_rejected(self):
+        with pytest.raises(ValueError):
+            QuantoOption(**{**self._BASE, 'rho': 1.5})
+
+    def test_invalid_cp_rejected(self):
+        with pytest.raises(ValueError):
+            QuantoOption(**{**self._BASE, 'cp': 0})

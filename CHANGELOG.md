@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.9.0 - 2026-07-01
+
+- Added quanto option pricing (Reiner 1992) in `foureng/analytics/bsm_quanto.py`: `bsm_quanto_forward` computes the domestic risk-neutral adjusted forward `F_adj = S * exp((r_dom - q_for - rho*sigma_S*sigma_X)*T)`; `bsm_quanto_option` prices calls and puts using the standard BSM formula with F_adj. FX volatility enters only through the drift, not the BSM variance. Put-call parity holds to 1e-12.
+- Added `QuantoOption` product dataclass in `foureng/products/quanto.py`; wired into `foureng/products/__init__.py`.
+- Added 29 tests in `tests/analytics/test_bsm_quanto.py`: forward formula checks, put-call parity, zero-vol/zero-maturity degeneracy, non-negativity sweep, rho monotonicity, input validation, public API.
+- Added 18 tests in `tests/products/test_quanto_product.py` for `QuantoOption` construction and validation.
+- Added demo notebook `notebooks/supplementary/quanto_options.ipynb` (5 sections): quanto-adjusted forward with rho/sigma_X sensitivity, put-call parity verification, correlation effect on prices, quanto vs. standard BSM comparison, spot sweep.
+- Exported `bsm_quanto_forward`, `bsm_quanto_option`, `QuantoOption` from `foureng/__init__.py`; added to `_BASELINE_API` in `tests/meta/test_api_snapshot.py`.
+
 ## 0.8.0 - 2026-07-01
 
 - Added Dupire (1994) local volatility surface extraction in `foureng/surface/local_vol.py`: `LocalVolSurface` dataclass, `dupire_local_vol_from_svi` (analytical k-derivatives from SVI, FD T-derivative between adjacent maturities), `dupire_local_vol_grid` (full numerical FD on an IV grid with optional Gaussian smoothing). Gatheral-Jacquier (2014) denominator `g(k,w)` used throughout; negative local variance clipped to zero.
