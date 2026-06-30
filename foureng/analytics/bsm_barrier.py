@@ -186,3 +186,120 @@ def bsm_barrier_price(
             return max(A(phi) - B(phi) + C(phi, eta) - D(phi, eta), 0.0)
         else:
             return max(B(phi) - C(phi, eta) + D(phi, eta), 0.0)
+
+
+# ── double barrier (eigenfunction expansion) ───────────────────────────────
+
+
+def bsm_double_barrier_price(
+    S: float,
+    K: float,
+    L: float,
+    U: float,
+    r: float,
+    q: float,
+    T: float,
+    sigma: float,
+    *,
+    cp: int = 1,
+    barrier_type: str = "double_out",
+    n_terms: int = 100,
+) -> float:
+    """Double barrier option price via eigenfunction expansion of absorbed GBM.
+
+    Prices a European call or put that is knocked out (``barrier_type="double_out"``)
+    or knocked in (``barrier_type="double_in"``) when the spot touches either the
+    lower barrier *L* or the upper barrier *U*.
+
+    The eigenfunction series of the absorbed GBM transition density between *L*
+    and *U* converges exponentially.  ``n_terms=100`` gives machine precision for
+    all practical parameter combinations.
+
+    Reference
+    ---------
+    Kunitomo, N. & Ikeda, M. (1992). *Pricing Options with Curved Boundaries*.
+    Mathematical Finance 2(4): 275–298.
+
+    Parameters
+    ----------
+    S, K : spot, strike
+    L, U : lower and upper barriers (must satisfy 0 < L < S < U)
+    r, q : risk-free rate, dividend yield
+    T    : time to maturity (years)
+    sigma : lognormal volatility
+    cp   : +1 call, −1 put
+    barrier_type : ``"double_out"`` (knockout at either barrier) or
+        ``"double_in"`` (knockin; uses in-out parity internally).
+    n_terms : truncation of eigenfunction series (default 100).
+
+    Returns
+    -------
+    float
+        Option price.  ``double_out + double_in = vanilla`` by construction.
+    """
+    if L <= 0.0 or U <= 0.0 or L >= U:
+        raise ValueError(f"bsm_double_barrier_price: must have 0 < L < U; got L={L}, U={U}")
+    if cp not in (1, -1):
+        raise ValueError(f"bsm_double_barrier_price: cp must be +1 or -1; got {cp}")
+    if barrier_type not in ("double_out", "double_in"):
+        raise ValueError(
+            f"bsm_double_barrier_price: barrier_type must be 'double_out' or 'double_in'; "
+            f"got {barrier_type!r}"
+        )
+
+    vanilla = bsm_call(S, K, r, q, T, sigma) if cp == 1 else bsm_put(S, K, r, q, T, sigma)
+
+    # Spot already breached a barrier
+    if S <= L or S >= U:
+        return 0.0 if barrier_type == "double_out" else vanilla
+
+    a, b, x0 = np.log(L), np.log(U), np.log(S)
+    mu = r - q - 0.5 * sigma**2
+    span = b - a  # log(U/L)
+
+    n_arr = np.arange(1, n_terms + 1, dtype=float)
+    omega = n_arr * np.pi / span  # ω_n = n π / (b−a)
+    lambda_n = 0.5 * sigma**2 * omega**2  # λ_n
+
+    # Eigenfunction and density pre-factor
+    decay = np.exp(-lambda_n * T)
+    sin_x0 = np.sin(omega * (x0 - a))
+    pre = (
+        np.exp(-r * T)
+        * (2.0 / span)
+        * np.exp(-mu * x0 / sigma**2 - mu**2 * T / (2.0 * sigma**2))
+    )
+
+    alpha1 = 1.0 + mu / sigma**2  # exponent for e^x payoff term
+    alpha2 = mu / sigma**2         # exponent for constant K payoff term
+
+    def _F(alpha: float, x: float) -> np.ndarray:
+        """Antiderivative of e^{alpha*x} sin(omega*(x-a)) at point x."""
+        denom = alpha**2 + omega**2
+        return (
+            np.exp(alpha * x) / denom
+            * (alpha * np.sin(omega * (x - a)) - omega * np.cos(omega * (x - a)))
+        )
+
+    if cp == 1:
+        # Call: ∫_{l}^{b} (e^x − K) e^{mu*x/sigma²} sin(omega*(x−a)) dx
+        l = max(np.log(K), a)
+        if np.log(K) >= b:
+            # Strike above upper barrier: call always OTM when survived
+            ko_price = 0.0
+        else:
+            I_n = (_F(alpha1, b) - _F(alpha1, l)) - K * (_F(alpha2, b) - _F(alpha2, l))
+            ko_price = max(float(pre * np.sum(decay * sin_x0 * I_n)), 0.0)
+    else:
+        # Put: ∫_{a}^{u} (K − e^x) e^{mu*x/sigma²} sin(omega*(x−a)) dx
+        u = min(np.log(K), b)
+        if np.log(K) <= a:
+            # Strike below lower barrier: put always OTM when survived
+            ko_price = 0.0
+        else:
+            I_n = K * (_F(alpha2, u) - _F(alpha2, a)) - (_F(alpha1, u) - _F(alpha1, a))
+            ko_price = max(float(pre * np.sum(decay * sin_x0 * I_n)), 0.0)
+
+    if barrier_type == "double_out":
+        return ko_price
+    return max(vanilla - ko_price, 0.0)

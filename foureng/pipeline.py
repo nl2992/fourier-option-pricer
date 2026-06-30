@@ -900,14 +900,34 @@ def price(
                 "price(): product_type='double_barrier' must be represented by "
                 f"DoubleBarrierOption, got {type(product).__name__!r}"
             )
-        if method not in {"double_barrier_mc", "monte_carlo"}:
-            raise NotImplementedError(
-                "Double-barrier pricing currently supports method='double_barrier_mc' "
-                "or method='monte_carlo'."
-            )
         if model != "bsm":
             raise NotImplementedError(
-                f"method={method!r} is currently implemented only for model='bsm'."
+                f"method={method!r} for double-barrier options is currently implemented only for model='bsm'."
+            )
+        if method == "double_barrier_bsm":
+            from .analytics.bsm_barrier import bsm_double_barrier_price
+
+            if product.rebate != 0.0:
+                raise NotImplementedError(
+                    "method='double_barrier_bsm' currently supports only zero rebates."
+                )
+            return bsm_double_barrier_price(
+                fwd.S0,
+                product.strike,
+                product.lower_barrier,
+                product.upper_barrier,
+                fwd.r,
+                fwd.q,
+                product.maturity,
+                params.sigma,
+                cp=product.cp,
+                barrier_type="double_out",
+            )
+        if method not in {"double_barrier_mc", "monte_carlo"}:
+            raise NotImplementedError(
+                "Double-barrier pricing currently supports method='double_barrier_bsm' "
+                "(eigenfunction expansion, BSM), method='double_barrier_mc', "
+                "or method='monte_carlo'."
             )
         if product.rebate != 0.0:
             raise NotImplementedError("double_barrier_mc currently supports only zero rebates.")
