@@ -24,6 +24,17 @@ from .local_vol import (
 )
 from .svi import SVIFitResult, SVIParams, fit_svi_smile, svi_butterfly_density
 from .svi import svi_check_butterfly_arbitrage, svi_implied_vol, svi_total_variance
+from .ssvi import (
+    SSVIFitResult,
+    SSVIParams,
+    fit_ssvi_surface,
+    ssvi_check_butterfly_free,
+    ssvi_check_calendar_free,
+    ssvi_implied_vol,
+    ssvi_phi_heston,
+    ssvi_phi_power_law,
+    ssvi_total_variance,
+)
 from .vol_surface import SurfaceSpec, model_iv_surface, model_price_surface
 
 __all__ = [
@@ -49,4 +60,14 @@ __all__ = [
     "LocalVolSurface",
     "dupire_local_vol_from_svi",
     "dupire_local_vol_grid",
+    # SSVI (Surface SVI, Gatheral & Jacquier 2014)
+    "SSVIParams",
+    "SSVIFitResult",
+    "ssvi_phi_power_law",
+    "ssvi_phi_heston",
+    "ssvi_total_variance",
+    "ssvi_implied_vol",
+    "ssvi_check_butterfly_free",
+    "ssvi_check_calendar_free",
+    "fit_ssvi_surface",
 ]

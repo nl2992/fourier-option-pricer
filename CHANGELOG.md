@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.10.0 - 2026-07-01
+
+- Added SSVI (Surface SVI) joint surface parameterization (Gatheral & Jacquier 2014) in `foureng/surface/ssvi.py`: `SSVIParams` dataclass (rho, eta, gamma), `ssvi_phi_power_law` and `ssvi_phi_heston` phi functions, `ssvi_total_variance`, `ssvi_implied_vol`, `ssvi_check_butterfly_free` (sufficient condition eta*(1+|rho|) <= 4), `ssvi_check_calendar_free` (phi non-increasing check), `fit_ssvi_surface` (two-stage joint calibration: per-slice ATM total variance then global L-BFGS-B for rho/eta/gamma).
+- Added 39 tests in `tests/surface/test_ssvi.py`: param validation, phi shape/monotonicity, total variance formula, ATM recovery, arbitrage conditions, round-trip fit on synthetic SSVI data, public API.
+- Added demo notebook `notebooks/supplementary/ssvi_surface.ipynb` (6 sections): phi sensitivity, smile slices, parameter sensitivity, arbitrage-free region visualization, joint calibration to Heston, SSVI vs. SVI comparison.
+- Exported all SSVI symbols from `foureng/__init__.py` and `foureng/surface/__init__.py`; added to `_BASELINE_API` in `tests/meta/test_api_snapshot.py`.
+
 ## 0.9.0 - 2026-07-01
 
 - Added quanto option pricing (Reiner 1992) in `foureng/analytics/bsm_quanto.py`: `bsm_quanto_forward` computes the domestic risk-neutral adjusted forward `F_adj = S * exp((r_dom - q_for - rho*sigma_S*sigma_X)*T)`; `bsm_quanto_option` prices calls and puts using the standard BSM formula with F_adj. FX volatility enters only through the drift, not the BSM variance. Put-call parity holds to 1e-12.

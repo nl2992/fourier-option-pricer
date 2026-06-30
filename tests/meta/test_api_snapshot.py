@@ -105,6 +105,12 @@ _BASELINE_API = {
     "fit_svi_smile",
     # local volatility (Dupire 1994)
     "LocalVolSurface", "dupire_local_vol_from_svi", "dupire_local_vol_grid",
+    # SSVI (Surface SVI, Gatheral & Jacquier 2014)
+    "SSVIParams", "SSVIFitResult",
+    "ssvi_phi_power_law", "ssvi_phi_heston",
+    "ssvi_total_variance", "ssvi_implied_vol",
+    "ssvi_check_butterfly_free", "ssvi_check_calendar_free",
+    "fit_ssvi_surface",
     # quanto options (Reiner 1992)
     "bsm_quanto_forward", "bsm_quanto_option", "QuantoOption",
     # multi-asset analytics
