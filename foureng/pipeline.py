@@ -1224,6 +1224,45 @@ def price(
         )
         return price_val
 
+    if pt == "compound":
+        from .products.compound import CompoundOption
+        if not isinstance(product, CompoundOption):
+            raise TypeError(f"product_type='compound' requires a CompoundOption instance, got {type(product)}")
+        if model not in {"bsm"}:
+            raise NotImplementedError(f"compound options are only supported for model='bsm', got {model!r}")
+        if method not in {"geske", "analytic", None}:
+            raise NotImplementedError(f"compound options support method='geske'/'analytic', got {method!r}")
+        from .analytics.bsm_compound import geske_compound_price
+        return geske_compound_price(
+            S=fwd.S0,
+            K1=product.strike_outer,
+            K2=product.strike_inner,
+            r=fwd.r,
+            q=fwd.q,
+            T1=product.maturity_outer,
+            T2=product.maturity_inner,
+            sigma=params.sigma,
+            cp_outer=product.cp_outer,
+            cp_inner=product.cp_inner,
+        )
+
+    if pt == "chooser":
+        from .products.chooser import ChooserOption
+        if not isinstance(product, ChooserOption):
+            raise TypeError(f"product_type='chooser' requires a ChooserOption instance, got {type(product)}")
+        if model not in {"bsm"}:
+            raise NotImplementedError(f"chooser options are only supported for model='bsm', got {model!r}")
+        from .analytics.bsm_chooser import bsm_chooser_price
+        return bsm_chooser_price(
+            S=fwd.S0,
+            K=product.strike,
+            r=fwd.r,
+            q=fwd.q,
+            T_choice=product.maturity_choice,
+            T_exp=product.maturity_expiry,
+            sigma=params.sigma,
+        )
+
     # Every supported product_type is handled by an explicit branch above; reaching
     # here means the product_type is unknown / not yet routed.
     raise NotImplementedError(
