@@ -98,6 +98,11 @@ _BASELINE_API = {
     "CompoundOption", "ChooserOption",
     # SABR smile calibration
     "SabrSmileCalibResult", "calibrate_sabr_smile",
+    # SVI smile parameterization
+    "SVIParams", "SVIFitResult",
+    "svi_total_variance", "svi_implied_vol",
+    "svi_butterfly_density", "svi_check_butterfly_arbitrage",
+    "fit_svi_smile",
     # multi-asset analytics
     "kirk_spread", "margrabe_exchange",
 }

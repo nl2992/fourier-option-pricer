@@ -136,6 +136,8 @@ from .products.chooser import ChooserOption
 from .products.compound import CompoundOption
 from .surface import (
     CalibrationResult,
+    SVIFitResult,
+    SVIParams,
     SabrSmileCalibResult,
     SurfaceSpec,
     calibrate_cgmy,
@@ -144,8 +146,13 @@ from .surface import (
     calibrate_nig,
     calibrate_sabr_smile,
     calibrate_vg,
+    fit_svi_smile,
     model_iv_surface,
     model_price_surface,
+    svi_butterfly_density,
+    svi_check_butterfly_arbitrage,
+    svi_implied_vol,
+    svi_total_variance,
 )
 from .utils.grids import CONVGrid, COSGrid, COSGridPolicy, FFTGrid, FRFTGrid, ProjGrid
 from .utils.spectral_filters import COSFilterSpec, cos_filter_weights
@@ -285,6 +292,14 @@ __all__ = [
     "calibrate_kou",
     "calibrate_nig",
     "calibrate_sabr_smile",
+    # SVI
+    "SVIParams",
+    "SVIFitResult",
+    "svi_total_variance",
+    "svi_implied_vol",
+    "svi_butterfly_density",
+    "svi_check_butterfly_arbitrage",
+    "fit_svi_smile",
     # greeks
     "COSGreeks",
     "cos_delta_gamma",
