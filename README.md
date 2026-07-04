@@ -69,12 +69,23 @@ Full methodology: [appendix.md](appendix.md) · Extension details: [docs/filtere
 
 ---
 
-## 🆕 What's new in 0.11.0
+## 🆕 What's new in the 0.11–0.15 line
 
-Four capabilities ported into the Fourier stack from the transform-methods literature (the same territory covered by Kirkby's PROJ MATLAB toolbox), each implemented natively against `foureng`'s CF interfaces and validated against closed forms and Monte Carlo:
+Nine capabilities ported into the Fourier stack from the transform-methods literature (the territory covered by Kirkby's PROJ MATLAB toolbox), each implemented natively against `foureng`'s CF interfaces and validated against closed forms and Monte Carlo:
 
 | Capability | Use it via | The one-line math |
 |-----------|-----------|-------------------|
+| **Hilbert-transform pricer** — Feng & Linetsky (2008) | `price_strip(model, "hilbert", ...)` | $\Pi = \tfrac12 + \tfrac{h}{\pi}\sum_m \mathrm{Re}\big[e^{-iu_mk}\varphi(u_m)/(iu_m)\big]$ on $u_m=(m{+}\tfrac12)h$ — error decays like $e^{-c/h}$ |
+| **Regime-switching jump-diffusion** — Buffington & Elliott (2002) | `RegimeSwitchingBsmParams` + any CF engine | $\varphi(u) = \pi_0^\top e^{T(Q + \mathrm{diag}\,\psi_j(u))}\mathbf{1}$, per-regime Merton blocks in $\psi_j$ |
+| **Exact Lévy geometric Asians** — Fusai & Meucci (2008) | `price(product, model, "asian_cf", ...)` | $\varphi_A(u) = \prod_j \varphi_{\Delta t_j}\!\big(u\,w_j\big)$ — the average's CF is a finite product, no lognormal proxy |
+| **Lévy variance-swap strikes** — Carr & Wu (2009) discrete analogue | `price(swap, model, "variance_levy_analytic", ...)` | $E[R_i^2] = \big((r{-}q)\Delta t_i + c_1\big)^2 + c_2$ per period, exact from CF cumulants |
+| **Exact Lévy forward-starts** — Rubinstein (1990) homogeneity | `price(product, model, "forward_start_cf", ...)` | $V = S_0 e^{-q t_1} \cdot \mathrm{Euro}(S_0{=}1, K{=}\alpha, \tau)$ |
+| **Exact Lévy cliquets** (local collars) | `price(product, model, "cliquet_cf", ...)` | $E[\mathrm{clip}(R,\ell,c)] = \ell + \mathrm{Call}(1{+}\ell) - \mathrm{Call}(1{+}c)$ per period |
+| **PROJ double barriers** — Kirkby (2015) | `price(product, model, "proj_double_barrier", ...)` | Toeplitz-FFT backward induction, absorption on both sides of $(L, U)$ |
+
+Also in this line: `cp=-1` is now honored uniformly across every Fourier engine (parity applied once at dispatch), a long-standing drift omission in `merton_jd_cumulants` is fixed, and the API reference was backfilled to cover every public symbol. Details in the [CHANGELOG](CHANGELOG.md).
+
+-----------|-----------|-------------------|
 | **Hilbert-transform pricer** — Feng & Linetsky (2008) | `price_strip(model, "hilbert", ...)` | $\Pi = \tfrac12 + \tfrac{h}{\pi}\sum_m \mathrm{Re}\big[e^{-iu_mk}\varphi(u_m)/(iu_m)\big]$ on $u_m=(m{+}\tfrac12)h$ — error decays like $e^{-c/h}$ |
 | **Regime-switching BSM** — Buffington & Elliott (2002) | `RegimeSwitchingBsmParams` + any CF engine | $\varphi(u) = \pi_0^\top e^{T(Q + \mathrm{diag}\,\psi_j(u))}\mathbf{1}$ |
 | **Exact Lévy geometric Asians** — Fusai & Meucci (2008) | `price(product, model, "asian_cf", ...)` | $\varphi_A(u) = \prod_j \varphi_{\Delta t_j}\!\big(u\,w_j\big)$ — the average's CF is a finite product, no lognormal proxy |
