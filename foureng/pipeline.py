@@ -981,13 +981,27 @@ def price(
                 "price(): product_type='forward_start' must be represented by "
                 f"ForwardStartOption, got {type(product).__name__!r}"
             )
+        if method == "forward_start_cf":
+            from .pricers.forward_start import levy_forward_start_price
+
+            return levy_forward_start_price(
+                model,
+                fwd,
+                params,
+                alpha=product.alpha,
+                start_time=product.start_time,
+                maturity=product.maturity,
+                cp=product.cp,
+            )
         if method != "forward_start_bsm":
             raise NotImplementedError(
-                "Forward-start pricing currently supports method='forward_start_bsm'."
+                "Forward-start pricing currently supports method='forward_start_bsm' "
+                "or method='forward_start_cf' (exact for Levy models)."
             )
         if model != "bsm":
             raise NotImplementedError(
-                "method='forward_start_bsm' is currently implemented only for model='bsm'."
+                "method='forward_start_bsm' is currently implemented only for model='bsm' "
+                "(use method='forward_start_cf' for Levy jump models)."
             )
         return bsm_forward_start(
             fwd.S0,

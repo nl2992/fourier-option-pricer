@@ -27,7 +27,7 @@ try:
 
     __version__: str = _pkg_version("fourier-option-pricer")
 except _PNF:  # editable install without metadata yet
-    __version__ = "0.11.0"
+    __version__ = "0.12.0"
 
 from .analytics.bsm_asian import (
     bsm_discrete_geometric_asian,
@@ -125,6 +125,7 @@ from .pricers.cos import (
 from .pricers.cos_bermudan import cos_bermudan_price, cos_bermudan_price_strip
 from .pricers.cos_digital import cos_digital_price, cos_digital_price_strip
 from .pricers.filtered_cos import FilteredCOSDecision, filtered_cos_prices
+from .pricers.forward_start import levy_forward_start_price
 from .pricers.frft import frft_price_at_strikes, frft_prices
 from .pricers.geometric_asian import levy_geometric_asian_price
 from .pricers.hilbert import hilbert_itm_probabilities, hilbert_price_at_strikes
@@ -291,6 +292,7 @@ __all__ = [
     "frft_prices",
     "hilbert_itm_probabilities",
     "hilbert_price_at_strikes",
+    "levy_forward_start_price",
     "levy_geometric_asian_price",
     "levy_variance_fair_strike",
     "levy_variance_swap",

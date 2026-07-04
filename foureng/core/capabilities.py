@@ -221,6 +221,17 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
         supports_path_dependent=True,
         notes="Closed-form BSM forward-start pricer with strike set to alpha * S_tstart.",
     ),
+    "forward_start_cf": MethodSpec(
+        requires_cf=True,
+        supports_products=frozenset({"forward_start"}),
+        supports_exercise=frozenset({"european"}),
+        supports_path_dependent=True,
+        notes=(
+            "Exact Levy forward-start pricer: the homogeneity factorization "
+            "V = S0 e^{-q t1} EuroPrice(S0=1, K=alpha, tau) holds exactly for "
+            "stationary independent increments; European leg via COS."
+        ),
+    ),
     "exchange_bsm": MethodSpec(
         requires_cf=False,
         supports_products=frozenset({"exchange"}),
