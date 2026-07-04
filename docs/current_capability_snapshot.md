@@ -44,6 +44,11 @@ This file tracks the capability surface used by the registry and dispatcher test
 | `asian_cf` | Exact Levy geometric-Asian via per-increment CF product | Fusai & Meucci (2008) |
 | `variance_levy_analytic` | Exact discrete variance-swap fair strike from CF cumulants | Carr & Wu (2009), discrete analogue |
 | `forward_start_cf` | Exact Levy forward-start via homogeneity factorization + COS European leg | Rubinstein (1990); Musiela & Rutkowski (2005) |
+| `proj_barrier` | PROJ discretely monitored single barrier | Kirkby (2014, 2015) |
+| `proj_asian` | Arithmetic Asian MC with PROJ/analytic geometric control variate | Kirkby (2016) |
+| `bsm_analytic` | BSM closed-form vanilla baseline | Black & Scholes (1973) |
+| `mc_gbm` | GBM Monte Carlo baseline | — |
+| `ctmc` | CTMC approximation | planned |
 | `conv` | CONV-style Fourier probability inversion | Choi/Kirkby MATLAB comparison target |
 | `lattice` | BSM Cox-Ross-Rubinstein tree | Cox, Ross & Rubinstein (1979) |
 | `pde_fd` | BSM implicit finite difference | Black-Scholes PDE |

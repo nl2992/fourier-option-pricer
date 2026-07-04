@@ -8,7 +8,7 @@ All public names are accessible from the top-level `foureng` namespace after `im
 
 | Name | Type | Description |
 |------|------|-------------|
-| `__version__` | str | Package version string, e.g. `"0.5.0"`. |
+| `__version__` | str | Package version string, e.g. `"0.12.0"`. |
 
 ---
 
@@ -80,6 +80,7 @@ All characteristic functions accept a model parameter dataclass and a complex-va
 | `fmls_cf` | FMLS |
 | `double_heston_cf` | Double Heston |
 | `vgsa_cf` | VGSA |
+| `regime_switching_cf` | Markov regime-switching BSM (matrix-exponential CF) |
 
 ### SABR implied volatility
 
@@ -114,6 +115,7 @@ Each model exposes a cumulant function that returns the first four log-return cu
 | `double_heston_cumulants` | Double Heston |
 | `vg_cumulants` | VG |
 | `vgsa_cumulants` | VGSA |
+| `regime_switching_cumulants` | Markov regime-switching BSM (numeric CGF differentiation) |
 
 ### Miscellaneous model helpers
 
@@ -201,6 +203,8 @@ Each model exposes a cumulant function that returns the first four log-return cu
 | `proj_european_price_at_strikes(cf, grid, fwd_spec, strikes)` | CF, `ProjGrid`, forward spec, strikes | PROJ European pricer (Kirkby 2015). Matches `carr_madan_price_at_strikes` to ~1e-7 across the Levy family. |
 | `proj_price_at_strikes(cf, grid, fwd_spec, strikes, ...)` | CF, `ProjGrid`, forward spec, strikes | General PROJ European dispatch (entry point used by `price_strip`). |
 | `proj_bermudan_put(cf, grid, fwd_spec, strikes, n_ex)` | CF, `ProjGrid`, forward spec, strikes, exercise count | PROJ Bermudan put via Toeplitz-FFT backward recursion (Kirkby 2017). |
+| `proj_barrier_price(...)` | CF, forward spec, barrier contract terms | PROJ discretely monitored single-barrier pricer (down-out / up-out, knock-in via parity). |
+| `proj_asian_price_cv(...)` | CF, forward spec, Asian contract terms | Arithmetic Asian via Monte Carlo with a PROJ/analytic geometric control variate. |
 
 ---
 
@@ -256,6 +260,20 @@ Each model exposes a cumulant function that returns the first four log-return cu
 | `calibrate_kou(...)` | function | Calibrates Kou parameters to market targets. Returns `CalibrationResult`. |
 | `calibrate_cgmy(...)` | function | Calibrates CGMY parameters to market targets. Returns `CalibrationResult`. |
 | `calibrate_nig(...)` | function | Calibrates NIG parameters to market targets. Returns `CalibrationResult`. |
+| `calibrate_sabr_smile(...)` | function | Fits SABR (alpha, nu, rho; optional beta) to a single-maturity smile. Returns `SabrSmileCalibResult`. |
+| `SabrSmileCalibResult` | dataclass | SABR smile calibration output: parameters, residuals, diagnostics. |
+| `SVIParams` / `SVIFitResult` | dataclasses | Gatheral (2004) SVI smile parameters and fit output. |
+| `svi_total_variance` / `svi_implied_vol` | functions | SVI total variance and implied vol at given log-moneyness. |
+| `svi_butterfly_density` / `svi_check_butterfly_arbitrage` | functions | Gatheral-Jacquier g(k) density and butterfly-arbitrage check. |
+| `fit_svi_smile(...)` | function | Calibrates SVI to a smile (L-BFGS-B with optional differential-evolution pre-fit). |
+| `SSVIParams` / `SSVIFitResult` | dataclasses | Gatheral-Jacquier (2014) Surface-SVI parameters and fit output. |
+| `ssvi_phi_power_law` / `ssvi_phi_heston` | functions | SSVI phi parameterizations. |
+| `ssvi_total_variance` / `ssvi_implied_vol` | functions | SSVI total variance and implied vol. |
+| `ssvi_check_butterfly_free` / `ssvi_check_calendar_free` | functions | SSVI static-arbitrage sufficient conditions. |
+| `fit_ssvi_surface(...)` | function | Two-stage joint SSVI surface calibration. |
+| `LocalVolSurface` | dataclass | Dupire local-volatility surface container. |
+| `dupire_local_vol_from_svi(...)` | function | Local vol from SVI slices (analytic k-derivatives, FD in T). |
+| `dupire_local_vol_grid(...)` | function | Local vol from a raw IV grid via finite differences with optional smoothing. |
 
 ---
 
@@ -267,6 +285,9 @@ Each model exposes a cumulant function that returns the first four log-return cu
 | `cos_price_and_greeks(cf, grid, fwd_spec, strikes)` | function | Returns prices and `COSGreeks` in a single pass. |
 | `cos_delta_gamma(cf, grid, fwd_spec, strikes)` | function | Returns delta and gamma arrays from the COS expansion. |
 | `cos_parameter_sensitivity(cf, grid, fwd_spec, strikes, params, ...)` | function | Finite-difference parameter sensitivities (model-parameter Greeks). |
+| `bsm_delta` / `bsm_gamma` / `bsm_vega` / `bsm_theta` / `bsm_rho` | functions | Analytic first-order BSM Greeks (theta is dV/dt; rho scaled by 1/100). |
+| `bsm_vanna` / `bsm_volga` | functions | Analytic second-order/cross BSM Greeks. |
+| `bsm_all_greeks(...)` | function | All analytic BSM Greeks in one call. |
 
 ---
 
@@ -304,6 +325,9 @@ Exact closed-form prices for non-vanilla payoffs under BSM dynamics.
 | `levy_variance_swap(model, fwd, params, product)` | Levy model key, market inputs, `VarianceSwap` | Discounted variance-swap value, `disc * notional * E[RV]`. |
 | `bsm_variance_option_integrated(fwd_spec, K_var, option_type)` | forward spec, variance strike, option type | Variance call or put price via integrated BSM formula. |
 | `bsm_gap_call(fwd_spec, K1, K2)` | forward spec, trigger strike, payoff strike | Gap call: pays `S - K2` if `S > K1`. |
+| `geske_compound_price(...)` | compound contract terms | Geske (1979) compound option (all four call/put-on-call/put types). |
+| `bsm_chooser_price(...)` | chooser contract terms | Rubinstein (1991) chooser via the call+put decomposition. |
+| `bsm_quanto_forward(...)` / `bsm_quanto_option(...)` | quanto contract terms | Reiner (1992) quanto-adjusted forward and option prices. |
 | `bsm_discrete_geometric_asian(fwd_spec, K, fixing_times)` | forward spec, strike, fixing schedule | Geometric Asian with an explicit fixing schedule. |
 
 ### Digital options
@@ -312,6 +336,14 @@ Exact closed-form prices for non-vanilla payoffs under BSM dynamics.
 |----------|-----------|---------|
 | `bsm_cash_or_nothing(fwd_spec, K, option_type)` | forward spec, strike, option type | Cash-or-nothing digital: pays 1 unit if `S_T > K`. |
 | `bsm_asset_or_nothing(fwd_spec, K, option_type)` | forward spec, strike, option type | Asset-or-nothing digital: pays `S_T` if `S_T > K`. |
+
+### Product dataclasses (exotics)
+
+| Class | Contract |
+|-------|----------|
+| `CompoundOption` | Option on an option (Geske); priced via `method="geske"`. |
+| `ChooserOption` | Choose call/put at a fixed date; priced via `method="analytic"`. |
+| `QuantoOption` | FX-translated payoff with quanto drift adjustment. |
 
 ### Multi-asset analytics
 

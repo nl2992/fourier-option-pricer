@@ -2,6 +2,7 @@
 
 ## 0.12.0 - 2026-07-04
 
+- Docs audit: `docs/api_reference.md` backfilled with every public symbol shipped in 0.7.0-0.12.0 (analytic BSM Greeks, compound/chooser/quanto, SVI/SSVI/local-vol/SABR-smile calibration, regime-switching CF pair, PROJ barrier/Asian entries) and its version example refreshed; capability snapshot now lists the full method registry; stale twenty-model counts fixed in the model zoo, appendix, and README.
 - Added the exact Levy forward-start pricer as `method="forward_start_cf"`: for stationary independent increments the strike-reset payoff factorizes as `V = S0 e^{-q t1} * EuropeanPrice(S0=1, K=alpha, tau)` (Rubinstein 1990 homogeneity, exact across the Levy class), with the European leg priced by COS on the model CF. `levy_forward_start_price` exported. Tests: BSM vs the Rubinstein closed form to 1e-8, zero-start reduction to the vanilla European for Kou/VG/Merton, 200k-path Kou Monte Carlo band, alpha-parity identity, pipeline dispatch, validation errors.
 
 ## 0.11.0 - 2026-07-04

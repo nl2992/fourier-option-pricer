@@ -156,10 +156,10 @@ Once a model exposes `phi(u)`, it can be priced by Carr--Madan FFT, FRFT, or COS
 
 ## 6. Model coverage
 
-The full model catalogue  -  all twenty supported models with parameter dataclasses,
+The full model catalogue  -  all twenty-one supported models with parameter dataclasses,
 CF sources, and API notes  -  is in [docs/model_zoo.md](docs/model_zoo.md).
 
-The twenty models split into two groups.
+The twenty-one models split into two groups.
 
 ### 6.1 PyFENG-backed characteristic functions
 

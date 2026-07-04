@@ -35,7 +35,7 @@ The unified dispatcher `fe.price_strip` routes through `foureng.models.registry.
 The eight PyFENG-backed models require `pyfeng>=0.4.0`.
 pyfeng 0.4.0 renamed `charfunc_logprice` → `logp_cf` and changed `VarGammaFft`/`ExpNigFft` from `vov=` to `nu=`.
 Rough Heston imports directly from `pyfeng.sv_fft` (not `pyfeng.ex`) to avoid a broken path that calls the removed `scipy.misc.derivative` in newer SciPy.
-The `method="pyfeng_fft"` option in `price_strip` is supported only for these eight models. It refers to the PyFENG-backed Lewis-style FFT path. The remaining twelve models use the in-house `"cos"`, `"cos_improved"`, `"cos_filtered"`, `"carr_madan"`, and `"frft"` methods only. Note: `foureng/pricers/lewis.py` is an internal module used inside the COS/filtered-COS policy; `"lewis"` is not a valid `price_strip` method string.
+The `method="pyfeng_fft"` option in `price_strip` is supported only for these eight models. It refers to the PyFENG-backed Lewis-style FFT path. The remaining thirteen models use the in-house `"cos"`, `"cos_improved"`, `"cos_filtered"`, `"carr_madan"`, and `"frft"` methods only. Note: `foureng/pricers/lewis.py` is an internal module used inside the COS/filtered-COS policy; `"lewis"` is not a valid `price_strip` method string.
 
 ## In-house composites
 
@@ -49,7 +49,7 @@ At zero jump intensity each composite reduces to plain Heston  -  this is checke
 
 ## Public API
 
-All twenty models are **first-class public API objects** importable directly from the top-level package.
+All twenty-one models are **first-class public API objects** importable directly from the top-level package.
 Parameter dataclasses, characteristic functions, and cumulant functions are all in `foureng.__all__`:
 
 ```python

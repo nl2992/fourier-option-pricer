@@ -175,7 +175,7 @@ Use this if you want to `import foureng` in your own code without cloning the re
 
 ```bash
 pip install fourier-option-pricer          # latest
-pip install "fourier-option-pricer==0.4.2" # pin to this release
+pip install "fourier-option-pricer==0.12.0" # or pin any release
 ```
 
 Requires Python 3.10+.
@@ -338,7 +338,7 @@ MIT. See [LICENSE](LICENSE).
 
 ### Supplementary notebook
 
-[`notebooks/supplementary/demo_advanced.ipynb`](notebooks/supplementary/demo_advanced.ipynb) is a **supplementary reference** for readers who want a comprehensive tour after the main demo. It covers all 20 models, the main Fourier pricers, Greeks, IV surface, Heston calibration, Monte Carlo, new models (Double Heston, VGSA), and validation highlights. It is **not** the recommended starting point.
+[`notebooks/supplementary/demo_advanced.ipynb`](notebooks/supplementary/demo_advanced.ipynb) is a **supplementary reference** for readers who want a comprehensive tour after the main demo. It covers the model zoo, the main Fourier pricers, Greeks, IV surface, Heston calibration, Monte Carlo, new models (Double Heston, VGSA), and validation highlights. It is **not** the recommended starting point.
 
 ---
 
