@@ -135,11 +135,13 @@ def merton_jd_cumulants(fwd: ForwardSpec, p: MertonJDParams) -> tuple[float, flo
     For a Lévy process with exponent ψ(u), cumulants follow from the
     log-cumulant generating function κ(s) = T * ψ(-is):
 
-        c1  = T * (omega + lam * muj)
+        c1  = T * (-sigma^2/2 + omega + lam * muj)
         c2  = T * (sigma^2 + lam * (muj^2 + sigj^2))
         c4  = T * lam * (muj^4 + 6*muj^2*sigj^2 + 3*sigj^4)
 
-    where omega = -lam * zeta and zeta = exp(muj + sigj^2/2) - 1.
+    where omega = -lam * zeta and zeta = exp(muj + sigj^2/2) - 1. The
+    -sigma^2/2 diffusion drift matches the CF's forward-normalized drift
+    (omega - sigma^2/2), so c1 is the true mean of log(S_T/F_0).
     """
     T = fwd.T
     lam, muj, sigj, sigma = p.lam, p.muj, p.sigj, p.sigma
@@ -147,7 +149,7 @@ def merton_jd_cumulants(fwd: ForwardSpec, p: MertonJDParams) -> tuple[float, flo
     zeta = np.expm1(muj + 0.5 * sigj**2)
     omega = -lam * zeta
 
-    c1 = T * (omega + lam * muj)
+    c1 = T * (-0.5 * sigma**2 + omega + lam * muj)
     c2 = T * (sigma**2 + lam * (muj**2 + sigj**2))
     c4 = T * lam * (muj**4 + 6 * muj**2 * sigj**2 + 3 * sigj**4)
     return float(c1), float(c2), float(c4)

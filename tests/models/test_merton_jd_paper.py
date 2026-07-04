@@ -98,13 +98,17 @@ class TestMertonJDLimitCases:
         )
 
     def test_cumulants_c1(self):
-        """c1 = T*(omega + lam*muj); omega = -lam*(exp(muj+sigj^2/2)-1)."""
+        """c1 = T*(-sigma^2/2 + omega + lam*muj); omega = -lam*(exp(muj+sigj^2/2)-1).
+
+        The -sigma^2/2 term is the diffusion part of the forward-normalized
+        drift used by merton_jd_cf; it was previously missing here and in the
+        cumulant function itself."""
         p = _P_BENCH
         fwd = _FWD_BENCH
         c1, c2, c4 = merton_jd_cumulants(fwd, p)
         zeta = np.expm1(p.muj + 0.5 * p.sigj**2)
         omega = -p.lam * zeta
-        expected_c1 = fwd.T * (omega + p.lam * p.muj)
+        expected_c1 = fwd.T * (-0.5 * p.sigma**2 + omega + p.lam * p.muj)
         np.testing.assert_allclose(c1, expected_c1, rtol=1e-12)
 
     def test_cumulants_c2(self):
