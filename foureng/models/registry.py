@@ -29,6 +29,7 @@ from .generalized_hyperbolic import GHParams, gh_cf, gh_cumulants
 from .heston import HestonParams, heston_cf, heston_cumulants
 from .heston_cgmy import HestonCGMYParams, heston_cgmy_cf, heston_cgmy_cumulants
 from .heston_kou import HestonKouParams, heston_kou_cf, heston_kou_cumulants
+from .hull_white_hybrid import HullWhiteHybridParams, hw_hybrid_cf, hw_hybrid_cumulants
 from .kou import KouParams, kou_cf, kou_cumulants
 from .meixner import MeixnerParams, meixner_cf, meixner_cumulants
 from .merton_jd import MertonJDParams, merton_jd_cf, merton_jd_cumulants
@@ -126,6 +127,13 @@ MODEL_REGISTRY: dict[str, ModelEntry] = {
         RegimeSwitchingBsmParams,
         regime_switching_cf,
         regime_switching_cumulants,
+        False,
+    ),
+    "hw_hybrid": _e(
+        "hw_hybrid",
+        HullWhiteHybridParams,
+        hw_hybrid_cf,
+        hw_hybrid_cumulants,
         False,
     ),
 }

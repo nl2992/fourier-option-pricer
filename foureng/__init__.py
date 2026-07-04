@@ -1,6 +1,6 @@
 """fourier-option-pricer: Fourier methods for European option pricing.
 
-All 21 model dataclasses, characteristic functions, and cumulants are
+All 22 model dataclasses, characteristic functions, and cumulants are
 available directly from this top-level package:
 
     import foureng as fe
@@ -27,7 +27,7 @@ try:
 
     __version__: str = _pkg_version("fourier-option-pricer")
 except _PNF:  # editable install without metadata yet
-    __version__ = "0.15.0"
+    __version__ = "0.16.0"
 
 from .analytics.bsm_asian import (
     bsm_discrete_geometric_asian,
@@ -95,6 +95,12 @@ from .models.generalized_hyperbolic import GHParams, gh_cf, gh_cumulants
 from .models.heston import HestonParams, heston_cf_form2, heston_cumulants, heston_riccati_cd
 from .models.heston_cgmy import HestonCGMYParams, heston_cgmy_cf, heston_cgmy_cumulants
 from .models.heston_kou import HestonKouParams, heston_kou_cf, heston_kou_cumulants
+from .models.hull_white_hybrid import (
+    HullWhiteHybridParams,
+    hw_bond_variance,
+    hw_hybrid_cf,
+    hw_hybrid_cumulants,
+)
 from .models.kou import KouParams, kou_cf, kou_cumulants
 from .models.meixner import MeixnerParams, meixner_cf, meixner_cumulants
 from .models.merton_jd import MertonJDParams, merton_jd_cf, merton_jd_cumulants
@@ -196,7 +202,7 @@ __all__ = [
     "ForwardSpec",
     "CharFunc",
     "ModelSpec",
-    # models  -  params, CF, cumulants (all 21)
+    # models  -  params, CF, cumulants (all 22)
     "BsmParams",
     "bsm_cf",
     "bsm_cumulants",
@@ -233,6 +239,10 @@ __all__ = [
     "GarchWMW2012Params",
     "garch_wmw2012_cf",
     "garch_wmw2012_cumulants",
+    "HullWhiteHybridParams",
+    "hw_bond_variance",
+    "hw_hybrid_cf",
+    "hw_hybrid_cumulants",
     "RegimeSwitchingBsmParams",
     "regime_switching_cf",
     "regime_switching_cumulants",

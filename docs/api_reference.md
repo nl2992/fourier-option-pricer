@@ -50,6 +50,7 @@ Each dataclass holds the calibrated parameters for one stochastic-volatility or 
 | `DoubleHestonParams` | Double Heston |
 | `VGSAParams` | Variance Gamma with stochastic arrival |
 | `RegimeSwitchingBsmParams` | Markov regime-switching jump-diffusion: per-regime vols, chain generator, initial distribution, optional per-regime Merton jump blocks |
+| `HullWhiteHybridParams` | Stochastic-rate hybrid: any base registry model plus an independent one-factor Hull-White short rate |
 | `SabrParams` | SABR: `alpha`, `beta`, `rho`, `nu`, `F`, `T`. |
 
 ---
@@ -81,6 +82,7 @@ All characteristic functions accept a model parameter dataclass and a complex-va
 | `double_heston_cf` | Double Heston |
 | `vgsa_cf` | VGSA |
 | `regime_switching_cf` | Markov regime-switching BSM (matrix-exponential CF) |
+| `hw_hybrid_cf` | Equity + Hull-White hybrid (base CF times the bond-variance Gaussian) |
 
 ### SABR implied volatility
 
@@ -116,6 +118,8 @@ Each model exposes a cumulant function that returns the first four log-return cu
 | `vg_cumulants` | VG |
 | `vgsa_cumulants` | VGSA |
 | `regime_switching_cumulants` | Markov regime-switching BSM (numeric CGF differentiation) |
+| `hw_hybrid_cumulants` | Equity + Hull-White hybrid (base cumulants shifted by the bond variance V_P) |
+| `hw_bond_variance` | Integrated Hull-White bond-price variance V_P(a, sigma_r, T) with the Ho-Lee small-a limit |
 
 ### Miscellaneous model helpers
 

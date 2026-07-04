@@ -4,7 +4,7 @@ Updated 2026-07-04 after the transform-methods expansion (Hilbert transform,
 regime switching, exact Levy geometric Asians and variance swaps).
 This file tracks the capability surface used by the registry and dispatcher tests.
 
-## Model registry (21 models)
+## Model registry (22 models)
 
 | Key | Family | PyFENG FFT | Status |
 |-----|--------|-----------|--------|
@@ -29,6 +29,7 @@ This file tracks the capability surface used by the registry and dispatcher test
 | `double_heston` | Two-factor SV | no | stable |
 | `vgsa` | VG with stochastic arrival | no | stable |
 | `regime_switching` | Markov regime-switching jump-diffusion (optional per-regime Merton jumps) | no | stable |
+| `hw_hybrid` | Any base model + independent Hull-White stochastic rates | no | stable |
 
 ## Pricing methods
 

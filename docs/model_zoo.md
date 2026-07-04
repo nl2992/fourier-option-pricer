@@ -1,6 +1,6 @@
 # Model Zoo
 
-Complete catalogue of the twenty-one characteristic-function models supported by `foureng`.
+Complete catalogue of the twenty-two characteristic-function models supported by `foureng`.
 All are importable from the top-level package (`import foureng as fe`).
 The unified dispatcher `fe.price_strip` routes through `foureng.models.registry.MODEL_REGISTRY`.
 
@@ -29,6 +29,7 @@ The unified dispatcher `fe.price_strip` routes through `foureng.models.registry.
 | Double Heston | `DoubleHestonParams` | In-house implementation | Two independent Heston variance factors; CF factorises as a product of two single-Heston CFs. |
 | VGSA | `VGSAParams` | In-house implementation | Variance Gamma on a stochastic CIR activity clock; captures term-structure of skew and vol-of-vol clustering. |
 | Regime-Switching JD | `RegimeSwitchingBsmParams` | In-house implementation | Markov-modulated volatility regimes with optional per-regime Merton jump blocks; CF via the matrix exponential of the chain generator plus per-regime Levy exponents (Buffington & Elliott 2002). Cumulants by numeric CGF differentiation. |
+| Hull-White Rate Hybrid | `HullWhiteHybridParams` | In-house composite | Any base registry model plus an independent one-factor Hull-White short rate; T-forward-measure CF multiplies the base CF by the bond-variance Gaussian (Merton 1973; Hull & White 1990). |
 
 ## PyFENG dependency
 

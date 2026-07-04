@@ -4,7 +4,7 @@
 
 **One characteristic function in → a whole strike strip of near-machine-precision prices out.**
 
-*21 models · 9 Fourier engines · exotics · calibration · 1,900+ tests*
+*22 models · 9 Fourier engines · exotics · calibration · 1,900+ tests*
 
 [![CI](https://github.com/nl2992/fourier-option-pricer/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/nl2992/fourier-option-pricer/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue.svg)](pyproject.toml)
@@ -23,7 +23,7 @@ params = fe.HestonParams(kappa=4.0, theta=0.25, nu=1.0, rho=-0.5, v0=0.04)
 prices = fe.price_strip("heston", "cos_improved", np.array([80, 90, 100, 110, 120]), fwd, params)
 ```
 
-Swap `"heston"` for any of 21 models, `"cos_improved"` for any of 9 engines. Same call, no rewiring.
+Swap `"heston"` for any of 22 models, `"cos_improved"` for any of 9 engines. Same call, no rewiring.
 
 ---
 
@@ -63,13 +63,13 @@ where $c_1, c_2, c_4$ are the model's cumulants and $L$ is a heuristic multiplie
 
 This project implements the **improved COS truncation** of Junike & Pankrashkin (2022) and Junike (2024), which replaces the heuristic $L$ with a rigorous tail-mass bound. On the FO2008 test suite, this truncation improvement beats the paper-grid COS in 7 of 8 cases and beats the paper's own best-N result in 6 of 8 (see [`benchmarks/cos_method_improved/`](benchmarks/cos_method_improved/outputs/cos_method_improved_paper_compare.csv)). On top of that, we add an **original adaptive filtered-COS extension**: spectral weights $\sigma_k \in [0, 1]$ (Fejér, Lanczos, raised-cosine, or exponential) applied to the high-frequency COS coefficients to suppress residual oscillation from sharp density features. A policy-search selector automatically compares grid and filter combinations, returning the fastest configuration that meets the user's tolerance, with the plain Junike path always included as a fallback.
 
-The package covers **21 characteristic-function models** across stochastic-volatility, jump-diffusion, pure-Lévy, rough-volatility, regime-switching, and hybrid SVJ families, plus a SABR approximation surface. They are priced through one `price_strip` dispatcher with COS/FFT/FRFT/CONV, the **Feng-Linetsky Hilbert-transform engine**, a first-slice Mellin façade, a real **PROJ frame-projection engine** (Kirkby 2015/2017, European vanilla plus a Bermudan-put recursion), BSM finite-difference/lattice baselines, and product-level exotic routes.
+The package covers **22 characteristic-function models** across stochastic-volatility, jump-diffusion, pure-Lévy, rough-volatility, regime-switching, stochastic-rate-hybrid, and hybrid SVJ families, plus a SABR approximation surface. They are priced through one `price_strip` dispatcher with COS/FFT/FRFT/CONV, the **Feng-Linetsky Hilbert-transform engine**, a first-slice Mellin façade, a real **PROJ frame-projection engine** (Kirkby 2015/2017, European vanilla plus a Bermudan-put recursion), BSM finite-difference/lattice baselines, and product-level exotic routes.
 
 Full methodology: [appendix.md](appendix.md) · Extension details: [docs/filtered_cos_extension.md](docs/filtered_cos_extension.md) · Package architecture: [docs/architecture_overview.md](docs/architecture_overview.md).
 
 ---
 
-## 🆕 What's new in the 0.11–0.15 line
+## 🆕 What's new in the 0.11–0.16 line
 
 Nine capabilities ported into the Fourier stack from the transform-methods literature (the territory covered by Kirkby's PROJ MATLAB toolbox), each implemented natively against `foureng`'s CF interfaces and validated against closed forms and Monte Carlo:
 
@@ -82,6 +82,7 @@ Nine capabilities ported into the Fourier stack from the transform-methods liter
 | **Exact Lévy forward-starts** — Rubinstein (1990) homogeneity | `price(product, model, "forward_start_cf", ...)` | $V = S_0 e^{-q t_1} \cdot \mathrm{Euro}(S_0{=}1, K{=}\alpha, \tau)$ |
 | **Exact Lévy cliquets** (local collars) | `price(product, model, "cliquet_cf", ...)` | $E[\mathrm{clip}(R,\ell,c)] = \ell + \mathrm{Call}(1{+}\ell) - \mathrm{Call}(1{+}c)$ per period |
 | **PROJ double barriers** — Kirkby (2015) | `price(product, model, "proj_double_barrier", ...)` | Toeplitz-FFT backward induction, absorption on both sides of $(L, U)$ |
+| **Hull-White stochastic-rate hybrid** — Merton (1973); Hull & White (1990) | `HullWhiteHybridParams(base, ...)` + any CF engine | $\varphi(u) = \varphi_{\text{base}}(u)\, e^{-\frac12 V_P (u^2 + iu)}$, $V_P = \int_0^T \sigma_P^2\,ds$ |
 
 Also in this line: `cp=-1` is now honored uniformly across every Fourier engine (parity applied once at dispatch), a long-standing drift omission in `merton_jd_cumulants` is fixed, and the API reference was backfilled to cover every public symbol. Details in the [CHANGELOG](CHANGELOG.md).
 
@@ -265,6 +266,7 @@ Everything is importable from `import foureng as fe`.
 | `DoubleHestonParams` | `kappa1..v01, kappa2..v02` | Two-factor Heston |
 | `VGSAParams` | `C, G, M, kappa, eta, lam` | VG with stochastic activity |
 | `RegimeSwitchingBsmParams` | `sigmas, generator, initial_probs` + optional `jump_intensities, jump_means, jump_stds` | Markov regime-switching jump-diffusion (matrix-exponential CF) |
+| `HullWhiteHybridParams` | `base_model, base_params, mean_reversion, sigma_r` | Any base model + independent Hull-White stochastic rates |
 | `SabrParams` | `alpha, beta, rho, nu` | SABR implied-vol approximation |
 
 Full model details: [docs/model_zoo.md](docs/model_zoo.md).
@@ -477,7 +479,7 @@ Transform-method territory not yet covered here, in rough priority order (the fi
 - [ ] CTMC (continuous-time Markov chain) approximation for barrier/American options under stochastic volatility and SABR
 - [ ] Swing options and credit default swaps via transform methods
 - [x] Regime-switching jump-diffusion regimes (per-regime Merton blocks, 0.15.0)
-- [ ] Stochastic-interest-rate hybrids (one-factor Hull-White composite CFs)
+- [x] Stochastic-interest-rate hybrids (one-factor Hull-White composite CFs, `hw_hybrid`, 0.16.0)
 
 Contributions welcome — see [CONTRIBUTING.md](CONTRIBUTING.md).
 
