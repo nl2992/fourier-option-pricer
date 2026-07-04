@@ -63,6 +63,10 @@ from .utils.spectral_filters import COSFilterSpec
 
 _DIRECT_CALL_FRIENDLY_MODELS = {"heston", "ousv", "nig"}
 
+# Engines whose numerical core produces call prices only; puts are recovered
+# by put-call parity at the top of ``price_strip``.
+_CALL_ONLY_METHODS = {"cos", "cos_improved", "cos_filtered", "frft", "carr_madan"}
+
 
 def _cf_for(model: str, fwd: ForwardSpec, params):
     if model not in MODEL_REGISTRY:
@@ -229,6 +233,13 @@ def price_strip(
     K = np.ascontiguousarray(np.asarray(strikes, dtype=np.float64))
     if K.size == 0:
         raise ValueError("strikes must be non-empty")
+
+    # The COS/FFT family computes calls; convert once here via put-call parity
+    # so ``cp=-1`` behaves identically across every engine.
+    if cp == -1 and method in _CALL_ONLY_METHODS:
+        calls = price_strip(model, method, K, fwd, params, grid=grid, cp=1)
+        return np.asarray(calls - fwd.disc * (fwd.F0 - K), dtype=np.float64)
+
     if method == "pyfeng_fft":
         return _pyfeng_fft_price(model, K, fwd, params, cp=cp)
 
