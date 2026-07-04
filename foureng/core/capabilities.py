@@ -304,6 +304,18 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
         supports_path_dependent=True,
         notes="BSM Monte Carlo pricer for realized-variance swaps and variance options.",
     ),
+    "fader_cf": MethodSpec(
+        requires_cf=True,
+        supports_products=frozenset({"fader"}),
+        supports_exercise=frozenset({"european"}),
+        supports_path_dependent=True,
+        notes=(
+            "Fade-in/fade-out pricer for Levy models: per-date COS density of "
+            "the monitoring marginal times the remaining-life European value "
+            "(spot-shift homogeneity turns the conditional values into one COS "
+            "strike strip per date)."
+        ),
+    ),
     "cliquet_cf": MethodSpec(
         requires_cf=True,
         supports_products=frozenset({"cliquet"}),

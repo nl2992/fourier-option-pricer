@@ -27,7 +27,7 @@ try:
 
     __version__: str = _pkg_version("fourier-option-pricer")
 except _PNF:  # editable install without metadata yet
-    __version__ = "0.16.0"
+    __version__ = "0.17.0"
 
 from .analytics.bsm_asian import (
     bsm_discrete_geometric_asian,
@@ -131,6 +131,7 @@ from .pricers.cos import (
 )
 from .pricers.cos_bermudan import cos_bermudan_price, cos_bermudan_price_strip
 from .pricers.cos_digital import cos_digital_price, cos_digital_price_strip
+from .pricers.fader import levy_fader_price
 from .pricers.filtered_cos import FilteredCOSDecision, filtered_cos_prices
 from .pricers.forward_start import levy_forward_start_price
 from .pricers.frft import frft_price_at_strikes, frft_prices
@@ -152,6 +153,7 @@ from .pricers.proj import (
 from .pricers.sabr import sabr_hagan_price_at_strikes
 from .products.chooser import ChooserOption
 from .products.compound import CompoundOption
+from .products.fader import FaderOption
 from .products.quanto import QuantoOption
 from .surface import (
     CalibrationResult,
@@ -305,6 +307,7 @@ __all__ = [
     "hilbert_itm_probabilities",
     "hilbert_price_at_strikes",
     "levy_cliquet_price",
+    "levy_fader_price",
     "levy_forward_start_price",
     "levy_geometric_asian_price",
     "levy_variance_fair_strike",
@@ -408,6 +411,7 @@ __all__ = [
     "bsm_chooser_price",
     "CompoundOption",
     "ChooserOption",
+    "FaderOption",
     # quanto
     "bsm_quanto_forward",
     "bsm_quanto_option",

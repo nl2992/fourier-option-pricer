@@ -1308,6 +1308,19 @@ def price(
         fwd_t = _FwdSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=product.maturity)
         return mc_price(fwd_t, params.sigma, product, mc_spec).price
 
+    if pt == "fader":
+        from .pricers.fader import levy_fader_price
+        from .products.fader import FaderOption
+
+        if not isinstance(product, FaderOption):
+            raise TypeError(
+                "price(): product_type='fader' must be represented by "
+                f"FaderOption, got {type(product).__name__!r}"
+            )
+        if method != "fader_cf":
+            raise NotImplementedError("Fader pricing currently supports method='fader_cf'.")
+        return levy_fader_price(model, fwd, params, product)
+
     if pt == "parisian":
         from .products.parisian import ParisianOption
 

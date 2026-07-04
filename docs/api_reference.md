@@ -197,6 +197,7 @@ Each model exposes a cumulant function that returns the first four log-return cu
 | `levy_geometric_asian_price(model, fwd, params, strikes=..., monitoring_times=..., cp=1)` | Levy model key, market inputs, fixings | Exact discrete geometric-Asian prices via the per-increment CF product (Fusai-Meucci 2008). |
 | `levy_forward_start_price(model, fwd, params, alpha=..., start_time=..., maturity=..., cp=1)` | Levy model key, market inputs, strike ratio, reset date | Exact Levy forward-start price via homogeneity factorization; COS European leg. |
 | `levy_cliquet_price(model, fwd, params, product)` | Levy model key, market inputs, `CliquetOption` | Exact locally collared cliquet: per-period COS call spreads, additive or multiplicative. |
+| `levy_fader_price(model, fwd, params, product)` | Levy model key, market inputs, `FaderOption` | Fade-in/fade-out via per-date COS density times the remaining-life European strip. |
 | `filtered_cos_prices(cf, grid, fwd_spec, strikes, spec)` | CF, `COSGrid`, forward spec, strikes, `COSFilterSpec` | COS with Conze-Viswanathan or exponential filters to suppress Gibbs oscillations. |
 
 ---
@@ -350,6 +351,7 @@ Exact closed-form prices for non-vanilla payoffs under BSM dynamics.
 | `CompoundOption` | Option on an option (Geske); priced via `method="geske"`. |
 | `ChooserOption` | Choose call/put at a fixed date; priced via `method="analytic"`. |
 | `QuantoOption` | FX-translated payoff with quanto drift adjustment. |
+| `FaderOption` | Range-monitored faded-notional vanilla (fade-in / fade-out); priced via `method="fader_cf"`. |
 
 ### Multi-asset analytics
 

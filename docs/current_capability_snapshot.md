@@ -46,6 +46,7 @@ This file tracks the capability surface used by the registry and dispatcher test
 | `variance_levy_analytic` | Exact discrete variance-swap fair strike from CF cumulants | Carr & Wu (2009), discrete analogue |
 | `forward_start_cf` | Exact Levy forward-start via homogeneity factorization + COS European leg | Rubinstein (1990); Musiela & Rutkowski (2005) |
 | `cliquet_cf` | Exact locally collared Levy cliquet via per-period COS call spreads | Wilmott (2002); Kirkby & Deng (2016) |
+| `fader_cf` | Levy fade-in/fade-out via per-date COS density x remaining-life value | Hakala & Wystup (2002) |
 | `proj_barrier` | PROJ discretely monitored single barrier | Kirkby (2014, 2015) |
 | `proj_double_barrier` | PROJ discretely monitored double barrier (two-sided absorption) | Kirkby (2015) |
 | `proj_asian` | Arithmetic Asian MC with PROJ/analytic geometric control variate | Kirkby (2016) |

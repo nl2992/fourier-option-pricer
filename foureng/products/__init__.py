@@ -19,6 +19,7 @@ from .cliquet import CliquetOption
 from .compound import CompoundOption
 from .digital import DigitalOption
 from .european import EuropeanOption
+from .fader import FaderOption
 from .forward_start import ForwardStartOption
 from .lookback import LookbackOption
 from .multi_asset import BasketOption, BestOfOption, ExchangeOption, SpreadOption
@@ -32,6 +33,7 @@ __all__ = [
     "DigitalOption",
     "BarrierOption",
     "DoubleBarrierOption",
+    "FaderOption",
     "AsianOption",
     "BermudanOption",
     "AmericanOption",

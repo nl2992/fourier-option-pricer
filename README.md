@@ -69,7 +69,7 @@ Full methodology: [appendix.md](appendix.md) · Extension details: [docs/filtere
 
 ---
 
-## 🆕 What's new in the 0.11–0.16 line
+## 🆕 What's new in the 0.11–0.17 line
 
 Nine capabilities ported into the Fourier stack from the transform-methods literature (the territory covered by Kirkby's PROJ MATLAB toolbox), each implemented natively against `foureng`'s CF interfaces and validated against closed forms and Monte Carlo:
 
@@ -83,6 +83,7 @@ Nine capabilities ported into the Fourier stack from the transform-methods liter
 | **Exact Lévy cliquets** (local collars) | `price(product, model, "cliquet_cf", ...)` | $E[\mathrm{clip}(R,\ell,c)] = \ell + \mathrm{Call}(1{+}\ell) - \mathrm{Call}(1{+}c)$ per period |
 | **PROJ double barriers** — Kirkby (2015) | `price(product, model, "proj_double_barrier", ...)` | Toeplitz-FFT backward induction, absorption on both sides of $(L, U)$ |
 | **Hull-White stochastic-rate hybrid** — Merton (1973); Hull & White (1990) | `HullWhiteHybridParams(base, ...)` + any CF engine | $\varphi(u) = \varphi_{\text{base}}(u)\, e^{-\frac12 V_P (u^2 + iu)}$, $V_P = \int_0^T \sigma_P^2\,ds$ |
+| **Fader options** — Hakala & Wystup (2002) | `price(product, model, "fader_cf", ...)` | $V = \tfrac{D}{M}\sum_k \int_A f_{t_k}(x)\, C_k(x)\,dx$, one COS strip per date |
 
 Also in this line: `cp=-1` is now honored uniformly across every Fourier engine (parity applied once at dispatch), a long-standing drift omission in `merton_jd_cumulants` is fixed, and the API reference was backfilled to cover every public symbol. Details in the [CHANGELOG](CHANGELOG.md).
 
@@ -277,7 +278,7 @@ Full model details: [docs/model_zoo.md](docs/model_zoo.md).
 |----------|------------|---------|
 | `price_strip(model, method, strikes, fwd, params, grid=None)` | model label, method label, strike array, `ForwardSpec`, model params, optional grid | `np.ndarray` of call prices |
 
-Method labels: `"cos"`, `"cos_improved"`, `"cos_filtered"`, `"carr_madan"`, `"frft"`, `"conv"`, `"hilbert"`, `"cos_bermudan"`, `"mellin"`, `"proj"`, `"pyfeng_fft"`, plus product-aware `"asian_cf"` / `"variance_levy_analytic"` / `"forward_start_cf"` / `"cliquet_cf"` (exact Lévy geometric Asians, variance-swap strikes, forward-starts, and locally collared cliquets) and `"cos_digital"` / `"digital_bsm"` / `"monte_carlo"` / `"barrier_bsm"` / `"asian_bsm"` / `"asian_mc"` / `"double_barrier_mc"` / `"proj_double_barrier"` / `"forward_start_bsm"` / `"exchange_bsm"` / `"spread_bsm"` / `"multi_asset_mc"` / `"lookback_bsm"` / `"lookback_mc"` / `"variance_analytic_bsm"` / `"variance_mc"` / `"cliquet_mc"` and SABR-only `"sabr_hagan"`.
+Method labels: `"cos"`, `"cos_improved"`, `"cos_filtered"`, `"carr_madan"`, `"frft"`, `"conv"`, `"hilbert"`, `"cos_bermudan"`, `"mellin"`, `"proj"`, `"pyfeng_fft"`, plus product-aware `"asian_cf"` / `"variance_levy_analytic"` / `"forward_start_cf"` / `"cliquet_cf"` / `"fader_cf"` (exact Lévy geometric Asians, variance-swap strikes, forward-starts, and locally collared cliquets) and `"cos_digital"` / `"digital_bsm"` / `"monte_carlo"` / `"barrier_bsm"` / `"asian_bsm"` / `"asian_mc"` / `"double_barrier_mc"` / `"proj_double_barrier"` / `"forward_start_bsm"` / `"exchange_bsm"` / `"spread_bsm"` / `"multi_asset_mc"` / `"lookback_bsm"` / `"lookback_mc"` / `"variance_analytic_bsm"` / `"variance_mc"` / `"cliquet_mc"` and SABR-only `"sabr_hagan"`.
 
 Product-level pricing uses `price(product, model, method, fwd, params)`. It currently routes European options, cash-or-nothing and asset-or-nothing digitals via `"cos_digital"` or BSM `"digital_bsm"`, supported 1-D Levy Bermudans via `"cos_bermudan"`, BSM generic Monte Carlo / Longstaff-Schwartz via `"monte_carlo"` for Europeans, Americans, Bermudans, and the GBM-simulated exotic book, continuously monitored zero-rebate BSM single barriers via `"barrier_bsm"`, BSM Asians via `"asian_bsm"` / `"asian_mc"`, BSM forward-start options via `"forward_start_bsm"`, BSM two-asset exchange options via `"exchange_bsm"` / `"multi_asset_mc"`, BSM basket and best-of options via `"multi_asset_mc"`, BSM spread options via `"spread_bsm"` / `"multi_asset_mc"`, BSM lookbacks via `"lookback_bsm"` / `"lookback_mc"`, BSM variance swaps via `"variance_analytic_bsm"` / `"variance_mc"`, integrated-variance BSM options via `"variance_analytic_bsm"` and realised/integrated BSM variance options via `"variance_mc"`, BSM cliquets via `"cliquet_mc"`, and BSM double barriers via `"double_barrier_mc"` / `"proj_double_barrier"`.
 
@@ -312,6 +313,7 @@ All MC functions take a `GBMPathSpec(n_paths, n_steps, seed, antithetic)` config
 | `levy_forward_start_price(model, fwd, params, alpha=..., start_time=..., maturity=..., cp=1)` | Lévy model key, market inputs, strike ratio, reset date | `float` |
 | `levy_cliquet_price(model, fwd, params, product)` | Lévy model key, market inputs, `CliquetOption` | `float` (locally collared additive/multiplicative) |
 | `proj_double_barrier_price(step_cf, S0=..., L=..., U=..., M=..., knockout=True, ...)` | one-step CF, corridor, monitoring count | `float` |
+| `levy_fader_price(model, fwd, params, product)` | Lévy model key, market inputs, `FaderOption` | `float` (fade-in or fade-out) |
 | `sabr_hagan_price_at_strikes(fwd, params, strikes)` | `ForwardSpec`, `SabrParams`, strike array | `np.ndarray` |
 
 ### Grid constructors
@@ -475,7 +477,8 @@ Full bibliography with DOIs and free-access links: [docs/papers.md](docs/papers.
 Transform-method territory not yet covered here, in rough priority order (the first block tracks capabilities popularized by the PROJ/CTMC MATLAB literature):
 
 - [x] PROJ double-barrier options under Lévy models (`proj_double_barrier`, 0.14.0)
-- [ ] Step/fader options under Lévy models
+- [x] Fader options under Lévy models (`fader_cf`, 0.17.0)
+- [ ] Step options (occupation-time payoffs, Linetsky 1999) under Lévy models
 - [ ] CTMC (continuous-time Markov chain) approximation for barrier/American options under stochastic volatility and SABR
 - [ ] Swing options and credit default swaps via transform methods
 - [x] Regime-switching jump-diffusion regimes (per-regime Merton blocks, 0.15.0)

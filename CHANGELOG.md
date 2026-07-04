@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.17.0 - 2026-07-05
+
+- Added fader (faded-notional) options for Levy models: new `FaderOption` product (fade-in/fade-out over a range (L, U) monitored on discrete dates) and `method="fader_cf"` (`levy_fader_price` exported). Linearity splits the payoff date by date; independence factorizes each term into the COS density of the date-k marginal times the remaining-life European value, and spot-shift homogeneity turns the conditional values into a single COS strike strip per date (2M COS runs total). Fade-out via the exact notional-split parity. Tests: all-encompassing range == vanilla, single-date-at-maturity vs the exact BSM call-spread + digital decomposition (5e-6), BSM and Kou full-path Monte Carlo at 200k paths, fade-in + fade-out == vanilla, range monotonicity, put route through the pipeline, validation errors.
+
 ## 0.16.0 - 2026-07-05
 
 - Added the equity + one-factor Hull-White stochastic-rate hybrid as registry model `"hw_hybrid"` (`HullWhiteHybridParams(base_model, base_params, mean_reversion, sigma_r)`): under independent rates, T-forward-measure pricing multiplies the base CF by `exp(-0.5 V_P (u^2 + iu))` where `V_P` is the integrated Hull-White bond-price variance (`hw_bond_variance`, with the Ho-Lee `sigma_r^2 T^3/3` limit at small mean reversion). Any registry model can be the base -- BSM, Levy jump models, Heston -- and `phi(-i) = 1` is preserved. Exported: `HullWhiteHybridParams`, `hw_hybrid_cf`, `hw_hybrid_cumulants`, `hw_bond_variance`. Tests: bond variance vs numerical quadrature and the Ho-Lee limit, BSM base equals the Merton (1973) effective-vol closed form to 1e-8, sigma_r = 0 collapse, martingale normalization, cumulant additivity, monotonicity in rate vol, COS/Hilbert cross-engine and parity, Kou base vs exact 250k-path Monte Carlo (independent Gaussian rate leg), Heston base through the pipeline, parameter validation. Model count: 22.
