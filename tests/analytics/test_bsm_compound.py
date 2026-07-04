@@ -81,9 +81,7 @@ def test_call_on_call_zero_outer_strike():
     # The parity relation gives: C-on-C - P-on-C = C(T2) - 0 = C(T2)
     # And P-on-C ≥ 0, so C-on-C ≥ C(T2)  when K1=0 also means C-on-C <= C(T2)
     # More precisely: C-on-C(K1=0) = C(S, K2, T2) exactly (exercise always occurs)
-    assert abs(coc - inner) < 1e-4, (
-        f"C-on-C(K1=0) = {coc:.6f}, C(S,K2,T2) = {inner:.6f}"
-    )
+    assert abs(coc - inner) < 1e-4, f"C-on-C(K1=0) = {coc:.6f}, C(S,K2,T2) = {inner:.6f}"
 
 
 # ── 5. Monotonicity in outer strike ───────────────────────────────────────────
@@ -97,7 +95,7 @@ def test_call_on_call_decreasing_in_K1():
     ]
     for i in range(len(prices) - 1):
         assert prices[i] >= prices[i + 1] - 1e-8, (
-            f"C-on-C not decreasing in K1: {prices[i]:.6f} < {prices[i+1]:.6f}"
+            f"C-on-C not decreasing in K1: {prices[i]:.6f} < {prices[i + 1]:.6f}"
         )
 
 
@@ -112,7 +110,7 @@ def test_call_on_call_decreasing_in_K2():
     ]
     for i in range(len(prices) - 1):
         assert prices[i] >= prices[i + 1] - 1e-8, (
-            f"C-on-C not decreasing in K2: {prices[i]:.6f} < {prices[i+1]:.6f}"
+            f"C-on-C not decreasing in K2: {prices[i]:.6f} < {prices[i + 1]:.6f}"
         )
 
 
@@ -125,7 +123,9 @@ def test_compound_finite_across_grid(S_val, K1_val):
     """Compound prices should be finite and non-negative across a (S, K1) grid."""
     for cp_outer, cp_inner in [(1, 1), (1, -1), (-1, 1), (-1, -1)]:
         v = geske_compound_price(S_val, K1_val, K2, r, q, T1, T2, sigma, cp_outer, cp_inner)
-        assert np.isfinite(v), f"Non-finite for S={S_val}, K1={K1_val}, types=({cp_outer},{cp_inner})"
+        assert np.isfinite(v), (
+            f"Non-finite for S={S_val}, K1={K1_val}, types=({cp_outer},{cp_inner})"
+        )
         assert v >= -1e-8, f"Negative for S={S_val}, K1={K1_val}, types=({cp_outer},{cp_inner})"
 
 
@@ -153,9 +153,12 @@ def test_pipeline_compound_call_on_call():
     from foureng.products.compound import CompoundOption
 
     product = CompoundOption(
-        strike_outer=K1, strike_inner=K2,
-        maturity_outer=T1, maturity_inner=T2,
-        cp_outer=1, cp_inner=1,
+        strike_outer=K1,
+        strike_inner=K2,
+        maturity_outer=T1,
+        maturity_inner=T2,
+        cp_outer=1,
+        cp_inner=1,
     )
     fwd = ForwardSpec(S0=S, r=r, q=q, T=T2)
     params = BsmParams(sigma=sigma)

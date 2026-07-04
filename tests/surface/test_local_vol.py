@@ -25,7 +25,7 @@ from foureng.surface.svi import SVIParams, svi_implied_vol
 
 # ── shared fixtures ───────────────────────────────────────────────────────────
 
-K_GRID = np.linspace(-1.0, 1.0, 31)      # log-moneyness
+K_GRID = np.linspace(-1.0, 1.0, 31)  # log-moneyness
 MATURITIES = np.array([0.25, 0.5, 1.0, 2.0])
 
 # Flat smile: a = sigma^2 * T, b = 0, so w(k) = sigma^2 * T for all k
@@ -192,8 +192,9 @@ def test_grid_route_raises_too_few_maturities():
 def test_grid_route_raises_shape_mismatch():
     with pytest.raises((ValueError, Exception)):
         dupire_local_vol_grid(
-            MATURITIES, K_GRID,
-            np.ones((len(MATURITIES), len(K_GRID) + 1))  # wrong K size
+            MATURITIES,
+            K_GRID,
+            np.ones((len(MATURITIES), len(K_GRID) + 1)),  # wrong K size
         )
 
 
@@ -214,11 +215,11 @@ def test_svi_route_consistent_with_grid_route():
     params = [_skew_svi(T) for T in T_arr]
     iv = _build_iv_grid(T_arr, k_arr, params)
 
-    lv_svi  = dupire_local_vol_from_svi(k_arr, T_arr, params)
+    lv_svi = dupire_local_vol_from_svi(k_arr, T_arr, params)
     lv_grid = dupire_local_vol_grid(T_arr, k_arr, iv)
 
     k_interior = np.abs(k_arr) < 0.5
-    svi_int  = lv_svi.local_vol[:, k_interior]
+    svi_int = lv_svi.local_vol[:, k_interior]
     grid_int = lv_grid.local_vol[:, k_interior]
 
     # Grid route uses FD so allow 10% relative tolerance
@@ -230,6 +231,7 @@ def test_svi_route_consistent_with_grid_route():
 
 def test_importable_from_foureng():
     import foureng as fe
+
     assert hasattr(fe, "LocalVolSurface")
     assert hasattr(fe, "dupire_local_vol_from_svi")
     assert hasattr(fe, "dupire_local_vol_grid")
@@ -237,6 +239,7 @@ def test_importable_from_foureng():
 
 def test_callable_from_foureng():
     import foureng as fe
+
     params = [_flat_svi(T) for T in MATURITIES]
     lv = fe.dupire_local_vol_from_svi(K_GRID, MATURITIES, params)
     assert isinstance(lv, fe.LocalVolSurface)

@@ -21,8 +21,13 @@ def sabr_hagan_price_at_strikes(
         raise ValueError(f"cp must be +1 or -1, got {cp}")
     K = np.ascontiguousarray(np.asarray(strikes, dtype=np.float64))
     vols = sabr_hagan_implied_vol(
-        fwd.F0, K, fwd.T,
-        params.alpha, params.beta, params.rho, params.nu,
+        fwd.F0,
+        K,
+        fwd.T,
+        params.alpha,
+        params.beta,
+        params.rho,
+        params.nu,
     )
     prices = [
         bs_price_from_fwd(

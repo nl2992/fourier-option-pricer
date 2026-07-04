@@ -14,8 +14,6 @@ Verification strategy:
 
 from __future__ import annotations
 
-import math
-
 import numpy as np
 import pytest
 
@@ -201,12 +199,12 @@ def test_implied_vol_raises_nonpositive_T():
 
 def test_butterfly_free_tight_eta():
     """eta * (1 + |rho|) <= 4 should be True for small eta."""
-    p = SSVIParams(rho=-0.5, eta=2.0, gamma=0.5)   # 2*(1.5) = 3 <= 4
+    p = SSVIParams(rho=-0.5, eta=2.0, gamma=0.5)  # 2*(1.5) = 3 <= 4
     assert ssvi_check_butterfly_free(p) is True
 
 
 def test_butterfly_free_violated():
-    p = SSVIParams(rho=0.5, eta=4.0, gamma=0.5)    # 4*(1.5) = 6 > 4
+    p = SSVIParams(rho=0.5, eta=4.0, gamma=0.5)  # 4*(1.5) = 6 > 4
     assert ssvi_check_butterfly_free(p) is False
 
 
@@ -235,35 +233,35 @@ def _make_ssvi_iv_grid(params, theta_t, maturities, k_arr):
 
 def test_fit_ssvi_returns_fit_result():
     iv_grid = _make_ssvi_iv_grid(BASE, THETA_T, MATURITIES, K_GRID)
-    k_list  = [K_GRID] * len(MATURITIES)
+    k_list = [K_GRID] * len(MATURITIES)
     iv_list = [iv_grid[i] for i in range(len(MATURITIES))]
-    result  = fit_ssvi_surface(k_list, iv_list, MATURITIES)
+    result = fit_ssvi_surface(k_list, iv_list, MATURITIES)
     assert isinstance(result, SSVIFitResult)
 
 
 def test_fit_ssvi_round_trip_rmse():
     """Fitting exact SSVI data should give very small RMSE."""
     iv_grid = _make_ssvi_iv_grid(BASE, THETA_T, MATURITIES, K_GRID)
-    k_list  = [K_GRID] * len(MATURITIES)
+    k_list = [K_GRID] * len(MATURITIES)
     iv_list = [iv_grid[i] for i in range(len(MATURITIES))]
-    result  = fit_ssvi_surface(k_list, iv_list, MATURITIES, initial=BASE)
-    assert result.rmse < 5e-3   # should recover near-exactly on synthetic data
+    result = fit_ssvi_surface(k_list, iv_list, MATURITIES, initial=BASE)
+    assert result.rmse < 5e-3  # should recover near-exactly on synthetic data
 
 
 def test_fit_ssvi_theta_shape():
     iv_grid = _make_ssvi_iv_grid(BASE, THETA_T, MATURITIES, K_GRID)
-    k_list  = [K_GRID] * len(MATURITIES)
+    k_list = [K_GRID] * len(MATURITIES)
     iv_list = [iv_grid[i] for i in range(len(MATURITIES))]
-    result  = fit_ssvi_surface(k_list, iv_list, MATURITIES)
+    result = fit_ssvi_surface(k_list, iv_list, MATURITIES)
     assert result.theta_t.shape == (len(MATURITIES),)
     assert np.all(result.theta_t > 0)
 
 
 def test_fit_ssvi_max_err_finite():
     iv_grid = _make_ssvi_iv_grid(BASE, THETA_T, MATURITIES, K_GRID)
-    k_list  = [K_GRID] * len(MATURITIES)
+    k_list = [K_GRID] * len(MATURITIES)
     iv_list = [iv_grid[i] for i in range(len(MATURITIES))]
-    result  = fit_ssvi_surface(k_list, iv_list, MATURITIES)
+    result = fit_ssvi_surface(k_list, iv_list, MATURITIES)
     assert np.isfinite(result.max_err)
     assert result.max_err >= 0
 
@@ -283,14 +281,23 @@ def test_fit_ssvi_raises_mismatched_lengths():
 
 def test_importable_from_foureng():
     import foureng as fe
-    for name in ['SSVIParams', 'SSVIFitResult', 'ssvi_phi_power_law',
-                 'ssvi_phi_heston', 'ssvi_total_variance', 'ssvi_implied_vol',
-                 'ssvi_check_butterfly_free', 'ssvi_check_calendar_free',
-                 'fit_ssvi_surface']:
+
+    for name in [
+        "SSVIParams",
+        "SSVIFitResult",
+        "ssvi_phi_power_law",
+        "ssvi_phi_heston",
+        "ssvi_total_variance",
+        "ssvi_implied_vol",
+        "ssvi_check_butterfly_free",
+        "ssvi_check_calendar_free",
+        "fit_ssvi_surface",
+    ]:
         assert hasattr(fe, name), f"missing: {name}"
 
 
 def test_callable_from_foureng():
     import foureng as fe
+
     w = fe.ssvi_total_variance(K_GRID, 0.04, fe.SSVIParams(rho=-0.3, eta=0.5, gamma=0.5))
     assert w.shape == K_GRID.shape

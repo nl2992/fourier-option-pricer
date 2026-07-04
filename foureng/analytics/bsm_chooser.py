@@ -66,13 +66,13 @@ def bsm_chooser_price(
     # Call component: call on forward K* expiring at T_choice
     d1c = (np.log(S / K_star) + (r - q + 0.5 * sigma**2) * T_choice) / sq_tc
     d2c = d1c - sq_tc
-    call_part = (S * np.exp(-q * T_choice) * norm.cdf(d1c)
-                 - K_star * np.exp(-r * T_choice) * norm.cdf(d2c))
+    call_part = S * np.exp(-q * T_choice) * norm.cdf(d1c) - K_star * np.exp(
+        -r * T_choice
+    ) * norm.cdf(d2c)
 
     # Put component: European put expiring at T_exp
     d1p = (np.log(S / K) + (r - q + 0.5 * sigma**2) * T_exp) / sq_te
     d2p = d1p - sq_te
-    put_part = (K * np.exp(-r * T_exp) * norm.cdf(-d2p)
-                - S * np.exp(-q * T_exp) * norm.cdf(-d1p))
+    put_part = K * np.exp(-r * T_exp) * norm.cdf(-d2p) - S * np.exp(-q * T_exp) * norm.cdf(-d1p)
 
     return call_part + put_part

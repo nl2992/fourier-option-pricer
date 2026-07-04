@@ -266,15 +266,15 @@ def bsm_double_barrier_price(
         return 0.0 if knockout else vanilla
 
     # ── log-space geometry ─────────────────────────────────────────────────
-    M = np.log(U / L)          # width of barrier interval in log-space
-    y0 = np.log(S / L)         # log(S/L) > 0 since L < S
-    a = np.log(L / S)          # = -y0  (lower barrier in X-space)
-    b_bar = np.log(U / S)      # upper barrier in X-space
-    mu = r - q - 0.5 * sigma ** 2   # drift of log-price
-    nu = mu / sigma ** 2             # convenience: μ/σ²
+    M = np.log(U / L)  # width of barrier interval in log-space
+    y0 = np.log(S / L)  # log(S/L) > 0 since L < S
+    a = np.log(L / S)  # = -y0  (lower barrier in X-space)
+    b_bar = np.log(U / S)  # upper barrier in X-space
+    mu = r - q - 0.5 * sigma**2  # drift of log-price
+    nu = mu / sigma**2  # convenience: μ/σ²
 
     # ── integration limits for the payoff integral ─────────────────────────
-    log_K_S = np.log(K / S)   # log(K/S)
+    log_K_S = np.log(K / S)  # log(K/S)
     if cp == 1:
         # Call: payoff = S·e^x − K  for x > log(K/S)
         xi_low = max(log_K_S, a)
@@ -290,13 +290,13 @@ def bsm_double_barrier_price(
 
     # ── common prefactor ───────────────────────────────────────────────────
     disc = np.exp(-r * T)
-    global_factor = (2.0 / M) * disc * np.exp(-nu ** 2 * sigma ** 2 * T / 2.0)
+    global_factor = (2.0 / M) * disc * np.exp(-(nu**2) * sigma**2 * T / 2.0)
 
     # ── closed-form helper: ∫_c^d exp(α x) sin(η_n (x - a)) dx ───────────
     # J(α, c, d) = [exp(αx)(α sin(η_n(x-a)) − η_n cos(η_n(x-a)))] / (α² + η_n²) |_c^d
     def _antideriv(alpha: float, eta_n: float, x: float) -> float:
         """Antiderivative of exp(αx) sin(ηn(x-a)) evaluated at x."""
-        denom = alpha ** 2 + eta_n ** 2
+        denom = alpha**2 + eta_n**2
         phase = eta_n * (x - a)
         return np.exp(alpha * x) * (alpha * np.sin(phase) - eta_n * np.cos(phase)) / denom
 
@@ -306,11 +306,11 @@ def bsm_double_barrier_price(
     # ── eigenfunction series ───────────────────────────────────────────────
     series_sum = 0.0
     for n in range(1, n_max + 1):
-        decay = np.exp(-n ** 2 * np.pi ** 2 * sigma ** 2 * T / (2.0 * M ** 2))
+        decay = np.exp(-(n**2) * np.pi**2 * sigma**2 * T / (2.0 * M**2))
         if decay < 1e-14:
             break  # remaining terms negligible
 
-        gamma_n = np.sin(n * np.pi * y0 / M)   # Γ_n = sin(nπy₀/M)
+        gamma_n = np.sin(n * np.pi * y0 / M)  # Γ_n = sin(nπy₀/M)
         eta_n = n * np.pi / M
 
         # I_n = S·J(ν+1, ξ_low, ξ_high) − K·J(ν, ξ_low, ξ_high)

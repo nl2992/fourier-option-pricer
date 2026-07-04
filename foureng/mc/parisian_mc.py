@@ -29,8 +29,8 @@ from __future__ import annotations
 
 import numpy as np
 
-from .paths import gbm_paths
 from ..products.parisian import ParisianOption
+from .paths import gbm_paths
 
 
 def _excursion_triggered_standard(
@@ -71,9 +71,7 @@ def _excursion_triggered_standard(
                 log_above_prev = np.log(np.maximum(H / S_prev, 1e-300))
                 log_above_curr = np.log(np.maximum(H / S_curr, 1e-300))
 
-            cross_prob = np.exp(
-                -2.0 * log_above_prev * log_above_curr / (sigma**2 * dt + 1e-300)
-            )
+            cross_prob = np.exp(-2.0 * log_above_prev * log_above_curr / (sigma**2 * dt + 1e-300))
             cross_prob = np.clip(cross_prob, 0.0, 1.0)
             # If both endpoints are on the side, full dt counts; if neither, 0;
             # if crossing is probable, partial credit (expected crossing duration
@@ -83,10 +81,15 @@ def _excursion_triggered_standard(
             exited = on_side[:, j - 1] & ~on_side[:, j]
             neither_on = ~on_side[:, j - 1] & ~on_side[:, j]
 
-            added_time = np.where(both_on, dt,
-                         np.where(entered, dt * 0.5,
-                         np.where(exited, dt * 0.5,
-                         np.where(neither_on, dt * cross_prob * 0.5, 0.0))))
+            added_time = np.where(
+                both_on,
+                dt,
+                np.where(
+                    entered,
+                    dt * 0.5,
+                    np.where(exited, dt * 0.5, np.where(neither_on, dt * cross_prob * 0.5, 0.0)),
+                ),
+            )
             excursion_time = np.where(currently_on_side, excursion_time + added_time, 0.0)
         else:
             # Simple discrete monitoring: add dt when on the excursion side, reset otherwise.

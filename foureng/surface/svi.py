@@ -42,7 +42,6 @@ from typing import NamedTuple
 import numpy as np
 from scipy.optimize import differential_evolution, minimize
 
-
 # ── parameter container ───────────────────────────────────────────────────────
 
 
@@ -149,7 +148,7 @@ def svi_butterfly_density(k: np.ndarray, params: SVIParams) -> np.ndarray:
     # second derivative w''(k)
     w2 = b * params.sigma**2 / sq**3
 
-    g = (1 - k * w1 / (2 * w))**2 - (w1 / 2)**2 * (1 / 4 + 1 / w) + w2 / 2
+    g = (1 - k * w1 / (2 * w)) ** 2 - (w1 / 2) ** 2 * (1 / 4 + 1 / w) + w2 / 2
     return g
 
 
@@ -260,13 +259,20 @@ def fit_svi_smile(
 
     if use_global:
         de_result = differential_evolution(
-            objective, bounds, seed=0,
-            maxiter=500, tol=1e-8, polish=True,
+            objective,
+            bounds,
+            seed=0,
+            maxiter=500,
+            tol=1e-8,
+            polish=True,
         )
         x0 = de_result.x
 
     result = minimize(
-        objective, x0, method="L-BFGS-B", bounds=bounds,
+        objective,
+        x0,
+        method="L-BFGS-B",
+        bounds=bounds,
         options={"maxiter": maxiter, "ftol": 1e-14, "gtol": 1e-8},
     )
 

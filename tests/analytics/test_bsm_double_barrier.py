@@ -19,7 +19,6 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
-from pytest import approx
 
 from foureng.analytics.bsm_barrier import bsm_call, bsm_double_barrier_price, bsm_put
 
@@ -47,7 +46,7 @@ def test_in_out_parity(cp, params):
     r, q, T, sigma = params["r"], params["q"], params["T"], params["sigma"]
     vanilla = bsm_call(S, K, r, q, T, sigma) if cp == 1 else bsm_put(S, K, r, q, T, sigma)
     assert abs(dko + dki - vanilla) < 1e-8, (
-        f"Parity failed: DKO={dko:.8f} DKI={dki:.8f} sum={dko+dki:.8f} vanilla={vanilla:.8f}"
+        f"Parity failed: DKO={dko:.8f} DKI={dki:.8f} sum={dko + dki:.8f} vanilla={vanilla:.8f}"
     )
 
 
@@ -156,8 +155,8 @@ def _mc_dko_call_bb(
     """
     rng = np.random.default_rng(seed)
     dt = T / n_steps
-    drift = (r - q - 0.5 * sigma ** 2) * dt
-    vol_sq_dt = sigma ** 2 * dt
+    drift = (r - q - 0.5 * sigma**2) * dt
+    vol_sq_dt = sigma**2 * dt
 
     Z = rng.standard_normal((n_steps, n_paths))
     dX = drift + sigma * np.sqrt(dt) * Z

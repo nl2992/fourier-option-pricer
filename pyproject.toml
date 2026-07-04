@@ -90,7 +90,10 @@ ignore = ["E501"]
 "tests/**/*.py" = ["E402", "E731"]
 
 [tool.mypy]
-python_version = "3.10"
+# Analysis target must be >= 3.12 so mypy can parse the PEP 695 `type`
+# statements in numpy >= 2.5 stubs. Runtime support for 3.10 is enforced by
+# ruff (target-version py310) and the 3.10 leg of the CI test matrix.
+python_version = "3.12"
 files = ["foureng"]
 exclude = "(^foureng/experiments/|^foureng/viz/)"
 ignore_missing_imports = true

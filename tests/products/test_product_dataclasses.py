@@ -321,9 +321,12 @@ class TestMultiAssetProducts:
 class TestCompoundOption:
     def test_call_on_call(self):
         opt = CompoundOption(
-            strike_outer=5.0, strike_inner=100.0,
-            maturity_outer=0.5, maturity_inner=1.0,
-            cp_outer=1, cp_inner=1,
+            strike_outer=5.0,
+            strike_inner=100.0,
+            maturity_outer=0.5,
+            maturity_inner=1.0,
+            cp_outer=1,
+            cp_inner=1,
         )
         assert opt.product_type == "compound"
         assert opt.cp_outer == 1
@@ -331,17 +334,22 @@ class TestCompoundOption:
 
     def test_put_on_put(self):
         opt = CompoundOption(
-            strike_outer=3.0, strike_inner=100.0,
-            maturity_outer=0.25, maturity_inner=0.75,
-            cp_outer=-1, cp_inner=-1,
+            strike_outer=3.0,
+            strike_inner=100.0,
+            maturity_outer=0.25,
+            maturity_inner=0.75,
+            cp_outer=-1,
+            cp_inner=-1,
         )
         assert opt.cp_outer == -1
         assert opt.cp_inner == -1
 
     def test_frozen(self):
         opt = CompoundOption(
-            strike_outer=5.0, strike_inner=100.0,
-            maturity_outer=0.5, maturity_inner=1.0,
+            strike_outer=5.0,
+            strike_inner=100.0,
+            maturity_outer=0.5,
+            maturity_inner=1.0,
         )
         with pytest.raises((AttributeError, TypeError)):
             opt.strike_outer = 10.0  # type: ignore[misc]
@@ -349,44 +357,56 @@ class TestCompoundOption:
     def test_outer_maturity_ge_inner_rejected(self):
         with pytest.raises(ValueError):
             CompoundOption(
-                strike_outer=5.0, strike_inner=100.0,
-                maturity_outer=1.0, maturity_inner=1.0,
+                strike_outer=5.0,
+                strike_inner=100.0,
+                maturity_outer=1.0,
+                maturity_inner=1.0,
             )
 
     def test_outer_maturity_after_inner_rejected(self):
         with pytest.raises(ValueError):
             CompoundOption(
-                strike_outer=5.0, strike_inner=100.0,
-                maturity_outer=1.5, maturity_inner=1.0,
+                strike_outer=5.0,
+                strike_inner=100.0,
+                maturity_outer=1.5,
+                maturity_inner=1.0,
             )
 
     def test_negative_outer_strike_rejected(self):
         with pytest.raises(ValueError):
             CompoundOption(
-                strike_outer=-1.0, strike_inner=100.0,
-                maturity_outer=0.5, maturity_inner=1.0,
+                strike_outer=-1.0,
+                strike_inner=100.0,
+                maturity_outer=0.5,
+                maturity_inner=1.0,
             )
 
     def test_zero_outer_strike_allowed(self):
         opt = CompoundOption(
-            strike_outer=0.0, strike_inner=100.0,
-            maturity_outer=0.5, maturity_inner=1.0,
+            strike_outer=0.0,
+            strike_inner=100.0,
+            maturity_outer=0.5,
+            maturity_inner=1.0,
         )
         assert opt.strike_outer == 0.0
 
     def test_invalid_cp_outer_rejected(self):
         with pytest.raises(ValueError):
             CompoundOption(
-                strike_outer=5.0, strike_inner=100.0,
-                maturity_outer=0.5, maturity_inner=1.0,
+                strike_outer=5.0,
+                strike_inner=100.0,
+                maturity_outer=0.5,
+                maturity_inner=1.0,
                 cp_outer=0,
             )
 
     def test_invalid_cp_inner_rejected(self):
         with pytest.raises(ValueError):
             CompoundOption(
-                strike_outer=5.0, strike_inner=100.0,
-                maturity_outer=0.5, maturity_inner=1.0,
+                strike_outer=5.0,
+                strike_inner=100.0,
+                maturity_outer=0.5,
+                maturity_inner=1.0,
                 cp_inner=2,
             )
 
@@ -430,9 +450,16 @@ class TestChooserOption:
 
 class TestQuantoOption:
     _BASE = dict(
-        S=100.0, K=105.0, T=1.0,
-        r_dom=0.05, r_for=0.03, q_for=0.02,
-        rho=-0.3, sigma_S=0.20, sigma_X=0.10, cp=1,
+        S=100.0,
+        K=105.0,
+        T=1.0,
+        r_dom=0.05,
+        r_for=0.03,
+        q_for=0.02,
+        rho=-0.3,
+        sigma_S=0.20,
+        sigma_X=0.10,
+        cp=1,
     )
 
     def test_default_call(self):
@@ -440,27 +467,27 @@ class TestQuantoOption:
         assert q.cp == 1
 
     def test_put_allowed(self):
-        q = QuantoOption(**{**self._BASE, 'cp': -1})
+        q = QuantoOption(**{**self._BASE, "cp": -1})
         assert q.cp == -1
 
     def test_zero_rho_allowed(self):
-        QuantoOption(**{**self._BASE, 'rho': 0.0})
+        QuantoOption(**{**self._BASE, "rho": 0.0})
 
     def test_zero_sigma_X_allowed(self):
-        QuantoOption(**{**self._BASE, 'sigma_X': 0.0})
+        QuantoOption(**{**self._BASE, "sigma_X": 0.0})
 
     def test_negative_S_rejected(self):
         with pytest.raises(ValueError):
-            QuantoOption(**{**self._BASE, 'S': -1.0})
+            QuantoOption(**{**self._BASE, "S": -1.0})
 
     def test_negative_K_rejected(self):
         with pytest.raises(ValueError):
-            QuantoOption(**{**self._BASE, 'K': -5.0})
+            QuantoOption(**{**self._BASE, "K": -5.0})
 
     def test_rho_out_of_range_rejected(self):
         with pytest.raises(ValueError):
-            QuantoOption(**{**self._BASE, 'rho': 1.5})
+            QuantoOption(**{**self._BASE, "rho": 1.5})
 
     def test_invalid_cp_rejected(self):
         with pytest.raises(ValueError):
-            QuantoOption(**{**self._BASE, 'cp': 0})
+            QuantoOption(**{**self._BASE, "cp": 0})

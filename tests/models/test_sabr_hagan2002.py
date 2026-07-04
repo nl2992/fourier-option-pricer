@@ -44,11 +44,15 @@ def test_atm_self_consistency(alpha, beta, rho, nu):
     """sabr_hagan_implied_vol(F, F, T, ...) matches the ATM limiting formula exactly."""
     F, T = 100.0, 1.0
     FK_mid = F  # ATM
-    correction_2 = 1.0 + (
-        (1.0 - beta) ** 2 / 24.0 * alpha ** 2 / FK_mid ** (2.0 - 2.0 * beta)
-        + rho * beta * nu * alpha / (4.0 * FK_mid ** (1.0 - beta))
-        + (2.0 - 3.0 * rho ** 2) / 24.0 * nu ** 2
-    ) * T
+    correction_2 = (
+        1.0
+        + (
+            (1.0 - beta) ** 2 / 24.0 * alpha**2 / FK_mid ** (2.0 - 2.0 * beta)
+            + rho * beta * nu * alpha / (4.0 * FK_mid ** (1.0 - beta))
+            + (2.0 - 3.0 * rho**2) / 24.0 * nu**2
+        )
+        * T
+    )
     atm_formula = alpha / F ** (1.0 - beta) * correction_2
     iv = sabr_hagan_implied_vol(F, F, T, alpha, beta, rho, nu)
     assert abs(iv - atm_formula) < 1e-10, (
@@ -66,9 +70,7 @@ def test_bsm_limit_beta1_nu0(alpha):
     beta, rho, nu = 1.0, 0.0, 1e-10  # near-zero nu
     for K in [80.0, 90.0, 100.0, 110.0, 120.0]:
         iv = sabr_hagan_implied_vol(F, K, T, alpha, beta, rho, nu)
-        assert abs(iv - alpha) < 1e-6, (
-            f"beta=1 nu≈0: expected IV={alpha}, got {iv:.8f} for K={K}"
-        )
+        assert abs(iv - alpha) < 1e-6, f"beta=1 nu≈0: expected IV={alpha}, got {iv:.8f} for K={K}"
 
 
 # ── 3. Put-call parity ───────────────────────────────────────────────────

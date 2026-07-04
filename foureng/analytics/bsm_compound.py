@@ -53,8 +53,7 @@ def _bsm(S: float, K: float, r: float, q: float, T: float, sigma: float, cp: int
 
 
 def _critical_stock(
-    K1: float, K2: float, r: float, q: float,
-    T1: float, T2: float, sigma: float, cp_inner: int
+    K1: float, K2: float, r: float, q: float, T1: float, T2: float, sigma: float, cp_inner: int
 ) -> float:
     """Find S* such that bsm(S*, K2, r, q, T2-T1, sigma, cp_inner) = K1."""
     tau = T2 - T1
@@ -70,10 +69,10 @@ def _critical_stock(
     if f_lo * f_hi > 0:
         # No sign change → trivial extreme: always exercise or never exercise
         if cp_inner == 1 and f_lo > 0:
-            return 0.0   # call always worth ≥ K1; holder always exercises
+            return 0.0  # call always worth ≥ K1; holder always exercises
         if cp_inner == -1 and f_lo < 0:
-            return float('inf')  # put never worth K1; never exercise
-        return 0.0 if f_lo > 0 else float('inf')
+            return float("inf")  # put never worth K1; never exercise
+        return 0.0 if f_lo > 0 else float("inf")
     return brentq(f, lo, hi, xtol=1e-12, rtol=1e-12)
 
 
@@ -125,7 +124,7 @@ def geske_compound_price(
         if cp_outer == 1:
             return max(inner - K1 * np.exp(-r * T1), 0.0)
         return max(K1 * np.exp(-r * T1) - inner, 0.0)
-    if S_star == float('inf'):
+    if S_star == float("inf"):
         return 0.0
 
     sq1 = sigma * np.sqrt(T1)
@@ -146,24 +145,32 @@ def geske_compound_price(
 
     if cp_outer == 1 and cp_inner == 1:
         # Call-on-call (Haug 2007, eq. 2.81)
-        return (S * disc_q2 * _N2(a1, b1, rho)
-                - K2 * disc_r2 * _N2(a2, b2, rho)
-                - K1 * disc_r1 * norm.cdf(a2))
+        return (
+            S * disc_q2 * _N2(a1, b1, rho)
+            - K2 * disc_r2 * _N2(a2, b2, rho)
+            - K1 * disc_r1 * norm.cdf(a2)
+        )
 
     if cp_outer == -1 and cp_inner == 1:
         # Put-on-call (Haug 2007, eq. 2.82)
-        return (-S * disc_q2 * _N2(-a1, b1, -rho)
-                + K2 * disc_r2 * _N2(-a2, b2, -rho)
-                + K1 * disc_r1 * norm.cdf(-a2))
+        return (
+            -S * disc_q2 * _N2(-a1, b1, -rho)
+            + K2 * disc_r2 * _N2(-a2, b2, -rho)
+            + K1 * disc_r1 * norm.cdf(-a2)
+        )
 
     if cp_outer == 1 and cp_inner == -1:
         # Call-on-put (Haug 2007, eq. 2.83)
-        return (-S * disc_q2 * _N2(-a1, -b1, rho)
-                + K2 * disc_r2 * _N2(-a2, -b2, rho)
-                - K1 * disc_r1 * norm.cdf(-a2))
+        return (
+            -S * disc_q2 * _N2(-a1, -b1, rho)
+            + K2 * disc_r2 * _N2(-a2, -b2, rho)
+            - K1 * disc_r1 * norm.cdf(-a2)
+        )
 
     # cp_outer == -1 and cp_inner == -1
     # Put-on-put (Haug 2007, eq. 2.84)
-    return (S * disc_q2 * _N2(a1, -b1, -rho)
-            - K2 * disc_r2 * _N2(a2, -b2, -rho)
-            + K1 * disc_r1 * norm.cdf(a2))
+    return (
+        S * disc_q2 * _N2(a1, -b1, -rho)
+        - K2 * disc_r2 * _N2(a2, -b2, -rho)
+        + K1 * disc_r1 * norm.cdf(a2)
+    )

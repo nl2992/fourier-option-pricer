@@ -393,8 +393,8 @@ def calibrate_nig(
 
 
 SABR_ALPHA_BOUNDS = (1e-4, 5.0)
-SABR_RHO_BOUNDS   = (-0.999, 0.999)
-SABR_NU_BOUNDS    = (1e-4, 5.0)
+SABR_RHO_BOUNDS = (-0.999, 0.999)
+SABR_NU_BOUNDS = (1e-4, 5.0)
 
 
 @dataclass
@@ -480,7 +480,9 @@ def calibrate_sabr_smile(
     K = np.asarray(strikes, dtype=float)
     mkt = np.asarray(market_ivs, dtype=float)
     if K.shape != mkt.shape:
-        raise ValueError(f"strikes and market_ivs must have the same shape; got {K.shape} vs {mkt.shape}")
+        raise ValueError(
+            f"strikes and market_ivs must have the same shape; got {K.shape} vs {mkt.shape}"
+        )
     if weights is None:
         weights = np.ones_like(mkt)
     w = np.asarray(weights, dtype=float)
@@ -530,17 +532,24 @@ def calibrate_sabr_smile(
         opts = dict(maxiter=maxiter, xatol=1e-8, fatol=ftol, adaptive=True)
         res = minimize(objective, x0=z0, bounds=z_bounds, method="Nelder-Mead", options=opts)
     else:
-        res = minimize(objective, x0=z0, bounds=z_bounds, method=method,
-                       options=dict(maxiter=maxiter, ftol=ftol))
+        res = minimize(
+            objective,
+            x0=z0,
+            bounds=z_bounds,
+            method=method,
+            options=dict(maxiter=maxiter, ftol=ftol),
+        )
 
     best = unscale(res.x)
     objective(res.x)  # refresh residuals at optimum
     if fit_beta:
-        best_params = SabrParams(alpha=float(best[0]), beta=float(best[3]),
-                                 rho=float(best[1]), nu=float(best[2]))
+        best_params = SabrParams(
+            alpha=float(best[0]), beta=float(best[3]), rho=float(best[1]), nu=float(best[2])
+        )
     else:
-        best_params = SabrParams(alpha=float(best[0]), beta=beta_fixed,
-                                 rho=float(best[1]), nu=float(best[2]))
+        best_params = SabrParams(
+            alpha=float(best[0]), beta=beta_fixed, rho=float(best[1]), nu=float(best[2])
+        )
 
     return SabrSmileCalibResult(
         params=best_params,

@@ -32,8 +32,9 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from .base import ModelSpec
 from foureng.analytics.bsm_barrier import bsm_call, bsm_put
+
+from .base import ModelSpec
 
 
 @dataclass(frozen=True)
@@ -82,13 +83,13 @@ class SabrParams(ModelSpec):
 
 def sabr_hagan_implied_vol(
     F: float,
-    K: float,
+    K: float | np.ndarray,
     T: float,
     alpha: float,
     beta: float,
     rho: float,
     nu: float,
-) -> float:
+) -> float | np.ndarray:
     """Hagan (2002) lognormal (Black-Scholes) implied volatility for SABR.
 
     Parameters
@@ -140,25 +141,28 @@ def sabr_hagan_implied_vol(
     one_minus_beta = 1.0 - beta
     log_FK = np.log(F / K_arr)
     FK_mid = np.sqrt(F * K_arr)
-    FK_beta = FK_mid ** one_minus_beta  # (FK)^{(1-beta)/2}
+    FK_beta = FK_mid**one_minus_beta  # (FK)^{(1-beta)/2}
 
     # Time correction (same for ATM and OTM)
-    correction_2 = 1.0 + (
-        (one_minus_beta ** 2 / 24.0) * alpha ** 2 / (FK_mid ** (2.0 * one_minus_beta))
-        + 0.25 * rho * beta * nu * alpha / FK_beta
-        + (2.0 - 3.0 * rho ** 2) / 24.0 * nu ** 2
-    ) * T
+    correction_2 = (
+        1.0
+        + (
+            (one_minus_beta**2 / 24.0) * alpha**2 / (FK_mid ** (2.0 * one_minus_beta))
+            + 0.25 * rho * beta * nu * alpha / FK_beta
+            + (2.0 - 3.0 * rho**2) / 24.0 * nu**2
+        )
+        * T
+    )
 
     # Base vol factor
     log_corr = 1.0 + (
-        (one_minus_beta ** 2 / 24.0) * log_FK ** 2
-        + (one_minus_beta ** 4 / 1920.0) * log_FK ** 4
+        (one_minus_beta**2 / 24.0) * log_FK**2 + (one_minus_beta**4 / 1920.0) * log_FK**4
     )
     sigma_0 = alpha / (FK_beta * log_corr)
 
     # z / chi(z) skew-curvature correction
     z = (nu / alpha) * FK_beta * log_FK
-    sqrt_term = np.sqrt(1.0 - 2.0 * rho * z + z ** 2)
+    sqrt_term = np.sqrt(1.0 - 2.0 * rho * z + z**2)
     chi_z = np.log((sqrt_term + z - rho) / (1.0 - rho))
 
     # Guard against cancellation when z is tiny (nu->0 or near ATM).
@@ -166,7 +170,7 @@ def sabr_hagan_implied_vol(
     safe_chi_z = np.where(np.abs(z) < 1e-8, 1.0, chi_z)
     correction_1 = np.where(
         np.abs(z) < 1e-8,
-        1.0 - 0.5 * rho * z,   # first-order Taylor of z/chi(z) at z=0
+        1.0 - 0.5 * rho * z,  # first-order Taylor of z/chi(z) at z=0
         z / safe_chi_z,
     )
 
@@ -175,12 +179,16 @@ def sabr_hagan_implied_vol(
     # Override with ATM limit where |log(F/K)| < 1e-6
     atm = np.abs(log_FK) < 1e-6
     if np.any(atm):
-        f_beta = F ** one_minus_beta
-        atm_corr = 1.0 + (
-            (one_minus_beta ** 2 / 24.0) * alpha ** 2 / F ** (2.0 * one_minus_beta)
-            + 0.25 * rho * beta * nu * alpha / f_beta
-            + (2.0 - 3.0 * rho ** 2) / 24.0 * nu ** 2
-        ) * T
+        f_beta = F**one_minus_beta
+        atm_corr = (
+            1.0
+            + (
+                (one_minus_beta**2 / 24.0) * alpha**2 / F ** (2.0 * one_minus_beta)
+                + 0.25 * rho * beta * nu * alpha / f_beta
+                + (2.0 - 3.0 * rho**2) / 24.0 * nu**2
+            )
+            * T
+        )
         sigma_BS = np.where(atm, alpha / f_beta * atm_corr, sigma_BS)
 
     sigma_BS = np.maximum(sigma_BS, 0.0)
@@ -227,7 +235,7 @@ def sabr_call_price(
         European call price.
     """
     F = S * np.exp((r - q) * T)
-    sigma_bs = sabr_hagan_implied_vol(F, K, T, alpha, beta, rho, nu)
+    sigma_bs = float(sabr_hagan_implied_vol(F, K, T, alpha, beta, rho, nu))
     return bsm_call(S, K, r, q, T, sigma_bs)
 
 
@@ -265,7 +273,7 @@ def sabr_put_price(
         European put price.
     """
     F = S * np.exp((r - q) * T)
-    sigma_bs = sabr_hagan_implied_vol(F, K, T, alpha, beta, rho, nu)
+    sigma_bs = float(sabr_hagan_implied_vol(F, K, T, alpha, beta, rho, nu))
     return bsm_put(S, K, r, q, T, sigma_bs)
 
 

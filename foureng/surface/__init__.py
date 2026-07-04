@@ -22,8 +22,6 @@ from .local_vol import (
     dupire_local_vol_from_svi,
     dupire_local_vol_grid,
 )
-from .svi import SVIFitResult, SVIParams, fit_svi_smile, svi_butterfly_density
-from .svi import svi_check_butterfly_arbitrage, svi_implied_vol, svi_total_variance
 from .ssvi import (
     SSVIFitResult,
     SSVIParams,
@@ -34,6 +32,15 @@ from .ssvi import (
     ssvi_phi_heston,
     ssvi_phi_power_law,
     ssvi_total_variance,
+)
+from .svi import (
+    SVIFitResult,
+    SVIParams,
+    fit_svi_smile,
+    svi_butterfly_density,
+    svi_check_butterfly_arbitrage,
+    svi_implied_vol,
+    svi_total_variance,
 )
 from .vol_surface import SurfaceSpec, model_iv_surface, model_price_surface
 

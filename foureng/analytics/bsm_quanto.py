@@ -35,7 +35,6 @@ from __future__ import annotations
 
 import math
 
-import numpy as np
 from scipy.stats import norm
 
 
@@ -144,7 +143,7 @@ def bsm_quanto_option(
         raise ValueError(f"cp must be +1 or -1, got {cp}")
 
     F_adj = bsm_quanto_forward(S, r_dom, r_for, q_for, rho, sigma_S, sigma_X, T)
-    disc  = math.exp(-r_dom * T)
+    disc = math.exp(-r_dom * T)
 
     if T == 0.0:
         return float(disc * max(cp * (S - K), 0.0))
@@ -152,9 +151,9 @@ def bsm_quanto_option(
     if sigma_S == 0.0:
         return float(disc * max(cp * (F_adj - K), 0.0))
 
-    sqrtT  = math.sqrt(T)
-    d1     = (math.log(F_adj / K) + 0.5 * sigma_S**2 * T) / (sigma_S * sqrtT)
-    d2     = d1 - sigma_S * sqrtT
+    sqrtT = math.sqrt(T)
+    d1 = (math.log(F_adj / K) + 0.5 * sigma_S**2 * T) / (sigma_S * sqrtT)
+    d2 = d1 - sigma_S * sqrtT
 
     if cp == 1:
         price = disc * (F_adj * norm.cdf(d1) - K * norm.cdf(d2))

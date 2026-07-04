@@ -62,9 +62,7 @@ def test_chooser_approaches_straddle_as_T_choice_to_T_exp():
     T_choice_near = T_exp * (1 - 1e-6)
     ch = bsm_chooser_price(S, K, r, q, T_choice_near, T_exp, sigma)
     straddle = bsm_call(S, K, r, q, T_exp, sigma) + bsm_put(S, K, r, q, T_exp, sigma)
-    assert abs(ch - straddle) < 1e-4, (
-        f"Chooser near T_exp: {ch:.6f} vs straddle: {straddle:.6f}"
-    )
+    assert abs(ch - straddle) < 1e-4, f"Chooser near T_exp: {ch:.6f} vs straddle: {straddle:.6f}"
 
 
 # ── 4. T_choice very small: chooser ≈ max(call, put) ─────────────────────────
@@ -77,9 +75,7 @@ def test_chooser_approaches_max_call_put_as_T_choice_to_zero_zero_dividend():
     call = bsm_call(S, K, r, q=0.0, T=T_exp, sigma=sigma)
     put = bsm_put(S, K, r, q=0.0, T=T_exp, sigma=sigma)
     expected = max(call, put)
-    assert abs(ch - expected) < 1e-3, (
-        f"Chooser near 0 (q=0): {ch:.6f} vs max(C,P): {expected:.6f}"
-    )
+    assert abs(ch - expected) < 1e-3, f"Chooser near 0 (q=0): {ch:.6f} vs max(C,P): {expected:.6f}"
 
 
 # ── 5. Rubinstein decomposition ───────────────────────────────────────────────
@@ -103,12 +99,11 @@ def test_rubinstein_decomposition():
 def test_chooser_increasing_in_T_choice():
     """Longer choice window → higher chooser price (more optionality)."""
     prices = [
-        bsm_chooser_price(S, K, r, q, tc, T_exp, sigma)
-        for tc in np.linspace(0.05, T_exp - 0.01, 8)
+        bsm_chooser_price(S, K, r, q, tc, T_exp, sigma) for tc in np.linspace(0.05, T_exp - 0.01, 8)
     ]
     for i in range(len(prices) - 1):
         assert prices[i] <= prices[i + 1] + 1e-6, (
-            f"Chooser not increasing in T_choice: {prices[i]:.6f} > {prices[i+1]:.6f}"
+            f"Chooser not increasing in T_choice: {prices[i]:.6f} > {prices[i + 1]:.6f}"
         )
 
 
@@ -146,9 +141,7 @@ def test_pipeline_chooser():
     from foureng.pipeline import price
     from foureng.products.chooser import ChooserOption
 
-    product = ChooserOption(
-        strike=K, maturity_choice=T_choice, maturity_expiry=T_exp
-    )
+    product = ChooserOption(strike=K, maturity_choice=T_choice, maturity_expiry=T_exp)
     fwd = ForwardSpec(S0=S, r=r, q=q, T=T_exp)
     params = BsmParams(sigma=sigma)
 

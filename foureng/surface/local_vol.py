@@ -44,19 +44,18 @@ import numpy as np
 
 from .svi import SVIParams, svi_total_variance
 
-
 # ── helpers ───────────────────────────────────────────────────────────────────
 
 
 def _svi_w_derivatives(k: np.ndarray, p: SVIParams):
     """Return w, dw/dk, d2w/dk2 analytically from SVI params."""
-    d  = k - p.m
+    d = k - p.m
     sq = np.sqrt(d**2 + p.sigma**2)
     b, rho = p.b, p.rho
 
-    w   = p.a + b * (rho * d + sq)
-    w1  = b * (rho + d / sq)                     # dw/dk
-    w2  = b * p.sigma**2 / sq**3                 # d2w/dk2
+    w = p.a + b * (rho * d + sq)
+    w1 = b * (rho + d / sq)  # dw/dk
+    w2 = b * p.sigma**2 / sq**3  # d2w/dk2
 
     return np.maximum(w, 1e-16), w1, w2
 
@@ -123,17 +122,15 @@ def dupire_local_vol_from_svi(
         Local vol evaluated at midpoint maturities (len(maturities) - 1 rows)
         and on the full log_moneyness grid.
     """
-    k    = np.asarray(log_moneyness, dtype=float)
-    T    = np.asarray(maturities, dtype=float)
-    nT   = len(T)
-    nK   = len(k)
+    k = np.asarray(log_moneyness, dtype=float)
+    T = np.asarray(maturities, dtype=float)
+    nT = len(T)
+    nK = len(k)
 
     if nT < 2:
         raise ValueError("Need at least 2 maturities to compute dw/dT.")
     if len(svi_params) != nT:
-        raise ValueError(
-            f"len(svi_params)={len(svi_params)} must match len(maturities)={nT}"
-        )
+        raise ValueError(f"len(svi_params)={len(svi_params)} must match len(maturities)={nT}")
     if not np.all(np.diff(T) > 0):
         raise ValueError("maturities must be strictly increasing.")
 
@@ -141,7 +138,7 @@ def dupire_local_vol_from_svi(
     W = np.array([svi_total_variance(k, p) for p in svi_params])  # (nT, nK)
 
     # Midpoint maturities
-    T_mid  = 0.5 * (T[:-1] + T[1:])
+    T_mid = 0.5 * (T[:-1] + T[1:])
     nT_mid = len(T_mid)
 
     local_var = np.empty((nT_mid, nK))
@@ -159,16 +156,18 @@ def dupire_local_vol_from_svi(
         w1a, w1_k_a, w2_k_a = _svi_w_derivatives(k, p1)
         w1b, w1_k_b, w2_k_b = _svi_w_derivatives(k, p2)
 
-        w_mid  = 0.5 * (w1a  + w1b)
-        w1_k   = 0.5 * (w1_k_a + w1_k_b)
-        w2_k   = 0.5 * (w2_k_a + w2_k_b)
+        w_mid = 0.5 * (w1a + w1b)
+        w1_k = 0.5 * (w1_k_a + w1_k_b)
+        w2_k = 0.5 * (w2_k_a + w2_k_b)
 
         w_mid = np.maximum(w_mid, 1e-16)
 
         # Gatheral-Jacquier denominator g(k, w)
-        g = (1.0 - k * w1_k / (2.0 * w_mid))**2 \
-            - (w1_k**2 / 4.0) * (1.0 / 4.0 + 1.0 / w_mid) \
+        g = (
+            (1.0 - k * w1_k / (2.0 * w_mid)) ** 2
+            - (w1_k**2 / 4.0) * (1.0 / 4.0 + 1.0 / w_mid)
             + w2_k / 2.0
+        )
 
         # Avoid division by zero or negative g
         g = np.where(g < 1e-12, np.nan, g)
@@ -236,9 +235,7 @@ def dupire_local_vol_grid(
     if nT < 2:
         raise ValueError("Need at least 2 maturities.")
     if iv.shape != (nT, nK):
-        raise ValueError(
-            f"iv_surface shape {iv.shape} doesn't match ({nT}, {nK})"
-        )
+        raise ValueError(f"iv_surface shape {iv.shape} doesn't match ({nT}, {nK})")
     if not np.all(np.diff(T) > 0):
         raise ValueError("maturities must be strictly increasing.")
     if not np.all(np.diff(k) > 0):
@@ -246,6 +243,7 @@ def dupire_local_vol_grid(
 
     if smooth_sigma > 0:
         from scipy.ndimage import gaussian_filter
+
         iv = gaussian_filter(iv, sigma=smooth_sigma)
 
     # Total variance w(T, k) = iv^2 * T,  shape (nT, nK)
@@ -262,9 +260,7 @@ def dupire_local_vol_grid(
             dW_dT[i] = (W[i + 1] - W[i - 1]) / (T[i + 1] - T[i - 1])
 
     # --- dw/dk, d2w/dk2: finite differences along k axis ---
-    dk = np.gradient(k)  # non-uniform grid step
-
-    dW_dk  = np.gradient(W, k, axis=1)
+    dW_dk = np.gradient(W, k, axis=1)
     d2W_dk = np.gradient(dW_dk, k, axis=1)
 
     # Evaluate at midpoint T grid
@@ -274,18 +270,20 @@ def dupire_local_vol_grid(
 
     for i in range(nT_mid):
         # Interpolate at midpoint
-        w_mid   = 0.5 * (W[i]      + W[i + 1])
+        w_mid = 0.5 * (W[i] + W[i + 1])
         dw_dT_m = 0.5 * (dW_dT[i] + dW_dT[i + 1])
-        w1_k    = 0.5 * (dW_dk[i]  + dW_dk[i + 1])
-        w2_k    = 0.5 * (d2W_dk[i] + d2W_dk[i + 1])
+        w1_k = 0.5 * (dW_dk[i] + dW_dk[i + 1])
+        w2_k = 0.5 * (d2W_dk[i] + d2W_dk[i + 1])
 
         w_mid = np.maximum(w_mid, 1e-16)
         k_mid = k  # same k grid
 
         # Gatheral-Jacquier denominator g(k, w)
-        g = (1.0 - k_mid * w1_k / (2.0 * w_mid))**2 \
-            - (w1_k**2 / 4.0) * (1.0 / 4.0 + 1.0 / w_mid) \
+        g = (
+            (1.0 - k_mid * w1_k / (2.0 * w_mid)) ** 2
+            - (w1_k**2 / 4.0) * (1.0 / 4.0 + 1.0 / w_mid)
             + w2_k / 2.0
+        )
 
         g = np.where(g < 1e-12, np.nan, g)
         lv2 = dw_dT_m / g

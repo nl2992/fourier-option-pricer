@@ -15,29 +15,24 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from foureng.models.cgmy import CgmyParams
 from foureng.models.heston import HestonParams
-from foureng.models.kou import KouParams
 from foureng.models.nig import NigParams
 from foureng.models.sabr import SabrParams, sabr_hagan_implied_vol
 from foureng.models.variance_gamma import VGParams
 from foureng.surface.calibration import (
     CalibrationResult,
     SabrSmileCalibResult,
-    calibrate_cgmy,
     calibrate_heston,
-    calibrate_kou,
     calibrate_nig,
     calibrate_sabr_smile,
     calibrate_vg,
 )
 from foureng.surface.vol_surface import SurfaceSpec, model_iv_surface
 
-
 # ── shared surface grid ────────────────────────────────────────────────────
 
 S0, r, q = 100.0, 0.05, 0.0
-MATS   = np.array([0.25, 0.5, 1.0])
+MATS = np.array([0.25, 0.5, 1.0])
 STRIKES = np.array([85.0, 90.0, 95.0, 100.0, 105.0, 110.0, 115.0])
 
 SPEC = SurfaceSpec(S0=S0, r=r, q=q, maturities=MATS, strikes=STRIKES)
@@ -48,6 +43,7 @@ SPEC = SurfaceSpec(S0=S0, r=r, q=q, maturities=MATS, strikes=STRIKES)
 
 def _heston_ivs(p: HestonParams) -> np.ndarray:
     from foureng.models.heston import heston_cf_form2, heston_cumulants
+
     return model_iv_surface(
         SPEC,
         cf_factory=lambda fwd: lambda u: heston_cf_form2(u, fwd, p),
@@ -58,6 +54,7 @@ def _heston_ivs(p: HestonParams) -> np.ndarray:
 
 def _vg_ivs(p: VGParams) -> np.ndarray:
     from foureng.models.variance_gamma import vg_cf, vg_cumulants
+
     return model_iv_surface(
         SPEC,
         cf_factory=lambda fwd: lambda u: vg_cf(u, fwd, p),
@@ -68,6 +65,7 @@ def _vg_ivs(p: VGParams) -> np.ndarray:
 
 def _nig_ivs(p: NigParams) -> np.ndarray:
     from foureng.models.nig import nig_cf, nig_cumulants
+
     return model_iv_surface(
         SPEC,
         cf_factory=lambda fwd: lambda u: nig_cf(u, fwd, p),
@@ -154,6 +152,7 @@ def test_calibration_loss_decreases_from_bad_start():
 
     # Compute initial loss manually
     from foureng.models.heston import heston_cf_form2, heston_cumulants
+
     init_ivs = model_iv_surface(
         SPEC,
         cf_factory=lambda fwd: lambda u: heston_cf_form2(u, fwd, bad_init),
@@ -186,7 +185,7 @@ def test_calibration_rejects_wrong_iv_shape():
     "true_alpha,true_rho,true_nu",
     [
         (0.25, -0.30, 0.40),
-        (0.40,  0.10, 0.20),
+        (0.40, 0.10, 0.20),
         (0.15, -0.60, 0.60),
     ],
 )
@@ -216,9 +215,7 @@ def test_sabr_smile_roundtrip(true_alpha, true_rho, true_nu):
     assert abs(res.params.rho - true_rho) < 0.05, (
         f"rho: expected {true_rho}, got {res.params.rho:.4f}"
     )
-    assert abs(res.params.nu - true_nu) < 0.05, (
-        f"nu: expected {true_nu}, got {res.params.nu:.4f}"
-    )
+    assert abs(res.params.nu - true_nu) < 0.05, f"nu: expected {true_nu}, got {res.params.nu:.4f}"
 
 
 # ── 8. SABR calibration result structure ──────────────────────────────────
@@ -249,13 +246,10 @@ def test_sabr_calibration_fit_beta():
     true_ivs = sabr_hagan_implied_vol(F, K, T, 0.3, 0.7, -0.3, 0.4)
     init = SabrParams(alpha=0.35, beta=0.5, rho=-0.2, nu=0.3)
 
-    res = calibrate_sabr_smile(F, T, K, true_ivs, initial=init,
-                               fit_beta=True, maxiter=5000)
+    res = calibrate_sabr_smile(F, T, K, true_ivs, initial=init, fit_beta=True, maxiter=5000)
 
     assert res.loss < 1e-8, f"SABR (fit_beta) loss: {res.loss:.2e}"
-    assert abs(res.params.beta - 0.7) < 0.1, (
-        f"beta: expected 0.7, got {res.params.beta:.4f}"
-    )
+    assert abs(res.params.beta - 0.7) < 0.1, f"beta: expected 0.7, got {res.params.beta:.4f}"
 
 
 # ── 10. SABR wrong shapes ─────────────────────────────────────────────────
@@ -265,7 +259,8 @@ def test_sabr_calibration_rejects_shape_mismatch():
     init = SabrParams(alpha=0.3, beta=0.5, rho=-0.3, nu=0.4)
     with pytest.raises(ValueError, match="shape"):
         calibrate_sabr_smile(
-            100.0, 1.0,
+            100.0,
+            1.0,
             np.array([95.0, 100.0, 105.0]),
             np.array([0.20, 0.21]),  # wrong length
             initial=init,

@@ -18,7 +18,6 @@ import pytest
 from foureng.mc.parisian_mc import parisian_mc_price, parisian_mc_price_from_product
 from foureng.products.parisian import ParisianOption
 
-
 # ── Shared fixtures ────────────────────────────────────────────────────────
 
 
@@ -76,8 +75,12 @@ def test_parisian_inout_parity_down_call(base_params):
     from foureng.analytics.bsm_barrier import bsm_call as bsm_c
 
     vanilla = bsm_c(
-        base_params["S0"], base_params["K"], base_params["r"],
-        base_params["q"], base_params["T"], base_params["sigma"]
+        base_params["S0"],
+        base_params["K"],
+        base_params["r"],
+        base_params["q"],
+        base_params["T"],
+        base_params["sigma"],
     )
 
     ko, se_ko = _price_se(direction="down", knockout=True, **base_params)
@@ -88,7 +91,7 @@ def test_parisian_inout_parity_down_call(base_params):
 
     assert abs(combined - vanilla) < 5 * total_se, (
         f"In-out parity failed: ko={ko:.4f}, ki={ki:.4f}, sum={combined:.4f}, "
-        f"vanilla={vanilla:.4f}, 5*se={5*total_se:.4f}"
+        f"vanilla={vanilla:.4f}, 5*se={5 * total_se:.4f}"
     )
 
 
@@ -98,8 +101,7 @@ def test_parisian_inout_parity_up_put(base_params):
 
     params = {**base_params, "H": 110.0, "cp": -1}
     vanilla = bsm_p(
-        params["S0"], params["K"], params["r"],
-        params["q"], params["T"], params["sigma"]
+        params["S0"], params["K"], params["r"], params["q"], params["T"], params["sigma"]
     )
 
     ko, se_ko = _price_se(direction="up", knockout=True, **params)
@@ -121,8 +123,12 @@ def test_parisian_ko_le_vanilla(base_params):
     from foureng.analytics.bsm_barrier import bsm_call as bsm_c
 
     vanilla = bsm_c(
-        base_params["S0"], base_params["K"], base_params["r"],
-        base_params["q"], base_params["T"], base_params["sigma"]
+        base_params["S0"],
+        base_params["K"],
+        base_params["r"],
+        base_params["q"],
+        base_params["T"],
+        base_params["sigma"],
     )
     ko, se = _price_se(direction="down", knockout=True, **base_params)
     assert ko < vanilla + 3 * se, f"KO price {ko:.4f} >= vanilla {vanilla:.4f}"
@@ -142,16 +148,22 @@ def test_standard_parisian_ge_barrier(base_params):
     from foureng.analytics.bsm_barrier import bsm_barrier_price
 
     barrier_price = bsm_barrier_price(
-        base_params["S0"], base_params["K"], base_params["H"],
-        base_params["r"], base_params["q"], base_params["T"],
-        base_params["sigma"], "down_out", cp=1
+        base_params["S0"],
+        base_params["K"],
+        base_params["H"],
+        base_params["r"],
+        base_params["q"],
+        base_params["T"],
+        base_params["sigma"],
+        "down_out",
+        cp=1,
     )
     parisian_price, se = _price_se(direction="down", knockout=True, **base_params)
 
     # Parisian KO >= standard barrier KO (Parisian is harder to trigger)
     assert parisian_price >= barrier_price - 5 * se, (
         f"Parisian KO {parisian_price:.4f} < standard barrier {barrier_price:.4f} "
-        f"(5*se={5*se:.4f})"
+        f"(5*se={5 * se:.4f})"
     )
 
 
@@ -163,15 +175,19 @@ def test_large_D_approaches_vanilla(base_params):
     from foureng.analytics.bsm_barrier import bsm_call as bsm_c
 
     vanilla = bsm_c(
-        base_params["S0"], base_params["K"], base_params["r"],
-        base_params["q"], base_params["T"], base_params["sigma"]
+        base_params["S0"],
+        base_params["K"],
+        base_params["r"],
+        base_params["q"],
+        base_params["T"],
+        base_params["sigma"],
     )
     # D = 0.99 * T: excursion of that length is nearly impossible
     large_D_params = {**base_params, "D": 0.98}
     ko, se = _price_se(direction="down", knockout=True, **large_D_params)
 
     assert abs(ko - vanilla) < 10 * se, (
-        f"Large D: KO={ko:.4f} vs vanilla={vanilla:.4f}, gap={abs(ko-vanilla):.4f}, 10*se={10*se:.4f}"
+        f"Large D: KO={ko:.4f} vs vanilla={vanilla:.4f}, gap={abs(ko - vanilla):.4f}, 10*se={10 * se:.4f}"
     )
 
 
@@ -213,8 +229,14 @@ def test_product_wrapper_matches_raw(base_params):
     )
     price_raw, _ = parisian_mc_price(
         **{k: base_params[k] for k in ("S0", "K", "H", "r", "q", "T", "sigma", "D")},
-        cp=1, direction="down", knockout=True, parisian_type="standard",
-        n_paths=20_000, n_steps=400, seed=99, antithetic=True,
+        cp=1,
+        direction="down",
+        knockout=True,
+        parisian_type="standard",
+        n_paths=20_000,
+        n_steps=400,
+        seed=99,
+        antithetic=True,
     )
     price_wrap, _ = parisian_mc_price_from_product(
         p,
@@ -243,8 +265,12 @@ def test_parisian_non_negative_grid(base_params):
             for ko in (True, False):
                 price, _ = parisian_mc_price(
                     **{**base_params, "K": K},
-                    direction="down", knockout=ko, parisian_type=ptype,
-                    n_paths=10_000, n_steps=300, seed=7,
+                    direction="down",
+                    knockout=ko,
+                    parisian_type=ptype,
+                    n_paths=10_000,
+                    n_steps=300,
+                    seed=7,
                 )
                 assert price >= -1e-8, (
                     f"Negative price {price:.4f} for K={K}, type={ptype}, ko={ko}"

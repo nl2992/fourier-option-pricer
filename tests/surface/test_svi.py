@@ -234,12 +234,15 @@ def test_fit_svi_nonpositive_T_raises():
 # ── 7. Calibration robustness across scenarios ────────────────────────────────
 
 
-@pytest.mark.parametrize("rho,b,scenario", [
-    (-0.5, 0.3, "negative skew"),
-    (0.4, 0.2, "positive skew"),
-    (0.0, 0.15, "symmetric smile"),
-    (-0.2, 0.05, "low vol flat smile"),
-])
+@pytest.mark.parametrize(
+    "rho,b,scenario",
+    [
+        (-0.5, 0.3, "negative skew"),
+        (0.4, 0.2, "positive skew"),
+        (0.0, 0.15, "symmetric smile"),
+        (-0.2, 0.05, "low vol flat smile"),
+    ],
+)
 def test_fit_svi_various_scenarios(rho, b, scenario):
     """Calibration should achieve RMSE < 1e-4 on synthetic data."""
     p = SVIParams(a=0.04, b=b, rho=rho, m=0.0, sigma=0.25)
@@ -274,6 +277,7 @@ def test_fit_svi_long_maturity():
 
 def test_svi_importable_from_foureng():
     import foureng as fe
+
     assert hasattr(fe, "SVIParams")
     assert hasattr(fe, "SVIFitResult")
     assert hasattr(fe, "svi_total_variance")
@@ -285,6 +289,7 @@ def test_svi_importable_from_foureng():
 
 def test_svi_params_callable_from_foureng():
     import foureng as fe
+
     p = fe.SVIParams(a=0.04, b=0.2, rho=-0.3, m=0.0, sigma=0.25)
     w = fe.svi_total_variance(0.0, p)
     assert w > 0

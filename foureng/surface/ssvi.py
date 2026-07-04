@@ -41,11 +41,10 @@ References:
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Callable, Literal, NamedTuple, Sequence
+from typing import NamedTuple, Sequence
 
 import numpy as np
 from scipy.optimize import minimize
-
 
 # ── parameter dataclasses ────────────────────────────────────────────────────
 
@@ -107,8 +106,8 @@ def ssvi_phi_heston(theta: np.ndarray) -> np.ndarray:
         ATM total variance values, > 0.
     """
     theta = np.asarray(theta, dtype=float)
-    ex = np.expm1(-theta)            # e^{-theta} - 1  (accurate for small theta)
-    return (theta + ex) / theta**2   # = (theta - 1 + e^{-theta}) / theta^2
+    ex = np.expm1(-theta)  # e^{-theta} - 1  (accurate for small theta)
+    return (theta + ex) / theta**2  # = (theta - 1 + e^{-theta}) / theta^2
 
 
 # ── SSVI total variance ───────────────────────────────────────────────────────
@@ -135,12 +134,12 @@ def ssvi_total_variance(
     ndarray
         Total variance w(k; theta, params).
     """
-    k     = np.asarray(k, dtype=float)
-    phi   = float(ssvi_phi_power_law(np.array([theta]), params.eta, params.gamma)[0])
-    rho   = params.rho
+    k = np.asarray(k, dtype=float)
+    phi = float(ssvi_phi_power_law(np.array([theta]), params.eta, params.gamma)[0])
+    rho = params.rho
 
-    pk    = phi * k + rho
-    w     = (theta / 2.0) * (1.0 + rho * phi * k + np.sqrt(pk**2 + (1.0 - rho**2)))
+    pk = phi * k + rho
+    w = (theta / 2.0) * (1.0 + rho * phi * k + np.sqrt(pk**2 + (1.0 - rho**2)))
     return np.maximum(w, 0.0)
 
 
@@ -287,7 +286,7 @@ def fit_ssvi_surface(
     SSVIFitResult
     """
     T_arr = np.asarray(maturities, dtype=float)
-    nT    = len(T_arr)
+    nT = len(T_arr)
 
     if not (len(k_list) == len(iv_list) == nT):
         raise ValueError("k_list, iv_list, and maturities must all have the same length.")
@@ -297,7 +296,7 @@ def fit_ssvi_surface(
     # ── Stage 1: per-maturity theta_t ────────────────────────────────────────
     theta_t = np.empty(nT)
     for i, (k_i, iv_i, T_i) in enumerate(zip(k_list, iv_list, T_arr)):
-        k_i  = np.asarray(k_i, dtype=float)
+        k_i = np.asarray(k_i, dtype=float)
         iv_i = np.asarray(iv_i, dtype=float)
         # Find nearest-ATM IV (smallest |k|)
         idx_atm = int(np.argmin(np.abs(k_i)))
@@ -321,7 +320,7 @@ def fit_ssvi_surface(
 
         total_sq = 0.0
         for i, (k_i, iv_i, T_i, th_i) in enumerate(zip(k_list, iv_list, T_arr, theta_t)):
-            k_i  = np.asarray(k_i, dtype=float)
+            k_i = np.asarray(k_i, dtype=float)
             iv_i = np.asarray(iv_i, dtype=float)
             try:
                 iv_fit = ssvi_implied_vol(k_i, float(T_i), float(th_i), p)
@@ -330,10 +329,15 @@ def fit_ssvi_surface(
             total_sq += float(np.sum((iv_fit - iv_i) ** 2))
         return total_sq
 
-    x0     = np.array([initial.rho, initial.eta, initial.gamma])
+    x0 = np.array([initial.rho, initial.eta, initial.gamma])
     bounds = [(-0.9999, 0.9999), (1e-4, 20.0), (1e-4, 0.9999)]
-    res    = minimize(_objective, x0, method='L-BFGS-B', bounds=bounds,
-                      options={'maxiter': max_iter, 'ftol': 1e-14, 'gtol': 1e-10})
+    res = minimize(
+        _objective,
+        x0,
+        method="L-BFGS-B",
+        bounds=bounds,
+        options={"maxiter": max_iter, "ftol": 1e-14, "gtol": 1e-10},
+    )
 
     rho_f, eta_f, gamma_f = float(res.x[0]), float(res.x[1]), float(res.x[2])
     best = SSVIParams(rho=rho_f, eta=eta_f, gamma=gamma_f)
@@ -341,13 +345,13 @@ def fit_ssvi_surface(
     # Compute RMSE and max error
     all_errs: list[float] = []
     for k_i, iv_i, T_i, th_i in zip(k_list, iv_list, T_arr, theta_t):
-        k_i  = np.asarray(k_i, dtype=float)
+        k_i = np.asarray(k_i, dtype=float)
         iv_i = np.asarray(iv_i, dtype=float)
         iv_f = ssvi_implied_vol(k_i, float(T_i), float(th_i), best)
         all_errs.extend((iv_f - iv_i).tolist())
 
     errs = np.array(all_errs)
-    rmse    = float(np.sqrt(np.mean(errs**2)))
+    rmse = float(np.sqrt(np.mean(errs**2)))
     max_err = float(np.max(np.abs(errs)))
 
     return SSVIFitResult(

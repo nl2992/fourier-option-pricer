@@ -35,10 +35,10 @@ from foureng.analytics.bsm_greeks import (
 S, K, r, q, T, sigma = 100.0, 100.0, 0.05, 0.02, 1.0, 0.20
 _PRICE = {"call": bsm_call, "put": bsm_put}
 _CP = {"call": 1, "put": -1}
-_EPS_S = 1e-4   # bump size for S finite-diff
-_EPS_V = 1e-5   # bump size for sigma finite-diff
-_EPS_R = 1e-6   # bump size for r finite-diff
-_TOL = 1e-5     # absolute tolerance against finite differences
+_EPS_S = 1e-4  # bump size for S finite-diff
+_EPS_V = 1e-5  # bump size for sigma finite-diff
+_EPS_R = 1e-6  # bump size for r finite-diff
+_TOL = 1e-5  # absolute tolerance against finite differences
 
 
 # ── delta ─────────────────────────────────────────────────────────────────────
@@ -48,8 +48,9 @@ _TOL = 1e-5     # absolute tolerance against finite differences
 def test_delta_finite_diff(cp, label):
     """∂V/∂S matches central finite difference."""
     price_fn = _PRICE[label]
-    fd = (price_fn(S + _EPS_S, K, r, q, T, sigma) -
-          price_fn(S - _EPS_S, K, r, q, T, sigma)) / (2 * _EPS_S)
+    fd = (price_fn(S + _EPS_S, K, r, q, T, sigma) - price_fn(S - _EPS_S, K, r, q, T, sigma)) / (
+        2 * _EPS_S
+    )
     assert abs(bsm_delta(S, K, r, q, T, sigma, cp) - fd) < _TOL
 
 
@@ -87,7 +88,7 @@ def test_gamma_finite_diff(cp, label):
     price_fn = _PRICE[label]
     V_up = price_fn(S + _EPS_S, K, r, q, T, sigma)
     V_dn = price_fn(S - _EPS_S, K, r, q, T, sigma)
-    V_0  = price_fn(S, K, r, q, T, sigma)
+    V_0 = price_fn(S, K, r, q, T, sigma)
     fd = (V_up - 2 * V_0 + V_dn) / _EPS_S**2
     assert abs(bsm_gamma(S, K, r, q, T, sigma, cp) - fd) < _TOL
 
@@ -113,8 +114,9 @@ def test_gamma_positive():
 def test_vega_finite_diff(cp, label):
     """∂V/∂σ matches central finite difference."""
     price_fn = _PRICE[label]
-    fd = (price_fn(S, K, r, q, T, sigma + _EPS_V) -
-          price_fn(S, K, r, q, T, sigma - _EPS_V)) / (2 * _EPS_V)
+    fd = (price_fn(S, K, r, q, T, sigma + _EPS_V) - price_fn(S, K, r, q, T, sigma - _EPS_V)) / (
+        2 * _EPS_V
+    )
     assert abs(bsm_vega(S, K, r, q, T, sigma, cp) - fd) < _TOL
 
 
@@ -138,8 +140,7 @@ def test_theta_finite_diff(cp, label):
     """∂V/∂t = -∂V/∂T; check against -ΔV/ΔT finite diff."""
     dT = 1e-5
     price_fn = _PRICE[label]
-    fd = -(price_fn(S, K, r, q, T + dT, sigma) -
-           price_fn(S, K, r, q, T - dT, sigma)) / (2 * dT)
+    fd = -(price_fn(S, K, r, q, T + dT, sigma) - price_fn(S, K, r, q, T - dT, sigma)) / (2 * dT)
     assert abs(bsm_theta(S, K, r, q, T, sigma, cp) - fd) < _TOL
 
 
@@ -155,8 +156,11 @@ def test_theta_call_generally_negative():
 def test_rho_finite_diff(cp, label):
     """∂V/∂r scaled by 1/100 matches finite difference (same scaling)."""
     price_fn = _PRICE[label]
-    fd = (price_fn(S, K, r + _EPS_R, q, T, sigma) -
-          price_fn(S, K, r - _EPS_R, q, T, sigma)) / (2 * _EPS_R) / 100
+    fd = (
+        (price_fn(S, K, r + _EPS_R, q, T, sigma) - price_fn(S, K, r - _EPS_R, q, T, sigma))
+        / (2 * _EPS_R)
+        / 100
+    )
     assert abs(bsm_rho(S, K, r, q, T, sigma, cp) - fd) < _TOL
 
 
@@ -172,8 +176,9 @@ def test_rho_call_positive_put_negative():
 @pytest.mark.parametrize("cp,label", [(1, "call"), (-1, "put")])
 def test_vanna_finite_diff(cp, label):
     """∂delta/∂σ matches central finite difference."""
-    fd = (bsm_delta(S, K, r, q, T, sigma + _EPS_V, cp) -
-          bsm_delta(S, K, r, q, T, sigma - _EPS_V, cp)) / (2 * _EPS_V)
+    fd = (
+        bsm_delta(S, K, r, q, T, sigma + _EPS_V, cp) - bsm_delta(S, K, r, q, T, sigma - _EPS_V, cp)
+    ) / (2 * _EPS_V)
     assert abs(bsm_vanna(S, K, r, q, T, sigma, cp) - fd) < _TOL
 
 
@@ -190,8 +195,9 @@ def test_vanna_call_equals_put():
 @pytest.mark.parametrize("cp,label", [(1, "call"), (-1, "put")])
 def test_volga_finite_diff(cp, label):
     """∂vega/∂σ matches central finite difference."""
-    fd = (bsm_vega(S, K, r, q, T, sigma + _EPS_V, cp) -
-          bsm_vega(S, K, r, q, T, sigma - _EPS_V, cp)) / (2 * _EPS_V)
+    fd = (
+        bsm_vega(S, K, r, q, T, sigma + _EPS_V, cp) - bsm_vega(S, K, r, q, T, sigma - _EPS_V, cp)
+    ) / (2 * _EPS_V)
     assert abs(bsm_volga(S, K, r, q, T, sigma, cp) - fd) < _TOL
 
 
@@ -230,9 +236,9 @@ def test_all_greeks_values_match_individual():
     g = bsm_all_greeks(S, K, r, q, T, sigma, cp=1)
     assert g["delta"] == bsm_delta(S, K, r, q, T, sigma, cp=1)
     assert g["gamma"] == bsm_gamma(S, K, r, q, T, sigma, cp=1)
-    assert g["vega"]  == bsm_vega(S, K, r, q, T, sigma, cp=1)
+    assert g["vega"] == bsm_vega(S, K, r, q, T, sigma, cp=1)
     assert g["theta"] == bsm_theta(S, K, r, q, T, sigma, cp=1)
-    assert g["rho"]   == bsm_rho(S, K, r, q, T, sigma, cp=1)
+    assert g["rho"] == bsm_rho(S, K, r, q, T, sigma, cp=1)
     assert g["vanna"] == bsm_vanna(S, K, r, q, T, sigma, cp=1)
     assert g["volga"] == bsm_volga(S, K, r, q, T, sigma, cp=1)
 
