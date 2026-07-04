@@ -34,6 +34,11 @@ from .meixner import MeixnerParams, meixner_cf, meixner_cumulants
 from .merton_jd import MertonJDParams, merton_jd_cf, merton_jd_cumulants
 from .nig import NigParams, nig_cf, nig_cumulants
 from .ousv import OusvParams, ousv_cf, ousv_cumulants
+from .regime_switching import (
+    RegimeSwitchingBsmParams,
+    regime_switching_cf,
+    regime_switching_cumulants,
+)
 from .rough_heston import RoughHestonParams, rough_heston_cf, rough_heston_cumulants
 from .sv32 import Sv32Params, sv32_cf, sv32_cumulants
 from .variance_gamma import VGParams, vg_cf, vg_cumulants
@@ -116,6 +121,13 @@ MODEL_REGISTRY: dict[str, ModelEntry] = {
         False,
     ),
     "vgsa": _e("vgsa", VGSAParams, vgsa_cf, vgsa_cumulants, False),
+    "regime_switching": _e(
+        "regime_switching",
+        RegimeSwitchingBsmParams,
+        regime_switching_cf,
+        regime_switching_cumulants,
+        False,
+    ),
 }
 
 __all__ = ["ModelEntry", "MODEL_REGISTRY"]

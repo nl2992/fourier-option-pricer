@@ -99,6 +99,11 @@ from .models.meixner import MeixnerParams, meixner_cf, meixner_cumulants
 from .models.merton_jd import MertonJDParams, merton_jd_cf, merton_jd_cumulants
 from .models.nig import NigParams, nig_cf, nig_cumulants
 from .models.ousv import OusvParams, ousv_cf, ousv_cumulants
+from .models.regime_switching import (
+    RegimeSwitchingBsmParams,
+    regime_switching_cf,
+    regime_switching_cumulants,
+)
 from .models.rough_heston import RoughHestonParams, rough_heston_cf, rough_heston_cumulants
 from .models.sabr import SabrParams, sabr_hagan_implied_vol
 from .models.sv32 import Sv32Params, sv32_cf, sv32_cumulants
@@ -215,6 +220,9 @@ __all__ = [
     "GarchWMW2012Params",
     "garch_wmw2012_cf",
     "garch_wmw2012_cumulants",
+    "RegimeSwitchingBsmParams",
+    "regime_switching_cf",
+    "regime_switching_cumulants",
     "RoughHestonParams",
     "rough_heston_cf",
     "rough_heston_cumulants",
