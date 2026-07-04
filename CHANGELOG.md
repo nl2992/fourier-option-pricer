@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.12.0 - 2026-07-04
+
+- Added the exact Levy forward-start pricer as `method="forward_start_cf"`: for stationary independent increments the strike-reset payoff factorizes as `V = S0 e^{-q t1} * EuropeanPrice(S0=1, K=alpha, tau)` (Rubinstein 1990 homogeneity, exact across the Levy class), with the European leg priced by COS on the model CF. `levy_forward_start_price` exported. Tests: BSM vs the Rubinstein closed form to 1e-8, zero-start reduction to the vanilla European for Kou/VG/Merton, 200k-path Kou Monte Carlo band, alpha-parity identity, pipeline dispatch, validation errors.
+
 ## 0.11.0 - 2026-07-04
 
 Transform-methods expansion: four new pricing capabilities, inspired by the coverage of the PROJ MATLAB option-pricing toolboxes and implemented natively on the `foureng` CF stack, plus two correctness fixes surfaced by the new cross-checks.
