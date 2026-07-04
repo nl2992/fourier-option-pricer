@@ -46,6 +46,7 @@ This file tracks the capability surface used by the registry and dispatcher test
 | `forward_start_cf` | Exact Levy forward-start via homogeneity factorization + COS European leg | Rubinstein (1990); Musiela & Rutkowski (2005) |
 | `cliquet_cf` | Exact locally collared Levy cliquet via per-period COS call spreads | Wilmott (2002); Kirkby & Deng (2016) |
 | `proj_barrier` | PROJ discretely monitored single barrier | Kirkby (2014, 2015) |
+| `proj_double_barrier` | PROJ discretely monitored double barrier (two-sided absorption) | Kirkby (2015) |
 | `proj_asian` | Arithmetic Asian MC with PROJ/analytic geometric control variate | Kirkby (2016) |
 | `bsm_analytic` | BSM closed-form vanilla baseline | Black & Scholes (1973) |
 | `mc_gbm` | GBM Monte Carlo baseline | — |

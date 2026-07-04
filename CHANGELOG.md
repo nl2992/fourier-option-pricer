@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.14.0 - 2026-07-05
+
+- Added the PROJ double-barrier pricer for 1-D Levy models as `method="proj_double_barrier"` (`proj_double_barrier_price` exported): the Kirkby (2015) Toeplitz-FFT backward induction with absorption on *both* sides of the corridor (L, U) at each of the M monitoring dates; double knock-ins via same-engine in-out parity so the discrete-monitoring bias cancels. Tests: far-barrier reduction to the COS vanilla and to the single-barrier PROJ price, BSM agreement with the eigenfunction closed form at Broadie-Glasserman-Kou continuity-corrected barriers (rel 1e-2 at M=126/252) with monotone approach to the continuous limit, Kou vs a discretely monitored 200k-path Monte Carlo with the same monitoring grid, corridor monotonicity and knock-out bounds, in-out parity to 1e-8, pipeline dispatch, validation errors.
+
 ## 0.13.0 - 2026-07-05
 
 - Added the exact locally collared cliquet pricer for Levy models as `method="cliquet_cf"`: each period's collared return `clip(R_k, lf, lc)` is a static call spread `lf + (R-lf)^+ - (R-lc)^+` priced by COS on a unit-spot asset over the period; additive payoffs sum and multiplicative payoffs factorize by independence of Levy increments. Non-positive strikes (no floor) handled analytically via `E[(R-a)^+] = E[R] - a`. Global floors/caps couple the periods and are rejected in favor of `cliquet_mc`. `levy_cliquet_price` exported. Tests: no-collar closed forms, one-period floor-at-zero == ATM-forward COS call identity, BSM vs the existing `cliquet_mc` engine (400k paths), Kou vs in-test jump Monte Carlo (200k paths), cp sign flip, collar bounds, pipeline dispatch, global-collar/model rejection.

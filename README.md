@@ -38,7 +38,7 @@ Swap `"heston"` for any of 21 models, `"cos_improved"` for any of 9 engines. Sam
 | CONV | `conv` | Probability-transform Fourier inversion | algebraic |
 | Lewis | internal | Parseval contour integral (Lewis 2001), used as adaptive fallback | spectral |
 | Mellin | `mellin` | Mellin-transform façade for selected Lévy models | — |
-| PROJ | `proj` | B-spline frame projection (Kirkby 2015/2017), European + Bermudan + barrier + Asian CV | polynomial (order-tunable) |
+| PROJ | `proj` | B-spline frame projection (Kirkby 2015/2017), European + Bermudan + single/double barrier + Asian CV | polynomial (order-tunable) |
 | PyFENG FFT | `pyfeng_fft` | Third-party reference engine for 8 models | — |
 
 Plus non-Fourier baselines (CRR lattice, implicit PDE, Monte Carlo with control variates and LSMC) and product-level analytics for ~20 exotic payoffs.
@@ -264,9 +264,9 @@ Full model details: [docs/model_zoo.md](docs/model_zoo.md).
 |----------|------------|---------|
 | `price_strip(model, method, strikes, fwd, params, grid=None)` | model label, method label, strike array, `ForwardSpec`, model params, optional grid | `np.ndarray` of call prices |
 
-Method labels: `"cos"`, `"cos_improved"`, `"cos_filtered"`, `"carr_madan"`, `"frft"`, `"conv"`, `"hilbert"`, `"cos_bermudan"`, `"mellin"`, `"proj"`, `"pyfeng_fft"`, plus product-aware `"asian_cf"` / `"variance_levy_analytic"` / `"forward_start_cf"` / `"cliquet_cf"` (exact Lévy geometric Asians, variance-swap strikes, forward-starts, and locally collared cliquets) and `"cos_digital"` / `"digital_bsm"` / `"monte_carlo"` / `"barrier_bsm"` / `"asian_bsm"` / `"asian_mc"` / `"double_barrier_mc"` / `"forward_start_bsm"` / `"exchange_bsm"` / `"spread_bsm"` / `"multi_asset_mc"` / `"lookback_bsm"` / `"lookback_mc"` / `"variance_analytic_bsm"` / `"variance_mc"` / `"cliquet_mc"` and SABR-only `"sabr_hagan"`.
+Method labels: `"cos"`, `"cos_improved"`, `"cos_filtered"`, `"carr_madan"`, `"frft"`, `"conv"`, `"hilbert"`, `"cos_bermudan"`, `"mellin"`, `"proj"`, `"pyfeng_fft"`, plus product-aware `"asian_cf"` / `"variance_levy_analytic"` / `"forward_start_cf"` / `"cliquet_cf"` (exact Lévy geometric Asians, variance-swap strikes, forward-starts, and locally collared cliquets) and `"cos_digital"` / `"digital_bsm"` / `"monte_carlo"` / `"barrier_bsm"` / `"asian_bsm"` / `"asian_mc"` / `"double_barrier_mc"` / `"proj_double_barrier"` / `"forward_start_bsm"` / `"exchange_bsm"` / `"spread_bsm"` / `"multi_asset_mc"` / `"lookback_bsm"` / `"lookback_mc"` / `"variance_analytic_bsm"` / `"variance_mc"` / `"cliquet_mc"` and SABR-only `"sabr_hagan"`.
 
-Product-level pricing uses `price(product, model, method, fwd, params)`. It currently routes European options, cash-or-nothing and asset-or-nothing digitals via `"cos_digital"` or BSM `"digital_bsm"`, supported 1-D Levy Bermudans via `"cos_bermudan"`, BSM generic Monte Carlo / Longstaff-Schwartz via `"monte_carlo"` for Europeans, Americans, Bermudans, and the GBM-simulated exotic book, continuously monitored zero-rebate BSM single barriers via `"barrier_bsm"`, BSM Asians via `"asian_bsm"` / `"asian_mc"`, BSM forward-start options via `"forward_start_bsm"`, BSM two-asset exchange options via `"exchange_bsm"` / `"multi_asset_mc"`, BSM basket and best-of options via `"multi_asset_mc"`, BSM spread options via `"spread_bsm"` / `"multi_asset_mc"`, BSM lookbacks via `"lookback_bsm"` / `"lookback_mc"`, BSM variance swaps via `"variance_analytic_bsm"` / `"variance_mc"`, integrated-variance BSM options via `"variance_analytic_bsm"` and realised/integrated BSM variance options via `"variance_mc"`, BSM cliquets via `"cliquet_mc"`, and BSM double barriers via `"double_barrier_mc"`.
+Product-level pricing uses `price(product, model, method, fwd, params)`. It currently routes European options, cash-or-nothing and asset-or-nothing digitals via `"cos_digital"` or BSM `"digital_bsm"`, supported 1-D Levy Bermudans via `"cos_bermudan"`, BSM generic Monte Carlo / Longstaff-Schwartz via `"monte_carlo"` for Europeans, Americans, Bermudans, and the GBM-simulated exotic book, continuously monitored zero-rebate BSM single barriers via `"barrier_bsm"`, BSM Asians via `"asian_bsm"` / `"asian_mc"`, BSM forward-start options via `"forward_start_bsm"`, BSM two-asset exchange options via `"exchange_bsm"` / `"multi_asset_mc"`, BSM basket and best-of options via `"multi_asset_mc"`, BSM spread options via `"spread_bsm"` / `"multi_asset_mc"`, BSM lookbacks via `"lookback_bsm"` / `"lookback_mc"`, BSM variance swaps via `"variance_analytic_bsm"` / `"variance_mc"`, integrated-variance BSM options via `"variance_analytic_bsm"` and realised/integrated BSM variance options via `"variance_mc"`, BSM cliquets via `"cliquet_mc"`, and BSM double barriers via `"double_barrier_mc"` / `"proj_double_barrier"`.
 
 ### Path-dependent MC engines (`foureng.mc`)
 
@@ -298,6 +298,7 @@ All MC functions take a `GBMPathSpec(n_paths, n_steps, seed, antithetic)` config
 | `levy_variance_fair_strike(model, fwd, params, sampling_times)` | Lévy model key, market inputs, observation dates | `float` (annualized E[RV]) |
 | `levy_forward_start_price(model, fwd, params, alpha=..., start_time=..., maturity=..., cp=1)` | Lévy model key, market inputs, strike ratio, reset date | `float` |
 | `levy_cliquet_price(model, fwd, params, product)` | Lévy model key, market inputs, `CliquetOption` | `float` (locally collared additive/multiplicative) |
+| `proj_double_barrier_price(step_cf, S0=..., L=..., U=..., M=..., knockout=True, ...)` | one-step CF, corridor, monitoring count | `float` |
 | `sabr_hagan_price_at_strikes(fwd, params, strikes)` | `ForwardSpec`, `SabrParams`, strike array | `np.ndarray` |
 
 ### Grid constructors
@@ -460,7 +461,8 @@ Full bibliography with DOIs and free-access links: [docs/papers.md](docs/papers.
 
 Transform-method territory not yet covered here, in rough priority order (the first block tracks capabilities popularized by the PROJ/CTMC MATLAB literature):
 
-- [ ] PROJ double-barrier and step/fader options under Lévy models
+- [x] PROJ double-barrier options under Lévy models (`proj_double_barrier`, 0.14.0)
+- [ ] Step/fader options under Lévy models
 - [ ] CTMC (continuous-time Markov chain) approximation for barrier/American options under stochastic volatility and SABR
 - [ ] Swing options and credit default swaps via transform methods
 - [ ] Regime-switching jump-diffusion regimes (per-regime Lévy exponents beyond BSM)

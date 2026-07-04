@@ -206,6 +206,7 @@ Each model exposes a cumulant function that returns the first four log-return cu
 | `proj_bermudan_put(cf, grid, fwd_spec, strikes, n_ex)` | CF, `ProjGrid`, forward spec, strikes, exercise count | PROJ Bermudan put via Toeplitz-FFT backward recursion (Kirkby 2017). |
 | `proj_barrier_price(...)` | CF, forward spec, barrier contract terms | PROJ discretely monitored single-barrier pricer (down-out / up-out, knock-in via parity). |
 | `proj_asian_price_cv(...)` | CF, forward spec, Asian contract terms | Arithmetic Asian via Monte Carlo with a PROJ/analytic geometric control variate. |
+| `proj_double_barrier_price(step_cf, S0=..., K=..., L=..., U=..., M=..., knockout=True, ...)` | one-step CF, corridor, monitoring count | PROJ double-barrier knock-out/knock-in via two-sided absorption in the backward induction. |
 
 ---
 
