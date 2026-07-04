@@ -8,7 +8,7 @@ All public names are accessible from the top-level `foureng` namespace after `im
 
 | Name | Type | Description |
 |------|------|-------------|
-| `__version__` | str | Package version string, e.g. `"0.12.0"`. |
+| `__version__` | str | Package version string (PEP 440); matches the latest entry in [CHANGELOG.md](../CHANGELOG.md). |
 
 ---
 
