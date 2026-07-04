@@ -996,3 +996,178 @@ def _proj_geometric_asian_levy(
         return float(max(prices[0], 0.0))
     except Exception:
         return 0.0
+
+
+# ---------------------------------------------------------------------------
+# PROJ double-barrier pricer
+# ---------------------------------------------------------------------------
+
+
+def proj_double_barrier_price(
+    step_cf,
+    *,
+    S0: float,
+    r: float,
+    T: float,
+    K: float,
+    L: float,
+    U: float,
+    M: int,
+    knockout: bool = True,
+    cp: int = 1,
+    q: float = 0.0,
+    N: int = 1 << 14,
+    alph: float = 7.0,
+) -> float:
+    """Double-barrier option price by the PROJ method (Kirkby 2015).
+
+    Same Toeplitz-FFT backward induction as :func:`proj_barrier_price`, but
+    with absorption on *both* sides of the corridor ``(L, U)`` at each of the
+    ``M`` equally spaced monitoring dates: nodes at or below the lower
+    barrier and at or above the upper barrier are zeroed. Knock-in prices
+    follow from in-out parity against the same-engine vanilla (both barriers
+    pushed far away), so the discrete-monitoring bias cancels.
+
+    Parameters
+    ----------
+    step_cf
+        One-step risk-neutral CF of ``log(S_{t+dt}/S_t)`` including the
+        ``(r - q) dt`` drift.
+    S0, r, T, K
+        Spot, risk-free rate, maturity, strike.
+    L, U
+        Lower and upper barrier levels; must satisfy ``0 < L < S0 < U``.
+    M
+        Number of monitoring dates (``M >= 252`` approximates continuous
+        monitoring).
+    knockout
+        ``True`` prices the double knock-out; ``False`` the double knock-in.
+    cp
+        ``+1`` call, ``-1`` put.
+    N, alph
+        Projection grid size (power of two) and half-width.
+    """
+    if not (0.0 < L < S0 < U):
+        raise ValueError(
+            f"proj_double_barrier_price: need 0 < L < S0 < U; got L={L}, S0={S0}, U={U}"
+        )
+    if cp not in (1, -1):
+        raise ValueError(f"proj_double_barrier_price: cp must be +1 or -1, got {cp}")
+    M = int(M)
+    if M < 1:
+        raise ValueError("proj_double_barrier_price: M must be >= 1")
+    N = int(N)
+    if N & (N - 1) != 0:
+        raise ValueError("proj_double_barrier_price: N must be a power of two")
+
+    if not knockout:
+        ko = proj_double_barrier_price(
+            step_cf,
+            S0=S0,
+            r=r,
+            T=T,
+            K=K,
+            L=L,
+            U=U,
+            M=M,
+            knockout=True,
+            cp=cp,
+            q=q,
+            N=N,
+            alph=alph,
+        )
+        vanilla = proj_double_barrier_price(
+            step_cf,
+            S0=S0,
+            r=r,
+            T=T,
+            K=K,
+            L=S0 * 1e-9,
+            U=S0 * 1e9,
+            M=M,
+            knockout=True,
+            cp=cp,
+            q=q,
+            N=N,
+            alph=alph,
+        )
+        return float(max(vanilla - ko, 0.0))
+
+    dt = T / M
+    K_half = N // 2
+
+    dx = 2.0 * alph / (N - 1)
+    a = 1.0 / dx
+    nnot = K_half // 2
+
+    # Strike-aligned grid (same logic as proj_barrier_price / Bermudan).
+    lws = np.log(K / S0)
+    nbar_K = int(np.floor(lws * a + K_half / 2))
+    dxtil = 1.0 / a
+    if abs(lws) < dxtil:
+        dx = dxtil
+    elif lws < 0:
+        dx = lws / (1 + nbar_K - K_half / 2)
+        nbar_K = nbar_K + 1
+    elif lws > 0:
+        dx = lws / (nbar_K - K_half / 2)
+    a = 1.0 / dx
+    xmin = (1 - K_half / 2) * dx
+
+    # Barrier node indices (1-based, clipped to the grid).
+    nbar_L = int(np.clip(int(np.floor(a * (np.log(L / S0) - xmin) + 1.0)), 0, K_half))
+    nbar_U = int(np.clip(int(np.floor(a * (np.log(U / S0) - xmin) + 1.0)), 0, K_half))
+
+    # ----  density projection coefficients  ----
+    a2 = a * a
+    Cons2 = 24.0 * a2 * np.exp(-r * dt) / N
+    zmin = (1 - K_half) * dx
+    dw = 2.0 * np.pi * a / N
+    grand_freq = np.arange(1, N) * dw
+    grand = (
+        np.exp(-1j * zmin * grand_freq)
+        * np.asarray(step_cf(grand_freq), dtype=np.complex128)
+        * (np.sin(grand_freq / (2.0 * a)) / grand_freq) ** 2
+        / (2.0 + np.cos(grand_freq / a))
+    )
+    beta = Cons2 * np.real(np.fft.fft(np.concatenate(([1.0 / (24.0 * a2)], grand))))
+    toepM = np.concatenate((np.flip(beta[0:K_half]), [0.0], np.flip(beta[K_half : 2 * K_half - 1])))
+    toepM_fft = np.fft.fft(toepM)
+
+    # ----  terminal payoff stencil (3-pt Gauss-Legendre)  ----
+    b3 = np.sqrt(15.0)
+    b4 = b3 / 10.0
+    varthet_01 = np.exp(0.5 * dx) * (5 * np.cosh(b4 * dx) - b3 * np.sinh(b4 * dx) + 4) / 18
+    varthet_m10 = np.exp(-0.5 * dx) * (5 * np.cosh(b4 * dx) + b3 * np.sinh(b4 * dx) + 4) / 18
+    varthet_star = varthet_01 + varthet_m10
+
+    ThetM = np.zeros(K_half)
+    if cp == -1:
+        Gs_put = np.zeros(K_half)
+        if nbar_K >= 1:
+            Gs_put[0:nbar_K] = np.exp(xmin + dx * np.arange(0, nbar_K)) * S0
+            ThetM[nbar_K - 1] = K * (0.5 - varthet_m10)
+        if nbar_K >= 2:
+            ThetM[0 : nbar_K - 1] = K - varthet_star * Gs_put[0 : nbar_K - 1]
+    else:
+        if nbar_K >= 1:
+            S_at_strike = np.exp(xmin + (nbar_K - 1) * dx) * S0
+            ThetM[nbar_K - 1] = S_at_strike * varthet_01 - K * 0.5
+        if nbar_K < K_half:
+            idx_itm = np.arange(nbar_K, K_half)
+            ThetM[nbar_K:K_half] = varthet_star * np.exp(xmin + dx * idx_itm) * S0 - K
+
+    def _kill(v: np.ndarray) -> np.ndarray:
+        v = v.copy()
+        if nbar_L > 0:
+            v[:nbar_L] = 0.0
+        if nbar_U < K_half:
+            v[nbar_U:] = 0.0
+        return v
+
+    Vt = _kill(ThetM)
+    for _m in range(M - 1, -1, -1):
+        p = np.fft.ifft(toepM_fft * np.fft.fft(np.concatenate((Vt, np.zeros(K_half)))))
+        Vt = _kill(np.real(p[:K_half]))
+
+    return float(max(Vt[nnot - 1], 0.0))

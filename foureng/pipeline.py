@@ -603,6 +603,56 @@ def _proj_barrier_price_dispatch(model: str, fwd: ForwardSpec, params, product) 
     )
 
 
+def _proj_double_barrier_price_dispatch(model: str, fwd: ForwardSpec, params, product) -> float:
+    """PROJ double-barrier pricer for 1-D Lévy models.
+
+    Same one-step-CF construction as the single-barrier dispatch; knock-in
+    handled inside the pricer via same-engine in-out parity.
+    """
+    from .pricers.cos_bermudan import _SUPPORTED_MODELS
+    from .pricers.proj import proj_double_barrier_price
+
+    if model not in _SUPPORTED_MODELS:
+        raise NotImplementedError(
+            f"method='proj_double_barrier' supports 1-D Lévy models "
+            f"{sorted(_SUPPORTED_MODELS)}; got model={model!r}. "
+            "Use method='double_barrier_bsm' or method='monte_carlo'."
+        )
+    if product.rebate != 0.0:
+        raise NotImplementedError(
+            "method='proj_double_barrier' currently supports only zero rebates."
+        )
+
+    T = float(product.maturity)
+    M = 252
+    dt = T / M
+    cf = MODEL_REGISTRY[model].cf
+    fwd_dt = ForwardSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=dt)
+    drift = (fwd.r - fwd.q) * dt
+
+    def step_cf(u: np.ndarray) -> np.ndarray:
+        return np.exp(1j * u * drift) * np.asarray(cf(u, fwd_dt, params), dtype=np.complex128)
+
+    fwd_T = ForwardSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=T)
+    grid = proj_auto_grid(MODEL_REGISTRY[model].cumulants(fwd_T, params), N=1 << 14)
+
+    return proj_double_barrier_price(
+        step_cf,
+        S0=fwd.S0,
+        r=fwd.r,
+        T=T,
+        K=float(product.strike),
+        L=float(product.lower_barrier),
+        U=float(product.upper_barrier),
+        M=M,
+        knockout=product.knockout,
+        cp=product.cp,
+        q=fwd.q,
+        N=grid.N,
+        alph=grid.alph,
+    )
+
+
 def _proj_asian_price_dispatch(model: str, fwd: ForwardSpec, params, product) -> float:
     """PROJ arithmetic Asian pricer (geometric control variate) for 1-D Lévy models.
 
@@ -938,9 +988,12 @@ def price(
                 "price(): product_type='double_barrier' must be represented by "
                 f"DoubleBarrierOption, got {type(product).__name__!r}"
             )
+        if method == "proj_double_barrier":
+            return _proj_double_barrier_price_dispatch(model, fwd, params, product)
         if model != "bsm":
             raise NotImplementedError(
-                f"method={method!r} for double-barrier options is currently implemented only for model='bsm'."
+                f"method={method!r} for double-barrier options is currently implemented only "
+                "for model='bsm' (use method='proj_double_barrier' for 1-D Lévy models)."
             )
         if method == "double_barrier_bsm":
             from .analytics.bsm_barrier import bsm_double_barrier_price

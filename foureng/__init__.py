@@ -27,7 +27,7 @@ try:
 
     __version__: str = _pkg_version("fourier-option-pricer")
 except _PNF:  # editable install without metadata yet
-    __version__ = "0.13.0"
+    __version__ = "0.14.0"
 
 from .analytics.bsm_asian import (
     bsm_discrete_geometric_asian,
@@ -139,6 +139,7 @@ from .pricers.proj import (
     proj_auto_grid,
     proj_barrier_price,
     proj_bermudan_put,
+    proj_double_barrier_price,
     proj_european_price_at_strikes,
     proj_price_at_strikes,
 )
@@ -305,6 +306,7 @@ __all__ = [
     "proj_price_at_strikes",
     "proj_auto_grid",
     "proj_bermudan_put",
+    "proj_double_barrier_price",
     "proj_barrier_price",
     "proj_asian_price_cv",
     "ProjGrid",

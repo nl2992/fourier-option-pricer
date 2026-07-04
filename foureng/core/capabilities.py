@@ -206,6 +206,17 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
         supports_path_dependent=True,
         notes="BSM Monte Carlo arithmetic/geometric Asian pricer.",
     ),
+    "proj_double_barrier": MethodSpec(
+        requires_cf=True,
+        supports_products=frozenset({"double_barrier"}),
+        supports_exercise=frozenset({"european"}),
+        supports_path_dependent=True,
+        notes=(
+            "PROJ double-barrier pricer for 1-D Levy models: Toeplitz-FFT "
+            "backward induction with absorption on both sides of the corridor "
+            "at each monitoring date; knock-in via same-engine in-out parity."
+        ),
+    ),
     "double_barrier_mc": MethodSpec(
         requires_cf=False,
         requires_simulation=True,
