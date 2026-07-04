@@ -38,6 +38,7 @@ from .pricers.cos import (
 from .pricers.cos_bermudan import cos_bermudan_price
 from .pricers.filtered_cos import filtered_cos_prices
 from .pricers.frft import frft_price_at_strikes
+from .pricers.hilbert import hilbert_price_at_strikes
 from .pricers.lattice import LatticeGrid, bsm_lattice_price, bsm_lattice_price_at_strikes
 from .pricers.lewis import lewis_call_prices
 from .pricers.mellin import MELLIN_SUPPORTED_MODELS, mellin_price_at_strikes
@@ -50,7 +51,7 @@ from .pricers.proj import (
     proj_european_price_at_strikes,
 )
 from .pricers.sabr import sabr_hagan_price_at_strikes
-from .utils.grids import CONVGrid, COSGrid, COSGridPolicy, FFTGrid
+from .utils.grids import CONVGrid, COSGrid, COSGridPolicy, FFTGrid, HilbertGrid
 from .utils.spectral_filters import COSFilterSpec
 
 # ---------------------------------------------------------------------------
@@ -198,7 +199,8 @@ def price_strip(
         ``"cos"`` / ``"cos_improved"`` / ``"cos_filtered"`` (Fang-Oosterlee 2008
         and the adaptive/filtered extensions), ``"carr_madan"`` (FFT, 1999),
         ``"frft"`` (Chourdakis 2004), ``"conv"`` (Fourier inversion),
-        ``"mellin"`` (Mellin transform, selected Lévy models), ``"proj"`` (PROJ
+        ``"mellin"`` (Mellin transform, selected Lévy models), ``"hilbert"``
+        (Feng-Linetsky 2008 discrete Hilbert transform), ``"proj"`` (PROJ
         frame projection, Kirkby 2015/2017), and ``"pyfeng_fft"`` (PyFENG native
         FFT for BSM/Heston/OUSV/VG/CGMY/NIG/3-2 SV/Rough Heston).
         Non-CF baselines: ``"lattice"`` and ``"pde_fd"`` (BSM only),
@@ -259,6 +261,12 @@ def price_strip(
             )
         mellin_grid = grid if isinstance(grid, CONVGrid) else None
         return mellin_price_at_strikes(phi, fwd, K, cp=cp, grid=mellin_grid)
+
+    if method == "hilbert":
+        hilbert_grid = grid if isinstance(grid, HilbertGrid) else None
+        return np.asarray(
+            hilbert_price_at_strikes(phi, fwd, K, cp=cp, grid=hilbert_grid), dtype=np.float64
+        )
 
     if method == "proj":
         return proj_european_price_at_strikes(
@@ -1226,13 +1234,21 @@ def price(
 
     if pt == "compound":
         from .products.compound import CompoundOption
+
         if not isinstance(product, CompoundOption):
-            raise TypeError(f"product_type='compound' requires a CompoundOption instance, got {type(product)}")
+            raise TypeError(
+                f"product_type='compound' requires a CompoundOption instance, got {type(product)}"
+            )
         if model not in {"bsm"}:
-            raise NotImplementedError(f"compound options are only supported for model='bsm', got {model!r}")
+            raise NotImplementedError(
+                f"compound options are only supported for model='bsm', got {model!r}"
+            )
         if method not in {"geske", "analytic", None}:
-            raise NotImplementedError(f"compound options support method='geske'/'analytic', got {method!r}")
+            raise NotImplementedError(
+                f"compound options support method='geske'/'analytic', got {method!r}"
+            )
         from .analytics.bsm_compound import geske_compound_price
+
         return geske_compound_price(
             S=fwd.S0,
             K1=product.strike_outer,
@@ -1248,11 +1264,17 @@ def price(
 
     if pt == "chooser":
         from .products.chooser import ChooserOption
+
         if not isinstance(product, ChooserOption):
-            raise TypeError(f"product_type='chooser' requires a ChooserOption instance, got {type(product)}")
+            raise TypeError(
+                f"product_type='chooser' requires a ChooserOption instance, got {type(product)}"
+            )
         if model not in {"bsm"}:
-            raise NotImplementedError(f"chooser options are only supported for model='bsm', got {model!r}")
+            raise NotImplementedError(
+                f"chooser options are only supported for model='bsm', got {model!r}"
+            )
         from .analytics.bsm_chooser import bsm_chooser_price
+
         return bsm_chooser_price(
             S=fwd.S0,
             K=product.strike,

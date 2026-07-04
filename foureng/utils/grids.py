@@ -108,6 +108,38 @@ class CONVGrid:
 
 
 @dataclass(frozen=True)
+class HilbertGrid:
+    """Frequency grid for the Hilbert-transform pricer of Feng & Linetsky (2008).
+
+    The pricer evaluates Gil-Pelaez-style probability integrals on the
+    half-integer sinc grid ``u_m = (m + 1/2) * h`` for ``m = 0..N-1``. The
+    half-integer offset skips the ``u = 0`` singularity of the integrand and
+    turns the midpoint sum into the discrete Hilbert transform, whose error
+    decays like ``exp(-c/h)`` for characteristic functions analytic in a
+    horizontal strip (Feng & Linetsky 2008; Stenger 1993).
+
+    Parameters
+    ----------
+    h : float
+        Frequency step. Smaller ``h`` reduces the discretization error
+        (exponentially, for strip-analytic CFs).
+    N : int
+        Number of half-integer nodes; the effective cutoff is ``N * h``,
+        which must be large enough for the CF tail to have decayed.
+    """
+
+    h: float = 0.05
+    N: int = 1 << 13
+
+    def u(self) -> np.ndarray:
+        if self.N < 2:
+            raise ValueError("HilbertGrid: N must be at least 2")
+        if self.h <= 0.0:
+            raise ValueError("HilbertGrid: h must be > 0")
+        return (np.arange(self.N) + 0.5) * self.h
+
+
+@dataclass(frozen=True)
 class ProjGrid:
     """Grid for the PROJ (frame-projection) pricer of Kirkby (2015, 2017).
 

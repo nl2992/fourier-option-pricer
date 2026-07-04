@@ -138,6 +138,17 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
             "First slice uses validated transform inversion pending model-specific contours."
         ),
     ),
+    "hilbert": MethodSpec(
+        requires_cf=True,
+        supports_products=frozenset({"european"}),
+        supports_exercise=frozenset({"european"}),
+        supports_path_dependent=False,
+        notes=(
+            "Feng-Linetsky (2008) discrete Hilbert transform on the half-integer "
+            "sinc grid; exponentially convergent Gil-Pelaez probabilities for "
+            "strip-analytic characteristic functions."
+        ),
+    ),
     "sabr_hagan": MethodSpec(
         requires_cf=False,
         supports_products=frozenset({"european"}),

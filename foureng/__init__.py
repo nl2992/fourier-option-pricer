@@ -37,7 +37,13 @@ from .analytics.bsm_asian import (
 from .analytics.bsm_barrier import bsm_barrier_price
 from .analytics.bsm_chooser import bsm_chooser_price
 from .analytics.bsm_compound import geske_compound_price
-from .analytics.bsm_quanto import bsm_quanto_forward, bsm_quanto_option
+from .analytics.bsm_exotics import (
+    bsm_forward_start,
+    bsm_gap_call,
+    bsm_lookback_floating,
+    kirk_spread,
+    margrabe_exchange,
+)
 from .analytics.bsm_greeks import (
     bsm_all_greeks,
     bsm_delta,
@@ -48,13 +54,7 @@ from .analytics.bsm_greeks import (
     bsm_vega,
     bsm_volga,
 )
-from .analytics.bsm_exotics import (
-    bsm_forward_start,
-    bsm_gap_call,
-    bsm_lookback_floating,
-    kirk_spread,
-    margrabe_exchange,
-)
+from .analytics.bsm_quanto import bsm_quanto_forward, bsm_quanto_option
 from .analytics.bsm_variance import bsm_variance_option_integrated, bsm_variance_swap
 from .greeks import (
     COSGreeks,
@@ -120,6 +120,7 @@ from .pricers.cos_bermudan import cos_bermudan_price, cos_bermudan_price_strip
 from .pricers.cos_digital import cos_digital_price, cos_digital_price_strip
 from .pricers.filtered_cos import FilteredCOSDecision, filtered_cos_prices
 from .pricers.frft import frft_price_at_strikes, frft_prices
+from .pricers.hilbert import hilbert_itm_probabilities, hilbert_price_at_strikes
 from .pricers.lattice import LatticeGrid, bsm_lattice_price, bsm_lattice_price_at_strikes
 from .pricers.lewis import lewis_call_prices, lewis_prices
 from .pricers.mellin import mellin_price_at_strikes
@@ -139,12 +140,12 @@ from .products.quanto import QuantoOption
 from .surface import (
     CalibrationResult,
     LocalVolSurface,
+    SabrSmileCalibResult,
     SSVIFitResult,
     SSVIParams,
+    SurfaceSpec,
     SVIFitResult,
     SVIParams,
-    SabrSmileCalibResult,
-    SurfaceSpec,
     calibrate_cgmy,
     calibrate_heston,
     calibrate_kou,
@@ -269,6 +270,8 @@ __all__ = [
     "cos_bermudan_price_strip",
     "frft_price_at_strikes",
     "frft_prices",
+    "hilbert_itm_probabilities",
+    "hilbert_price_at_strikes",
     "lewis_call_prices",
     "lewis_prices",
     "mellin_price_at_strikes",
