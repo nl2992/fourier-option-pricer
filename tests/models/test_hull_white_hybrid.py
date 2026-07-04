@@ -35,7 +35,8 @@ def test_bond_variance_exact_and_holee_limit():
     a, sr, T = 0.3, 0.02, 2.0
     s_grid = np.linspace(0.0, T, 200_001)
     sig_p = (sr / a) * (1.0 - np.exp(-a * (T - s_grid)))
-    v_quad = float(np.trapezoid(sig_p**2, s_grid))
+    trapz = getattr(np, "trapezoid", None) or np.trapz  # numpy 1.x compat
+    v_quad = float(trapz(sig_p**2, s_grid))
     assert hw_bond_variance(a, sr, T) == pytest.approx(v_quad, rel=1e-8)
     # Ho-Lee limit continuity at the a*T branch point
     v_small = hw_bond_variance(1e-5, sr, T)
