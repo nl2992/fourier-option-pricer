@@ -27,7 +27,7 @@ try:
 
     __version__: str = _pkg_version("fourier-option-pricer")
 except _PNF:  # editable install without metadata yet
-    __version__ = "0.14.0"
+    __version__ = "0.15.0"
 
 from .analytics.bsm_asian import (
     bsm_discrete_geometric_asian,

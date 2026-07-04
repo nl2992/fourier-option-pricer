@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.15.0 - 2026-07-05
+
+- Upgraded the regime-switching model to a full regime-switching jump-diffusion: `RegimeSwitchingBsmParams` gains optional per-regime Merton jump blocks (`jump_intensities`, `jump_means`, `jump_stds`, all defaulting to no jumps, fully backward compatible). Each regime's Levy exponent becomes `-0.5 sigma_j^2 (u^2+iu) + lambda_j (phi_Y(u) - 1 - iu zeta_j)`, compensated regime-wise so `phi(-i) = 1` for any regime path; the matrix-exponential CF and the numeric CGF cumulants pick the jump blocks up automatically. Tests: zero-intensity equivalence with the pure-diffusion CF, single-regime reduction to the Merton CF and cumulants, zero-generator Merton mixture identity, martingale normalization, cross-engine (COS vs Hilbert) and parity checks, an exact occupation-time Monte Carlo (chain drawn via exponential holding times -- no time-discretization bias) at 200k paths, and jump-parameter validation.
+
 ## 0.14.0 - 2026-07-05
 
 - Added the PROJ double-barrier pricer for 1-D Levy models as `method="proj_double_barrier"` (`proj_double_barrier_price` exported): the Kirkby (2015) Toeplitz-FFT backward induction with absorption on *both* sides of the corridor (L, U) at each of the M monitoring dates; double knock-ins via same-engine in-out parity so the discrete-monitoring bias cancels. Tests: far-barrier reduction to the COS vanilla and to the single-barrier PROJ price, BSM agreement with the eigenfunction closed form at Broadie-Glasserman-Kou continuity-corrected barriers (rel 1e-2 at M=126/252) with monotone approach to the continuous limit, Kou vs a discretely monitored 200k-path Monte Carlo with the same monitoring grid, corridor monotonicity and knock-out bounds, in-out parity to 1e-8, pipeline dispatch, validation errors.

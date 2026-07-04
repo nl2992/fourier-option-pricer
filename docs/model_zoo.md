@@ -28,7 +28,7 @@ The unified dispatcher `fe.price_strip` routes through `foureng.models.registry.
 | Finite Moment Log Stable | `FMLSParams` | In-house implementation | Maximally negatively-skewed α-stable Lévy process; all positive moments of S_T are finite (Carr & Wu 2003). |
 | Double Heston | `DoubleHestonParams` | In-house implementation | Two independent Heston variance factors; CF factorises as a product of two single-Heston CFs. |
 | VGSA | `VGSAParams` | In-house implementation | Variance Gamma on a stochastic CIR activity clock; captures term-structure of skew and vol-of-vol clustering. |
-| Regime-Switching BSM | `RegimeSwitchingBsmParams` | In-house implementation | Markov-modulated volatility regimes; CF via the matrix exponential of the chain generator plus per-regime Levy exponents (Buffington & Elliott 2002). Cumulants by numeric CGF differentiation. |
+| Regime-Switching JD | `RegimeSwitchingBsmParams` | In-house implementation | Markov-modulated volatility regimes with optional per-regime Merton jump blocks; CF via the matrix exponential of the chain generator plus per-regime Levy exponents (Buffington & Elliott 2002). Cumulants by numeric CGF differentiation. |
 
 ## PyFENG dependency
 

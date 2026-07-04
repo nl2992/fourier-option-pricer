@@ -44,23 +44,37 @@ from .base import ForwardSpec, ModelSpec
 
 @dataclass(frozen=True)
 class RegimeSwitchingBsmParams(ModelSpec):
-    """Markov-modulated BSM parameters.
+    """Markov-modulated BSM parameters, optionally with per-regime Merton jumps.
 
-    sigmas        : per-regime diffusion volatilities (all > 0)
-    generator     : Markov-chain generator Q as a nested tuple; rows sum to
-                    zero and off-diagonal entries are >= 0
-    initial_probs : initial regime distribution pi_0 (sums to 1)
+    sigmas          : per-regime diffusion volatilities (all > 0)
+    generator       : Markov-chain generator Q as a nested tuple; rows sum to
+                      zero and off-diagonal entries are >= 0
+    initial_probs   : initial regime distribution pi_0 (sums to 1)
+    jump_intensities: optional per-regime Poisson intensities lambda_j >= 0
+                      (default: no jumps). When set, each regime carries a
+                      Merton compound-Poisson block with log-normal jump sizes
+                      N(jump_means[j], jump_stds[j]^2), compensated per regime
+                      so the martingale property is preserved (the
+                      regime-switching jump-diffusion of Kirkby's RS pricers).
+    jump_means      : per-regime mean log-jump sizes (required with intensities)
+    jump_stds       : per-regime log-jump standard deviations (>= 0)
     """
 
     sigmas: tuple[float, ...]
     generator: tuple[tuple[float, ...], ...]
     initial_probs: tuple[float, ...]
+    jump_intensities: tuple[float, ...]
+    jump_means: tuple[float, ...]
+    jump_stds: tuple[float, ...]
 
     def __init__(
         self,
         sigmas,
         generator,
         initial_probs,
+        jump_intensities=None,
+        jump_means=None,
+        jump_stds=None,
     ):
         object.__setattr__(self, "name", "regime_switching")
         object.__setattr__(self, "sigmas", tuple(float(s) for s in sigmas))
@@ -68,6 +82,16 @@ class RegimeSwitchingBsmParams(ModelSpec):
             self, "generator", tuple(tuple(float(x) for x in row) for row in generator)
         )
         object.__setattr__(self, "initial_probs", tuple(float(p) for p in initial_probs))
+        n = len(self.sigmas)
+        if jump_intensities is None:
+            jump_intensities = (0.0,) * n
+        if jump_means is None:
+            jump_means = (0.0,) * n
+        if jump_stds is None:
+            jump_stds = (0.0,) * n
+        object.__setattr__(self, "jump_intensities", tuple(float(x) for x in jump_intensities))
+        object.__setattr__(self, "jump_means", tuple(float(x) for x in jump_means))
+        object.__setattr__(self, "jump_stds", tuple(float(x) for x in jump_stds))
         self.__post_init__()
 
     def __post_init__(self) -> None:
@@ -76,6 +100,18 @@ class RegimeSwitchingBsmParams(ModelSpec):
             raise ValueError("RegimeSwitchingBsmParams: need at least one regime")
         if any(s <= 0.0 or not np.isfinite(s) for s in self.sigmas):
             raise ValueError(f"RegimeSwitchingBsmParams: all sigmas must be > 0; got {self.sigmas}")
+        for field_name in ("jump_intensities", "jump_means", "jump_stds"):
+            vals = getattr(self, field_name)
+            if len(vals) != n:
+                raise ValueError(
+                    f"RegimeSwitchingBsmParams: {field_name} must have length {n}; got {len(vals)}"
+                )
+            if not all(np.isfinite(v) for v in vals):
+                raise ValueError(f"RegimeSwitchingBsmParams: {field_name} must be finite")
+        if any(lam < 0.0 for lam in self.jump_intensities):
+            raise ValueError("RegimeSwitchingBsmParams: jump_intensities must be >= 0")
+        if any(sj < 0.0 for sj in self.jump_stds):
+            raise ValueError("RegimeSwitchingBsmParams: jump_stds must be >= 0")
         Q = np.asarray(self.generator, dtype=np.float64)
         if Q.shape != (n, n):
             raise ValueError(
@@ -104,10 +140,29 @@ class RegimeSwitchingBsmParams(ModelSpec):
         return len(self.sigmas)
 
 
-def _rs_phi_scalar(u: complex, T: float, p: RegimeSwitchingBsmParams) -> complex:
-    """phi(u) for one (possibly complex) frequency via the matrix exponential."""
+def _rs_psi(u: complex, p: RegimeSwitchingBsmParams) -> np.ndarray:
+    """Per-regime Levy exponents psi_j(u), martingale-compensated regime-wise.
+
+    Diffusion block ``-0.5 sigma_j^2 (u^2 + iu)`` plus, when jumps are active,
+    the compensated Merton block ``lambda_j (phi_Y(u) - 1 - iu zeta_j)`` with
+    ``zeta_j = exp(mu_j + s_j^2/2) - 1``. Each block vanishes at ``u = -i``, so
+    phi(-i) = 1 regardless of the regime path.
+    """
     sig2 = np.asarray(p.sigmas, dtype=np.float64) ** 2
     psi = -0.5 * sig2 * (u * u + 1j * u)
+    lam = np.asarray(p.jump_intensities, dtype=np.float64)
+    if np.any(lam > 0.0):
+        muj = np.asarray(p.jump_means, dtype=np.float64)
+        sj = np.asarray(p.jump_stds, dtype=np.float64)
+        zeta = np.expm1(muj + 0.5 * sj * sj)
+        phi_y = np.exp(1j * u * muj - 0.5 * sj * sj * u * u)
+        psi = psi + lam * (phi_y - 1.0 - 1j * u * zeta)
+    return psi
+
+
+def _rs_phi_scalar(u: complex, T: float, p: RegimeSwitchingBsmParams) -> complex:
+    """phi(u) for one (possibly complex) frequency via the matrix exponential."""
+    psi = _rs_psi(u, p)
     # Underflow guard: a generator has zero infinity-log-norm, so
     # |phi(u)| <= exp(T * max_j Re(psi_j)). Below the double-precision floor
     # return 0 instead of asking expm for a matrix it may turn into NaNs
@@ -147,13 +202,13 @@ def regime_switching_cumulants(
     analytic BSM cumulants to that accuracy.
     """
     T = fwd.T
-    sig2 = np.asarray(p.sigmas, dtype=np.float64) ** 2
     Q = np.asarray(p.generator, dtype=np.float64)
     p0 = np.asarray(p.initial_probs, dtype=np.float64)
     ones = np.ones(len(p.sigmas), dtype=np.float64)
 
     def K(s: float) -> float:
-        kappa = 0.5 * sig2 * (s * s - s)
+        # kappa_j(s) = psi_j(-is): real for real s, jump blocks included.
+        kappa = np.real(_rs_psi(complex(0.0, -s), p))
         return float(np.log(p0 @ expm(T * (Q + np.diag(kappa))) @ ones))
 
     # K(0) = 0 exactly; 4th-order central stencils for K' and K'', 2nd-order

@@ -253,7 +253,7 @@ Everything is importable from `import foureng as fe`.
 | `FMLSParams` | `alpha, sigma` | Finite Moment Log Stable |
 | `DoubleHestonParams` | `kappa1..v01, kappa2..v02` | Two-factor Heston |
 | `VGSAParams` | `C, G, M, kappa, eta, lam` | VG with stochastic activity |
-| `RegimeSwitchingBsmParams` | `sigmas, generator, initial_probs` | Markov regime-switching BSM (matrix-exponential CF) |
+| `RegimeSwitchingBsmParams` | `sigmas, generator, initial_probs` + optional `jump_intensities, jump_means, jump_stds` | Markov regime-switching jump-diffusion (matrix-exponential CF) |
 | `SabrParams` | `alpha, beta, rho, nu` | SABR implied-vol approximation |
 
 Full model details: [docs/model_zoo.md](docs/model_zoo.md).
@@ -465,7 +465,7 @@ Transform-method territory not yet covered here, in rough priority order (the fi
 - [ ] Step/fader options under Lévy models
 - [ ] CTMC (continuous-time Markov chain) approximation for barrier/American options under stochastic volatility and SABR
 - [ ] Swing options and credit default swaps via transform methods
-- [ ] Regime-switching jump-diffusion regimes (per-regime Lévy exponents beyond BSM)
+- [x] Regime-switching jump-diffusion regimes (per-regime Merton blocks, 0.15.0)
 - [ ] Stochastic-interest-rate hybrids (one-factor Hull-White composite CFs)
 
 Contributions welcome — see [CONTRIBUTING.md](CONTRIBUTING.md).

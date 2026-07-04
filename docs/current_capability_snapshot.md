@@ -28,7 +28,7 @@ This file tracks the capability surface used by the registry and dispatcher test
 | `fmls` | Lévy (FMLS) | no | stable |
 | `double_heston` | Two-factor SV | no | stable |
 | `vgsa` | VG with stochastic arrival | no | stable |
-| `regime_switching` | Markov regime-switching BSM | no | stable |
+| `regime_switching` | Markov regime-switching jump-diffusion (optional per-regime Merton jumps) | no | stable |
 
 ## Pricing methods
 

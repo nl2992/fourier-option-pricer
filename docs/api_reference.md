@@ -49,7 +49,7 @@ Each dataclass holds the calibrated parameters for one stochastic-volatility or 
 | `FMLSParams` | Finite Moment Log-Stable |
 | `DoubleHestonParams` | Double Heston |
 | `VGSAParams` | Variance Gamma with stochastic arrival |
-| `RegimeSwitchingBsmParams` | Markov regime-switching BSM: per-regime vols, chain generator, initial distribution |
+| `RegimeSwitchingBsmParams` | Markov regime-switching jump-diffusion: per-regime vols, chain generator, initial distribution, optional per-regime Merton jump blocks |
 | `SabrParams` | SABR: `alpha`, `beta`, `rho`, `nu`, `F`, `T`. |
 
 ---
