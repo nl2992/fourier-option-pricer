@@ -1,6 +1,6 @@
 """fourier-option-pricer: Fourier methods for European option pricing.
 
-All 20 model dataclasses, characteristic functions, and cumulants are
+All 21 model dataclasses, characteristic functions, and cumulants are
 available directly from this top-level package:
 
     import foureng as fe
@@ -27,7 +27,7 @@ try:
 
     __version__: str = _pkg_version("fourier-option-pricer")
 except _PNF:  # editable install without metadata yet
-    __version__ = "0.5.0"
+    __version__ = "0.11.0"
 
 from .analytics.bsm_asian import (
     bsm_discrete_geometric_asian,
@@ -176,7 +176,15 @@ from .surface import (
     svi_implied_vol,
     svi_total_variance,
 )
-from .utils.grids import CONVGrid, COSGrid, COSGridPolicy, FFTGrid, FRFTGrid, ProjGrid
+from .utils.grids import (
+    CONVGrid,
+    COSGrid,
+    COSGridPolicy,
+    FFTGrid,
+    FRFTGrid,
+    HilbertGrid,
+    ProjGrid,
+)
 from .utils.spectral_filters import COSFilterSpec, cos_filter_weights
 
 __all__ = [
@@ -185,7 +193,7 @@ __all__ = [
     "ForwardSpec",
     "CharFunc",
     "ModelSpec",
-    # models  -  params, CF, cumulants (all 20)
+    # models  -  params, CF, cumulants (all 21)
     "BsmParams",
     "bsm_cf",
     "bsm_cumulants",
@@ -262,6 +270,7 @@ __all__ = [
     "COSGridPolicy",
     "FFTGrid",
     "FRFTGrid",
+    "HilbertGrid",
     "CONVGrid",
     "LatticeGrid",
     "PDEGrid",

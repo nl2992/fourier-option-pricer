@@ -1,6 +1,47 @@
-# fourier-option-pricer
+<div align="center">
 
-Price European options under stochastic volatility and jump models using Fourier methods.
+# ⚡ fourier-option-pricer
+
+**One characteristic function in → a whole strike strip of near-machine-precision prices out.**
+
+*21 models · 9 Fourier engines · exotics · calibration · 1,900+ tests*
+
+[![CI](https://github.com/nl2992/fourier-option-pricer/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/nl2992/fourier-option-pricer/actions/workflows/ci.yml)
+[![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue.svg)](pyproject.toml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Ruff](https://img.shields.io/badge/lint-ruff-261230.svg)](pyproject.toml)
+[![Typed](https://img.shields.io/badge/types-mypy-blue.svg)](pyproject.toml)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/nl2992/fourier-option-pricer/blob/main/notebooks/demo.ipynb)
+
+</div>
+
+```python
+import numpy as np, foureng as fe
+
+fwd    = fe.ForwardSpec(S0=100.0, r=0.01, q=0.02, T=1.0)
+params = fe.HestonParams(kappa=4.0, theta=0.25, nu=1.0, rho=-0.5, v0=0.04)
+prices = fe.price_strip("heston", "cos_improved", np.array([80, 90, 100, 110, 120]), fwd, params)
+```
+
+Swap `"heston"` for any of 21 models, `"cos_improved"` for any of 9 engines. Same call, no rewiring.
+
+---
+
+## Engines at a glance
+
+| Engine | `method=` | Idea | Convergence |
+|--------|-----------|------|-------------|
+| COS | `cos` / `cos_improved` / `cos_filtered` | Fourier-cosine density expansion (Fang & Oosterlee 2008) + Junike truncation + adaptive spectral filtering | exponential |
+| Carr-Madan FFT | `carr_madan` | Damped-call FFT over log-strike (Carr & Madan 1999) | algebraic |
+| Fractional FFT | `frft` | FFT with decoupled strike/frequency spacing (Chourdakis 2004) | algebraic |
+| Hilbert transform | `hilbert` | Gil-Pelaez probabilities on the half-integer sinc grid (Feng & Linetsky 2008) | exponential |
+| CONV | `conv` | Probability-transform Fourier inversion | algebraic |
+| Lewis | internal | Parseval contour integral (Lewis 2001), used as adaptive fallback | spectral |
+| Mellin | `mellin` | Mellin-transform façade for selected Lévy models | — |
+| PROJ | `proj` | B-spline frame projection (Kirkby 2015/2017), European + Bermudan + barrier + Asian CV | polynomial (order-tunable) |
+| PyFENG FFT | `pyfeng_fft` | Third-party reference engine for 8 models | — |
+
+Plus non-Fourier baselines (CRR lattice, implicit PDE, Monte Carlo with control variates and LSMC) and product-level analytics for ~20 exotic payoffs.
 
 ---
 
@@ -22,9 +63,24 @@ where $c_1, c_2, c_4$ are the model's cumulants and $L$ is a heuristic multiplie
 
 This project implements the **improved COS truncation** of Junike & Pankrashkin (2022) and Junike (2024), which replaces the heuristic $L$ with a rigorous tail-mass bound. On the FO2008 test suite, this truncation improvement beats the paper-grid COS in 7 of 8 cases and beats the paper's own best-N result in 6 of 8 (see [`benchmarks/cos_method_improved/`](benchmarks/cos_method_improved/outputs/cos_method_improved_paper_compare.csv)). On top of that, we add an **original adaptive filtered-COS extension**: spectral weights $\sigma_k \in [0, 1]$ (Fejér, Lanczos, raised-cosine, or exponential) applied to the high-frequency COS coefficients to suppress residual oscillation from sharp density features. A policy-search selector automatically compares grid and filter combinations, returning the fastest configuration that meets the user's tolerance, with the plain Junike path always included as a fallback.
 
-The package covers **20 characteristic-function models** across stochastic-volatility, jump-diffusion, pure-Lévy, rough-volatility, and hybrid SVJ families, plus a SABR approximation surface. They are priced through one `price_strip` dispatcher with COS/FFT/FRFT/CONV, a first-slice Mellin façade, a real **PROJ frame-projection engine** (Kirkby 2015/2017, European vanilla plus a Bermudan-put recursion), BSM finite-difference/lattice baselines, and product-level exotic routes.
+The package covers **21 characteristic-function models** across stochastic-volatility, jump-diffusion, pure-Lévy, rough-volatility, regime-switching, and hybrid SVJ families, plus a SABR approximation surface. They are priced through one `price_strip` dispatcher with COS/FFT/FRFT/CONV, the **Feng-Linetsky Hilbert-transform engine**, a first-slice Mellin façade, a real **PROJ frame-projection engine** (Kirkby 2015/2017, European vanilla plus a Bermudan-put recursion), BSM finite-difference/lattice baselines, and product-level exotic routes.
 
 Full methodology: [appendix.md](appendix.md) · Extension details: [docs/filtered_cos_extension.md](docs/filtered_cos_extension.md) · Package architecture: [docs/architecture_overview.md](docs/architecture_overview.md).
+
+---
+
+## 🆕 What's new in 0.11.0
+
+Four capabilities ported into the Fourier stack from the transform-methods literature (the same territory covered by Kirkby's PROJ MATLAB toolbox), each implemented natively against `foureng`'s CF interfaces and validated against closed forms and Monte Carlo:
+
+| Capability | Use it via | The one-line math |
+|-----------|-----------|-------------------|
+| **Hilbert-transform pricer** — Feng & Linetsky (2008) | `price_strip(model, "hilbert", ...)` | $\Pi = \tfrac12 + \tfrac{h}{\pi}\sum_m \mathrm{Re}\big[e^{-iu_mk}\varphi(u_m)/(iu_m)\big]$ on $u_m=(m{+}\tfrac12)h$ — error decays like $e^{-c/h}$ |
+| **Regime-switching BSM** — Buffington & Elliott (2002) | `RegimeSwitchingBsmParams` + any CF engine | $\varphi(u) = \pi_0^\top e^{T(Q + \mathrm{diag}\,\psi_j(u))}\mathbf{1}$ |
+| **Exact Lévy geometric Asians** — Fusai & Meucci (2008) | `price(product, model, "asian_cf", ...)` | $\varphi_A(u) = \prod_j \varphi_{\Delta t_j}\!\big(u\,w_j\big)$ — the average's CF is a finite product, no lognormal proxy |
+| **Lévy variance-swap strikes** — Carr & Wu (2009) discrete analogue | `price(swap, model, "variance_levy_analytic", ...)` | $E[R_i^2] = \big((r{-}q)\Delta t_i + c_1\big)^2 + c_2$ per period, exact from CF cumulants |
+
+Also in 0.11.0: `cp=-1` is now honored uniformly across every Fourier engine (parity applied once at dispatch), and a long-standing drift omission in `merton_jd_cumulants` is fixed. Details in the [CHANGELOG](CHANGELOG.md).
 
 ---
 
@@ -197,6 +253,7 @@ Everything is importable from `import foureng as fe`.
 | `FMLSParams` | `alpha, sigma` | Finite Moment Log Stable |
 | `DoubleHestonParams` | `kappa1..v01, kappa2..v02` | Two-factor Heston |
 | `VGSAParams` | `C, G, M, kappa, eta, lam` | VG with stochastic activity |
+| `RegimeSwitchingBsmParams` | `sigmas, generator, initial_probs` | Markov regime-switching BSM (matrix-exponential CF) |
 | `SabrParams` | `alpha, beta, rho, nu` | SABR implied-vol approximation |
 
 Full model details: [docs/model_zoo.md](docs/model_zoo.md).
@@ -207,7 +264,7 @@ Full model details: [docs/model_zoo.md](docs/model_zoo.md).
 |----------|------------|---------|
 | `price_strip(model, method, strikes, fwd, params, grid=None)` | model label, method label, strike array, `ForwardSpec`, model params, optional grid | `np.ndarray` of call prices |
 
-Method labels: `"cos"`, `"cos_improved"`, `"cos_filtered"`, `"carr_madan"`, `"frft"`, `"conv"`, `"cos_bermudan"`, `"mellin"`, `"proj"`, `"pyfeng_fft"`, plus product-aware `"cos_digital"` / `"digital_bsm"` / `"monte_carlo"` / `"barrier_bsm"` / `"asian_bsm"` / `"asian_mc"` / `"double_barrier_mc"` / `"forward_start_bsm"` / `"exchange_bsm"` / `"spread_bsm"` / `"multi_asset_mc"` / `"lookback_bsm"` / `"lookback_mc"` / `"variance_analytic_bsm"` / `"variance_mc"` / `"cliquet_mc"` and SABR-only `"sabr_hagan"`.
+Method labels: `"cos"`, `"cos_improved"`, `"cos_filtered"`, `"carr_madan"`, `"frft"`, `"conv"`, `"hilbert"`, `"cos_bermudan"`, `"mellin"`, `"proj"`, `"pyfeng_fft"`, plus product-aware `"asian_cf"` / `"variance_levy_analytic"` (exact Lévy geometric Asians and variance-swap strikes) and `"cos_digital"` / `"digital_bsm"` / `"monte_carlo"` / `"barrier_bsm"` / `"asian_bsm"` / `"asian_mc"` / `"double_barrier_mc"` / `"forward_start_bsm"` / `"exchange_bsm"` / `"spread_bsm"` / `"multi_asset_mc"` / `"lookback_bsm"` / `"lookback_mc"` / `"variance_analytic_bsm"` / `"variance_mc"` / `"cliquet_mc"` and SABR-only `"sabr_hagan"`.
 
 Product-level pricing uses `price(product, model, method, fwd, params)`. It currently routes European options, cash-or-nothing and asset-or-nothing digitals via `"cos_digital"` or BSM `"digital_bsm"`, supported 1-D Levy Bermudans via `"cos_bermudan"`, BSM generic Monte Carlo / Longstaff-Schwartz via `"monte_carlo"` for Europeans, Americans, Bermudans, and the GBM-simulated exotic book, continuously monitored zero-rebate BSM single barriers via `"barrier_bsm"`, BSM Asians via `"asian_bsm"` / `"asian_mc"`, BSM forward-start options via `"forward_start_bsm"`, BSM two-asset exchange options via `"exchange_bsm"` / `"multi_asset_mc"`, BSM basket and best-of options via `"multi_asset_mc"`, BSM spread options via `"spread_bsm"` / `"multi_asset_mc"`, BSM lookbacks via `"lookback_bsm"` / `"lookback_mc"`, BSM variance swaps via `"variance_analytic_bsm"` / `"variance_mc"`, integrated-variance BSM options via `"variance_analytic_bsm"` and realised/integrated BSM variance options via `"variance_mc"`, BSM cliquets via `"cliquet_mc"`, and BSM double barriers via `"double_barrier_mc"`.
 
@@ -236,6 +293,9 @@ All MC functions take a `GBMPathSpec(n_paths, n_steps, seed, antithetic)` config
 | `bsm_pde_fd_price_at_strikes(fwd, params, strikes, grid=None)` | BSM inputs, `PDEGrid`, strike array | `np.ndarray` |
 | `bsm_barrier_price(S, K, H, r, q, T, sigma, barrier_type, cp=1)` | BSM single-barrier inputs | `float` |
 | `bsm_discrete_geometric_asian(S, K, r, q, monitoring_times, sigma, cp=1)` | BSM geometric-Asian inputs | `float` |
+| `hilbert_price_at_strikes(phi, fwd, strikes, cp=1, grid=None)` | CF, `ForwardSpec`, strike array, optional `HilbertGrid` | `np.ndarray` |
+| `levy_geometric_asian_price(model, fwd, params, strikes=..., monitoring_times=..., cp=1)` | Lévy model key, market inputs, fixings | `np.ndarray` |
+| `levy_variance_fair_strike(model, fwd, params, sampling_times)` | Lévy model key, market inputs, observation dates | `float` (annualized E[RV]) |
 | `sabr_hagan_price_at_strikes(fwd, params, strikes)` | `ForwardSpec`, `SabrParams`, strike array | `np.ndarray` |
 
 ### Grid constructors
@@ -247,6 +307,7 @@ All MC functions take a `GBMPathSpec(n_paths, n_steps, seed, antithetic)` config
 | `FFTGrid(N, eta, alpha)` | FFT size, frequency spacing, damping factor | Carr-Madan FFT grid |
 | `FRFTGrid(N, eta, lam, alpha)` | size, freq spacing, strike step, damping | FRFT grid |
 | `CONVGrid(N, u_max)` | positive-frequency node count and cutoff | CONV-style Fourier inversion grid |
+| `HilbertGrid(h, N)` | frequency step and half-integer node count | Feng-Linetsky discrete Hilbert transform grid |
 | `LatticeGrid(steps)` | tree step count | BSM CRR lattice grid |
 | `PDEGrid(spot_steps, time_steps, s_max_mult)` | finite-difference grid controls | BSM implicit finite-difference grid |
 
@@ -342,7 +403,7 @@ python -m pytest -q -m "paper"
 python -m pytest -q -m "software_reference"
 ```
 
-The repository has 800+ pytest cases.
+The repository has 1,900+ pytest cases.
 
 For linting and type checks:
 
@@ -383,8 +444,27 @@ python -m mypy foureng
 | Lewis benchmark | Lewis, A.L. (2001), *A Simple Option Formula for General Jump-Diffusion and Other Exponential Lévy Processes* |
 | Kou jump-diffusion | Kou, S.G. (2002), *A Jump-Diffusion Model for Option Pricing* |
 | Bates SVJ | Bates, D.S. (1996), *Jumps and Stochastic Volatility: Exchange Rate Processes Implicit in Deutsche Mark Options* |
+| Hilbert-transform pricing | Feng, L. and Linetsky, V. (2008), *Pricing Discretely Monitored Barrier Options and Defaultable Bonds in Lévy Process Models: A Fast Hilbert Transform Approach* |
+| Regime switching | Buffington, J. and Elliott, R.J. (2002), *American Options with Regime Switching* |
+| Lévy geometric Asians | Fusai, G. and Meucci, A. (2008), *Pricing Discretely Monitored Asian Options under Lévy Processes* |
+| Variance swaps under jumps | Carr, P. and Wu, L. (2009), *Variance Risk Premiums* |
+| PROJ frame projection | Kirkby, J.L. (2015), *Efficient Option Pricing by Frame Duality with the Fast Fourier Transform* |
 
 Full bibliography with DOIs and free-access links: [docs/papers.md](docs/papers.md).
+
+---
+
+## Roadmap
+
+Transform-method territory not yet covered here, in rough priority order (the first block tracks capabilities popularized by the PROJ/CTMC MATLAB literature):
+
+- [ ] PROJ double-barrier and step/fader options under Lévy models
+- [ ] CTMC (continuous-time Markov chain) approximation for barrier/American options under stochastic volatility and SABR
+- [ ] Swing options and credit default swaps via transform methods
+- [ ] Regime-switching jump-diffusion regimes (per-regime Lévy exponents beyond BSM)
+- [ ] Stochastic-interest-rate hybrids (one-factor Hull-White composite CFs)
+
+Contributions welcome — see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 

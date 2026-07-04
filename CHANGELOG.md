@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.11.0 - 2026-07-04
+
+Transform-methods expansion: four new pricing capabilities, inspired by the coverage of the PROJ MATLAB option-pricing toolboxes and implemented natively on the `foureng` CF stack, plus two correctness fixes surfaced by the new cross-checks.
+
+**New engines and models**
+
+- Added the Hilbert-transform European pricer (Feng & Linetsky 2008) as `method="hilbert"` in `price_strip`: Gil-Pelaez tail probabilities on the half-integer sinc grid `u_m = (m + 1/2)h`, exponentially convergent for strip-analytic CFs. New `HilbertGrid` dataclass; `hilbert_price_at_strikes` and `hilbert_itm_probabilities` exported. Under BSM the probabilities reproduce `N(d1)`/`N(d2)` to 1e-10.
+- Added the Markov regime-switching BSM model (Buffington & Elliott 2002) as registry model `"regime_switching"`: CF via the matrix exponential `pi0' expm(T(Q + diag(psi_j(u)))) 1` with per-regime martingale drift; cumulants by 4th-order finite differences of the CGF. Prices through every CF engine. Tests include the fast-switching homogenization limit and single-regime/zero-generator degeneracies.
+- Added the exact discrete geometric-Asian pricer for Levy models (Fusai & Meucci 2008) as `method="asian_cf"`: the average's CF is the finite product of per-increment CFs at scaled frequencies — no lognormal approximation. Matches the discrete Kemna-Vorst BSM closed form to 1e-8 and Kou Monte Carlo within the confidence band. `levy_geometric_asian_price` exported.
+- Added exact discrete variance-swap fair strikes for Levy models as `method="variance_levy_analytic"`: per-period squared-return expectations from CF cumulants, `E[R^2] = ((r-q)dt + c1)^2 + c2`; prices jump risk (Carr-Wu 2009 discrete analogue) and collapses to the BSM closed form at zero intensity. `levy_variance_fair_strike` and `levy_variance_swap` exported.
+
+**Fixes**
+
+- `price_strip` now honors `cp=-1` for the call-only Fourier engines (`cos`, `cos_improved`, `cos_filtered`, `frft`, `carr_madan`) via a single parity conversion at dispatch level; previously these silently returned call prices.
+- `merton_jd_cumulants` was missing the `-sigma^2/2` diffusion drift in `c1` (the CF already had it), which off-centered COS/PROJ truncation windows for Merton.
+- CI restored to green: repo-wide ruff lint/format cleanup, SABR implied-vol signature widened to strike arrays, and the mypy analysis target bumped to 3.12 so it can parse numpy >= 2.5 PEP 695 stubs.
+
 ## 0.10.0 - 2026-07-01
 
 - Added SSVI (Surface SVI) joint surface parameterization (Gatheral & Jacquier 2014) in `foureng/surface/ssvi.py`: `SSVIParams` dataclass (rho, eta, gamma), `ssvi_phi_power_law` and `ssvi_phi_heston` phi functions, `ssvi_total_variance`, `ssvi_implied_vol`, `ssvi_check_butterfly_free` (sufficient condition eta*(1+|rho|) <= 4), `ssvi_check_calendar_free` (phi non-increasing check), `fit_ssvi_surface` (two-stage joint calibration: per-slice ATM total variance then global L-BFGS-B for rho/eta/gamma).

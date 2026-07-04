@@ -49,6 +49,7 @@ Each dataclass holds the calibrated parameters for one stochastic-volatility or 
 | `FMLSParams` | Finite Moment Log-Stable |
 | `DoubleHestonParams` | Double Heston |
 | `VGSAParams` | Variance Gamma with stochastic arrival |
+| `RegimeSwitchingBsmParams` | Markov regime-switching BSM: per-regime vols, chain generator, initial distribution |
 | `SabrParams` | SABR: `alpha`, `beta`, `rho`, `nu`, `F`, `T`. |
 
 ---
@@ -145,6 +146,7 @@ Each model exposes a cumulant function that returns the first four log-return cu
 | `LatticeGrid` | `n_steps` | Binomial/trinomial lattice grid. |
 | `PDEGrid` | `n_steps`, `n_spot`, `theta` | Finite-difference PDE grid. |
 | `ProjGrid` | `N`, `alph`, `order` | PROJ frame-projection grid (Haar/linear/quadratic/cubic B-spline). |
+| `HilbertGrid` | `h`, `N` | Feng-Linetsky half-integer sinc grid for the discrete Hilbert transform. |
 
 ### Grid builders
 
@@ -184,6 +186,9 @@ Each model exposes a cumulant function that returns the first four log-return cu
 | `lewis_call_prices(cf, grid, fwd_spec, strikes)` | CF, `COSGrid`, forward spec, strikes | Lewis pricer returning call prices. |
 | `conv_price_at_strikes(cf, grid, fwd_spec, strikes)` | CF, `CONVGrid`, forward spec, strikes | CONV method (Lord et al. 2008) evaluated at specific strikes. |
 | `mellin_price_at_strikes(cf, grid, fwd_spec, strikes)` | CF, forward spec, strikes | Mellin-transform pricer evaluated at specific strikes. |
+| `hilbert_price_at_strikes(phi, fwd, strikes, cp=1, grid=None)` | CF, forward spec, strikes | Feng-Linetsky (2008) Hilbert-transform pricer; exponentially convergent Gil-Pelaez probabilities. |
+| `hilbert_itm_probabilities(phi, fwd, strikes, grid=None)` | CF, forward spec, strikes | Share- and cash-measure ITM probabilities (Pi_1, Pi_2); N(d1)/N(d2) under BSM. |
+| `levy_geometric_asian_price(model, fwd, params, strikes=..., monitoring_times=..., cp=1)` | Levy model key, market inputs, fixings | Exact discrete geometric-Asian prices via the per-increment CF product (Fusai-Meucci 2008). |
 | `filtered_cos_prices(cf, grid, fwd_spec, strikes, spec)` | CF, `COSGrid`, forward spec, strikes, `COSFilterSpec` | COS with Conze-Viswanathan or exponential filters to suppress Gibbs oscillations. |
 
 ---
@@ -294,6 +299,8 @@ Exact closed-form prices for non-vanilla payoffs under BSM dynamics.
 | `bsm_geometric_asian(fwd_spec, K, n)` | forward spec, strike, number of fixings | Geometric-average Asian option closed form. |
 | `bsm_geometric_asian_parity(fwd_spec, K, n)` | forward spec, strike, number of fixings | Put-call parity check for geometric Asian. |
 | `bsm_variance_swap(fwd_spec)` | forward spec | Fair variance swap strike under BSM (equals `sigma^2`). |
+| `levy_variance_fair_strike(model, fwd, params, sampling_times, maturity=None)` | Levy model key, market inputs, dates | Exact annualized E[RV] from per-increment CF cumulants; prices jump risk. |
+| `levy_variance_swap(model, fwd, params, product)` | Levy model key, market inputs, `VarianceSwap` | Discounted variance-swap value, `disc * notional * E[RV]`. |
 | `bsm_variance_option_integrated(fwd_spec, K_var, option_type)` | forward spec, variance strike, option type | Variance call or put price via integrated BSM formula. |
 | `bsm_gap_call(fwd_spec, K1, K2)` | forward spec, trigger strike, payoff strike | Gap call: pays `S - K2` if `S > K1`. |
 | `bsm_discrete_geometric_asian(fwd_spec, K, fixing_times)` | forward spec, strike, fixing schedule | Geometric Asian with an explicit fixing schedule. |

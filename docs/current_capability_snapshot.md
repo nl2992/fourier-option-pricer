@@ -1,9 +1,10 @@
 # Current Capability Snapshot (expanded baseline)
 
-Updated 2026-06-08 after the Monte Carlo / LSMC expansion.
+Updated 2026-07-04 after the transform-methods expansion (Hilbert transform,
+regime switching, exact Levy geometric Asians and variance swaps).
 This file tracks the capability surface used by the registry and dispatcher tests.
 
-## Model registry (20 models)
+## Model registry (21 models)
 
 | Key | Family | PyFENG FFT | Status |
 |-----|--------|-----------|--------|
@@ -27,6 +28,7 @@ This file tracks the capability surface used by the registry and dispatcher test
 | `fmls` | Lévy (FMLS) | no | stable |
 | `double_heston` | Two-factor SV | no | stable |
 | `vgsa` | VG with stochastic arrival | no | stable |
+| `regime_switching` | Markov regime-switching BSM | no | stable |
 
 ## Pricing methods
 
@@ -38,6 +40,9 @@ This file tracks the capability surface used by the registry and dispatcher test
 | `carr_madan` | FFT / Carr-Madan 1999 | Carr & Madan (1999) |
 | `frft` | FRFT / Chourdakis 2004 | Chourdakis (2004) |
 | `pyfeng_fft` | PyFENG native FFT | pyfeng package |
+| `hilbert` | Discrete Hilbert transform on the half-integer sinc grid | Feng & Linetsky (2008) |
+| `asian_cf` | Exact Levy geometric-Asian via per-increment CF product | Fusai & Meucci (2008) |
+| `variance_levy_analytic` | Exact discrete variance-swap fair strike from CF cumulants | Carr & Wu (2009), discrete analogue |
 | `conv` | CONV-style Fourier probability inversion | Choi/Kirkby MATLAB comparison target |
 | `lattice` | BSM Cox-Ross-Rubinstein tree | Cox, Ross & Rubinstein (1979) |
 | `pde_fd` | BSM implicit finite difference | Black-Scholes PDE |
