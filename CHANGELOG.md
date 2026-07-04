@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.13.0 - 2026-07-05
+
+- Added the exact locally collared cliquet pricer for Levy models as `method="cliquet_cf"`: each period's collared return `clip(R_k, lf, lc)` is a static call spread `lf + (R-lf)^+ - (R-lc)^+` priced by COS on a unit-spot asset over the period; additive payoffs sum and multiplicative payoffs factorize by independence of Levy increments. Non-positive strikes (no floor) handled analytically via `E[(R-a)^+] = E[R] - a`. Global floors/caps couple the periods and are rejected in favor of `cliquet_mc`. `levy_cliquet_price` exported. Tests: no-collar closed forms, one-period floor-at-zero == ATM-forward COS call identity, BSM vs the existing `cliquet_mc` engine (400k paths), Kou vs in-test jump Monte Carlo (200k paths), cp sign flip, collar bounds, pipeline dispatch, global-collar/model rejection.
+
 ## 0.12.0 - 2026-07-04
 
 - Docs audit: `docs/api_reference.md` backfilled with every public symbol shipped in 0.7.0-0.12.0 (analytic BSM Greeks, compound/chooser/quanto, SVI/SSVI/local-vol/SABR-smile calibration, regime-switching CF pair, PROJ barrier/Asian entries) and its version example refreshed; capability snapshot now lists the full method registry; stale twenty-model counts fixed in the model zoo, appendix, and README.
