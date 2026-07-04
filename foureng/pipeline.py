@@ -1163,17 +1163,23 @@ def price(
                 "price(): product_type='variance_swap' must be represented by "
                 f"VarianceSwap, got {type(product).__name__!r}"
             )
+        fwd_t = _FwdSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=product.maturity)
+        if method == "variance_levy_analytic":
+            from .analytics.levy_variance import levy_variance_swap
+
+            return levy_variance_swap(model, fwd_t, params, product)
         if model != "bsm":
             raise NotImplementedError(
-                f"method={method!r} is currently implemented only for model='bsm'."
+                f"method={method!r} is currently implemented only for model='bsm' "
+                "(use method='variance_levy_analytic' for Levy jump models)."
             )
-        fwd_t = _FwdSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=product.maturity)
         if method == "variance_analytic_bsm":
             return bsm_variance_swap(fwd_t, params, product)
         if method not in {"variance_mc", "monte_carlo"}:
             raise NotImplementedError(
-                "Variance-swap pricing currently supports method='variance_analytic_bsm' "
-                "or method='variance_mc' / method='monte_carlo'."
+                "Variance-swap pricing currently supports method='variance_analytic_bsm', "
+                "method='variance_levy_analytic', or method='variance_mc' / "
+                "method='monte_carlo'."
             )
         mc_spec = grid if isinstance(grid, MCSpec) else MCSpec(n_steps=len(product.sampling_times))
         return mc_price(fwd_t, params.sigma, product, mc_spec).price

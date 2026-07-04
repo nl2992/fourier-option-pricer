@@ -263,6 +263,17 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
             "deterministic integrated-variance options."
         ),
     ),
+    "variance_levy_analytic": MethodSpec(
+        requires_cf=True,
+        supports_products=frozenset({"variance_swap"}),
+        supports_exercise=frozenset({"european"}),
+        supports_path_dependent=True,
+        notes=(
+            "Exact discrete variance-swap fair strike for Levy models from "
+            "per-increment CF cumulants; reduces to the BSM closed form when "
+            "jumps are switched off."
+        ),
+    ),
     "variance_mc": MethodSpec(
         requires_cf=False,
         requires_simulation=True,

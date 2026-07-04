@@ -56,6 +56,7 @@ from .analytics.bsm_greeks import (
 )
 from .analytics.bsm_quanto import bsm_quanto_forward, bsm_quanto_option
 from .analytics.bsm_variance import bsm_variance_option_integrated, bsm_variance_swap
+from .analytics.levy_variance import levy_variance_fair_strike, levy_variance_swap
 from .greeks import (
     COSGreeks,
     cos_delta_gamma,
@@ -282,6 +283,8 @@ __all__ = [
     "hilbert_itm_probabilities",
     "hilbert_price_at_strikes",
     "levy_geometric_asian_price",
+    "levy_variance_fair_strike",
+    "levy_variance_swap",
     "lewis_call_prices",
     "lewis_prices",
     "mellin_price_at_strikes",
