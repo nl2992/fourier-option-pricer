@@ -187,6 +187,17 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
         supports_path_dependent=True,
         notes="Closed-form BSM discretely monitored fixed-strike geometric Asian pricer.",
     ),
+    "asian_cf": MethodSpec(
+        requires_cf=True,
+        supports_products=frozenset({"asian"}),
+        supports_exercise=frozenset({"european"}),
+        supports_path_dependent=True,
+        notes=(
+            "Exact discrete geometric-Asian pricer for Levy models: the average's "
+            "CF is the product of per-increment CFs (Fusai-Meucci 2008), inverted "
+            "with COS. No lognormal approximation."
+        ),
+    ),
     "asian_mc": MethodSpec(
         requires_cf=False,
         requires_simulation=True,

@@ -877,6 +877,25 @@ def price(
             )
         if method == "proj_asian":
             return _proj_asian_price_dispatch(model, fwd, params, product)
+        if method == "asian_cf":
+            from .pricers.geometric_asian import levy_geometric_asian_price
+
+            if product.average_type != "geometric" or product.strike_type != "fixed":
+                raise NotImplementedError(
+                    "method='asian_cf' supports fixed-strike geometric Asians only "
+                    "(the arithmetic average has no closed CF; use 'proj_asian' or "
+                    "'monte_carlo')."
+                )
+            return float(
+                levy_geometric_asian_price(
+                    model,
+                    fwd,
+                    params,
+                    strikes=product.strike,
+                    monitoring_times=product.monitoring_times,
+                    cp=product.cp,
+                )[0]
+            )
         if model != "bsm":
             raise NotImplementedError(
                 "Asian pricing is currently implemented only for model='bsm' "
