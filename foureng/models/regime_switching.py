@@ -108,10 +108,19 @@ def _rs_phi_scalar(u: complex, T: float, p: RegimeSwitchingBsmParams) -> complex
     """phi(u) for one (possibly complex) frequency via the matrix exponential."""
     sig2 = np.asarray(p.sigmas, dtype=np.float64) ** 2
     psi = -0.5 * sig2 * (u * u + 1j * u)
+    # Underflow guard: a generator has zero infinity-log-norm, so
+    # |phi(u)| <= exp(T * max_j Re(psi_j)). Below the double-precision floor
+    # return 0 instead of asking expm for a matrix it may turn into NaNs
+    # (older SciPy releases overflow internally on such extreme diagonals).
+    if T * float(np.max(psi.real)) < -700.0:
+        return 0.0j
     Q = np.asarray(p.generator, dtype=np.complex128)
     M = expm(T * (Q + np.diag(psi)))
     p0 = np.asarray(p.initial_probs, dtype=np.complex128)
-    return complex(p0 @ M @ np.ones(len(p.sigmas), dtype=np.complex128))
+    val = complex(p0 @ M @ np.ones(len(p.sigmas), dtype=np.complex128))
+    if not (np.isfinite(val.real) and np.isfinite(val.imag)):
+        return 0.0j
+    return val
 
 
 def regime_switching_cf(u: np.ndarray, fwd: ForwardSpec, p: RegimeSwitchingBsmParams) -> np.ndarray:
