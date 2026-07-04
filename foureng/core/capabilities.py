@@ -293,6 +293,18 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
         supports_path_dependent=True,
         notes="BSM Monte Carlo pricer for realized-variance swaps and variance options.",
     ),
+    "cliquet_cf": MethodSpec(
+        requires_cf=True,
+        supports_products=frozenset({"cliquet"}),
+        supports_exercise=frozenset({"european"}),
+        supports_path_dependent=True,
+        notes=(
+            "Exact locally collared cliquet for Levy models: each period's "
+            "collared return is a static call spread priced by COS; additive "
+            "sums and multiplicative products factorize by independence. "
+            "Global collars are rejected (use cliquet_mc)."
+        ),
+    ),
     "cliquet_mc": MethodSpec(
         requires_cf=False,
         requires_simulation=True,

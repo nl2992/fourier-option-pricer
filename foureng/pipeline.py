@@ -1237,13 +1237,19 @@ def price(
                 "price(): product_type='cliquet' must be represented by "
                 f"CliquetOption, got {type(product).__name__!r}"
             )
+        if method == "cliquet_cf":
+            from .pricers.cliquet import levy_cliquet_price
+
+            return levy_cliquet_price(model, fwd, params, product)
         if method not in {"cliquet_mc", "monte_carlo"}:
             raise NotImplementedError(
-                "Cliquet pricing currently supports method='cliquet_mc' or method='monte_carlo'."
+                "Cliquet pricing currently supports method='cliquet_cf' (locally "
+                "collared, Levy models), method='cliquet_mc', or method='monte_carlo'."
             )
         if model != "bsm":
             raise NotImplementedError(
-                f"method={method!r} is currently implemented only for model='bsm'."
+                f"method={method!r} is currently implemented only for model='bsm' "
+                "(use method='cliquet_cf' for Levy models without global collars)."
             )
         mc_spec = grid if isinstance(grid, MCSpec) else MCSpec(n_steps=len(product.reset_times))
         fwd_t = _FwdSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=product.maturity)
