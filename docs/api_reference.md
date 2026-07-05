@@ -88,7 +88,7 @@ All characteristic functions accept a model parameter dataclass and a complex-va
 
 | Function | Signature | Purpose |
 |----------|-----------|---------|
-| `sabr_hagan_implied_vol(F, K, T, params)` | forward, strike, maturity, `SabrParams` | Hagan et al. (2002) lognormal SABR implied-vol approximation. Returns a float. |
+| `sabr_hagan_implied_vol(F, K, T, alpha, beta, rho, nu)` | forward, strike, maturity, `SabrParams` | Hagan et al. (2002) lognormal SABR implied-vol approximation. Returns a float. |
 
 ### Cumulants
 
@@ -133,8 +133,8 @@ Each model exposes a cumulant function that returns the first four log-return cu
 
 | Function | Signature | Purpose |
 |----------|-----------|---------|
-| `price(product, model_params, fwd_spec, **kwargs)` | product spec, model dataclass, forward spec | Product-aware dispatcher: routes to the correct pricer based on product type and model. Returns a scalar price. |
-| `price_strip(strikes, option_type, model_params, fwd_spec, method=..., **kwargs)` | strike array, "call"/"put", model dataclass, forward spec | Prices a strip of European options at multiple strikes. Returns an array. |
+| `price(product, model, method, fwd, params, grid=...)` | product spec, model dataclass, forward spec | Product-aware dispatcher: routes to the correct pricer based on product type and model. Returns a scalar price. |
+| `price_strip(model, method, strikes, fwd, params, grid=..., cp=...)` | strike array, "call"/"put", model dataclass, forward spec | Prices a strip of European options at multiple strikes. Returns an array. |
 
 ---
 
@@ -171,11 +171,11 @@ Each model exposes a cumulant function that returns the first four log-return cu
 |------|------|-------------|
 | `COSResult` | dataclass | Holds prices, Greeks, and diagnostics from a COS computation. |
 | `COSPolicyDecision` | dataclass | Stores the resolved `COSGrid` and the policy that produced it. |
-| `cos_adaptive_decision(model, params, T, ...)` | function | Returns a `COSPolicyDecision` for a given model, adapting to accuracy requirements. |
-| `cos_prices(cf, grid, fwd_spec, strikes, ...)` | function | Core COS pricer. Returns an array of call/put prices. |
-| `cos_bermudan_price(cf, grid, fwd_spec, ...)` | function | COS Bermudan pricing via backward induction. |
+| `cos_adaptive_decision(cumulants, model=..., params=..., policy=..., strike_count=...)` | function | Returns a `COSPolicyDecision` for a given model, adapting to accuracy requirements. |
+| `cos_prices(phi, fwd, strikes, grid, payoff_mode=..., call_direct_width_max=..., ...)` | function | Core COS pricer. Returns an array of call/put prices. |
+| `cos_bermudan_price(model, fwd, params, product, grid=..., n_spatial=..., ...)` | function | COS Bermudan pricing via backward induction. |
 | `cos_bermudan_price_strip(...)` | function | COS Bermudan pricer over a strike strip. |
-| `cos_digital_price(cf, grid, fwd_spec, ...)` | function | COS pricing for cash-or-nothing and asset-or-nothing digitals. |
+| `cos_digital_price(model, fwd, params, product, grid=..., N=..., L=...)` | function | COS pricing for cash-or-nothing and asset-or-nothing digitals. |
 | `cos_digital_price_strip(...)` | function | COS digital pricer over a strike strip. |
 
 ---
@@ -184,21 +184,21 @@ Each model exposes a cumulant function that returns the first four log-return cu
 
 | Function | Signature | Purpose |
 |----------|-----------|---------|
-| `carr_madan_fft_prices(cf, grid, fwd_spec)` | CF, `FFTGrid`, forward spec | Carr-Madan (1999) FFT pricer. Returns prices on the FFT log-strike grid. |
-| `carr_madan_price_at_strikes(cf, grid, fwd_spec, strikes)` | CF, `FFTGrid`, forward spec, strikes | FFT pricer interpolated to specific strikes. |
-| `frft_prices(cf, grid, fwd_spec)` | CF, `FRFTGrid`, forward spec | Fractional FFT pricer. Returns prices on the FRFT log-strike grid. |
-| `frft_price_at_strikes(cf, grid, fwd_spec, strikes)` | CF, `FRFTGrid`, forward spec, strikes | FRFT pricer interpolated to specific strikes. |
-| `lewis_prices(cf, grid, fwd_spec, strikes)` | CF, `COSGrid`, forward spec, strikes | Lewis (2001) call integral formula. |
-| `lewis_call_prices(cf, grid, fwd_spec, strikes)` | CF, `COSGrid`, forward spec, strikes | Lewis pricer returning call prices. |
-| `conv_price_at_strikes(cf, grid, fwd_spec, strikes)` | CF, `CONVGrid`, forward spec, strikes | CONV method (Lord et al. 2008) evaluated at specific strikes. |
-| `mellin_price_at_strikes(cf, grid, fwd_spec, strikes)` | CF, forward spec, strikes | Mellin-transform pricer evaluated at specific strikes. |
+| `carr_madan_fft_prices(phi, fwd, grid, k0=...)` | CF, `FFTGrid`, forward spec | Carr-Madan (1999) FFT pricer. Returns prices on the FFT log-strike grid. |
+| `carr_madan_price_at_strikes(phi, fwd, grid, strikes, window_factor=...)` | CF, `FFTGrid`, forward spec, strikes | FFT pricer interpolated to specific strikes. |
+| `frft_prices(phi, fwd, grid, k0=...)` | CF, `FRFTGrid`, forward spec | Fractional FFT pricer. Returns prices on the FRFT log-strike grid. |
+| `frft_price_at_strikes(phi, fwd, grid, strikes, window_factor=...)` | CF, `FRFTGrid`, forward spec, strikes | FRFT pricer interpolated to specific strikes. |
+| `lewis_prices(cf, strikes, spot, texp, cp=..., intr=..., ...)` | CF, `COSGrid`, forward spec, strikes | Lewis (2001) call integral formula. |
+| `lewis_call_prices(cf, strikes, spot, texp, intr=..., divr=..., ...)` | CF, `COSGrid`, forward spec, strikes | Lewis pricer returning call prices. |
+| `conv_price_at_strikes(phi, fwd, grid, strikes, cp=...)` | CF, `CONVGrid`, forward spec, strikes | CONV method (Lord et al. 2008) evaluated at specific strikes. |
+| `mellin_price_at_strikes(phi, fwd, strikes, cp=..., grid=...)` | CF, forward spec, strikes | Mellin-transform pricer evaluated at specific strikes. |
 | `hilbert_price_at_strikes(phi, fwd, strikes, cp=1, grid=None)` | CF, forward spec, strikes | Feng-Linetsky (2008) Hilbert-transform pricer; exponentially convergent Gil-Pelaez probabilities. |
 | `hilbert_itm_probabilities(phi, fwd, strikes, grid=None)` | CF, forward spec, strikes | Share- and cash-measure ITM probabilities (Pi_1, Pi_2); N(d1)/N(d2) under BSM. |
 | `levy_geometric_asian_price(model, fwd, params, strikes=..., monitoring_times=..., cp=1)` | Levy model key, market inputs, fixings | Exact discrete geometric-Asian prices via the per-increment CF product (Fusai-Meucci 2008). |
 | `levy_forward_start_price(model, fwd, params, alpha=..., start_time=..., maturity=..., cp=1)` | Levy model key, market inputs, strike ratio, reset date | Exact Levy forward-start price via homogeneity factorization; COS European leg. |
 | `levy_cliquet_price(model, fwd, params, product)` | Levy model key, market inputs, `CliquetOption` | Exact locally collared cliquet: per-period COS call spreads, additive or multiplicative. |
 | `levy_fader_price(model, fwd, params, product)` | Levy model key, market inputs, `FaderOption` | Fade-in/fade-out via per-date COS density times the remaining-life European strip. |
-| `filtered_cos_prices(cf, grid, fwd_spec, strikes, spec)` | CF, `COSGrid`, forward spec, strikes, `COSFilterSpec` | COS with Conze-Viswanathan or exponential filters to suppress Gibbs oscillations. |
+| `filtered_cos_prices(phi, fwd, strikes, grid, filter_spec=..., payoff_mode=...)` | CF, `COSGrid`, forward spec, strikes, `COSFilterSpec` | COS with Conze-Viswanathan or exponential filters to suppress Gibbs oscillations. |
 
 ---
 
@@ -206,9 +206,9 @@ Each model exposes a cumulant function that returns the first four log-return cu
 
 | Function | Signature | Purpose |
 |----------|-----------|---------|
-| `proj_european_price_at_strikes(cf, grid, fwd_spec, strikes)` | CF, `ProjGrid`, forward spec, strikes | PROJ European pricer (Kirkby 2015). Matches `carr_madan_price_at_strikes` to ~1e-7 across the Levy family. |
-| `proj_price_at_strikes(cf, grid, fwd_spec, strikes, ...)` | CF, `ProjGrid`, forward spec, strikes | General PROJ European dispatch (entry point used by `price_strip`). |
-| `proj_bermudan_put(cf, grid, fwd_spec, strikes, n_ex)` | CF, `ProjGrid`, forward spec, strikes, exercise count | PROJ Bermudan put via Toeplitz-FFT backward recursion (Kirkby 2017). |
+| `proj_european_price_at_strikes(phi, fwd, cumulants, strikes, cp=..., N=..., L=...)` | CF, `ProjGrid`, forward spec, strikes | PROJ European pricer (Kirkby 2015). Matches `carr_madan_price_at_strikes` to ~1e-7 across the Levy family. |
+| `proj_price_at_strikes(phi, fwd, grid, strikes, cp=..., c1=...)` | CF, `ProjGrid`, forward spec, strikes | General PROJ European dispatch (entry point used by `price_strip`). |
+| `proj_bermudan_put(step_cf, S0, r, T, W, M, ...)` | CF, `ProjGrid`, forward spec, strikes, exercise count | PROJ Bermudan put via Toeplitz-FFT backward recursion (Kirkby 2017). |
 | `proj_barrier_price(...)` | CF, forward spec, barrier contract terms | PROJ discretely monitored single-barrier pricer (down-out / up-out, knock-in via parity). |
 | `proj_asian_price_cv(...)` | CF, forward spec, Asian contract terms | Arithmetic Asian via Monte Carlo with a PROJ/analytic geometric control variate. |
 | `proj_double_barrier_price(step_cf, S0=..., K=..., L=..., U=..., M=..., knockout=True, ...)` | one-step CF, corridor, monitoring count | PROJ double-barrier knock-out/knock-in via two-sided absorption in the backward induction. |
@@ -221,9 +221,9 @@ Each model exposes a cumulant function that returns the first four log-return cu
 
 | Function | Signature | Purpose |
 |----------|-----------|---------|
-| `bsm_lattice_price(product, bsm_params, fwd_spec, grid)` | product spec, `BsmParams`, forward spec, `LatticeGrid` | European or American option via binomial lattice. |
+| `bsm_lattice_price(fwd, params, strike, cp=..., exercise=..., grid=...)` | product spec, `BsmParams`, forward spec, `LatticeGrid` | European or American option via binomial lattice. |
 | `bsm_lattice_price_at_strikes(strikes, ..., grid)` | strikes, model params, forward spec, `LatticeGrid` | Lattice pricer over a strike strip. |
-| `bsm_pde_fd_price(product, bsm_params, fwd_spec, grid)` | product spec, `BsmParams`, forward spec, `PDEGrid` | European or American option via Crank-Nicolson finite differences. |
+| `bsm_pde_fd_price(fwd, params, strike, cp=..., exercise=..., grid=...)` | product spec, `BsmParams`, forward spec, `PDEGrid` | European or American option via Crank-Nicolson finite differences. |
 | `bsm_pde_fd_price_at_strikes(strikes, ..., grid)` | strikes, model params, forward spec, `PDEGrid` | PDE pricer over a strike strip. |
 
 ---
@@ -232,7 +232,7 @@ Each model exposes a cumulant function that returns the first four log-return cu
 
 | Function | Signature | Purpose |
 |----------|-----------|---------|
-| `sabr_hagan_price_at_strikes(strikes, params, fwd_spec)` | strikes, `SabrParams`, forward spec | Prices a strip of calls via SABR Hagan implied vol then BSM. |
+| `sabr_hagan_price_at_strikes(fwd, params, strikes, cp=...)` | strikes, `SabrParams`, forward spec | Prices a strip of calls via SABR Hagan implied vol then BSM. |
 
 ---
 
@@ -250,9 +250,9 @@ Each model exposes a cumulant function that returns the first four log-return cu
 
 | Function | Signature | Purpose |
 |----------|-----------|---------|
-| `bs_price_from_fwd(fwd_spec, K, sigma, option_type)` | forward spec, strike, vol, type | BSM call or put price from forward inputs. |
-| `implied_vol_brent(fwd_spec, K, price, option_type)` | forward spec, strike, price, type | Implied vol via Brent root-finding. Safe for deep-ITM/OTM. |
-| `implied_vol_newton_safeguarded(fwd_spec, K, price, option_type)` | forward spec, strike, price, type | Newton-Raphson with Brent fallback. Faster for near-ATM. |
+| `bs_price_from_fwd(vol, inp)` | forward spec, strike, vol, type | BSM call or put price from forward inputs. |
+| `implied_vol_brent(price, inp, lo=..., hi=...)` | forward spec, strike, price, type | Implied vol via Brent root-finding. Safe for deep-ITM/OTM. |
+| `implied_vol_newton_safeguarded(price, inp, vol0=..., iters=..., tol=..., lo=..., hi=...)` | forward spec, strike, price, type | Newton-Raphson with Brent fallback. Faster for near-ATM. |
 
 ---
 
@@ -262,8 +262,8 @@ Each model exposes a cumulant function that returns the first four log-return cu
 |------|------|-------------|
 | `SurfaceSpec` | dataclass | Defines the moneyness-tenor grid used in calibration targets. |
 | `CalibrationResult` | dataclass | Holds calibrated parameter dataclass, residuals, and optimizer diagnostics. |
-| `model_iv_surface(model_params, fwd_spec, surface_spec)` | function | Evaluates a model implied-vol surface on a `SurfaceSpec` grid. |
-| `model_price_surface(model_params, fwd_spec, surface_spec)` | function | Evaluates a model price surface on a `SurfaceSpec` grid. |
+| `model_iv_surface(spec, cf_factory, cumulant_factory, N=..., L=...)` | function | Evaluates a model implied-vol surface on a `SurfaceSpec` grid. |
+| `model_price_surface(spec, cf_factory, cumulant_factory, N=..., L=...)` | function | Evaluates a model price surface on a `SurfaceSpec` grid. |
 | `calibrate_heston(...)` | function | Calibrates Heston parameters to market targets. Returns `CalibrationResult`. |
 | `calibrate_vg(...)` | function | Calibrates VG parameters to market targets. Returns `CalibrationResult`. |
 | `calibrate_kou(...)` | function | Calibrates Kou parameters to market targets. Returns `CalibrationResult`. |
@@ -291,9 +291,9 @@ Each model exposes a cumulant function that returns the first four log-return cu
 | Name | Type | Description |
 |------|------|-------------|
 | `COSGreeks` | dataclass | Delta, gamma, and vega computed via the COS method. |
-| `cos_price_and_greeks(cf, grid, fwd_spec, strikes)` | function | Returns prices and `COSGreeks` in a single pass. |
-| `cos_delta_gamma(cf, grid, fwd_spec, strikes)` | function | Returns delta and gamma arrays from the COS expansion. |
-| `cos_parameter_sensitivity(cf, grid, fwd_spec, strikes, params, ...)` | function | Finite-difference parameter sensitivities (model-parameter Greeks). |
+| `cos_price_and_greeks(phi, fwd, strikes, grid)` | function | Returns prices and `COSGreeks` in a single pass. |
+| `cos_delta_gamma(phi, fwd, strikes, grid)` | function | Returns delta and gamma arrays from the COS expansion. |
+| `cos_parameter_sensitivity(dphi_dparam, fwd, strikes, grid)` | function | Finite-difference parameter sensitivities (model-parameter Greeks). |
 | `bsm_delta` / `bsm_gamma` / `bsm_vega` / `bsm_theta` / `bsm_rho` | functions | Analytic first-order BSM Greeks (theta is dV/dt; rho scaled by 1/100). |
 | `bsm_vanna` / `bsm_volga` | functions | Analytic second-order/cross BSM Greeks. |
 | `bsm_all_greeks(...)` | function | All analytic BSM Greeks in one call. |
@@ -306,9 +306,9 @@ Each model exposes a cumulant function that returns the first four log-return cu
 |------|------|-------------|
 | `MCSpec` | dataclass | Monte Carlo specification: product, model, paths, time steps, random seed, antithetics, control-variate flag. |
 | `MCResult` | dataclass | Output of `mc_price`: estimated price, standard error, confidence interval, paths used. |
-| `mc_price(spec, model_params, fwd_spec)` | function | Generic MC dispatcher. Routes to the correct simulation engine based on `spec.model` and `spec.product`. |
-| `european_call_mc(bsm_params, fwd_spec, K, n_paths, n_steps, seed)` | function | Vectorised BSM European call MC. |
-| `heston_conditional_mc_calls(heston_params, fwd_spec, strikes, n_paths, seed)` | function | Heston exact conditional simulation (Broadie-Kaya scheme). |
+| `mc_price(fwd, sigma, product, mc=...)` | function | Generic MC dispatcher. Routes to the correct simulation engine based on `spec.model` and `spec.product`. |
+| `european_call_mc(S0, K, T, r, q, vol, mc)` | function | Vectorised BSM European call MC. |
+| `heston_conditional_mc_calls(S0, strikes, T, r, q, p, mc)` | function | Heston exact conditional simulation (Broadie-Kaya scheme). |
 | `HestonMCScheme` | enum | Discretisation scheme selector: `EULER`, `MILSTEIN`, `QE`. |
 | `bs_call_cv` | function | BSM control-variate correction for a Monte Carlo estimate. |
 | `heston_call_bs_control` | function | Heston MC pricer with a BSM control variate. |
@@ -324,30 +324,30 @@ Exact closed-form prices for non-vanilla payoffs under BSM dynamics.
 
 | Function | Signature | Purpose |
 |----------|-----------|---------|
-| `bsm_barrier_price(fwd_spec, K, H, barrier_type, option_type)` | forward spec, strike, barrier level, barrier type, option type | Analytical up/down in/out barrier option. |
-| `bsm_forward_start(fwd_spec, alpha, T_start, T_end)` | forward spec, moneyness, start date, end date | Rubinstein (1991) forward-start call. |
-| `bsm_lookback_floating(fwd_spec, option_type)` | forward spec, option type | Floating-strike lookback call or put (Goldman-Sosin-Gatto). |
-| `bsm_geometric_asian(fwd_spec, K, n)` | forward spec, strike, number of fixings | Geometric-average Asian option closed form. |
-| `bsm_geometric_asian_parity(fwd_spec, K, n)` | forward spec, strike, number of fixings | Put-call parity check for geometric Asian. |
-| `bsm_variance_swap(fwd_spec)` | forward spec | Fair variance swap strike under BSM (equals `sigma^2`). |
+| `bsm_barrier_price(S, K, H, r, q, T, ...)` | forward spec, strike, barrier level, barrier type, option type | Analytical up/down in/out barrier option. |
+| `bsm_forward_start(S, alpha, t_start, T, r, q, ...)` | forward spec, moneyness, start date, end date | Rubinstein (1991) forward-start call. |
+| `bsm_lookback_floating(S, S_min, S_max, r, q, T, ...)` | forward spec, option type | Floating-strike lookback call or put (Goldman-Sosin-Gatto). |
+| `bsm_geometric_asian(S, K, r, q, T, sigma, cp=...)` | forward spec, strike, number of fixings | Geometric-average Asian option closed form. |
+| `bsm_geometric_asian_parity(S, K, r, q, T, sigma)` | forward spec, strike, number of fixings | Put-call parity check for geometric Asian. |
+| `bsm_variance_swap(fwd, params, product)` | forward spec | Fair variance swap strike under BSM (equals `sigma^2`). |
 | `levy_variance_fair_strike(model, fwd, params, sampling_times, maturity=None)` | Levy model key, market inputs, dates | Exact annualized E[RV] from per-increment CF cumulants; prices jump risk. |
 | `levy_variance_swap(model, fwd, params, product)` | Levy model key, market inputs, `VarianceSwap` | Discounted variance-swap value, `disc * notional * E[RV]`. |
 | `levy_survival_curve(model, fwd, params, default_barrier=..., horizons=...)` | Levy model key, market inputs, barrier, dates | Discretely monitored first-passage survival probabilities (Black-Cox structural default). |
 | `levy_cds_spread(model, fwd, params, default_barrier=..., recovery=..., maturity=...)` | Levy model key, market inputs, credit terms | Structural CDS par spread from the PROJ survival curve and O'Kane running-spread legs. |
 | `cds_par_spread_from_survival(survival, payment_times, r, recovery)` | survival curve, premium dates | Leg assembly only; credit-triangle consistent. |
-| `bsm_variance_option_integrated(fwd_spec, K_var, option_type)` | forward spec, variance strike, option type | Variance call or put price via integrated BSM formula. |
-| `bsm_gap_call(fwd_spec, K1, K2)` | forward spec, trigger strike, payoff strike | Gap call: pays `S - K2` if `S > K1`. |
+| `bsm_variance_option_integrated(fwd, params, product)` | forward spec, variance strike, option type | Variance call or put price via integrated BSM formula. |
+| `bsm_gap_call(S, K1, K2, r, q, T, sigma)` | forward spec, trigger strike, payoff strike | Gap call: pays `S - K2` if `S > K1`. |
 | `geske_compound_price(...)` | compound contract terms | Geske (1979) compound option (all four call/put-on-call/put types). |
 | `bsm_chooser_price(...)` | chooser contract terms | Rubinstein (1991) chooser via the call+put decomposition. |
 | `bsm_quanto_forward(...)` / `bsm_quanto_option(...)` | quanto contract terms | Reiner (1992) quanto-adjusted forward and option prices. |
-| `bsm_discrete_geometric_asian(fwd_spec, K, fixing_times)` | forward spec, strike, fixing schedule | Geometric Asian with an explicit fixing schedule. |
+| `bsm_discrete_geometric_asian(S, K, r, q, monitoring_times, sigma, cp=...)` | forward spec, strike, fixing schedule | Geometric Asian with an explicit fixing schedule. |
 
 ### Digital options
 
 | Function | Signature | Purpose |
 |----------|-----------|---------|
-| `bsm_cash_or_nothing(fwd_spec, K, option_type)` | forward spec, strike, option type | Cash-or-nothing digital: pays 1 unit if `S_T > K`. |
-| `bsm_asset_or_nothing(fwd_spec, K, option_type)` | forward spec, strike, option type | Asset-or-nothing digital: pays `S_T` if `S_T > K`. |
+| `bsm_cash_or_nothing(fwd, p, K, cp=..., cash_amount=...)` | forward spec, strike, option type | Cash-or-nothing digital: pays 1 unit if `S_T > K`. |
+| `bsm_asset_or_nothing(fwd, p, K, cp=...)` | forward spec, strike, option type | Asset-or-nothing digital: pays `S_T` if `S_T > K`. |
 
 ### Product dataclasses (`foureng.products`)
 
@@ -384,5 +384,5 @@ Priced through `price(product, model, method, fwd, params)`.
 
 | Function | Signature | Purpose |
 |----------|-----------|---------|
-| `margrabe_exchange(fwd_spec_1, fwd_spec_2, sigma_1, sigma_2, rho)` | two forward specs, vols, correlation | Margrabe (1978) exchange option: pays `max(S2 - S1, 0)`. |
-| `kirk_spread(fwd_spec_1, fwd_spec_2, K, sigma_1, sigma_2, rho)` | two forward specs, strike, vols, correlation | Kirk (1995) spread option approximation: pays `max(S2 - S1 - K, 0)`. |
+| `margrabe_exchange(S1, S2, q1, q2, T, sigma1, ...)` | two forward specs, vols, correlation | Margrabe (1978) exchange option: pays `max(S2 - S1, 0)`. |
+| `kirk_spread(S1, S2, K, r, q1, q2, ...)` | two forward specs, strike, vols, correlation | Kirk (1995) spread option approximation: pays `max(S2 - S1 - K, 0)`. |

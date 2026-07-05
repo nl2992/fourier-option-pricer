@@ -229,7 +229,10 @@ Swap the method string to switch pricers without touching any other code:
 ```python
 prices = fe.price_strip("heston", "cos_improved", strikes, fwd, params)
 prices = fe.price_strip("heston", "cos_filtered", strikes, fwd, params)
-prices = fe.price_strip("bates",  "cos_improved", strikes, fwd, params)
+
+bates = fe.BatesParams(kappa=4.0, theta=0.25, nu=1.0, rho=-0.5, v0=0.04,
+                       lam_j=0.5, mu_j=-0.1, sigma_j=0.15)
+prices = fe.price_strip("bates", "cos_improved", strikes, fwd, bates)
 ```
 
 ---
