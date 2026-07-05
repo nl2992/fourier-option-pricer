@@ -349,20 +349,36 @@ Exact closed-form prices for non-vanilla payoffs under BSM dynamics.
 | `bsm_cash_or_nothing(fwd_spec, K, option_type)` | forward spec, strike, option type | Cash-or-nothing digital: pays 1 unit if `S_T > K`. |
 | `bsm_asset_or_nothing(fwd_spec, K, option_type)` | forward spec, strike, option type | Asset-or-nothing digital: pays `S_T` if `S_T > K`. |
 
-### Product dataclasses (exotics)
+### Product dataclasses (`foureng.products`)
 
-| Class | Contract |
-|-------|----------|
-| `CompoundOption` | Option on an option (Geske); priced via `method="geske"`. |
-| `ChooserOption` | Choose call/put at a fixed date; priced via `method="analytic"`. |
-| `QuantoOption` | FX-translated payoff with quanto drift adjustment. |
-| `FaderOption` | Range-monitored faded-notional vanilla (fade-in / fade-out); priced via `method="fader_cf"`. |
-| `StepOption` | Occupation-time-damped vanilla (Linetsky 1999); priced via `method="proj_step"`. |
-| `AsianOption` | Discretely monitored average-rate option (arithmetic/geometric, fixed/floating strike); see `foureng.products`. |
-| `DoubleBarrierOption` | Corridor knock-out/knock-in with two barriers; priced via `method="double_barrier_bsm"`, `"proj_double_barrier"`, or Monte Carlo. |
-| `ForwardStartOption` | Strike set as `alpha * S_{t_start}`; priced via `method="forward_start_bsm"` or `"forward_start_cf"`. |
+Every product is a frozen dataclass inheriting from `ProductSpec` (the root
+base class carrying the `product_type` tag used by the capability registry).
+Priced through `price(product, model, method, fwd, params)`.
 
-The remaining product dataclasses (`BarrierOption`, `BermudanOption`, `LookbackOption`, `VarianceSwap`, `VarianceOption`, `CliquetOption`, `ParisianOption`, multi-asset products) live in `foureng.products` and follow the same frozen-dataclass pattern; see [model_zoo.md](model_zoo.md) and the product modules for field-level docs.
+| Class | Contract | Typical methods |
+|-------|----------|-----------------|
+| `EuropeanOption` | Plain-vanilla European call/put | any CF engine via `price_strip` |
+| `AmericanOption` | American-exercise put/call | `monte_carlo` (LSMC), `lattice` |
+| `BermudanOption` | Finite exercise-date put/call | `cos_bermudan`, `proj`, `monte_carlo` |
+| `DigitalOption` | Cash-/asset-or-nothing digital | `cos_digital`, `digital_bsm` |
+| `BarrierOption` | Single knock-in/knock-out | `barrier_bsm`, `proj_barrier`, `monte_carlo` |
+| `DoubleBarrierOption` | Corridor knock-out/knock-in | `double_barrier_bsm`, `proj_double_barrier`, MC |
+| `StepOption` | Occupation-time-damped vanilla (Linetsky 1999) | `proj_step` |
+| `FaderOption` | Range-monitored faded notional | `fader_cf` |
+| `AsianOption` | Discretely monitored average-rate | `asian_cf`, `asian_bsm`, `proj_asian`, MC |
+| `LookbackOption` | Fixed-/floating-strike lookback | `lookback_bsm`, `lookback_mc` |
+| `ParisianOption` | Excursion-triggered barrier | `parisian_mc` |
+| `ForwardStartOption` | Strike set as `alpha * S_{t_start}` | `forward_start_cf`, `forward_start_bsm` |
+| `CliquetOption` | Capped/floored period-return sum/product | `cliquet_cf`, `cliquet_mc` |
+| `VarianceSwap` | Realised variance vs fair strike | `variance_levy_analytic`, `variance_analytic_bsm`, MC |
+| `VarianceOption` | Option on realised variance | `variance_analytic_bsm`, `variance_mc` |
+| `CompoundOption` | Option on an option (Geske 1979) | `geske` |
+| `ChooserOption` | Choose call/put at a fixed date | `analytic` |
+| `QuantoOption` | Foreign underlying, domestic payout | BSM quanto analytics |
+| `ExchangeOption` | Margrabe `max(S1 - S2, 0)` | `exchange_bsm`, `multi_asset_mc` |
+| `SpreadOption` | Call on `S1 - S2` with strike K | `spread_bsm`, `multi_asset_mc` |
+| `BasketOption` | Weighted-sum basket | `multi_asset_mc` |
+| `BestOfOption` | Call on `max(S1, S2, ...)` | `multi_asset_mc` |
 
 ### Multi-asset analytics
 
