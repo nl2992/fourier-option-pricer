@@ -4,7 +4,7 @@
 
 **One characteristic function in → a whole strike strip of near-machine-precision prices out.**
 
-*22 models · 9 Fourier engines · exotics · calibration · 1,900+ tests*
+*22 models · 9 Fourier engines · 23 products · calibration · 2,000+ tests*
 
 [![CI](https://github.com/nl2992/fourier-option-pricer/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/nl2992/fourier-option-pricer/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue.svg)](pyproject.toml)
@@ -41,7 +41,7 @@ Swap `"heston"` for any of 22 models, `"cos_improved"` for any of 9 engines. Sam
 | PROJ | `proj` | B-spline frame projection (Kirkby 2015/2017), European + Bermudan + single/double barrier + Asian CV | polynomial (order-tunable) |
 | PyFENG FFT | `pyfeng_fft` | Third-party reference engine for 8 models | — |
 
-Plus non-Fourier baselines (CRR lattice, implicit PDE, Monte Carlo with control variates and LSMC) and product-level analytics for ~20 exotic payoffs.
+Plus non-Fourier baselines (CRR lattice, implicit PDE, Monte Carlo with control variates and LSMC) and product-level pricing for 23 payoff dataclasses (barriers, Asians, cliquets, faders, step and swing options, variance products, and more).
 
 ---
 
@@ -430,7 +430,7 @@ python -m pytest -q -m "paper"
 python -m pytest -q -m "software_reference"
 ```
 
-The repository has 1,900+ pytest cases.
+The repository has 2,000+ pytest cases.
 
 For linting and type checks:
 

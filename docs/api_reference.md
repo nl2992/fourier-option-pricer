@@ -365,6 +365,7 @@ Priced through `price(product, model, method, fwd, params)`.
 | `BarrierOption` | Single knock-in/knock-out | `barrier_bsm`, `proj_barrier`, `monte_carlo` |
 | `DoubleBarrierOption` | Corridor knock-out/knock-in | `double_barrier_bsm`, `proj_double_barrier`, MC |
 | `StepOption` | Occupation-time-damped vanilla (Linetsky 1999) | `proj_step` |
+| `SwingOption` | Multiple vanilla exercise rights, one per date (Carmona-Touzi 2008) | `proj_swing` |
 | `FaderOption` | Range-monitored faded notional | `fader_cf` |
 | `AsianOption` | Discretely monitored average-rate | `asian_cf`, `asian_bsm`, `proj_asian`, MC |
 | `LookbackOption` | Fixed-/floating-strike lookback | `lookback_bsm`, `lookback_mc` |
