@@ -213,6 +213,7 @@ Each model exposes a cumulant function that returns the first four log-return cu
 | `proj_asian_price_cv(...)` | CF, forward spec, Asian contract terms | Arithmetic Asian via Monte Carlo with a PROJ/analytic geometric control variate. |
 | `proj_double_barrier_price(step_cf, S0=..., K=..., L=..., U=..., M=..., knockout=True, ...)` | one-step CF, corridor, monitoring count | PROJ double-barrier knock-out/knock-in via two-sided absorption in the backward induction. |
 | `proj_step_price(step_cf, S0=..., K=..., B=..., rho=..., M=..., step_type="down", ...)` | one-step CF, barrier, damping rate, monitoring count | PROJ step option: occupation-time soft killing exp(-rho dt) beyond the barrier (Linetsky 1999). |
+| `proj_survival_probability(step_cf, S0=..., B=..., M=...)` | one-step CF, barrier, monitoring count | First-passage survival probability via the undiscounted down-and-out unit-payoff recursion. |
 
 ---
 
@@ -331,6 +332,9 @@ Exact closed-form prices for non-vanilla payoffs under BSM dynamics.
 | `bsm_variance_swap(fwd_spec)` | forward spec | Fair variance swap strike under BSM (equals `sigma^2`). |
 | `levy_variance_fair_strike(model, fwd, params, sampling_times, maturity=None)` | Levy model key, market inputs, dates | Exact annualized E[RV] from per-increment CF cumulants; prices jump risk. |
 | `levy_variance_swap(model, fwd, params, product)` | Levy model key, market inputs, `VarianceSwap` | Discounted variance-swap value, `disc * notional * E[RV]`. |
+| `levy_survival_curve(model, fwd, params, default_barrier=..., horizons=...)` | Levy model key, market inputs, barrier, dates | Discretely monitored first-passage survival probabilities (Black-Cox structural default). |
+| `levy_cds_spread(model, fwd, params, default_barrier=..., recovery=..., maturity=...)` | Levy model key, market inputs, credit terms | Structural CDS par spread from the PROJ survival curve and O'Kane running-spread legs. |
+| `cds_par_spread_from_survival(survival, payment_times, r, recovery)` | survival curve, premium dates | Leg assembly only; credit-triangle consistent. |
 | `bsm_variance_option_integrated(fwd_spec, K_var, option_type)` | forward spec, variance strike, option type | Variance call or put price via integrated BSM formula. |
 | `bsm_gap_call(fwd_spec, K1, K2)` | forward spec, trigger strike, payoff strike | Gap call: pays `S - K2` if `S > K1`. |
 | `geske_compound_price(...)` | compound contract terms | Geske (1979) compound option (all four call/put-on-call/put types). |

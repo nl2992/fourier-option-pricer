@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.19.0 - 2026-07-05
+
+- Added structural CDS pricing under Levy models (Black-Cox first passage, discretely monitored): `proj_survival_probability` (down-and-out unit payoff through the undiscounted PROJ recursion), `levy_survival_curve` (one run per premium date), `cds_par_spread_from_survival` (O'Kane running-spread legs with half-period accrual on default), and `levy_cds_spread` (end-to-end par spread). Tests: single-date survival equals the exact lognormal tail probability, survival curves vs 200k-path first-passage Monte Carlo on the same monthly grid for BSM and Kou, the credit-triangle identity spread = (1-R) lambda on a synthetic exponential curve (leg assembly validated independently of the survival engine), horizon/barrier monotonicity, spread monotonicity in barrier and exact linearity in (1-R), far-barrier degeneracy, jumps-widen-spreads, validation errors.
+
 ## 0.18.0 - 2026-07-05
 
 - Added step options (Linetsky 1999 occupation-time damping, discretely monitored) for 1-D Levy models: new `StepOption` product and `method="proj_step"` (`proj_step_price` exported). The PROJ barrier backward induction generalizes from hard knock-out to *soft killing*: value mass beyond the barrier is multiplied by `exp(-rho dt)` at each monitoring date, so `rho = 0` recovers the vanilla and `rho -> infinity` recovers the knock-out barrier, with a continuous delta in between. Tests: both limits against the same-engine vanilla/knock-out (2e-3), monotone decay in rho, BSM and Kou full-path Monte Carlo with the discrete occupation-time payoff at 200k paths, up-step direction check, pipeline dispatch, validation errors.

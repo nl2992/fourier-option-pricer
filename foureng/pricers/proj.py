@@ -1323,3 +1323,89 @@ def proj_step_price(
     Vt = np.real(p[:K_half])
 
     return float(max(Vt[nnot - 1], 0.0))
+
+
+# ---------------------------------------------------------------------------
+# PROJ first-passage survival probability (structural credit)
+# ---------------------------------------------------------------------------
+
+
+def proj_survival_probability(
+    step_cf,
+    *,
+    S0: float,
+    B: float,
+    M: int,
+    N: int = 1 << 13,
+    alph: float = 7.0,
+) -> float:
+    """P(min over monitoring dates of S_{t_k} > B) by the PROJ recursion.
+
+    A down-and-out *unit* payoff run through the undiscounted backward
+    induction: the terminal value is 1 on every node, mass at or below the
+    barrier is zeroed at each of the ``M`` monitoring dates, and the node at
+    ``x = 0`` returns the survival probability of the discretely monitored
+    first-passage time. This is the structural-credit building block behind
+    barrier-based CDS pricing (Black & Cox 1976, discretized).
+
+    Parameters
+    ----------
+    step_cf
+        One-step risk-neutral CF of ``log(S_{t+dt}/S_t)`` including the
+        ``(r - q) dt`` drift.
+    S0, B
+        Spot and default barrier, ``0 < B < S0``.
+    M
+        Number of equally spaced monitoring dates over the horizon.
+    N, alph
+        Projection grid size (power of two) and half-width.
+    """
+    if not (0.0 < B < S0):
+        raise ValueError(f"proj_survival_probability: need 0 < B < S0; got B={B}, S0={S0}")
+    M = int(M)
+    if M < 1:
+        raise ValueError("proj_survival_probability: M must be >= 1")
+    N = int(N)
+    if N & (N - 1) != 0:
+        raise ValueError("proj_survival_probability: N must be a power of two")
+
+    K_half = N // 2
+    dx = 2.0 * alph / (N - 1)
+    a = 1.0 / dx
+    nnot = K_half // 2
+    xmin = (1 - K_half / 2) * dx
+
+    nbar_B = int(np.clip(int(np.floor(a * (np.log(B / S0) - xmin) + 1.0)), 0, K_half))
+
+    # Undiscounted density projection coefficients (probability, not value).
+    a2 = a * a
+    Cons2 = 24.0 * a2 / N
+    zmin = (1 - K_half) * dx
+    dw = 2.0 * np.pi * a / N
+    grand_freq = np.arange(1, N) * dw
+    grand = (
+        np.exp(-1j * zmin * grand_freq)
+        * np.asarray(step_cf(grand_freq), dtype=np.complex128)
+        * (np.sin(grand_freq / (2.0 * a)) / grand_freq) ** 2
+        / (2.0 + np.cos(grand_freq / a))
+    )
+    beta = Cons2 * np.real(np.fft.fft(np.concatenate(([1.0 / (24.0 * a2)], grand))))
+    toepM = np.concatenate((np.flip(beta[0:K_half]), [0.0], np.flip(beta[K_half : 2 * K_half - 1])))
+    toepM_fft = np.fft.fft(toepM)
+
+    def _kill(v: np.ndarray) -> np.ndarray:
+        v = v.copy()
+        if nbar_B > 0:
+            v[:nbar_B] = 0.0
+        return v
+
+    # Survival indicator at t_M, then t_{M-1}..t_1; final step to t_0 unkilled
+    # (S0 > B is asserted above).
+    Vt = _kill(np.ones(K_half))
+    for _m in range(M - 1, 0, -1):
+        p = np.fft.ifft(toepM_fft * np.fft.fft(np.concatenate((Vt, np.zeros(K_half)))))
+        Vt = _kill(np.real(p[:K_half]))
+    p = np.fft.ifft(toepM_fft * np.fft.fft(np.concatenate((Vt, np.zeros(K_half)))))
+    Vt = np.real(p[:K_half])
+
+    return float(np.clip(Vt[nnot - 1], 0.0, 1.0))

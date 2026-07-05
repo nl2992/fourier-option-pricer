@@ -27,7 +27,7 @@ try:
 
     __version__: str = _pkg_version("fourier-option-pricer")
 except _PNF:  # editable install without metadata yet
-    __version__ = "0.18.0"
+    __version__ = "0.19.0"
 
 from .analytics.bsm_asian import (
     bsm_discrete_geometric_asian,
@@ -56,6 +56,11 @@ from .analytics.bsm_greeks import (
 )
 from .analytics.bsm_quanto import bsm_quanto_forward, bsm_quanto_option
 from .analytics.bsm_variance import bsm_variance_option_integrated, bsm_variance_swap
+from .analytics.levy_credit import (
+    cds_par_spread_from_survival,
+    levy_cds_spread,
+    levy_survival_curve,
+)
 from .analytics.levy_variance import levy_variance_fair_strike, levy_variance_swap
 from .greeks import (
     COSGreeks,
@@ -150,6 +155,7 @@ from .pricers.proj import (
     proj_european_price_at_strikes,
     proj_price_at_strikes,
     proj_step_price,
+    proj_survival_probability,
 )
 from .pricers.sabr import sabr_hagan_price_at_strikes
 from .products.chooser import ChooserOption
@@ -308,6 +314,9 @@ __all__ = [
     "frft_prices",
     "hilbert_itm_probabilities",
     "hilbert_price_at_strikes",
+    "cds_par_spread_from_survival",
+    "levy_cds_spread",
+    "levy_survival_curve",
     "levy_cliquet_price",
     "levy_fader_price",
     "levy_forward_start_price",
@@ -323,6 +332,7 @@ __all__ = [
     "proj_bermudan_put",
     "proj_double_barrier_price",
     "proj_step_price",
+    "proj_survival_probability",
     "proj_barrier_price",
     "proj_asian_price_cv",
     "ProjGrid",

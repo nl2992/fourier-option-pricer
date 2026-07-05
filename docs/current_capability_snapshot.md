@@ -48,6 +48,13 @@ This file tracks the capability surface used by the registry and dispatcher test
 | `cliquet_cf` | Exact locally collared Levy cliquet via per-period COS call spreads | Wilmott (2002); Kirkby & Deng (2016) |
 | `fader_cf` | Levy fade-in/fade-out via per-date COS density x remaining-life value | Hakala & Wystup (2002) |
 | `proj_step` | PROJ step option: soft killing exp(-rho dt) beyond the barrier | Linetsky (1999) |
+
+## Credit analytics (not routed through `price()`)
+
+| Function | Engine | Reference |
+|----------|--------|-----------|
+| `levy_survival_curve` / `proj_survival_probability` | PROJ first-passage survival (down-and-out unit payoff) | Black & Cox (1976) |
+| `levy_cds_spread` / `cds_par_spread_from_survival` | Structural CDS par spread, O'Kane legs | O'Kane (2008) |
 | `proj_barrier` | PROJ discretely monitored single barrier | Kirkby (2014, 2015) |
 | `proj_double_barrier` | PROJ discretely monitored double barrier (two-sided absorption) | Kirkby (2015) |
 | `proj_asian` | Arithmetic Asian MC with PROJ/analytic geometric control variate | Kirkby (2016) |
