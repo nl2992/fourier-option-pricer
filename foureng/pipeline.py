@@ -1308,6 +1308,54 @@ def price(
         fwd_t = _FwdSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=product.maturity)
         return mc_price(fwd_t, params.sigma, product, mc_spec).price
 
+    if pt == "step":
+        from .products.step import StepOption
+
+        if not isinstance(product, StepOption):
+            raise TypeError(
+                "price(): product_type='step' must be represented by "
+                f"StepOption, got {type(product).__name__!r}"
+            )
+        if method != "proj_step":
+            raise NotImplementedError("Step-option pricing currently supports method='proj_step'.")
+        from .pricers.cos_bermudan import _SUPPORTED_MODELS
+        from .pricers.proj import proj_step_price
+
+        if model not in _SUPPORTED_MODELS:
+            raise NotImplementedError(
+                f"method='proj_step' supports 1-D Lévy models {sorted(_SUPPORTED_MODELS)}; "
+                f"got model={model!r}."
+            )
+        T_step = float(product.maturity)
+        M_step = int(product.n_monitoring)
+        dt_step = T_step / M_step
+        cf_step = MODEL_REGISTRY[model].cf
+        fwd_dt_step = ForwardSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=dt_step)
+        drift_step = (fwd.r - fwd.q) * dt_step
+
+        def step_cf_step(u: np.ndarray) -> np.ndarray:
+            return np.exp(1j * u * drift_step) * np.asarray(
+                cf_step(u, fwd_dt_step, params), dtype=np.complex128
+            )
+
+        fwd_T_step = ForwardSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=T_step)
+        grid_step = proj_auto_grid(MODEL_REGISTRY[model].cumulants(fwd_T_step, params), N=1 << 14)
+        return proj_step_price(
+            step_cf_step,
+            S0=fwd.S0,
+            r=fwd.r,
+            T=T_step,
+            K=float(product.strike),
+            B=float(product.barrier),
+            rho=float(product.rho),
+            M=M_step,
+            step_type=product.step_type,
+            cp=product.cp,
+            q=fwd.q,
+            N=grid_step.N,
+            alph=grid_step.alph,
+        )
+
     if pt == "fader":
         from .pricers.fader import levy_fader_price
         from .products.fader import FaderOption

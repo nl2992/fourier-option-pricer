@@ -69,7 +69,7 @@ Full methodology: [appendix.md](appendix.md) · Extension details: [docs/filtere
 
 ---
 
-## 🆕 What's new in the 0.11–0.17 line
+## 🆕 What's new in the 0.11–0.18 line
 
 Nine capabilities ported into the Fourier stack from the transform-methods literature (the territory covered by Kirkby's PROJ MATLAB toolbox), each implemented natively against `foureng`'s CF interfaces and validated against closed forms and Monte Carlo:
 
@@ -84,6 +84,7 @@ Nine capabilities ported into the Fourier stack from the transform-methods liter
 | **PROJ double barriers** — Kirkby (2015) | `price(product, model, "proj_double_barrier", ...)` | Toeplitz-FFT backward induction, absorption on both sides of $(L, U)$ |
 | **Hull-White stochastic-rate hybrid** — Merton (1973); Hull & White (1990) | `HullWhiteHybridParams(base, ...)` + any CF engine | $\varphi(u) = \varphi_{\text{base}}(u)\, e^{-\frac12 V_P (u^2 + iu)}$, $V_P = \int_0^T \sigma_P^2\,ds$ |
 | **Fader options** — Hakala & Wystup (2002) | `price(product, model, "fader_cf", ...)` | $V = \tfrac{D}{M}\sum_k \int_A f_{t_k}(x)\, C_k(x)\,dx$, one COS strip per date |
+| **Step options** — Linetsky (1999) | `price(product, model, "proj_step", ...)` | PROJ recursion with soft killing $e^{-\rho\,\Delta t}$ beyond the barrier; $\rho{=}0$ vanilla, $\rho{\to}\infty$ knock-out |
 
 Also in this line: `cp=-1` is now honored uniformly across every Fourier engine (parity applied once at dispatch), a long-standing drift omission in `merton_jd_cumulants` is fixed, and the API reference was backfilled to cover every public symbol. Details in the [CHANGELOG](CHANGELOG.md).
 
@@ -314,6 +315,7 @@ All MC functions take a `GBMPathSpec(n_paths, n_steps, seed, antithetic)` config
 | `levy_cliquet_price(model, fwd, params, product)` | Lévy model key, market inputs, `CliquetOption` | `float` (locally collared additive/multiplicative) |
 | `proj_double_barrier_price(step_cf, S0=..., L=..., U=..., M=..., knockout=True, ...)` | one-step CF, corridor, monitoring count | `float` |
 | `levy_fader_price(model, fwd, params, product)` | Lévy model key, market inputs, `FaderOption` | `float` (fade-in or fade-out) |
+| `proj_step_price(step_cf, S0=..., B=..., rho=..., M=..., step_type="down", ...)` | one-step CF, barrier, damping rate | `float` |
 | `sabr_hagan_price_at_strikes(fwd, params, strikes)` | `ForwardSpec`, `SabrParams`, strike array | `np.ndarray` |
 
 ### Grid constructors
@@ -478,7 +480,7 @@ Transform-method territory not yet covered here, in rough priority order (the fi
 
 - [x] PROJ double-barrier options under Lévy models (`proj_double_barrier`, 0.14.0)
 - [x] Fader options under Lévy models (`fader_cf`, 0.17.0)
-- [ ] Step options (occupation-time payoffs, Linetsky 1999) under Lévy models
+- [x] Step options (occupation-time payoffs, Linetsky 1999) under Lévy models (`proj_step`, 0.18.0)
 - [ ] CTMC (continuous-time Markov chain) approximation for barrier/American options under stochastic volatility and SABR
 - [ ] Swing options and credit default swaps via transform methods
 - [x] Regime-switching jump-diffusion regimes (per-regime Merton blocks, 0.15.0)

@@ -304,6 +304,18 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
         supports_path_dependent=True,
         notes="BSM Monte Carlo pricer for realized-variance swaps and variance options.",
     ),
+    "proj_step": MethodSpec(
+        requires_cf=True,
+        supports_products=frozenset({"step"}),
+        supports_exercise=frozenset({"european"}),
+        supports_path_dependent=True,
+        notes=(
+            "PROJ step-option pricer (Linetsky 1999 occupation-time damping, "
+            "discretely monitored): backward induction with soft killing "
+            "exp(-rho dt) beyond the barrier; rho=0 is the vanilla, "
+            "rho->inf the knock-out barrier."
+        ),
+    ),
     "fader_cf": MethodSpec(
         requires_cf=True,
         supports_products=frozenset({"fader"}),

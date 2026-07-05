@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.18.0 - 2026-07-05
+
+- Added step options (Linetsky 1999 occupation-time damping, discretely monitored) for 1-D Levy models: new `StepOption` product and `method="proj_step"` (`proj_step_price` exported). The PROJ barrier backward induction generalizes from hard knock-out to *soft killing*: value mass beyond the barrier is multiplied by `exp(-rho dt)` at each monitoring date, so `rho = 0` recovers the vanilla and `rho -> infinity` recovers the knock-out barrier, with a continuous delta in between. Tests: both limits against the same-engine vanilla/knock-out (2e-3), monotone decay in rho, BSM and Kou full-path Monte Carlo with the discrete occupation-time payoff at 200k paths, up-step direction check, pipeline dispatch, validation errors.
+- Docs audit: `AsianOption`, `DoubleBarrierOption`, and `ForwardStartOption` were missing from the API-reference product table; backfilled along with a pointer to the remaining product dataclasses.
+
 ## 0.17.0 - 2026-07-05
 
 - Added fader (faded-notional) options for Levy models: new `FaderOption` product (fade-in/fade-out over a range (L, U) monitored on discrete dates) and `method="fader_cf"` (`levy_fader_price` exported). Linearity splits the payoff date by date; independence factorizes each term into the COS density of the date-k marginal times the remaining-life European value, and spot-shift homogeneity turns the conditional values into a single COS strike strip per date (2M COS runs total). Fade-out via the exact notional-split parity. Tests: all-encompassing range == vanilla, single-date-at-maturity vs the exact BSM call-spread + digital decomposition (5e-6), BSM and Kou full-path Monte Carlo at 200k paths, fade-in + fade-out == vanilla, range monotonicity, put route through the pipeline, validation errors.

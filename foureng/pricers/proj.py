@@ -1171,3 +1171,155 @@ def proj_double_barrier_price(
         Vt = _kill(np.real(p[:K_half]))
 
     return float(max(Vt[nnot - 1], 0.0))
+
+
+# ---------------------------------------------------------------------------
+# PROJ step-option pricer (occupation-time damping, Linetsky 1999)
+# ---------------------------------------------------------------------------
+
+
+def proj_step_price(
+    step_cf,
+    *,
+    S0: float,
+    r: float,
+    T: float,
+    K: float,
+    B: float,
+    rho: float,
+    M: int,
+    step_type: str = "down",
+    cp: int = 1,
+    q: float = 0.0,
+    N: int = 1 << 14,
+    alph: float = 7.0,
+) -> float:
+    """Proportional step option by the PROJ method.
+
+    Same Toeplitz-FFT backward induction as :func:`proj_barrier_price`, but
+    the hard knock-out is replaced by *soft killing*: at each of the ``M``
+    monitoring dates ``t_1..t_M``, value-function mass beyond the barrier is
+    multiplied by ``exp(-rho * dt)`` instead of being zeroed (Linetsky 1999
+    occupation-time discounting, discretely monitored). ``rho = 0`` recovers
+    the vanilla and ``rho -> infinity`` recovers the knock-out barrier.
+
+    Parameters
+    ----------
+    step_cf
+        One-step risk-neutral CF of ``log(S_{t+dt}/S_t)`` including the
+        ``(r - q) dt`` drift.
+    S0, r, T, K
+        Spot, risk-free rate, maturity, strike.
+    B
+        Barrier level (> 0).
+    rho
+        Damping rate per year spent beyond the barrier (>= 0).
+    M
+        Number of equally spaced monitoring dates.
+    step_type
+        ``"down"`` damps below the barrier, ``"up"`` damps above it.
+    cp
+        ``+1`` call, ``-1`` put.
+    N, alph
+        Projection grid size (power of two) and half-width.
+    """
+    if step_type not in ("down", "up"):
+        raise ValueError(f"proj_step_price: step_type must be 'down' or 'up', got {step_type!r}")
+    if cp not in (1, -1):
+        raise ValueError(f"proj_step_price: cp must be +1 or -1, got {cp}")
+    if rho < 0.0:
+        raise ValueError(f"proj_step_price: rho must be >= 0, got {rho}")
+    if B <= 0.0:
+        raise ValueError(f"proj_step_price: B must be > 0, got {B}")
+    M = int(M)
+    if M < 1:
+        raise ValueError("proj_step_price: M must be >= 1")
+    N = int(N)
+    if N & (N - 1) != 0:
+        raise ValueError("proj_step_price: N must be a power of two")
+
+    dt = T / M
+    damp = float(np.exp(-rho * dt))
+    K_half = N // 2
+
+    dx = 2.0 * alph / (N - 1)
+    a = 1.0 / dx
+    nnot = K_half // 2
+
+    # Strike-aligned grid (same logic as the barrier pricers).
+    lws = np.log(K / S0)
+    nbar_K = int(np.floor(lws * a + K_half / 2))
+    dxtil = 1.0 / a
+    if abs(lws) < dxtil:
+        dx = dxtil
+    elif lws < 0:
+        dx = lws / (1 + nbar_K - K_half / 2)
+        nbar_K = nbar_K + 1
+    elif lws > 0:
+        dx = lws / (nbar_K - K_half / 2)
+    a = 1.0 / dx
+    xmin = (1 - K_half / 2) * dx
+
+    nbar_B = int(np.clip(int(np.floor(a * (np.log(B / S0) - xmin) + 1.0)), 0, K_half))
+
+    # ----  density projection coefficients  ----
+    a2 = a * a
+    Cons2 = 24.0 * a2 * np.exp(-r * dt) / N
+    zmin = (1 - K_half) * dx
+    dw = 2.0 * np.pi * a / N
+    grand_freq = np.arange(1, N) * dw
+    grand = (
+        np.exp(-1j * zmin * grand_freq)
+        * np.asarray(step_cf(grand_freq), dtype=np.complex128)
+        * (np.sin(grand_freq / (2.0 * a)) / grand_freq) ** 2
+        / (2.0 + np.cos(grand_freq / a))
+    )
+    beta = Cons2 * np.real(np.fft.fft(np.concatenate(([1.0 / (24.0 * a2)], grand))))
+    toepM = np.concatenate((np.flip(beta[0:K_half]), [0.0], np.flip(beta[K_half : 2 * K_half - 1])))
+    toepM_fft = np.fft.fft(toepM)
+
+    # ----  terminal payoff stencil (3-pt Gauss-Legendre)  ----
+    b3 = np.sqrt(15.0)
+    b4 = b3 / 10.0
+    varthet_01 = np.exp(0.5 * dx) * (5 * np.cosh(b4 * dx) - b3 * np.sinh(b4 * dx) + 4) / 18
+    varthet_m10 = np.exp(-0.5 * dx) * (5 * np.cosh(b4 * dx) + b3 * np.sinh(b4 * dx) + 4) / 18
+    varthet_star = varthet_01 + varthet_m10
+
+    ThetM = np.zeros(K_half)
+    if cp == -1:
+        Gs_put = np.zeros(K_half)
+        if nbar_K >= 1:
+            Gs_put[0:nbar_K] = np.exp(xmin + dx * np.arange(0, nbar_K)) * S0
+            ThetM[nbar_K - 1] = K * (0.5 - varthet_m10)
+        if nbar_K >= 2:
+            ThetM[0 : nbar_K - 1] = K - varthet_star * Gs_put[0 : nbar_K - 1]
+    else:
+        if nbar_K >= 1:
+            S_at_strike = np.exp(xmin + (nbar_K - 1) * dx) * S0
+            ThetM[nbar_K - 1] = S_at_strike * varthet_01 - K * 0.5
+        if nbar_K < K_half:
+            idx_itm = np.arange(nbar_K, K_half)
+            ThetM[nbar_K:K_half] = varthet_star * np.exp(xmin + dx * idx_itm) * S0 - K
+
+    def _soft_kill(v: np.ndarray) -> np.ndarray:
+        if damp == 1.0:
+            return v
+        v = v.copy()
+        if step_type == "down":
+            if nbar_B > 0:
+                v[:nbar_B] *= damp
+        else:
+            if nbar_B < K_half:
+                v[nbar_B:] *= damp
+        return v
+
+    # Monitoring at t_M (terminal), then t_{M-1}..t_1 after each convolution;
+    # the final convolution to t_0 is NOT damped (occupation over (0, T]).
+    Vt = _soft_kill(ThetM)
+    for _m in range(M - 1, 0, -1):
+        p = np.fft.ifft(toepM_fft * np.fft.fft(np.concatenate((Vt, np.zeros(K_half)))))
+        Vt = _soft_kill(np.real(p[:K_half]))
+    p = np.fft.ifft(toepM_fft * np.fft.fft(np.concatenate((Vt, np.zeros(K_half)))))
+    Vt = np.real(p[:K_half])
+
+    return float(max(Vt[nnot - 1], 0.0))

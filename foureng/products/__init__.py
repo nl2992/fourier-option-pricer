@@ -25,6 +25,7 @@ from .lookback import LookbackOption
 from .multi_asset import BasketOption, BestOfOption, ExchangeOption, SpreadOption
 from .parisian import ParisianOption
 from .quanto import QuantoOption
+from .step import StepOption
 from .variance import VarianceOption, VarianceSwap
 
 __all__ = [
@@ -34,6 +35,7 @@ __all__ = [
     "BarrierOption",
     "DoubleBarrierOption",
     "FaderOption",
+    "StepOption",
     "AsianOption",
     "BermudanOption",
     "AmericanOption",
