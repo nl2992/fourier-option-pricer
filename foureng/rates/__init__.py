@@ -17,12 +17,11 @@ and Practice*, 2nd ed., Springer.
 
 LevFin bridge
 -------------
-For fixed-rate high-yield bonds and leveraged loans, the make-whole
-calculator in Federico Etchelecu's LevFin repository currently uses a
-deterministic risk-free discounter.  Coupling that binomial engine with a
-stochastic ``integrated_rate_cf`` from this subpackage lets the make-whole
-tool value soft-call spread options and issuer refinancing optionality
-under a live yield-curve regime rather than a flat rate assumption.
+For fixed-rate high-yield bonds, Federico Etchelecu's LevFin make-whole
+calculator now uses a Hull-White trinomial tree plus analytic live-curve
+zero-coupon prices for the make-whole strike.  This subpackage supplies the
+curve-fitted short-rate machinery behind that reference implementation and
+keeps the risk-neutral discounting identities explicit.
 """
 
 from __future__ import annotations

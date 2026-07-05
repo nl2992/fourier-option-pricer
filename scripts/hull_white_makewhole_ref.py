@@ -48,8 +48,9 @@ class BondSpec:
         Constant credit spread over the short rate (e.g. 0.04 for 400 bps).
     tighten : float
         Spread-tightening scenario: bps of spread compression phased in
-        linearly from 0 at t=0 to full at t=n. Applied to the credit discount
-        and to the MW strike PV. Default 0.
+        linearly from 0 at t=0 to full at t=n. Applied to the credit discount;
+        the MW strike itself remains risk-free/Treasury plus ``mw_addon``.
+        Default 0.
     mw_addon : float
         Make-whole discount add-on over the risk-free curve (e.g. 0.005 for T+50).
     par : float
@@ -271,7 +272,7 @@ def price_bond_hw(
 
     Make-whole strike inside NC at node (i, j):
         K = max(1.01*par, sum_{k coupon date, i<k<=n} cpn * P_HW(t_i, t_k; r_ij)
-                          + par * P_HW(t_i, t_n; r_ij))
+                          + p50 * P_HW(t_i, t_n; r_ij))
     where ``P_HW`` uses ``r_HW = r_ij`` and the ``mw_addon`` add-on is applied
     inside the affine formula by shifting r_ij by +mw_addon.
     """
@@ -305,7 +306,7 @@ def price_bond_hw(
     n = bond.n
 
     def mw_strike(i: int, r_ij: float) -> float:
-        # PV of remaining coupons + par at t = n, discounted at r_ij + mw_addon
+        # PV of remaining coupons + first-call price at t = n, discounted at r_ij + mw_addon
         # Use analytic HW ZCB from t_i to each future coupon/redemption date.
         # The mw_addon is layered on top of the model curve by shifting the
         # affine exponent — equivalent to a parallel spread over the HW curve.
@@ -324,14 +325,13 @@ def price_bond_hw(
                 zcb *= float(np.exp(-bond.mw_addon * (k - t_i)))
                 # No spread inside MW discount — MW is a rf+50 payoff by convention
                 pv += cpn * zcb
-        # Par at t = n:
+        # First-call redemption price at t = n:
         zcb_n = hw_bond_price_at_node(p, t_i, float(n), r_ij, f0t) * float(
             np.exp(-bond.mw_addon * (n - t_i))
         )
-        # The "step-up 50" p50 payment is what happens at t=n from the tool's
-        # convention — but strictly the MW pays PV of (remaining coupons + par
-        # at n). We use the standard MW: sum coupons + par.
-        pv += par * zcb_n
+        # High-yield Applicable Premium reconstructs coupons through first call
+        # plus the first-call redemption price, matching the browser tool.
+        pv += p50 * zcb_n
         return max(1.01 * par, pv)
 
     def call_strike(tau: float) -> float:
