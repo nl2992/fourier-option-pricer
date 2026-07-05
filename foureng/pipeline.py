@@ -1308,6 +1308,52 @@ def price(
         fwd_t = _FwdSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=product.maturity)
         return mc_price(fwd_t, params.sigma, product, mc_spec).price
 
+    if pt == "swing":
+        from .products.swing import SwingOption
+
+        if not isinstance(product, SwingOption):
+            raise TypeError(
+                "price(): product_type='swing' must be represented by "
+                f"SwingOption, got {type(product).__name__!r}"
+            )
+        if method != "proj_swing":
+            raise NotImplementedError("Swing pricing currently supports method='proj_swing'.")
+        from .pricers.cos_bermudan import _SUPPORTED_MODELS
+        from .pricers.proj import proj_swing_price
+
+        if model not in _SUPPORTED_MODELS:
+            raise NotImplementedError(
+                f"method='proj_swing' supports 1-D Lévy models {sorted(_SUPPORTED_MODELS)}; "
+                f"got model={model!r}."
+            )
+        T_sw = float(product.maturity)
+        M_sw = int(product.n_exercise_dates)
+        dt_sw = T_sw / M_sw
+        cf_sw = MODEL_REGISTRY[model].cf
+        fwd_dt_sw = ForwardSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=dt_sw)
+        drift_sw = (fwd.r - fwd.q) * dt_sw
+
+        def step_cf_sw(u: np.ndarray) -> np.ndarray:
+            return np.exp(1j * u * drift_sw) * np.asarray(
+                cf_sw(u, fwd_dt_sw, params), dtype=np.complex128
+            )
+
+        fwd_T_sw = ForwardSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=T_sw)
+        grid_sw = proj_auto_grid(MODEL_REGISTRY[model].cumulants(fwd_T_sw, params), N=1 << 13)
+        return proj_swing_price(
+            step_cf_sw,
+            S0=fwd.S0,
+            r=fwd.r,
+            T=T_sw,
+            K=float(product.strike),
+            M=M_sw,
+            n_rights=int(product.n_rights),
+            cp=product.cp,
+            q=fwd.q,
+            N=grid_sw.N,
+            alph=grid_sw.alph,
+        )
+
     if pt == "step":
         from .products.step import StepOption
 

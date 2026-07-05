@@ -48,6 +48,7 @@ This file tracks the capability surface used by the registry and dispatcher test
 | `cliquet_cf` | Exact locally collared Levy cliquet via per-period COS call spreads | Wilmott (2002); Kirkby & Deng (2016) |
 | `fader_cf` | Levy fade-in/fade-out via per-date COS density x remaining-life value | Hakala & Wystup (2002) |
 | `proj_step` | PROJ step option: soft killing exp(-rho dt) beyond the barrier | Linetsky (1999) |
+| `proj_swing` | PROJ swing option: DP over (date, rights remaining) | Carmona & Touzi (2008) |
 
 ## Credit analytics (not routed through `price()`)
 

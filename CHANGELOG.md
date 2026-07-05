@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.20.0 - 2026-07-05
+
+- Added swing options (multiple exercise rights, Carmona-Touzi 2008) for 1-D Levy models: new `SwingOption` product and `method="proj_swing"` (`proj_swing_price` exported). Dynamic programming over (date, rights remaining) with one Toeplitz-FFT convolution per rights level: `V_m(x,j) = max(C_m(x,j), g(x) + C_m(x,j-1))` on the strike-aligned PROJ grid. Two exact degeneracies anchor it: `n_rights = 1` is the Bermudan option (agrees with the independent COS-Bermudan engine to 5e-3 and with proj_bermudan_put to 1e-3 at matched grid width) and `n_rights = n_dates` values as the sum of the per-date Europeans (2e-3, calls and puts, BSM and Kou). Also verified: value increasing and concave in rights, subadditivity, excess rights worthless, validation errors.
+
 ## 0.19.0 - 2026-07-05
 
 - Added structural CDS pricing under Levy models (Black-Cox first passage, discretely monitored): `proj_survival_probability` (down-and-out unit payoff through the undiscounted PROJ recursion), `levy_survival_curve` (one run per premium date), `cds_par_spread_from_survival` (O'Kane running-spread legs with half-period accrual on default), and `levy_cds_spread` (end-to-end par spread). Tests: single-date survival equals the exact lognormal tail probability, survival curves vs 200k-path first-passage Monte Carlo on the same monthly grid for BSM and Kou, the credit-triangle identity spread = (1-R) lambda on a synthetic exponential curve (leg assembly validated independently of the survival engine), horizon/barrier monotonicity, spread monotonicity in barrier and exact linearity in (1-R), far-barrier degeneracy, jumps-widen-spreads, validation errors.

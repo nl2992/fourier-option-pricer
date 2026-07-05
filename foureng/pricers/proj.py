@@ -1409,3 +1409,115 @@ def proj_survival_probability(
     Vt = np.real(p[:K_half])
 
     return float(np.clip(Vt[nnot - 1], 0.0, 1.0))
+
+
+# ---------------------------------------------------------------------------
+# PROJ swing-option pricer (multiple exercise rights)
+# ---------------------------------------------------------------------------
+
+
+def proj_swing_price(
+    step_cf,
+    *,
+    S0: float,
+    r: float,
+    T: float,
+    K: float,
+    M: int,
+    n_rights: int,
+    cp: int = 1,
+    q: float = 0.0,
+    N: int = 1 << 13,
+    alph: float = 2.0,
+) -> float:
+    """Swing option price by PROJ dynamic programming over (date, rights).
+
+    The holder owns ``n_rights`` exercise rights over the ``M`` equally
+    spaced dates ``t_1..t_M``, at most one per date, each paying the vanilla
+    intrinsic ``max(cp (S - K), 0)``. Backward induction runs one Toeplitz
+    convolution per (date, rights-level):
+
+        V_m(x, j) = max( C_m(x, j),  g(x) + C_m(x, j-1) ),   C_m(., 0) = 0,
+
+    with the intrinsic ``g`` sampled on the strike-aligned grid (plain
+    node-wise max; the fine grid makes the kink error O(dx^2), negligible
+    next to the rights-level structure). Degeneracies anchor the method:
+    ``n_rights = 1`` is the Bermudan option, and ``n_rights >= M`` makes
+    every ITM date exercisable, so the value is the sum of the ``M``
+    European options.
+
+    References
+    ----------
+    Carmona, R. & Touzi, N. (2008). Optimal multiple stopping and valuation
+    of swing options. *Mathematical Finance*, 18(2), 239-268.
+    """
+    if cp not in (1, -1):
+        raise ValueError(f"proj_swing_price: cp must be +1 or -1, got {cp}")
+    M = int(M)
+    if M < 1:
+        raise ValueError("proj_swing_price: M must be >= 1")
+    n_rights = int(n_rights)
+    if not (1 <= n_rights):
+        raise ValueError(f"proj_swing_price: n_rights must be >= 1, got {n_rights}")
+    n_rights = min(n_rights, M)  # more rights than dates cannot be used
+    N = int(N)
+    if N & (N - 1) != 0:
+        raise ValueError("proj_swing_price: N must be a power of two")
+
+    dt = T / M
+    K_half = N // 2
+
+    dx = 2.0 * alph / (N - 1)
+    a = 1.0 / dx
+    nnot = K_half // 2
+
+    # Strike-aligned grid (same logic as the barrier/step pricers).
+    lws = np.log(K / S0)
+    nbar_K = int(np.floor(lws * a + K_half / 2))
+    dxtil = 1.0 / a
+    if abs(lws) < dxtil:
+        dx = dxtil
+    elif lws < 0:
+        dx = lws / (1 + nbar_K - K_half / 2)
+        nbar_K = nbar_K + 1
+    elif lws > 0:
+        dx = lws / (nbar_K - K_half / 2)
+    a = 1.0 / dx
+    xmin = (1 - K_half / 2) * dx
+
+    # ----  density projection coefficients (with discount)  ----
+    a2 = a * a
+    Cons2 = 24.0 * a2 * np.exp(-r * dt) / N
+    zmin = (1 - K_half) * dx
+    dw = 2.0 * np.pi * a / N
+    grand_freq = np.arange(1, N) * dw
+    grand = (
+        np.exp(-1j * zmin * grand_freq)
+        * np.asarray(step_cf(grand_freq), dtype=np.complex128)
+        * (np.sin(grand_freq / (2.0 * a)) / grand_freq) ** 2
+        / (2.0 + np.cos(grand_freq / a))
+    )
+    beta = Cons2 * np.real(np.fft.fft(np.concatenate(([1.0 / (24.0 * a2)], grand))))
+    toepM = np.concatenate((np.flip(beta[0:K_half]), [0.0], np.flip(beta[K_half : 2 * K_half - 1])))
+    toepM_fft = np.fft.fft(toepM)
+
+    def _conv(v: np.ndarray) -> np.ndarray:
+        p = np.fft.ifft(toepM_fft * np.fft.fft(np.concatenate((v, np.zeros(K_half)))))
+        return np.real(p[:K_half])
+
+    s_nodes = S0 * np.exp(xmin + dx * np.arange(K_half))
+    g = np.maximum(cp * (s_nodes - K), 0.0)
+
+    # V[j] for j = 1..n_rights; at t_M only one exercise is possible per date.
+    V = [g.copy() for _ in range(n_rights)]
+
+    for _m in range(M - 1, 0, -1):
+        C = [_conv(v) for v in V]
+        newV = []
+        for j in range(n_rights):
+            c_lower = C[j - 1] if j >= 1 else 0.0
+            newV.append(np.maximum(C[j], g + c_lower))
+        V = newV
+
+    Vt = _conv(V[n_rights - 1])
+    return float(max(Vt[nnot - 1], 0.0))

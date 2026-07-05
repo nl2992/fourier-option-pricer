@@ -214,6 +214,7 @@ Each model exposes a cumulant function that returns the first four log-return cu
 | `proj_double_barrier_price(step_cf, S0=..., K=..., L=..., U=..., M=..., knockout=True, ...)` | one-step CF, corridor, monitoring count | PROJ double-barrier knock-out/knock-in via two-sided absorption in the backward induction. |
 | `proj_step_price(step_cf, S0=..., K=..., B=..., rho=..., M=..., step_type="down", ...)` | one-step CF, barrier, damping rate, monitoring count | PROJ step option: occupation-time soft killing exp(-rho dt) beyond the barrier (Linetsky 1999). |
 | `proj_survival_probability(step_cf, S0=..., B=..., M=...)` | one-step CF, barrier, monitoring count | First-passage survival probability via the undiscounted down-and-out unit-payoff recursion. |
+| `proj_swing_price(step_cf, S0=..., K=..., M=..., n_rights=..., cp=1, ...)` | one-step CF, exercise dates, rights count | Swing option DP over (date, rights); n_rights=1 Bermudan, n_rights>=M sum of Europeans. |
 
 ---
 

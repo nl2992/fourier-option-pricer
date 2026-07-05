@@ -27,7 +27,7 @@ try:
 
     __version__: str = _pkg_version("fourier-option-pricer")
 except _PNF:  # editable install without metadata yet
-    __version__ = "0.19.0"
+    __version__ = "0.20.0"
 
 from .analytics.bsm_asian import (
     bsm_discrete_geometric_asian,
@@ -156,6 +156,7 @@ from .pricers.proj import (
     proj_price_at_strikes,
     proj_step_price,
     proj_survival_probability,
+    proj_swing_price,
 )
 from .pricers.sabr import sabr_hagan_price_at_strikes
 from .products.chooser import ChooserOption
@@ -163,6 +164,7 @@ from .products.compound import CompoundOption
 from .products.fader import FaderOption
 from .products.quanto import QuantoOption
 from .products.step import StepOption
+from .products.swing import SwingOption
 from .surface import (
     CalibrationResult,
     LocalVolSurface,
@@ -333,6 +335,7 @@ __all__ = [
     "proj_double_barrier_price",
     "proj_step_price",
     "proj_survival_probability",
+    "proj_swing_price",
     "proj_barrier_price",
     "proj_asian_price_cv",
     "ProjGrid",
@@ -426,6 +429,7 @@ __all__ = [
     "ChooserOption",
     "FaderOption",
     "StepOption",
+    "SwingOption",
     # quanto
     "bsm_quanto_forward",
     "bsm_quanto_option",

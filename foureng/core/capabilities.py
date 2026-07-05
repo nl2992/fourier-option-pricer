@@ -304,6 +304,17 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
         supports_path_dependent=True,
         notes="BSM Monte Carlo pricer for realized-variance swaps and variance options.",
     ),
+    "proj_swing": MethodSpec(
+        requires_cf=True,
+        supports_products=frozenset({"swing"}),
+        supports_exercise=frozenset({"bermudan"}),
+        supports_path_dependent=True,
+        notes=(
+            "PROJ swing pricer: dynamic programming over (date, rights) with "
+            "one Toeplitz convolution per level; n_rights=1 is Bermudan, "
+            "n_rights>=dates the sum of per-date Europeans (Carmona-Touzi 2008)."
+        ),
+    ),
     "proj_step": MethodSpec(
         requires_cf=True,
         supports_products=frozenset({"step"}),
