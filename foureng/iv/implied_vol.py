@@ -74,13 +74,23 @@ def bs_price_from_fwd(vol: float, inp: BSInputs) -> float:
     return disc * (K * norm.cdf(-d2) - F * norm.cdf(-d1))
 
 
-def _bs_vega_from_fwd(vol: float, inp: BSInputs) -> float:
+def bs_vega_from_fwd(vol: float, inp: BSInputs) -> float:
+    """Black-Scholes vega (dPrice/dVol) in forward-measure form.
+
+    Public helper used by :mod:`foureng.surface.calibration` to build
+    vega-weighted calibration objectives.  Returns ``0.0`` when the vol or
+    maturity is non-positive.
+    """
     F, K, T, r = inp.F0, inp.K, inp.T, inp.r
     if vol <= 0.0 or T <= 0.0:
         return 0.0
     sqT = np.sqrt(T)
     d1 = (np.log(F / K) + 0.5 * vol * vol * T) / (vol * sqT)
     return np.exp(-r * T) * F * norm.pdf(d1) * sqT
+
+
+# Back-compat alias: older callers used the private name.
+_bs_vega_from_fwd = bs_vega_from_fwd
 
 
 def implied_vol_brent(price: float, inp: BSInputs, lo: float = 1e-6, hi: float = 5.0) -> float:

@@ -18,9 +18,25 @@ across each dimension regardless of raw units (kappa in [0,20] vs theta in
 the normalisation is invisible.
 
 Calibrate on IVs rather than prices because IV residuals are roughly on the
-same scale across strikes (prices vary by orders of magnitude ITM/OTM). For
-pathological inputs (stale quotes, arbitrage violations) switch to a
-price-space loss with vega weights.
+same scale across strikes (prices vary by orders of magnitude ITM/OTM).
+
+Weighting
+---------
+The raw unweighted SSR treats every grid cell as equally informative, which
+over-fits illiquid deep-OTM wings.  Two helpers build sensible weight
+matrices that plug straight into ``weights=`` on the calibrate_* functions:
+
+* :func:`vega_weights`  -  weights each cell by vega^2 so that IV residuals
+  are converted into an approximate price-space Gauss-Newton loss.  This is
+  the standard practitioner objective (Cont-Tankov 2004 §13.1; Homescu 2011,
+  "Implied volatility surface: Construction methodologies and characteristics").
+* :func:`spread_weights`  -  weights each cell by ``1 / (bid_ask_iv / 2)^2``
+  so that quotes with a tight bid-ask contribute more.  Useful when the
+  market data feed carries per-cell spread information; falls back gracefully
+  to a floor spread when quotes are one-sided.
+
+Both helpers return a ``(nT, nK)`` array normalised to mean 1 so that the
+absolute magnitude of ``ftol`` stays comparable across weighting schemes.
 """
 
 from __future__ import annotations
@@ -31,6 +47,7 @@ from typing import Callable
 import numpy as np
 from scipy.optimize import minimize
 
+from ..iv.implied_vol import BSInputs, bs_vega_from_fwd
 from ..models.cgmy import CgmyParams, cgmy_cf, cgmy_cumulants
 from ..models.heston import HestonParams, heston_cf_form2, heston_cumulants
 from ..models.kou import KouParams, kou_cf, kou_cumulants
@@ -386,3 +403,123 @@ def calibrate_nig(
         maxiter=maxiter,
         ftol=ftol,
     )
+
+
+# --- Weight builders ---------------------------------------------------------
+
+
+def vega_weights(
+    spec: SurfaceSpec,
+    market_ivs: np.ndarray,
+    normalise: bool = True,
+) -> np.ndarray:
+    """Vega^2 weight matrix aligned to ``(spec.maturities, spec.strikes)``.
+
+    Weighting the IV SSR by ``vega^2`` is the Gauss-Newton equivalent of the
+    price-space SSR, because to first order
+
+        Δprice ≈ vega · Δiv        ⇒        (Δprice)^2 ≈ vega^2 · (Δiv)^2.
+
+    So minimising ``Σ vega^2 · (iv_model - iv_mkt)^2`` is equivalent to
+    minimising the price-space SSR while keeping the numerically well-behaved
+    IV-space residual formulation (see module docstring on why we do not
+    calibrate on raw prices directly).
+
+    Deep-OTM quotes have vega ≈ 0 and therefore carry ~zero weight, which
+    matches the practitioner intuition that those wings are noise-dominated.
+
+    Parameters
+    ----------
+    spec : SurfaceSpec
+        Grid definition (S0, r, q, maturities, strikes).
+    market_ivs : np.ndarray
+        Shape ``(nT, nK)`` of market Black-76 implied vols.  Used to evaluate
+        vega at the market IV level (this is standard: model IV moves during
+        calibration but weights are fixed at market to avoid a moving target).
+    normalise : bool
+        If True (default), rescale the weight matrix to have mean 1.  This
+        keeps the absolute magnitude of ``ftol`` roughly invariant across
+        weighting schemes.
+
+    Returns
+    -------
+    np.ndarray
+        Shape ``(nT, nK)`` weight matrix suitable for passing to the
+        ``weights=`` argument of any ``calibrate_*`` function.
+    """
+    market_ivs = np.asarray(market_ivs, dtype=float)
+    expected_shape = (len(spec.maturities), len(spec.strikes))
+    if market_ivs.shape != expected_shape:
+        raise ValueError(f"market_ivs shape {market_ivs.shape} != {expected_shape}")
+
+    w = np.zeros_like(market_ivs)
+    for i, T in enumerate(spec.maturities):
+        F0 = spec.S0 * np.exp((spec.r - spec.q) * float(T))
+        for j, K in enumerate(spec.strikes):
+            iv = float(market_ivs[i, j])
+            if not np.isfinite(iv) or iv <= 0.0:
+                continue
+            inp = BSInputs(F0=F0, K=float(K), T=float(T), r=spec.r, q=spec.q, is_call=True)
+            vega = bs_vega_from_fwd(iv, inp)
+            w[i, j] = vega * vega
+
+    if normalise:
+        m = float(w[np.isfinite(w) & (w > 0)].mean()) if np.any(w > 0) else 1.0
+        if m > 0:
+            w = w / m
+    return w
+
+
+def spread_weights(
+    bid_ivs: np.ndarray,
+    ask_ivs: np.ndarray,
+    floor_spread: float = 5e-4,
+    normalise: bool = True,
+) -> np.ndarray:
+    """Bid-ask-spread weight matrix ``w = 1 / half_spread^2``.
+
+    Tight quotes contribute more; wide quotes contribute less.  This is the
+    inverse-variance interpretation: if we treat the bid-ask half-spread as a
+    proxy for the standard error of the mid-quote IV, then Gauss-Markov says
+    to weight each residual by the reciprocal of its variance.
+
+    Parameters
+    ----------
+    bid_ivs, ask_ivs : np.ndarray
+        Shape ``(nT, nK)`` matrices of bid and ask implied vols.  Must be
+        aligned to the same ``(maturities, strikes)`` grid.  Missing quotes
+        (NaN, non-finite, or one-sided) get the ``floor_spread`` treatment.
+    floor_spread : float
+        Minimum half-spread (in IV points) applied to any cell whose observed
+        half-spread is below this floor or where one side of the quote is
+        missing.  Default 5 bps of vol = 0.05 vol points; picks up
+        typical liquid ATM equity/FX quotes without over-weighting
+        artificially tight vendor mids.
+    normalise : bool
+        If True (default), rescale the weight matrix to have mean 1.
+
+    Returns
+    -------
+    np.ndarray
+        Shape ``(nT, nK)`` weight matrix suitable for ``weights=`` on any
+        ``calibrate_*`` function.
+    """
+    bid = np.asarray(bid_ivs, dtype=float)
+    ask = np.asarray(ask_ivs, dtype=float)
+    if bid.shape != ask.shape:
+        raise ValueError(f"bid_ivs shape {bid.shape} != ask_ivs shape {ask.shape}")
+    if not np.isfinite(floor_spread) or floor_spread <= 0.0:
+        raise ValueError(f"floor_spread must be finite and > 0; got {floor_spread}")
+
+    half = 0.5 * (ask - bid)
+    # Any invalid cell (NaN, negative crossed quote, one-sided) gets the floor.
+    invalid = ~(np.isfinite(half) & (half > 0.0))
+    half = np.where(invalid, floor_spread, half)
+    half = np.maximum(half, floor_spread)
+
+    w = 1.0 / (half * half)
+    if normalise:
+        m = float(w[np.isfinite(w) & (w > 0)].mean()) if np.any(w > 0) else 1.0
+        if m > 0:
+            w = w / m
+    return w

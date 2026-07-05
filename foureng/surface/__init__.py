@@ -14,6 +14,8 @@ from .calibration import (
     calibrate_kou,
     calibrate_nig,
     calibrate_vg,
+    spread_weights,
+    vega_weights,
 )
 from .vol_surface import SurfaceSpec, model_iv_surface, model_price_surface
 
@@ -27,4 +29,6 @@ __all__ = [
     "calibrate_kou",
     "calibrate_cgmy",
     "calibrate_nig",
+    "vega_weights",
+    "spread_weights",
 ]
