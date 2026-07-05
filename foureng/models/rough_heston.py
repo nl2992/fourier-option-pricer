@@ -9,10 +9,14 @@ Hurst parameter H (or equivalently the fractional exponent alpha):
     v_t  = v0 + (1/Γ(alpha)) ∫_0^t (t-s)^{alpha-1} [kappa*(theta - v_s) ds
                                                   + nu*sqrt(v_s) dW2_s]
 
-where alpha ∈ (0, 1) and <dW1, dW2> = rho dt.  When alpha = 0.5 (i.e.,
-H = 0.5 in some parameterisations), the model reduces to the standard
-Heston SDE.  Rough paths (H < 0.5 in the half-integer convention) produce
-a steeper short-maturity ATM skew consistent with empirical observations.
+where alpha ∈ (0, 1) and <dW1, dW2> = rho dt.  In the limit alpha → 1
+the fractional kernel collapses to (t-s)^0 = 1 with Γ(1) = 1, so the
+SDE recovers the classical (Markovian) Heston model; alpha = 1 itself
+is on the boundary and excluded by this dataclass.  The rough regime
+is alpha < 1/2 (equivalently, Hurst exponent H = alpha - 1/2 < 0);
+the library default alpha = 0.62 corresponds to H ≈ 0.12, well inside
+the rough regime and consistent with the empirical H reported by
+Gatheral, Jaisson & Rosenbaum (2018) for equity index variance.
 
 CF derivation
 -------------
@@ -79,8 +83,13 @@ class RoughHestonParams(ModelSpec):
     theta : float
         Long-term variance mean. Must be ``> 0``.
     alpha : float
-        Fractional exponent, in ``(0, 1)``. Governs path roughness;
-        ``alpha = 0.5`` recovers the standard Heston SDE.
+        Fractional exponent, in ``(0, 1)``. Governs path roughness.
+        The limit ``alpha → 1`` recovers the classical Heston SDE (the
+        fractional kernel becomes ``(t-s)^0 = 1`` and ``Γ(1) = 1``);
+        ``alpha = 1`` itself is on the boundary and is excluded by the
+        validator below.  The rough regime is ``alpha < 1/2`` (Hurst
+        ``H = alpha - 1/2 < 0``); the default ``alpha = 0.62`` gives
+        ``H ≈ 0.12`` and matches the rough-variance empirics.
     """
 
     sigma: float
