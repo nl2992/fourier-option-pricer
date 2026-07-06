@@ -71,7 +71,7 @@ Full methodology: [appendix.md](appendix.md) · Extension details: [docs/filtere
 
 ## 🆕 What's new in the 0.11–0.21 line
 
-Nine capabilities ported into the Fourier stack from the transform-methods literature (the territory covered by Kirkby's PROJ MATLAB toolbox), each implemented natively against `foureng`'s CF interfaces and validated against closed forms and Monte Carlo:
+Thirteen capabilities ported into the Fourier stack from the transform-methods literature (the territory covered by Kirkby's PROJ MATLAB toolbox), each implemented natively against `foureng`'s CF interfaces and validated against closed forms and Monte Carlo:
 
 | Capability | Use it via | The one-line math |
 |-----------|-----------|-------------------|
