@@ -259,6 +259,19 @@ def price_strip(
             dtype=np.float64,
         )
 
+    if method == "ctmc":
+        if model != "bsm":
+            raise ValueError("method='ctmc' is currently implemented only for model='bsm'")
+        from .pricers.ctmc import CTMCGrid, ctmc_european_price_at_strikes
+
+        ctmc_grid = grid if isinstance(grid, CTMCGrid) else None
+        return np.asarray(
+            ctmc_european_price_at_strikes(
+                fwd.S0, K, fwd.r, fwd.q, fwd.T, params.sigma, cp=cp, grid=ctmc_grid
+            ),
+            dtype=np.float64,
+        )
+
     phi = _cf_for(model, fwd, params)
 
     if method == "conv":
@@ -811,6 +824,20 @@ def price(
                 "American pricing is currently implemented only for model='bsm'."
             )
         fwd_t = _FwdSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=product.maturity)
+        if method == "ctmc":
+            from .pricers.ctmc import CTMCGrid, ctmc_american_price
+
+            ctmc_grid = grid if isinstance(grid, CTMCGrid) else None
+            return ctmc_american_price(
+                fwd.S0,
+                product.strike,
+                fwd.r,
+                fwd.q,
+                product.maturity,
+                params.sigma,
+                cp=product.cp,
+                grid=ctmc_grid,
+            )
         if method == "monte_carlo":
             mc_spec = grid if isinstance(grid, MCSpec) else MCSpec()
             return mc_price(fwd_t, params.sigma, product, mc_spec).price

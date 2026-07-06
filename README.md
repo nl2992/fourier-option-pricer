@@ -41,7 +41,7 @@ Swap `"heston"` for any of 22 models, `"cos_improved"` for any of 9 engines. Sam
 | PROJ | `proj` | B-spline frame projection (Kirkby 2015/2017), European + Bermudan + single/double barrier + Asian CV | polynomial (order-tunable) |
 | PyFENG FFT | `pyfeng_fft` | Third-party reference engine for 8 models | — |
 
-Plus non-Fourier baselines (CRR lattice, implicit PDE, Monte Carlo with control variates and LSMC) and product-level pricing for 23 payoff dataclasses (barriers, Asians, cliquets, faders, step and swing options, variance products, and more).
+Plus non-Fourier baselines (CRR lattice, implicit PDE, CTMC generator methods, Monte Carlo with control variates and LSMC) and product-level pricing for 23 payoff dataclasses (barriers, Asians, cliquets, faders, step and swing options, variance products, and more).
 
 ---
 
@@ -69,7 +69,7 @@ Full methodology: [appendix.md](appendix.md) · Extension details: [docs/filtere
 
 ---
 
-## 🆕 What's new in the 0.11–0.20 line
+## 🆕 What's new in the 0.11–0.21 line
 
 Nine capabilities ported into the Fourier stack from the transform-methods literature (the territory covered by Kirkby's PROJ MATLAB toolbox), each implemented natively against `foureng`'s CF interfaces and validated against closed forms and Monte Carlo:
 
@@ -87,6 +87,7 @@ Nine capabilities ported into the Fourier stack from the transform-methods liter
 | **Step options** — Linetsky (1999) | `price(product, model, "proj_step", ...)` | PROJ recursion with soft killing $e^{-\rho\,\Delta t}$ beyond the barrier; $\rho{=}0$ vanilla, $\rho{\to}\infty$ knock-out |
 | **Structural CDS** — Black & Cox (1976) | `levy_cds_spread(model, fwd, params, ...)` | First-passage survival via the PROJ unit-payoff recursion + O'Kane legs |
 | **Swing options** — Carmona & Touzi (2008) | `price(product, model, "proj_swing", ...)` | DP over (date, rights): $V_m(x,j) = \max(C_j, g + C_{j-1})$, one convolution per level |
+| **CTMC approximation** — Mijatović & Pistorius (2013) | `price_strip("bsm", "ctmc", ...)`, American via `price` | Generator $Q$ from the finite-volume stencil; $V = e^{T(Q - rI)}g$, local vol supported |
 
 Also in this line: `cp=-1` is now honored uniformly across every Fourier engine (parity applied once at dispatch), a long-standing drift omission in `merton_jd_cumulants` is fixed, and the API reference was backfilled to cover every public symbol. Details in the [CHANGELOG](CHANGELOG.md).
 
@@ -323,6 +324,8 @@ All MC functions take a `GBMPathSpec(n_paths, n_steps, seed, antithetic)` config
 | `proj_step_price(step_cf, S0=..., B=..., rho=..., M=..., step_type="down", ...)` | one-step CF, barrier, damping rate | `float` |
 | `levy_cds_spread(model, fwd, params, default_barrier=..., recovery=..., maturity=...)` | Lévy model key, market inputs, credit terms | `float` (par spread) |
 | `proj_swing_price(step_cf, S0=..., K=..., M=..., n_rights=..., cp=1, ...)` | one-step CF, dates, rights | `float` |
+| `ctmc_european_price(S0, K, r, q, T, sigma, cp=1, grid=None)` | market inputs, constant or callable vol | `float` |
+| `ctmc_american_price(S0, K, r, q, T, sigma, cp=1, n_steps=100, grid=None)` | market inputs, constant or callable vol | `float` |
 | `sabr_hagan_price_at_strikes(fwd, params, strikes)` | `ForwardSpec`, `SabrParams`, strike array | `np.ndarray` |
 
 ### Grid constructors
@@ -488,7 +491,7 @@ Transform-method territory not yet covered here, in rough priority order (the fi
 - [x] PROJ double-barrier options under Lévy models (`proj_double_barrier`, 0.14.0)
 - [x] Fader options under Lévy models (`fader_cf`, 0.17.0)
 - [x] Step options (occupation-time payoffs, Linetsky 1999) under Lévy models (`proj_step`, 0.18.0)
-- [ ] CTMC (continuous-time Markov chain) approximation for barrier/American options under stochastic volatility and SABR
+- [x] CTMC (continuous-time Markov chain) approximation: 1-D diffusions with local vol, European + American (`ctmc`, 0.21.0); stochastic-vol/SABR 2-D extension is future work
 - [x] Credit default swaps via transform methods (`levy_cds_spread`, 0.19.0)
 - [x] Swing options via transform methods (`proj_swing`, 0.20.0)
 - [x] Regime-switching jump-diffusion regimes (per-regime Merton blocks, 0.15.0)

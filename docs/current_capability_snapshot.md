@@ -49,6 +49,7 @@ This file tracks the capability surface used by the registry and dispatcher test
 | `fader_cf` | Levy fade-in/fade-out via per-date COS density x remaining-life value | Hakala & Wystup (2002) |
 | `proj_step` | PROJ step option: soft killing exp(-rho dt) beyond the barrier | Linetsky (1999) |
 | `proj_swing` | PROJ swing option: DP over (date, rights remaining) | Carmona & Touzi (2008) |
+| `ctmc` | CTMC generator approximation: European (matrix exponential) and American (time-stepping), constant or local vol | Mijatovic & Pistorius (2013); Lo & Skindilias (2014) |
 
 ## Credit analytics (not routed through `price()`)
 

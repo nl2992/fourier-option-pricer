@@ -479,9 +479,10 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
         supports_exercise=frozenset({"european", "american", "bermudan"}),
         supports_path_dependent=False,
         notes=(
-            "Continuous-Time Markov Chain approximation (Kirkby). "
-            "Discretises the state space; supports early exercise and barriers "
-            "via matrix-exponent / generator methods."
+            "Continuous-time Markov chain approximation (Mijatovic-Pistorius / "
+            "Lo-Skindilias generator): European vanillas via one matrix "
+            "exponential, Americans via Bermudan time-stepping. Constant or "
+            "local (state-dependent) volatility."
         ),
     ),
     "bsm_analytic": MethodSpec(

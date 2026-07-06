@@ -153,6 +153,7 @@ Each model exposes a cumulant function that returns the first four log-return cu
 | `PDEGrid` | `n_steps`, `n_spot`, `theta` | Finite-difference PDE grid. |
 | `ProjGrid` | `N`, `alph`, `order` | PROJ frame-projection grid (Haar/linear/quadratic/cubic B-spline). |
 | `HilbertGrid` | `h`, `N` | Feng-Linetsky half-integer sinc grid for the discrete Hilbert transform. |
+| `CTMCGrid` | `n_states`, `width` | Spot-centered log-price state grid for the CTMC generator approximation. |
 
 ### Grid builders
 
@@ -215,6 +216,9 @@ Each model exposes a cumulant function that returns the first four log-return cu
 | `proj_step_price(step_cf, S0=..., K=..., B=..., rho=..., M=..., step_type="down", ...)` | one-step CF, barrier, damping rate, monitoring count | PROJ step option: occupation-time soft killing exp(-rho dt) beyond the barrier (Linetsky 1999). |
 | `proj_survival_probability(step_cf, S0=..., B=..., M=...)` | one-step CF, barrier, monitoring count | First-passage survival probability via the undiscounted down-and-out unit-payoff recursion. |
 | `proj_swing_price(step_cf, S0=..., K=..., M=..., n_rights=..., cp=1, ...)` | one-step CF, exercise dates, rights count | Swing option DP over (date, rights); n_rights=1 Bermudan, n_rights>=M sum of Europeans. |
+| `ctmc_european_price(S0, K, r, q, T, sigma, cp=..., grid=...)` | market inputs, constant or callable sigma(S) | CTMC European vanilla via one matrix exponential of the generator. |
+| `ctmc_european_price_at_strikes(S0, strikes, r, q, T, sigma, cp=..., grid=...)` | market inputs, strike array | Strip version sharing one matrix exponential across strikes. |
+| `ctmc_american_price(S0, K, r, q, T, sigma, cp=..., n_steps=..., grid=...)` | market inputs, exercise resolution | CTMC American vanilla via Bermudan time-stepping. |
 
 ---
 

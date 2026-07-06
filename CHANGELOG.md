@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.21.0 - 2026-07-06
+
+- Implemented the CTMC (continuous-time Markov chain) approximation layer, completing the PROJ-toolbox gap roadmap. New `foureng/pricers/ctmc.py` with `CTMCGrid`, `ctmc_european_price`, `ctmc_european_price_at_strikes` (one matrix exponential shared across a strike strip), and `ctmc_american_price` (Bermudan time-stepping with a single one-step transition matrix). Generator built from the Mijatovic-Pistorius / Lo-Skindilias finite-volume stencil with automatic upwind fallback, on a spot-centered log grid. Volatility may be a constant (BSM) or a callable `sigma(S)` for local-vol/CEV-type diffusions -- the CTMC's purpose: state-dependent coefficients with no characteristic function. Wired as `method="ctmc"` in `price_strip` (European, BSM) and `price` (American), filling the long-standing "planned" registry entry. Tests: BSM closed form at 5e-4 with verified second-order grid convergence, American put vs the CRR lattice at 2e-3, American call with q=0 equals European, constant-callable identity, CEV local-vol skew direction, dispatch, parity, validation.
+
 ## 0.20.0 - 2026-07-05
 
 - Added swing options (multiple exercise rights, Carmona-Touzi 2008) for 1-D Levy models: new `SwingOption` product and `method="proj_swing"` (`proj_swing_price` exported). Dynamic programming over (date, rights remaining) with one Toeplitz-FFT convolution per rights level: `V_m(x,j) = max(C_m(x,j), g(x) + C_m(x,j-1))` on the strike-aligned PROJ grid. Two exact degeneracies anchor it: `n_rights = 1` is the Bermudan option (agrees with the independent COS-Bermudan engine to 5e-3 and with proj_bermudan_put to 1e-3 at matched grid width) and `n_rights = n_dates` values as the sum of the per-date Europeans (2e-3, calls and puts, BSM and Kou). Also verified: value increasing and concave in rights, subadditivity, excess rights worthless, validation errors.
