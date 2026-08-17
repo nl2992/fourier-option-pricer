@@ -46,6 +46,12 @@ class MethodSpec:
         Exercise styles supported (e.g. ``{"european", "bermudan"}``).
     supports_path_dependent : bool
         True if the engine handles path-dependent payoffs natively.
+    implemented : bool
+        False for entries that describe a *planned* engine with no module
+        behind it yet. The declaration is kept so the capability matrix can
+        document the intended roadmap, but callers must not read a
+        declaration as shipped code -- ``explain_capability`` says so
+        explicitly, and :func:`implemented_methods` filters them out.
     notes : str
         Optional human-readable notes for explain_capability().
     """
@@ -56,6 +62,7 @@ class MethodSpec:
     supports_products: FrozenSet[str] = field(default_factory=frozenset)
     supports_exercise: FrozenSet[str] = field(default_factory=frozenset)
     supports_path_dependent: bool = False
+    implemented: bool = True
     notes: str = ""
 
 
@@ -118,7 +125,6 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
             "CGMY, NIG, 3/2 SV, Rough Heston."
         ),
     ),
-    # ── Planned methods (not yet implemented) ────────────────────────────
     "cos_bermudan": MethodSpec(
         requires_cf=True,
         supports_products=frozenset({"bermudan", "european"}),
@@ -156,7 +162,12 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
             "control variates, and Sobol QMC."
         ),
     ),
+    # ── Planned engines: declared for the roadmap, NOT yet implemented ───
+    # There is no module behind any of the four below. Do not read these as
+    # shipped capability; `implemented=False` and explain_capability() flags
+    # them. Remove the flag in the same change that lands the engine.
     "pde_fd": MethodSpec(
+        implemented=False,
         requires_cf=False,
         requires_markov_state=True,
         supports_products=frozenset({"european", "american", "barrier"}),
@@ -169,6 +180,7 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
         ),
     ),
     "lattice": MethodSpec(
+        implemented=False,
         requires_cf=False,
         supports_products=frozenset({"european", "american", "barrier"}),
         supports_exercise=frozenset({"european", "american", "bermudan"}),
@@ -180,6 +192,7 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
         ),
     ),
     "proj": MethodSpec(
+        implemented=False,
         requires_cf=True,
         supports_products=frozenset({"european", "barrier", "asian", "bermudan", "american"}),
         supports_exercise=frozenset({"european", "bermudan", "american"}),
@@ -191,6 +204,7 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
         ),
     ),
     "ctmc": MethodSpec(
+        implemented=False,
         requires_cf=False,
         requires_markov_state=True,
         supports_products=frozenset({"european", "american", "barrier", "bermudan"}),
@@ -241,6 +255,16 @@ _SVJD_MODELS = {
     "heston_kou",
     "heston_cgmy",
 }
+
+
+def implemented_methods() -> list[str]:
+    """Method keys with an actual engine behind them, sorted.
+
+    Prefer this over iterating ``METHOD_REGISTRY`` when you need the methods a
+    caller can really invoke: the registry also carries planned entries that
+    document the roadmap.
+    """
+    return sorted(k for k, spec in METHOD_REGISTRY.items() if spec.implemented)
 
 
 def explain_capability(
@@ -296,6 +320,13 @@ def explain_capability(
 
     # --- success ---
     notes = spec.notes or f"method={method!r} supports product={product!r}."
+    if not spec.implemented:
+        return (
+            f"Not supported: method={method!r} is declared in the capability "
+            "matrix but is not implemented yet -- there is no engine behind "
+            f"this entry. Planned behaviour: {notes}"
+        )
+
     return f"Supported: {notes}"
 
 

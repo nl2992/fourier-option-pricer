@@ -24,9 +24,6 @@ from foureng.core.capabilities import explain_capability
         ("kou", "bermudan", "cos_bermudan"),
         ("bsm", "european", "monte_carlo"),
         ("heston", "asian", "monte_carlo"),
-        ("bsm", "barrier", "pde_fd"),
-        ("bsm", "american", "lattice"),
-        ("vg", "european", "proj"),
     ],
 )
 def test_supported_combinations_return_supported(model, product, method):
@@ -34,6 +31,40 @@ def test_supported_combinations_return_supported(model, product, method):
     assert result.startswith("Supported:"), (
         f"Expected Supported for ({model}, {product}, {method}), got: {result}"
     )
+
+
+# ── Planned engines ────────────────────────────────────────────────────────
+#
+# These four are declared in METHOD_REGISTRY to document the roadmap, but no
+# module implements them. They previously appeared in the "supported" list
+# above, which made the capability matrix assert a capability the package does
+# not have. They must report as unavailable until the engine lands.
+
+
+@pytest.mark.parametrize(
+    "model,product,method",
+    [
+        ("bsm", "barrier", "pde_fd"),
+        ("bsm", "american", "lattice"),
+        ("vg", "european", "proj"),
+        ("bsm", "american", "ctmc"),
+    ],
+)
+def test_planned_engines_are_not_reported_as_supported(model, product, method):
+    result = explain_capability(model, product, method)
+    assert result.startswith("Not supported:")
+    assert "not implemented yet" in result
+
+
+def test_planned_engines_excluded_from_implemented_methods():
+    from foureng.core.capabilities import METHOD_REGISTRY, implemented_methods
+
+    available = implemented_methods()
+    for planned in ("pde_fd", "lattice", "proj", "ctmc"):
+        assert planned in METHOD_REGISTRY, "declaration should remain for the roadmap"
+        assert planned not in available
+    for shipped in ("cos", "cos_bermudan", "monte_carlo", "pyfeng_fft"):
+        assert shipped in available
 
 
 # ── Unsupported combinations ───────────────────────────────────────────────

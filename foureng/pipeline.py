@@ -453,10 +453,12 @@ def price(
 ) -> float | np.ndarray:
     """Price a :class:`~foureng.products.ProductSpec` under the given model and method.
 
-    This is the product-aware counterpart to :func:`price_strip`.  Currently
-    only :class:`~foureng.products.EuropeanOption` is routed; all other product
-    types raise :class:`NotImplementedError` with an informative message
-    (including which engine would be needed once that product is implemented).
+    This is the product-aware counterpart to :func:`price_strip`.  Routed
+    products are :class:`~foureng.products.EuropeanOption` (any method) and
+    :class:`~foureng.products.BermudanOption` (``method="cos_bermudan"``, 1-D
+    Lévy models only).  All other product types raise
+    :class:`NotImplementedError` with an informative message (including which
+    engine would be needed once that product is implemented).
 
     Parameters
     ----------
@@ -502,14 +504,47 @@ def price(
         results = price_strip(
             model, method, [product.strike], fwd_t, params, grid=grid, cp=product.cp
         )
-        return float(results[0])
+        value = float(results[0])
+        if product.cp == -1 and method != "pyfeng_fft":
+            # price_strip's in-house pricers always return calls and leave
+            # parity to the caller (documented in its ``cp`` parameter). The
+            # product API cannot delegate that: a EuropeanOption with cp=-1
+            # *is* a put, so returning the call value would be a silently
+            # wrong number. Apply put-call parity here.
+            value = (
+                value
+                - fwd_t.S0 * np.exp(-fwd_t.q * fwd_t.T)
+                + product.strike * np.exp(-fwd_t.r * fwd_t.T)
+            )
+        return float(value)
+
+    if pt == "bermudan":
+        from .models.base import ForwardSpec as _FwdSpec
+        from .pricers.cos_bermudan import cos_bermudan_price
+        from .products.bermudan import BermudanOption
+
+        if not isinstance(product, BermudanOption):
+            raise TypeError(
+                "price(): product_type='bermudan' must be represented by "
+                f"BermudanOption, got {type(product).__name__!r}"
+            )
+        if method != "cos_bermudan":
+            raise NotImplementedError(
+                f"price(): method={method!r} does not support Bermudan exercise.\n"
+                "Use method='cos_bermudan' (Fang & Oosterlee 2009 COS backward "
+                "induction). Transform methods that price a terminal payoff "
+                "cannot value an early-exercise right."
+            )
+        # cos_bermudan_price applies its own model gate: 1-D Lévy models only,
+        # raising NotImplementedError for SV / SV-jump models.
+        fwd_t = _FwdSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=product.maturity)
+        return float(cos_bermudan_price(model, fwd_t, params, product, grid=grid))
 
     # For future products, provide a capability hint instead of a bare NotImplementedError.
     _HINTS: dict[str, str] = {
         "digital": "Use a COS digital pricer (Phase 4.1) or analytic BSM.",
         "barrier": "Use barrier_analytic_bsm / barrier_mc / barrier_cos (Phase 4.2).",
         "asian": "Use asian_geometric_bsm / asian_mc / asian_proj (Phase 4.3).",
-        "bermudan": "Use cos_bermudan for Lévy models (Phase 3.3).",
         "american": "Use american_lattice / american_pde (Phase 4.4).",
         "lookback": "Use lookback_bsm / lookback_mc (Phase 4.5).",
         "forward_start": "Use forward_start_bsm / forward_start_mc (Phase 4.6).",
