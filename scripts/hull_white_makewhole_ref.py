@@ -47,10 +47,16 @@ class BondSpec:
     spread : float
         Constant credit spread over the short rate (e.g. 0.04 for 400 bps).
     tighten : float
-        Spread-tightening scenario: bps of spread compression phased in
-        linearly from 0 at t=0 to full at t=n. Applied to the credit discount;
-        the MW strike itself remains risk-free/Treasury plus ``mw_addon``.
-        Default 0.
+        Spread-tightening scenario: spread compression phased in linearly from
+        0 at t=0 to full at t=n, expressed **in decimals like ``spread``**
+        (e.g. 0.005 for 50 bps of compression). Applied to the credit
+        discount; the MW strike itself remains risk-free/Treasury plus
+        ``mw_addon``. Default 0.
+
+        This is subtracted directly from ``spread`` in the lattice roll-back,
+        so the two must share units. It was previously documented in bps,
+        which made a docstring-following caller pass ``50`` and compute a
+        discount yield of ``spread - 50``.
     mw_addon : float
         Make-whole discount add-on over the risk-free curve (e.g. 0.005 for T+50).
     par : float
@@ -64,6 +70,21 @@ class BondSpec:
     tighten: float = 0.0
     mw_addon: float = 0.005
     par: float = 100.0
+
+    def __post_init__(self) -> None:
+        # Catch a bps-denominated `tighten` at the boundary rather than letting
+        # it flow into the discount yield, where `spread - tighten` silently
+        # becomes a large negative rate and the lattice returns nonsense.
+        if not -1.0 < self.tighten < 1.0:
+            raise ValueError(
+                f"BondSpec.tighten must be a decimal like `spread`, got {self.tighten!r}. "
+                "Pass 0.005 for 50 bps of spread compression, not 50."
+            )
+        if not -1.0 < self.spread < 1.0:
+            raise ValueError(
+                f"BondSpec.spread must be a decimal, got {self.spread!r}. "
+                "Pass 0.04 for 400 bps, not 400."
+            )
 
 
 def _hw_bond_reconstitution(
