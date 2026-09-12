@@ -25,7 +25,7 @@ foureng/                # source package
   __init__.py           # public API + __all__
   _version.py           # __version__
   py.typed              # PEP 561 marker
-  models/               # 22 characteristic-function models
+  models/               # 27 characteristic-function models
   pricers/              # COS, Carr-Madan, FRFT, Hilbert, CONV, Lewis, PROJ, CTMC, ...
   products/             # payoff dataclasses (barriers, Asians, cliquets, ...)
   analytics/            # closed forms (BSM exotics, Levy credit, variance)

@@ -1,6 +1,6 @@
-"""fourier-option-pricer: Fourier methods for European option pricing.
+"""fourier-option-pricer: Fourier option pricing under characteristic-function models.
 
-All 22 model dataclasses, characteristic functions, and cumulants are
+All 27 model dataclasses, characteristic functions, and cumulants are
 available directly from this top-level package:
 
     import foureng as fe

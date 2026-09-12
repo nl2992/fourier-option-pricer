@@ -1,4 +1,4 @@
-"""Characteristic functions and parameter dataclasses for all 20 models.
+"""Characteristic functions and parameter dataclasses for all 27 models.
 
 PyFENG-backed (thin adapters around ``pyfeng.*Fft.logp_cf``, requires pyfeng>=0.4.0):
 
@@ -26,6 +26,12 @@ In-house native CFs:
     double_heston  DoubleHestonParams     -  Two-factor Heston SV (Christoffersen 2009)
     vgsa           VGSAParams             -  VG with Stochastic Arrival (CGMY 2003)
     sv42           Sv42Params             -  4/2 stochastic volatility (Grasselli 2017)
+    bns            BNSParams              -  Barndorff-Nielsen-Shephard Gamma-OU SV (2001)
+    lifted_heston  LiftedHestonParams     -  lifted rough Heston (Abi Jaber 2019)
+    time_changed_levy TimeChangedLevyParams - Levy base on a CIR / Gamma-OU clock (CGMY 2003)
+    affine         AffineParams           -  generic affine jump-diffusion (DPS 2000)
+    regime_switching RegimeSwitchingBsmParams - Markov regime-switching jump-diffusion
+    hw_hybrid      HullWhiteHybridParams  -  any base model + Hull-White rates
     sabr           SabrParams             -  SABR Hagan implied-vol approximation
 """
 

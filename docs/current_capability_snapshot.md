@@ -1,10 +1,11 @@
 # Current Capability Snapshot (expanded baseline)
 
-Updated 2026-07-04 after the transform-methods expansion (Hilbert transform,
-regime switching, exact Levy geometric Asians and variance swaps).
+Updated 2026-09-12 after the post-0.21 expansion (Let's Be Rational implied
+vol, COS Americans, contour/SINC/SWIFT engines, Hilbert barriers and lookbacks,
+ASCOS arithmetic Asians, model-free variance, and five new models).
 This file tracks the capability surface used by the registry and dispatcher tests.
 
-## Model registry (22 models)
+## Model registry (27 models)
 
 | Key | Family | PyFENG FFT | Status |
 |-----|--------|-----------|--------|
@@ -30,6 +31,11 @@ This file tracks the capability surface used by the registry and dispatcher test
 | `vgsa` | VG with stochastic arrival | no | stable |
 | `regime_switching` | Markov regime-switching jump-diffusion (optional per-regime Merton jumps) | no | stable |
 | `hw_hybrid` | Any base model + independent Hull-White stochastic rates | no | stable |
+| `sv42` | 4/2 stochastic volatility (Grasselli 2017) | no | stable |
+| `bns` | Barndorff-Nielsen-Shephard Γ-OU stochastic volatility | no | stable |
+| `lifted_heston` | Lifted (multi-factor Markovian) rough Heston (Abi Jaber 2019) | no | stable |
+| `time_changed_levy` | Lévy base on a CIR / Γ-OU business clock (CGMY 2003) | no | stable |
+| `affine` | Generic affine jump-diffusion (Duffie-Pan-Singleton 2000) | no | stable |
 
 ## Pricing methods
 
@@ -42,6 +48,13 @@ This file tracks the capability surface used by the registry and dispatcher test
 | `frft` | FRFT / Chourdakis 2004 | Chourdakis (2004) |
 | `pyfeng_fft` | PyFENG native FFT | pyfeng package |
 | `hilbert` | Discrete Hilbert transform on the half-integer sinc grid | Feng & Linetsky (2008) |
+| `sinc` | SINC: odd-frequency sign-function series on a density-sized window (= Hilbert sum with h = 2 pi / X_c) | Baschetti, Bormetti, Romagnoli & Rossi (2022) |
+| `swift` | Shannon-wavelet inverse Fourier technique | Ortiz-Gracia & Oosterlee (2016) |
+| `contour` | Optimal-contour inversion + double-exponential quadrature; full relative precision OTM | Lord & Kahl (2007); Andersen & Lake (2018) |
+| `cos_american` | American options for 1-D Lévy models by Richardson extrapolation of COS Bermudans | Fang & Oosterlee (2009) |
+| `hilbert_barrier` | Discretely monitored single barriers (1-D Lévy) | Feng & Linetsky (2008) |
+| `hilbert_lookback` | Discretely monitored floating- and fixed-strike lookbacks (1-D Lévy) | Feng & Linetsky (2009) |
+| `asian_cos` | Fixed-strike arithmetic Asians (1-D Lévy), ASCOS recursion | Zhang & Oosterlee (2013) |
 | `asian_cf` | Exact Levy geometric-Asian via per-increment CF product | Fusai & Meucci (2008) |
 | `variance_levy_analytic` | Exact discrete variance-swap fair strike from CF cumulants | Carr & Wu (2009), discrete analogue |
 | `forward_start_cf` | Exact Levy forward-start via homogeneity factorization + COS European leg | Rubinstein (1990); Musiela & Rutkowski (2005) |
@@ -62,7 +75,6 @@ This file tracks the capability surface used by the registry and dispatcher test
 | `proj_asian` | Arithmetic Asian MC with PROJ/analytic geometric control variate | Kirkby (2016) |
 | `bsm_analytic` | BSM closed-form vanilla baseline | Black & Scholes (1973) |
 | `mc_gbm` | GBM Monte Carlo baseline | — |
-| `ctmc` | CTMC approximation | planned |
 | `conv` | CONV-style Fourier probability inversion | Choi/Kirkby MATLAB comparison target |
 | `lattice` | BSM Cox-Ross-Rubinstein tree | Cox, Ross & Rubinstein (1979) |
 | `pde_fd` | BSM implicit finite difference | Black-Scholes PDE |
@@ -90,7 +102,9 @@ This file tracks the capability surface used by the registry and dispatcher test
 
 - European call / put (via `price_strip`)
 - Digital cash-or-nothing and asset-or-nothing options (via `price(..., method="cos_digital"|"digital_bsm")`)
-- American BSM call / put (via `price(..., method="lattice"|"pde_fd"|"monte_carlo")`)
+- American BSM call / put (via `price(..., method="lattice"|"pde_fd"|"ctmc"|"monte_carlo")`) and American call / put for every 1-D Lévy model (via `price(..., method="cos_american")`)
+- Discretely monitored single barriers and floating- / fixed-strike lookbacks for 1-D Lévy models (via `price(..., method="hilbert_barrier"|"hilbert_lookback")`)
+- Fixed-strike arithmetic Asians for 1-D Lévy models (via `price(..., method="asian_cos")`)
 - Bermudan BSM call / put (via `price(..., method="monte_carlo")`) alongside the existing 1-D Levy `cos_bermudan` route
 - Continuous zero-rebate BSM single-barrier call / put (via `price(..., method="barrier_bsm"|"monte_carlo")`)
 - BSM Asian options (geometric closed form via `asian_bsm`; arithmetic/geometric MC via `asian_mc` or `monte_carlo`)
@@ -118,3 +132,5 @@ Public exports include the multi-asset analytic helper `kirk_spread` alongside t
 
 - `proj` is now a real B-spline frame-projection engine for European vanillas (validated against COS to ~1e-7), with a standalone Bermudan-put recursion (`proj_bermudan_put`) cross-validated against `cos_bermudan`. The broader exotic PROJ recursion family (barrier, Asian, lookback, step, cliquet) is still planned; see [proj_parity_roadmap.md](proj_parity_roadmap.md).
 - `mellin` remains a validated European façade rather than the full model-specific contour implementation set.
+- The contour engine assumes a cheap closed-form CF; for the ODE-based models (`lifted_heston`, `affine`) price with COS or SINC.
+- Implied volatilities throughout (`model_iv_surface`, calibration, `implied_vol_from_prices`) use the vectorised Let's Be Rational solver.

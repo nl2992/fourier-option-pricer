@@ -7,6 +7,16 @@ the **PROJ (frame-projection)** method, which prices path-dependent exotics at
 near-Fourier speed, plus a **CTMC** engine for SV/SLV exotics. We are pursuing
 **full parity** across all phases below.
 
+> **Status (2026-09).** Beyond the PROJ ports listed below, the remaining Phase 2
+> exotics are now covered by other transform engines: discretely monitored
+> barriers and floating/fixed-strike lookbacks by the Feng-Linetsky Hilbert
+> transform (`hilbert_barrier`, `hilbert_lookback`), arithmetic Asians by the
+> ASCOS recursion (`asian_cos`), and Americans by Richardson-extrapolated COS
+> Bermudans (`cos_american`). Still open: Parisian options via Fourier, and the
+> 2-D CTMC for stochastic-volatility exotics. At daily monitoring the
+> `proj_barrier` route disagrees with exact references by ~1e-3 (under
+> investigation).
+
 ## Gap summary (at kickoff)
 
 | Dimension | foureng had | PROJ has | Gap |

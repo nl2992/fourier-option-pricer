@@ -4,7 +4,7 @@
 
 **One characteristic function in → a whole strike strip of near-machine-precision prices out.**
 
-*22 models · 9 Fourier engines · 23 products · calibration · 2,000+ tests*
+*27 models · 12 Fourier engines · 23 products · calibration · 2,200+ tests*
 
 [![CI](https://github.com/nl2992/fourier-option-pricer/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/nl2992/fourier-option-pricer/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.10%20%E2%80%93%203.14-blue.svg)](pyproject.toml)
@@ -23,7 +23,7 @@ params = fe.HestonParams(kappa=4.0, theta=0.25, nu=1.0, rho=-0.5, v0=0.04)
 prices = fe.price_strip("heston", "cos_improved", np.array([80, 90, 100, 110, 120]), fwd, params)
 ```
 
-Swap `"heston"` for any of 22 models, `"cos_improved"` for any of 9 engines. Same call, no rewiring.
+Swap `"heston"` for any of 27 models, `"cos_improved"` for any of 12 engines. Same call, no rewiring.
 
 ---
 
@@ -35,13 +35,16 @@ Swap `"heston"` for any of 22 models, `"cos_improved"` for any of 9 engines. Sam
 | Carr-Madan FFT | `carr_madan` | Damped-call FFT over log-strike (Carr & Madan 1999) | algebraic |
 | Fractional FFT | `frft` | FFT with decoupled strike/frequency spacing (Chourdakis 2004) | algebraic |
 | Hilbert transform | `hilbert` | Gil-Pelaez probabilities on the half-integer sinc grid (Feng & Linetsky 2008) | exponential |
+| SINC | `sinc` | The same odd-frequency sum on a density-sized window (Baschetti et al. 2022); `sinc_smile` prices a whole smile with one FFT | exponential |
+| SWIFT | `swift` | Shannon-wavelet projection of density and payoff (Ortiz-Gracia & Oosterlee 2016); scale `m` sets the accuracy | exponential in `m` |
+| Optimal contour | `contour` | Lord-Kahl optimal contour + double-exponential quadrature: a high-precision reference with full *relative* accuracy deep out of the money | double-exponential |
 | CONV | `conv` | Probability-transform Fourier inversion | algebraic |
 | Lewis | internal | Parseval contour integral (Lewis 2001), used as adaptive fallback | spectral |
 | Mellin | `mellin` | Mellin-transform façade for selected Lévy models | — |
 | PROJ | `proj` | B-spline frame projection (Kirkby 2015/2017), European + Bermudan + single/double barrier + Asian CV | polynomial (order-tunable) |
 | PyFENG FFT | `pyfeng_fft` | Third-party reference engine for 8 models | — |
 
-Plus non-Fourier baselines (CRR lattice, implicit PDE, CTMC generator methods, Monte Carlo with control variates and LSMC) and product-level pricing for 23 payoff dataclasses (barriers, Asians, cliquets, faders, step and swing options, variance products, and more).
+Plus Fourier exotics engines (exact Fang-Oosterlee COS Bermudans and Richardson-extrapolated Americans, Hilbert-transform discrete barriers and lookbacks, ASCOS arithmetic Asians, PROJ recursions), non-Fourier baselines (CRR lattice, implicit PDE, CTMC generator methods, Monte Carlo with control variates and LSMC), a vectorised machine-precision implied-vol solver, and product-level pricing for 23 payoff dataclasses (barriers, Asians, cliquets, faders, step and swing options, variance products, and more).
 
 ---
 
@@ -63,42 +66,53 @@ where $c_1, c_2, c_4$ are the model's cumulants and $L$ is a heuristic multiplie
 
 This project implements the **improved COS truncation** of Junike & Pankrashkin (2022) and Junike (2024), which replaces the heuristic $L$ with a rigorous tail-mass bound. On the FO2008 test suite, this truncation improvement beats the paper-grid COS in 7 of 8 cases and beats the paper's own best-N result in 6 of 8 (see [`benchmarks/cos_method_improved/`](benchmarks/cos_method_improved/outputs/cos_method_improved_paper_compare.csv)). On top of that, we add an **original adaptive filtered-COS extension**: spectral weights $\sigma_k \in [0, 1]$ (Fejér, Lanczos, raised-cosine, or exponential) applied to the high-frequency COS coefficients to suppress residual oscillation from sharp density features. A policy-search selector automatically compares grid and filter combinations, returning the fastest configuration that meets the user's tolerance, with the plain Junike path always included as a fallback.
 
-The package covers **22 characteristic-function models** across stochastic-volatility, jump-diffusion, pure-Lévy, rough-volatility, regime-switching, stochastic-rate-hybrid, and hybrid SVJ families, plus a SABR approximation surface. They are priced through one `price_strip` dispatcher with COS/FFT/FRFT/CONV, the **Feng-Linetsky Hilbert-transform engine**, a first-slice Mellin façade, a real **PROJ frame-projection engine** (Kirkby 2015/2017, European vanilla plus a Bermudan-put recursion), BSM finite-difference/lattice baselines, and product-level exotic routes.
+The package covers **27 characteristic-function models** across stochastic-volatility, jump-diffusion, pure-Lévy, rough-volatility (including a Markovian lifted Heston), regime-switching, stochastic-rate-hybrid, time-changed Lévy, hybrid SVJ and generic affine families, plus a SABR approximation surface. They are priced through one `price_strip` dispatcher with COS/FFT/FRFT/CONV, the **Feng-Linetsky Hilbert-transform engine**, SINC, SWIFT, a high-precision optimal-contour engine, a first-slice Mellin façade, a real **PROJ frame-projection engine** (Kirkby 2015/2017, European vanilla plus a Bermudan-put recursion), BSM finite-difference/lattice baselines, and product-level exotic routes.
 
 Full methodology: [appendix.md](appendix.md) · Extension details: [docs/filtered_cos_extension.md](docs/filtered_cos_extension.md) · Package architecture: [docs/architecture_overview.md](docs/architecture_overview.md).
 
 ---
 
-## 🆕 What's new in the 0.11–0.21 line
+## 🆕 What's new since 0.21 (unreleased)
+
+Fourteen additions, each validated against an independent reference (closed forms, 50-digit mpmath, exact-kernel grids, or exact-simulation Monte Carlo with control variates). Details in the [CHANGELOG](CHANGELOG.md).
+
+| Capability | Use it via | Validation highlight |
+|-----------|-----------|----------------------|
+| **"Let's Be Rational" implied vol** — Jäckel (2015) | `implied_vol_lets_be_rational(price, F, K, T, disc=..., cp=...)`, `black_price(...)` | 4e-15 max error on 200k quotes, two Householder steps, ~0.7 µs/option (~590x the Newton solver); now used by `model_iv_surface` and every `calibrate_*` |
+| **Americans for Lévy models** — Fang & Oosterlee (2009) | `price(AmericanOption(...), model, "cos_american", ...)` | Richardson on exact FO2009 COS Bermudans (the COS Bermudan itself was rewritten as the exact Hankel+Toeplitz scheme); within 1.5e-5 of a 40k-step binomial tree |
+| **4/2 stochastic volatility** — Grasselli (2017) | `Sv42Params` + any CF engine | Closed-form CF derived in-house; equals Heston (b = 0) and 3/2 (a = 0) to 1e-14 |
+| **Optimal-contour reference engine** — Lord & Kahl (2007) | `price_strip(model, "contour", ...)` | Full relative precision deep in the wings (1e-19 prices to 1e-14) |
+| **Model-free variance / VIX** — Carr & Madan (1998) | `log_contract_variance_from_strip`, `vix_style_index`, `log_contract_variance` | Recovers BSM sigma^2 to 1e-8 and Heston's expected integrated variance to 1e-7 |
+| **Discrete barriers & lookbacks** — Feng & Linetsky (2008, 2009) | `"hilbert_barrier"`, `"hilbert_lookback"` (floating and fixed strike) | Exact-Gaussian-kernel references to 5e-7; extrapolates to Haug's continuous lookback to 2e-5 |
+| **Arithmetic Asians under Lévy** — Zhang & Oosterlee (2013) | `price(AsianOption(...), model, "asian_cos", ...)` | Two-date case exact to 1e-11; agrees with MC using the exact geometric Asian as control |
+| **SINC and SWIFT engines** — Baschetti et al. (2022); Ortiz-Gracia & Oosterlee (2016) | `"sinc"`, `"swift"`, `sinc_smile(...)` | SINC proven identical to the Hilbert sum on a smarter window; both agree with the contour reference to 1e-12 or better |
+| **Time-changed Lévy** — Carr, Geman, Madan & Yor (2003) | `TimeChangedLevyParams(base, params, CirClock/GammaOUClock)` | VG on a CIR clock reproduces `vgsa` to 1e-13 |
+| **Lifted Heston** — Abi Jaber (2019) | `LiftedHestonParams` | One factor reproduces Heston to 1e-10; 20-factor kernel within 6% of the rough kernel |
+| **BNS Γ-OU stochastic volatility** — Barndorff-Nielsen & Shephard (2001) | `BNSParams` | No-jump limit equals BSM to 1e-14; exact conditional MC |
+| **Generic affine jump-diffusions** — Duffie, Pan & Singleton (2000) | `AffineParams` (any dimension) | Heston, Bates, Heston-Kou, double Heston and Merton reproduced to 1e-11 |
+
+```python
+import foureng as fe
+from foureng.products.american import AmericanOption
+
+fwd = fe.ForwardSpec(S0=100.0, r=0.05, q=0.0, T=1.0)
+kou = fe.KouParams(sigma=0.15, lam=1.0, p=0.4, eta1=10.0, eta2=5.0)
+american_put = fe.price(AmericanOption(strike=100.0, maturity=1.0, cp=-1), "kou", "cos_american", fwd, kou)
+
+quote = fe.black_price(100.0, 110.0, 1.0, 0.2)
+implied = fe.implied_vol_lets_be_rational(quote, 100.0, 110.0, 1.0)  # 0.2 to machine precision
+```
+
+Also: the top-level `bsm_lookback_floating` (behind `price(..., "lookback_bsm")`) mispriced floating lookbacks by ~10% and is fixed; packaging now ships the licence and type information, supports Python 3.10-3.14, and slims the default install.
+
+---
+
+## What's new in the 0.11–0.21 line
 
 Thirteen capabilities ported into the Fourier stack from the transform-methods literature (the territory covered by Kirkby's PROJ MATLAB toolbox), each implemented natively against `foureng`'s CF interfaces and validated against closed forms and Monte Carlo:
 
 | Capability | Use it via | The one-line math |
-|-----------|-----------|-------------------|
-| **Hilbert-transform pricer** — Feng & Linetsky (2008) | `price_strip(model, "hilbert", ...)` | $\Pi = \tfrac12 + \tfrac{h}{\pi}\sum_m \mathrm{Re}\big[e^{-iu_mk}\varphi(u_m)/(iu_m)\big]$ on $u_m=(m{+}\tfrac12)h$ — error decays like $e^{-c/h}$ |
-| **Regime-switching jump-diffusion** — Buffington & Elliott (2002) | `RegimeSwitchingBsmParams` + any CF engine | $\varphi(u) = \pi_0^\top e^{T(Q + \mathrm{diag}\,\psi_j(u))}\mathbf{1}$, per-regime Merton blocks in $\psi_j$ |
-| **Exact Lévy geometric Asians** — Fusai & Meucci (2008) | `price(product, model, "asian_cf", ...)` | $\varphi_A(u) = \prod_j \varphi_{\Delta t_j}\!\big(u\,w_j\big)$ — the average's CF is a finite product, no lognormal proxy |
-| **Lévy variance-swap strikes** — Carr & Wu (2009) discrete analogue | `price(swap, model, "variance_levy_analytic", ...)` | $E[R_i^2] = \big((r{-}q)\Delta t_i + c_1\big)^2 + c_2$ per period, exact from CF cumulants |
-| **Exact Lévy forward-starts** — Rubinstein (1990) homogeneity | `price(product, model, "forward_start_cf", ...)` | $V = S_0 e^{-q t_1} \cdot \mathrm{Euro}(S_0{=}1, K{=}\alpha, \tau)$ |
-| **Exact Lévy cliquets** (local collars) | `price(product, model, "cliquet_cf", ...)` | $E[\mathrm{clip}(R,\ell,c)] = \ell + \mathrm{Call}(1{+}\ell) - \mathrm{Call}(1{+}c)$ per period |
-| **PROJ double barriers** — Kirkby (2015) | `price(product, model, "proj_double_barrier", ...)` | Toeplitz-FFT backward induction, absorption on both sides of $(L, U)$ |
-| **Hull-White stochastic-rate hybrid** — Merton (1973); Hull & White (1990) | `HullWhiteHybridParams(base, ...)` + any CF engine | $\varphi(u) = \varphi_{\text{base}}(u)\, e^{-\frac12 V_P (u^2 + iu)}$, $V_P = \int_0^T \sigma_P^2\,ds$ |
-| **Fader options** — Hakala & Wystup (2002) | `price(product, model, "fader_cf", ...)` | $V = \tfrac{D}{M}\sum_k \int_A f_{t_k}(x)\, C_k(x)\,dx$, one COS strip per date |
-| **Step options** — Linetsky (1999) | `price(product, model, "proj_step", ...)` | PROJ recursion with soft killing $e^{-\rho\,\Delta t}$ beyond the barrier; $\rho{=}0$ vanilla, $\rho{\to}\infty$ knock-out |
-| **Structural CDS** — Black & Cox (1976) | `levy_cds_spread(model, fwd, params, ...)` | First-passage survival via the PROJ unit-payoff recursion + O'Kane legs |
-| **Swing options** — Carmona & Touzi (2008) | `price(product, model, "proj_swing", ...)` | DP over (date, rights): $V_m(x,j) = \max(C_j, g + C_{j-1})$, one convolution per level |
-| **CTMC approximation** — Mijatović & Pistorius (2013) | `price_strip("bsm", "ctmc", ...)`, American via `price` | Generator $Q$ from the finite-volume stencil; $V = e^{T(Q - rI)}g$, local vol supported |
-
-Also in this line: `cp=-1` is now honored uniformly across every Fourier engine (parity applied once at dispatch), a long-standing drift omission in `merton_jd_cumulants` is fixed, and the API reference was backfilled to cover every public symbol. Details in the [CHANGELOG](CHANGELOG.md).
-
------------|-----------|-------------------|
-| **Hilbert-transform pricer** — Feng & Linetsky (2008) | `price_strip(model, "hilbert", ...)` | $\Pi = \tfrac12 + \tfrac{h}{\pi}\sum_m \mathrm{Re}\big[e^{-iu_mk}\varphi(u_m)/(iu_m)\big]$ on $u_m=(m{+}\tfrac12)h$ — error decays like $e^{-c/h}$ |
-| **Regime-switching BSM** — Buffington & Elliott (2002) | `RegimeSwitchingBsmParams` + any CF engine | $\varphi(u) = \pi_0^\top e^{T(Q + \mathrm{diag}\,\psi_j(u))}\mathbf{1}$ |
-| **Exact Lévy geometric Asians** — Fusai & Meucci (2008) | `price(product, model, "asian_cf", ...)` | $\varphi_A(u) = \prod_j \varphi_{\Delta t_j}\!\big(u\,w_j\big)$ — the average's CF is a finite product, no lognormal proxy |
-| **Lévy variance-swap strikes** — Carr & Wu (2009) discrete analogue | `price(swap, model, "variance_levy_analytic", ...)` | $E[R_i^2] = \big((r{-}q)\Delta t_i + c_1\big)^2 + c_2$ per period, exact from CF cumulants |
-
-Also in 0.11.0: `cp=-1` is now honored uniformly across every Fourier engine (parity applied once at dispatch), and a long-standing drift omission in `merton_jd_cumulants` is fixed. Details in the [CHANGELOG](CHANGELOG.md).
-
+|
 ---
 
 ## Installation
@@ -267,7 +281,7 @@ Everything is importable from `import foureng as fe`.
 | `CgmyParams` | `C, G, M, Y` | CGMY tempered-stable |
 | `NigParams` | `sigma, nu, theta` | Normal Inverse Gaussian |
 | `KouParams` | `sigma, lam, p, eta1, eta2` | Double-exponential jump-diffusion |
-| `MertonJDParams` | `sigma, lam, mu_j, sigma_j` | Merton jump-diffusion |
+| `MertonJDParams` | `sigma, lam, muj, sigj` | Merton jump-diffusion |
 | `MeixnerParams` | `a, b, delta` | Meixner process |
 | `BilateralGammaParams` | `alpha_p, lambda_p, alpha_m, lambda_m` | Bilateral Gamma |
 | `GHParams` | `lam, alpha, beta, delta` | Generalised Hyperbolic |
@@ -276,6 +290,11 @@ Everything is importable from `import foureng as fe`.
 | `VGSAParams` | `C, G, M, kappa, eta, lam` | VG with stochastic activity |
 | `RegimeSwitchingBsmParams` | `sigmas, generator, initial_probs` + optional `jump_intensities, jump_means, jump_stds` | Markov regime-switching jump-diffusion (matrix-exponential CF) |
 | `HullWhiteHybridParams` | `base_model, base_params, mean_reversion, sigma_r` | Any base model + independent Hull-White stochastic rates |
+| `Sv42Params` | `v0, kappa, theta, nu, rho, a, b` | 4/2 stochastic volatility (Heston + 3/2 terms) |
+| `BNSParams` | `v0, lam, a, b, rho` | Barndorff-Nielsen-Shephard Γ-OU stochastic volatility |
+| `LiftedHestonParams` | `v0, kappa, theta, nu, rho, H, n, r_n` | Lifted (Markovian multi-factor) rough Heston |
+| `TimeChangedLevyParams` | `base_model, base_params, clock` (`CirClock` / `GammaOUClock`) | Lévy base on a stochastic business clock |
+| `AffineParams` | `x0, K0, K1, H0, H1, l0, l1, jump_transform` | Generic affine jump-diffusion |
 | `SabrParams` | `alpha, beta, rho, nu` | SABR implied-vol approximation |
 
 Full model details: [docs/model_zoo.md](docs/model_zoo.md).
@@ -286,9 +305,9 @@ Full model details: [docs/model_zoo.md](docs/model_zoo.md).
 |----------|------------|---------|
 | `price_strip(model, method, strikes, fwd, params, grid=None)` | model label, method label, strike array, `ForwardSpec`, model params, optional grid | `np.ndarray` of call prices |
 
-Method labels: `"cos"`, `"cos_improved"`, `"cos_filtered"`, `"carr_madan"`, `"frft"`, `"conv"`, `"hilbert"`, `"cos_bermudan"`, `"mellin"`, `"proj"`, `"pyfeng_fft"`, plus product-aware `"asian_cf"` / `"variance_levy_analytic"` / `"forward_start_cf"` / `"cliquet_cf"` / `"fader_cf"` (exact Lévy geometric Asians, variance-swap strikes, forward-starts, and locally collared cliquets) and `"cos_digital"` / `"digital_bsm"` / `"monte_carlo"` / `"barrier_bsm"` / `"asian_bsm"` / `"asian_mc"` / `"double_barrier_mc"` / `"proj_double_barrier"` / `"forward_start_bsm"` / `"exchange_bsm"` / `"spread_bsm"` / `"multi_asset_mc"` / `"lookback_bsm"` / `"lookback_mc"` / `"variance_analytic_bsm"` / `"variance_mc"` / `"cliquet_mc"` and SABR-only `"sabr_hagan"`.
+Method labels: `"cos"`, `"cos_improved"`, `"cos_filtered"`, `"carr_madan"`, `"frft"`, `"conv"`, `"hilbert"`, `"sinc"`, `"swift"`, `"contour"`, `"cos_bermudan"`, `"mellin"`, `"proj"`, `"pyfeng_fft"`, plus product-aware `"asian_cf"` / `"variance_levy_analytic"` / `"forward_start_cf"` / `"cliquet_cf"` / `"fader_cf"` (exact Lévy geometric Asians, variance-swap strikes, forward-starts, and locally collared cliquets) and `"cos_digital"` / `"digital_bsm"` / `"monte_carlo"` / `"barrier_bsm"` / `"asian_bsm"` / `"asian_mc"` / `"double_barrier_mc"` / `"proj_double_barrier"` / `"forward_start_bsm"` / `"exchange_bsm"` / `"spread_bsm"` / `"multi_asset_mc"` / `"lookback_bsm"` / `"lookback_mc"` / `"variance_analytic_bsm"` / `"variance_mc"` / `"cliquet_mc"` and SABR-only `"sabr_hagan"`.
 
-Product-level pricing uses `price(product, model, method, fwd, params)`. It currently routes European options, cash-or-nothing and asset-or-nothing digitals via `"cos_digital"` or BSM `"digital_bsm"`, supported 1-D Levy Bermudans via `"cos_bermudan"`, BSM generic Monte Carlo / Longstaff-Schwartz via `"monte_carlo"` for Europeans, Americans, Bermudans, and the GBM-simulated exotic book, continuously monitored zero-rebate BSM single barriers via `"barrier_bsm"`, BSM Asians via `"asian_bsm"` / `"asian_mc"`, BSM forward-start options via `"forward_start_bsm"`, BSM two-asset exchange options via `"exchange_bsm"` / `"multi_asset_mc"`, BSM basket and best-of options via `"multi_asset_mc"`, BSM spread options via `"spread_bsm"` / `"multi_asset_mc"`, BSM lookbacks via `"lookback_bsm"` / `"lookback_mc"`, BSM variance swaps via `"variance_analytic_bsm"` / `"variance_mc"`, integrated-variance BSM options via `"variance_analytic_bsm"` and realised/integrated BSM variance options via `"variance_mc"`, BSM cliquets via `"cliquet_mc"`, and BSM double barriers via `"double_barrier_mc"` / `"proj_double_barrier"`.
+Product-level pricing uses `price(product, model, method, fwd, params)`. It currently routes European options, cash-or-nothing and asset-or-nothing digitals via `"cos_digital"` or BSM `"digital_bsm"`, supported 1-D Levy Bermudans via `"cos_bermudan"`, BSM generic Monte Carlo / Longstaff-Schwartz via `"monte_carlo"` for Europeans, Americans, Bermudans, and the GBM-simulated exotic book, continuously monitored zero-rebate BSM single barriers via `"barrier_bsm"`, BSM Asians via `"asian_bsm"` / `"asian_mc"`, BSM forward-start options via `"forward_start_bsm"`, BSM two-asset exchange options via `"exchange_bsm"` / `"multi_asset_mc"`, BSM basket and best-of options via `"multi_asset_mc"`, BSM spread options via `"spread_bsm"` / `"multi_asset_mc"`, BSM lookbacks via `"lookback_bsm"` / `"lookback_mc"`, BSM variance swaps via `"variance_analytic_bsm"` / `"variance_mc"`, integrated-variance BSM options via `"variance_analytic_bsm"` and realised/integrated BSM variance options via `"variance_mc"`, BSM cliquets via `"cliquet_mc"`, BSM double barriers via `"double_barrier_mc"` / `"proj_double_barrier"`, and, for 1-D Lévy models, Americans via `"cos_american"`, discretely monitored barriers and floating- or fixed-strike lookbacks via `"hilbert_barrier"` / `"hilbert_lookback"` (pass `grid=<int>` for the number of monitoring dates), and arithmetic Asians via `"asian_cos"`.
 
 ### Path-dependent MC engines (`foureng.mc`)
 
@@ -328,6 +347,14 @@ All MC functions take a `GBMPathSpec(n_paths, n_steps, seed, antithetic)` config
 | `ctmc_european_price(S0, K, r, q, T, sigma, cp=1, grid=None)` | market inputs, constant or callable vol | `float` |
 | `ctmc_american_price(S0, K, r, q, T, sigma, cp=1, n_steps=100, grid=None)` | market inputs, constant or callable vol | `float` |
 | `sabr_hagan_price_at_strikes(fwd, params, strikes)` | `ForwardSpec`, `SabrParams`, strike array | `np.ndarray` |
+| `contour_price_at_strikes(phi, fwd, strikes, cp=1, grid=None)` | CF, `ForwardSpec`, strikes, optional `ContourGrid` | `np.ndarray` (full relative precision) |
+| `sinc_price_at_strikes(phi, fwd, strikes, cumulants, cp=1, grid=None)` / `sinc_smile(phi, fwd, cumulants)` | CF, `ForwardSpec`, strikes or cumulants | `np.ndarray` / `(strikes, prices)` |
+| `swift_price_at_strikes(phi, fwd, strikes, cumulants, cp=1, m=None)` | CF, `ForwardSpec`, strikes, cumulants | `np.ndarray` |
+| `cos_american_price(model, fwd, params, product, base_dates=64)` | Lévy model key, market inputs, `AmericanOption` | `float` |
+| `hilbert_barrier_price(model, fwd, params, strike=..., barrier=..., maturity=..., barrier_type=..., n_monitor=252)` | Lévy model key, contract terms | `float` |
+| `hilbert_lookback_price(model, fwd, params, maturity=..., cp=-1, strike_type="floating", strike=None, n_monitor=252)` | Lévy model key, contract terms | `float` |
+| `levy_arithmetic_asian_price(model, fwd, params, strike=..., monitoring_times=..., cp=1)` | Lévy model key, fixings | `float` |
+| `log_contract_variance_from_strip(strikes, fwd, calls=..., puts=...)` / `vix_style_index(...)` | option quotes | model-free variance / VIX-style index |
 
 ### Grid constructors
 
@@ -339,6 +366,8 @@ All MC functions take a `GBMPathSpec(n_paths, n_steps, seed, antithetic)` config
 | `FRFTGrid(N, eta, lam, alpha)` | size, freq spacing, strike step, damping | FRFT grid |
 | `CONVGrid(N, u_max)` | positive-frequency node count and cutoff | CONV-style Fourier inversion grid |
 | `HilbertGrid(h, N)` | frequency step and half-integer node count | Feng-Linetsky discrete Hilbert transform grid |
+| `SincGrid(X_c, N, L)` | window half-width, odd-frequency count, cumulant multiplier | SINC window (auto by default) |
+| `ContourGrid(rel_tol, c, c_bound, max_levels)` | tolerance, optional fixed contour height | optimal-contour pricer controls |
 | `LatticeGrid(steps)` | tree step count | BSM CRR lattice grid |
 | `PDEGrid(spot_steps, time_steps, s_max_mult)` | finite-difference grid controls | BSM implicit finite-difference grid |
 
@@ -346,6 +375,8 @@ All MC functions take a `GBMPathSpec(n_paths, n_steps, seed, antithetic)` config
 
 | Function | Parameters | Returns |
 |----------|------------|---------|
+| `implied_vol_lets_be_rational(price, F, K, T, disc=1.0, cp=1)` | arrays (broadcast) | `np.ndarray` — recommended: machine precision, vectorised |
+| `black_price(F, K, T, sigma, disc=1.0, cp=1)` | arrays (broadcast) | `np.ndarray` (full relative precision far OTM) |
 | `implied_vol_newton_safeguarded(price, inputs)` | option price, `BSInputs` | `float` |
 | `implied_vol_brent(price, inputs)` | option price, `BSInputs` | `float` |
 | `cos_price_and_greeks(phi, fwd, strikes, grid)` | CF, `ForwardSpec`, strikes, grid | `COSGreeks` with prices, delta, gamma |
@@ -411,6 +442,12 @@ MIT. See [LICENSE](LICENSE).
 | VG, Rough Heston | PyFENG adapter parity | atol=1e-3 | partial |
 | Kou, Bilateral Gamma, GH, FMLS, Meixner | Derived reference, cross-method | atol=1e-4 | partial |
 | VGSA | Derived reference, cross-method | atol=1e-3 | partial |
+| Implied vol (Let's Be Rational) | 50-digit mpmath reprice, 20k random OTM quotes | rel 5e-14 (vol), 1e-12 (reprice) | done |
+| COS Americans (BSM) | Richardson-extrapolated 40k-step binomial trees | atol 5e-5 | done |
+| COS Americans (Kou, CGMY) | Same extrapolation on the independent PROJ engine | atol 2e-5 | done |
+| Hilbert discrete barriers/lookbacks (BSM) | Exact-Gaussian-kernel backward induction | atol 5e-7 / 1e-6 | done |
+| Contour engine (BSM, VG) | Closed form; Gamma-mixture quadrature | rel 5e-14 / 5e-13 | done |
+| 4/2, time-changed Lévy, BNS, lifted Heston, affine | Reductions to registry models + exact-simulation MC | 1e-10 to 1e-14 (reductions) | done |
 
 Full per-paper matrix: [docs/paper_validation_matrix.md](docs/paper_validation_matrix.md). Evidence-level definitions: [docs/validation_hierarchy.md](docs/validation_hierarchy.md).
 
@@ -434,7 +471,7 @@ python -m pytest -q -m "paper"
 python -m pytest -q -m "software_reference"
 ```
 
-The repository has 2,000+ pytest cases.
+The repository has 2,200+ pytest cases.
 
 For linting and type checks:
 
@@ -480,6 +517,18 @@ python -m mypy foureng
 | Lévy geometric Asians | Fusai, G. and Meucci, A. (2008), *Pricing Discretely Monitored Asian Options under Lévy Processes* |
 | Variance swaps under jumps | Carr, P. and Wu, L. (2009), *Variance Risk Premiums* |
 | PROJ frame projection | Kirkby, J.L. (2015), *Efficient Option Pricing by Frame Duality with the Fast Fourier Transform* |
+| Implied volatility | Jäckel, P. (2015), *Let's Be Rational* |
+| COS early exercise | Fang, F. and Oosterlee, C.W. (2009), *Pricing Early-Exercise and Discrete Barrier Options by Fourier-Cosine Series Expansions* |
+| Optimal contours | Lord, R. and Kahl, C. (2007), *Optimal Fourier Inversion in Semi-Analytical Option Pricing* |
+| Lookbacks | Feng, L. and Linetsky, V. (2009), *Computing Exponential Moments of the Discrete Maximum of a Lévy Process and Lookback Options* |
+| Arithmetic Asians | Zhang, B. and Oosterlee, C.W. (2013), *Efficient Pricing of European-Style Asian Options under Exponential Lévy Processes Based on Fourier Cosine Expansions* |
+| SINC | Baschetti, F., Bormetti, G., Romagnoli, S. and Rossi, P. (2022), *The SINC Way: A Fast and Accurate Approach to Fourier Pricing* |
+| SWIFT | Ortiz-Gracia, L. and Oosterlee, C.W. (2016), *A Highly Efficient Shannon Wavelet Inverse Fourier Technique for Pricing European Options* |
+| 4/2 model | Grasselli, M. (2017), *The 4/2 Stochastic Volatility Model: A Unified Approach for the Heston and the 3/2 Model* |
+| Time-changed Lévy | Carr, P., Geman, H., Madan, D.B. and Yor, M. (2003), *Stochastic Volatility for Lévy Processes* |
+| Lifted Heston | Abi Jaber, E. (2019), *Lifting the Heston Model* |
+| BNS model | Barndorff-Nielsen, O.E. and Shephard, N. (2001), *Non-Gaussian Ornstein-Uhlenbeck-Based Models and Some of Their Uses in Financial Economics* |
+| Affine transforms | Duffie, D., Pan, J. and Singleton, K. (2000), *Transform Analysis and Asset Pricing for Affine Jump-Diffusions* |
 
 Full bibliography with DOIs and free-access links: [docs/papers.md](docs/papers.md).
 
@@ -497,6 +546,15 @@ Transform-method territory not yet covered here, in rough priority order (the fi
 - [x] Swing options via transform methods (`proj_swing`, 0.20.0)
 - [x] Regime-switching jump-diffusion regimes (per-regime Merton blocks, 0.15.0)
 - [x] Stochastic-interest-rate hybrids (one-factor Hull-White composite CFs, `hw_hybrid`, 0.16.0)
+- [x] Machine-precision vectorised implied volatility (Let's Be Rational)
+- [x] American options for Lévy models (COS Bermudans + Richardson)
+- [x] Discrete barriers and floating/fixed lookbacks by the Hilbert transform; arithmetic Asians (ASCOS)
+- [x] SINC, SWIFT and optimal-contour European engines
+- [x] 4/2, BNS Γ-OU, lifted Heston, time-changed Lévy and generic affine models
+- [x] Model-free variance and VIX-style index from option strips
+- [ ] Stochastic-volatility exotics: Bermudans and barriers under Heston (2-D COS or 2-D CTMC)
+- [ ] Two-dimensional Fourier spread and rainbow options (Hurd & Zhou 2010)
+- [ ] Registry-driven calibration with analytic CF gradients
 
 Contributions welcome — see [CONTRIBUTING.md](CONTRIBUTING.md).
 
