@@ -35,7 +35,6 @@ Functions
 from __future__ import annotations
 
 import numpy as np
-from scipy.integrate import simpson
 from scipy.interpolate import CubicSpline
 
 from ..models.base import ForwardSpec
@@ -63,6 +62,34 @@ def _otm_prices(
     if not (K[0] < fwd.F0 < K[-1]):
         raise ValueError("the strike strip must bracket the forward")
     return K, C, P
+
+
+def _simpson(y: np.ndarray, x: np.ndarray) -> float:
+    """Composite Simpson rule on a non-uniform grid, independent of the SciPy version.
+
+    Pairs of intervals use the three-point non-uniform Simpson weights; an odd
+    number of intervals closes with Cartwright's (2017) last-interval
+    correction (the rule SciPy >= 1.11 uses; SciPy 1.10 averaged two rules).
+    """
+    n = len(x) - 1
+    if n < 2:
+        return float(np.trapezoid(y, x)) if hasattr(np, "trapezoid") else float(np.trapz(y, x))
+    m = n - (n % 2)  # intervals covered by whole pairs
+    h = np.diff(x)
+    h0, h1 = h[0:m:2], h[1:m:2]
+    y0, y1, y2 = y[0:m:2], y[1 : m + 1 : 2], y[2 : m + 1 : 2]
+    hs = h0 + h1
+    total = np.sum(
+        hs / 6.0 * ((2.0 - h1 / h0) * y0 + hs * hs / (h0 * h1) * y1 + (2.0 - h0 / h1) * y2)
+    )
+    if n % 2:
+        a, b = h[-2], h[-1]
+        total += (
+            (2.0 * b * b + 3.0 * a * b) / (6.0 * (a + b)) * y[-1]
+            + (b * b + 3.0 * a * b) / (6.0 * a) * y[-2]
+            - b**3 / (6.0 * a * (a + b)) * y[-3]
+        )
+    return float(total)
 
 
 def log_contract_variance_from_strip(
@@ -99,7 +126,7 @@ def log_contract_variance_from_strip(
     k_hi = np.insert(K[hi], 0, F)
     y_lo = np.append(P[lo], q_at_f) / k_lo**2
     y_hi = np.insert(C[hi], 0, q_at_f) / k_hi**2
-    integral = simpson(y_lo, x=k_lo) + simpson(y_hi, x=k_hi)
+    integral = _simpson(y_lo, k_lo) + _simpson(y_hi, k_hi)
     return float(2.0 * integral / (fwd.disc * fwd.T))
 
 
