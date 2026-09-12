@@ -624,6 +624,7 @@ _SV_MODELS = {
     "ousv",
     "sv32",
     "sv42",
+    "bns",
     "time_changed_levy",
     "lifted_heston",
     "rough_heston",

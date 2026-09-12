@@ -20,6 +20,7 @@ from typing import Callable
 
 from .bates import BatesParams, bates_cf, bates_cumulants
 from .bilateral_gamma import BilateralGammaParams, bilateral_gamma_cf, bilateral_gamma_cumulants
+from .bns import BNSParams, bns_cf, bns_cumulants
 from .bsm import BsmParams, bsm_cf, bsm_cumulants
 from .cgmy import CgmyParams, cgmy_cf, cgmy_cumulants
 from .double_heston import DoubleHestonParams, double_heston_cf, double_heston_cumulants
@@ -111,6 +112,7 @@ MODEL_REGISTRY: dict[str, ModelEntry] = {
     ),
     "merton_jd": _e("merton_jd", MertonJDParams, merton_jd_cf, merton_jd_cumulants, False),
     "sv42": _e("sv42", Sv42Params, sv42_cf, sv42_cumulants, False),
+    "bns": _e("bns", BNSParams, bns_cf, bns_cumulants, False),
     "lifted_heston": _e(
         "lifted_heston", LiftedHestonParams, lifted_heston_cf, lifted_heston_cumulants, False
     ),

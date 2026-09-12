@@ -37,6 +37,7 @@ Each dataclass holds the calibrated parameters for one stochastic-volatility or 
 | `NigParams` | Normal Inverse Gaussian |
 | `Sv32Params` | 3/2 stochastic-volatility model |
 | `Sv42Params` | 4/2 stochastic-volatility model (Grasselli 2017): `v0, kappa, theta, nu, rho, a, b` |
+| `BNSParams` | Barndorff-Nielsen-Shephard Gamma-OU SV: `v0, lam, a, b, rho` (compound-Poisson variance jumps, leverage `rho`) |
 | `LiftedHestonParams` | Lifted Heston (Abi Jaber 2019): `v0, kappa, theta, nu, rho, H, n=20, r_n=2.5` (or an explicit kernel via `weights`, `speeds`); Markovian `n`-factor proxy for rough Heston |
 | `TimeChangedLevyParams` | Levy base (`bsm, vg, nig, cgmy, kou, merton_jd`) on a stochastic clock: `base_model, base_params, clock` with `CirClock(y0, kappa, eta, lam)` or `GammaOUClock(y0, lam, a, b)` (Carr-Geman-Madan-Yor 2003) |
 | `RoughHestonParams` | Rough Heston (El Euch and Rosenbaum) |
@@ -73,6 +74,7 @@ All characteristic functions accept a model parameter dataclass and a complex-va
 | `sv32_cf` | 3/2 |
 | `sv42_cf` | 4/2 (native closed form) |
 | `time_changed_levy_cf` | time-changed Levy (CGMY 2003 eq. 4.9) |
+| `bns_cf` | BNS Gamma-OU (closed form) |
 | `lifted_heston_cf` | lifted Heston (ETDRK4 on the stiff Riccati system; `lifted_kernel` gives the weights/speeds) |
 | `rough_heston_cf` | Rough Heston |
 | `kou_cf` | Kou |
@@ -112,6 +114,7 @@ Each model exposes a cumulant function that returns the first four log-return cu
 | `sv42_cumulants` | 4/2 |
 | `time_changed_levy_cumulants` | time-changed Levy |
 | `lifted_heston_cumulants` | lifted Heston |
+| `bns_cumulants` | BNS Gamma-OU |
 | `rough_heston_cumulants` | Rough Heston |
 | `kou_cumulants` | Kou |
 | `bates_cumulants` | Bates |

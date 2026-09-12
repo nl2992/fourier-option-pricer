@@ -32,6 +32,7 @@ In-house native CFs:
 from .base import CharFunc, ForwardSpec, ModelSpec
 from .bates import BatesParams, bates_cf, bates_cumulants
 from .bilateral_gamma import BilateralGammaParams, bilateral_gamma_cf, bilateral_gamma_cumulants
+from .bns import BNSParams, bns_cf, bns_cumulants
 from .bsm import BsmParams, bsm_cf, bsm_cumulants
 from .cgmy import CgmyParams, cgmy_cf, cgmy_cumulants
 from .double_heston import DoubleHestonParams, double_heston_cf, double_heston_cumulants
@@ -125,6 +126,9 @@ __all__ = [
     "Sv42Params",
     "sv42_cf",
     "sv42_cumulants",
+    "BNSParams",
+    "bns_cf",
+    "bns_cumulants",
     "CirClock",
     "GammaOUClock",
     "TimeChangedLevyParams",

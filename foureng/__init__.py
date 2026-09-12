@@ -84,6 +84,7 @@ from .models.bilateral_gamma import (
     bilateral_gamma_cf,
     bilateral_gamma_cumulants,
 )
+from .models.bns import BNSParams, bns_cf, bns_cumulants
 from .models.bsm import (
     BsmParams,
     bsm_asset_or_nothing,
@@ -285,6 +286,9 @@ __all__ = [
     "Sv42Params",
     "sv42_cf",
     "sv42_cumulants",
+    "BNSParams",
+    "bns_cf",
+    "bns_cumulants",
     "CirClock",
     "GammaOUClock",
     "TimeChangedLevyParams",
