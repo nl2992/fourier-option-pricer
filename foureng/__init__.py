@@ -55,6 +55,11 @@ from .analytics.levy_credit import (
     levy_survival_curve,
 )
 from .analytics.levy_variance import levy_variance_fair_strike, levy_variance_swap
+from .analytics.model_free_variance import (
+    log_contract_variance,
+    log_contract_variance_from_strip,
+    vix_style_index,
+)
 from .greeks import (
     COSGreeks,
     cos_delta_gamma,
@@ -342,6 +347,9 @@ __all__ = [
     "levy_geometric_asian_price",
     "levy_variance_fair_strike",
     "levy_variance_swap",
+    "log_contract_variance",
+    "log_contract_variance_from_strip",
+    "vix_style_index",
     "lewis_call_prices",
     "lewis_prices",
     "mellin_price_at_strikes",

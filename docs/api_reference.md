@@ -344,6 +344,9 @@ Exact closed-form prices for non-vanilla payoffs under BSM dynamics.
 | `bsm_geometric_asian_parity(S, K, r, q, T, sigma)` | forward spec, strike, number of fixings | Put-call parity check for geometric Asian. |
 | `bsm_variance_swap(fwd, params, product)` | forward spec | Fair variance swap strike under BSM (equals `sigma^2`). |
 | `levy_variance_fair_strike(model, fwd, params, sampling_times, maturity=None)` | Levy model key, market inputs, dates | Exact annualized E[RV] from per-increment CF cumulants; prices jump risk. |
+| `log_contract_variance_from_strip(strikes, fwd, calls=..., puts=...)` | quotes, forward spec | Model-free variance `2E[-log(S_T/F)]/T` replicated from an option strip (Carr-Madan 1998; Demeterfi et al. 1999); Simpson on each side of the forward. Equals the variance-swap strike only without jumps. |
+| `vix_style_index(strikes, fwd, calls=..., puts=...)` | quotes, forward spec | CBOE VIX discretisation (`Delta K/K^2` weights, `(F/K_0 - 1)^2` correction), returned as `100 sqrt(var)`. |
+| `log_contract_variance(model, fwd, params)` | model key, market inputs, params | Exact model value `-2 c_1/T` of the replicated quantity, e.g. for VIX calibration. |
 | `levy_variance_swap(model, fwd, params, product)` | Levy model key, market inputs, `VarianceSwap` | Discounted variance-swap value, `disc * notional * E[RV]`. |
 | `levy_survival_curve(model, fwd, params, default_barrier=..., horizons=...)` | Levy model key, market inputs, barrier, dates | Discretely monitored first-passage survival probabilities (Black-Cox structural default). |
 | `levy_cds_spread(model, fwd, params, default_barrier=..., recovery=..., maturity=...)` | Levy model key, market inputs, credit terms | Structural CDS par spread from the PROJ survival curve and O'Kane running-spread legs. |

@@ -156,16 +156,17 @@ def sv42_cf(u: np.ndarray, fwd: ForwardSpec, p: Sv42Params) -> np.ndarray:
     # exp(-zeta/2) * 1F1(A; half_d; z), summed as log-space Poisson-like terms.
     zmax = float(np.max(np.abs(z))) if z.size else 0.0
     n_terms = int(np.ceil(zmax + 12.0 * np.sqrt(zmax) + 40.0))
-    with np.errstate(divide="ignore", invalid="ignore"):
+    # Streaming log-sum-exp: O(len(u)) memory however many terms are needed.
+    with np.errstate(divide="ignore", invalid="ignore", over="ignore"):
         log_z = np.log(z)
         L = -0.5 * zeta
-        logs = np.empty((n_terms + 1,) + u.shape, dtype=complex)
-        logs[0] = L
+        scale = L.real.copy()
+        series = np.exp(L - scale)
         for j in range(n_terms):
             L = L + np.log(A + j) - np.log(half_d + j) + log_z - np.log(j + 1.0)
-            logs[j + 1] = L
-        scale = np.max(logs.real, axis=0)
-        series = np.exp(logs - scale).sum(axis=0)
+            new_scale = np.maximum(scale, L.real)
+            series = series * np.exp(scale - new_scale) + np.exp(L - new_scale)
+            scale = new_scale
 
     log_moment = (
         P * (log_c + np.log(2.0))

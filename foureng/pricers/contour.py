@@ -56,6 +56,7 @@ __all__ = ["contour_price_at_strikes"]
 _SCAN_STEP = 0.02
 _POLE_GAP = 0.02
 _T_MAX = 3.9  # exp-sinh truncation: w in [s e^-38, s e^38]
+_MAX_POINTS = 200_000  # CF evaluations per call
 
 
 def _log_mgf(phi: Callable, c: np.ndarray) -> np.ndarray:
@@ -110,38 +111,55 @@ def _contour_heights(phi, k: np.ndarray, grid: ContourGrid) -> tuple[np.ndarray,
     if cand.size == 0:
         raise ValueError("contour: no admissible contour height; the CF looks invalid")
     obj = (1.0 - cand)[None, :] * k[:, None] + log_m[None, :] - np.log(np.abs(cand * (cand - 1.0)))
-    return cand[np.argmin(obj, axis=1)], scale
+    best = np.argmin(obj, axis=1)
+    return cand[best], scale
 
 
 def _integrals(phi, k: np.ndarray, c: np.ndarray, scale: float, grid: ContourGrid) -> np.ndarray:
-    """``(1/pi) int_0^inf Re[g^(w + ic) phi(-w - ic)] dw`` per strike (exp-sinh rule)."""
+    """``(1/pi) int_0^inf Re[g^(w + ic) phi(-w - ic)] dw`` per strike (exp-sinh rule).
 
-    def f(t: np.ndarray) -> np.ndarray:
+    Each level adds the midpoints of the previous one (nested trapezoid in
+    ``t``); only strikes that have not yet converged are refined further.
+    """
+
+    def f(t: np.ndarray, kk: np.ndarray, cc: np.ndarray) -> np.ndarray:
         w = scale * np.exp(0.5 * np.pi * np.sinh(t))
         dw = 0.5 * np.pi * np.cosh(t) * w
-        z = w[None, :] + 1j * c[:, None]
-        with np.errstate(all="ignore"):
-            vals = np.asarray(phi(-z.ravel()), dtype=complex).reshape(z.shape)
-            # g^(z) without its e^{(1-c)k} factor, which is applied at the end.
-            integrand = -np.exp(1j * w[None, :] * k[:, None]) * vals / (z * (z - 1j))
-            out = np.real(integrand) * dw[None, :]
-        return np.where(np.isfinite(out), out, 0.0)
+        out = np.empty(kk.shape)
+        rows = max(1, _MAX_POINTS // max(w.size, 1))  # bound each CF call's size
+        for lo in range(0, kk.size, rows):
+            sl = slice(lo, lo + rows)
+            z = w[None, :] + 1j * cc[sl, None]
+            with np.errstate(all="ignore"):
+                vals = np.asarray(phi(-z.ravel()), dtype=complex).reshape(z.shape)
+                # g^(z) without its e^{(1-c)k} factor, which is applied at the end.
+                integrand = -np.exp(1j * w[None, :] * kk[sl, None]) * vals / (z * (z - 1j))
+                part = np.real(integrand) * dw[None, :]
+            out[sl] = np.where(np.isfinite(part), part, 0.0).sum(axis=1)
+        return out
+
+    # Attainable accuracy: rounding in the integrand is ~eps times its peak
+    # size M(c) / |c (c - 1)| over a width ~scale, so do not ask for more.
+    m_c = np.real(np.asarray(phi(-1j * c), dtype=complex))
+    floor = 1e-15 * scale * np.abs(m_c) / np.abs(c * (c - 1.0))
 
     h = 0.5
     t = np.arange(-_T_MAX, _T_MAX + 1e-12, h)
-    total = f(t).sum(axis=1)
+    total = f(t, k, c)
     estimate = h * total
-    converged = np.zeros(k.shape, dtype=bool)
+    active = np.ones(k.shape, dtype=bool)
     for _ in range(grid.max_levels):
+        idx = np.flatnonzero(active)
+        if idx.size == 0:
+            break
         t_new = t[:-1] + 0.5 * h  # midpoints: the nested half-step nodes
-        total = total + f(t_new).sum(axis=1)
+        total[idx] += f(t_new, k[idx], c[idx])
         t = np.sort(np.concatenate([t, t_new]))
         h *= 0.5
-        new = h * total
-        converged = np.abs(new - estimate) <= grid.rel_tol * np.abs(new) + 1e-300
-        estimate = new
-        if np.all(converged):
-            break
+        new = h * total[idx]
+        done = np.abs(new - estimate[idx]) <= grid.rel_tol * np.abs(new) + floor[idx] + 1e-300
+        estimate[idx] = new
+        active[idx[done]] = False
     return np.exp((1.0 - c) * k) * estimate / np.pi
 
 
