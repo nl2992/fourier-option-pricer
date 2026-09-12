@@ -1,6 +1,6 @@
 """Model -> (T, K) price grid -> Black-76 IV grid.
 
-Single-call convenience on top of ``cos_prices`` + ``implied_vol_newton_safeguarded``.
+Single-call convenience on top of ``cos_prices`` + ``implied_vol_lets_be_rational``.
 Same-strike strip assumed across maturities; easy to generalize later.
 """
 
@@ -11,7 +11,7 @@ from typing import Callable
 
 import numpy as np
 
-from ..iv.implied_vol import BSInputs, implied_vol_newton_safeguarded
+from ..iv.lets_be_rational import implied_vol_lets_be_rational
 from ..models.base import ForwardSpec
 from ..pricers.cos import cos_auto_grid, cos_prices
 
@@ -67,23 +67,16 @@ def model_iv_surface(
 ) -> np.ndarray:
     """Compute a (nT, nK) Black-76 implied-vol grid.
 
-    Prices come from ``model_price_surface``; IVs via safeguarded Newton.
-    Cells that fail to invert return NaN (likely a degenerate / deep-OTM price).
+    Prices come from ``model_price_surface``; IVs from the vectorised
+    machine-precision inversion of Jäckel (2015) over the whole grid at once.
+    Cells that fail to invert return NaN (a price outside the no-arbitrage
+    bounds, typically numerical noise on a degenerate deep-ITM/OTM quote).
     """
     mats = np.asarray(spec.maturities, dtype=float)
     if np.any(mats <= 0.0):
         raise ValueError(f"All maturities must be > 0; got {mats[mats <= 0].tolist()}")
     prices = model_price_surface(spec, cf_factory, cumulant_factory, N=N, L=L)
-    ivs = np.full_like(prices, np.nan)
-    for i, T in enumerate(spec.maturities):
-        for j, K in enumerate(spec.strikes):
-            inp = BSInputs(
-                F0=spec.S0 * np.exp((spec.r - spec.q) * float(T)),
-                K=float(K),
-                T=float(T),
-                r=spec.r,
-                q=spec.q,
-                is_call=True,
-            )
-            ivs[i, j] = implied_vol_newton_safeguarded(float(prices[i, j]), inp)
-    return ivs
+    T = mats[:, None]
+    K = np.asarray(spec.strikes, dtype=float)[None, :]
+    F = spec.S0 * np.exp((spec.r - spec.q) * T)
+    return implied_vol_lets_be_rational(prices, F, K, T, disc=np.exp(-spec.r * T), cp=1)

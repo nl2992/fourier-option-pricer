@@ -258,6 +258,8 @@ Each model exposes a cumulant function that returns the first four log-return cu
 | `bs_price_from_fwd(vol, inp)` | forward spec, strike, vol, type | BSM call or put price from forward inputs. |
 | `implied_vol_brent(price, inp, lo=..., hi=...)` | forward spec, strike, price, type | Implied vol via Brent root-finding. Safe for deep-ITM/OTM. |
 | `implied_vol_newton_safeguarded(price, inp, vol0=..., iters=..., tol=..., lo=..., hi=...)` | forward spec, strike, price, type | Newton-Raphson with Brent fallback. Faster for near-ATM. |
+| `implied_vol_lets_be_rational(price, F, K, T, disc=..., cp=...)` | arrays, broadcast | **Recommended.** Jäckel (2015) "Let's Be Rational": vectorised, machine-precision inversion in two Householder steps, no bracketing; ~0.7 µs/option. `0.0` at intrinsic, `nan` outside the no-arbitrage bounds. |
+| `black_price(F, K, T, sigma, disc=..., cp=...)` | arrays, broadcast | Vectorised Black (1976) price with full relative precision far out of the money (the inverse of the above). |
 
 ---
 

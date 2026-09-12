@@ -67,6 +67,7 @@ from .iv.implied_vol import (
     implied_vol_brent,
     implied_vol_newton_safeguarded,
 )
+from .iv.lets_be_rational import black_price, implied_vol_lets_be_rational
 from .mc.black_scholes_mc import european_call_mc
 from .mc.control_variate import CVResult, bs_call_cv, heston_call_bs_control
 from .mc.engine import MCResult, MCSpec, mc_price
@@ -357,6 +358,8 @@ __all__ = [
     "bs_price_from_fwd",
     "implied_vol_brent",
     "implied_vol_newton_safeguarded",
+    "implied_vol_lets_be_rational",
+    "black_price",
     # surface + calibration
     "SurfaceSpec",
     "model_iv_surface",

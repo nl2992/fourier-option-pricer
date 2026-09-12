@@ -206,7 +206,7 @@ Requires Python 3.10+. The package ships inline type hints (`py.typed`).
 | Runtime | `numpy>=1.26`, `scipy>=1.10`, `pyfeng>=0.4.0`, `statsmodels>=0.14` (an undeclared import of pyfeng) |
 | `[viz]` | `matplotlib>=3.7`, `pandas>=2.0` (needed only for `foureng.viz`) |
 | `[notebook]` | `matplotlib>=3.7`, `pandas>=2.0`, `jupyter>=1.0`, `ipykernel>=6.0`, `nbformat>=5.10` |
-| `[test]` | `pytest>=7.4`, `pytest-cov>=4.0`, `hypothesis>=6.112`, `pandas>=2.0` |
+| `[test]` | `pytest>=7.4`, `pytest-cov>=4.0`, `hypothesis>=6.112`, `pandas>=2.0`, `mpmath>=1.3` (high-precision test oracle) |
 | `[dev]` | all of the above plus `nbmake`, `build`, `twine`, `ruff`, `mypy>=1.10`, `pyperf>=2.7` (`pip install -e ".[dev]"`) |
 
 `requirements.txt` covers runtime + notebook + test deps in one file. `environment.yml` is the conda equivalent.
