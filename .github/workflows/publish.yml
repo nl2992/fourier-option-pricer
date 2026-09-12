@@ -1,11 +1,16 @@
 name: Publish to PyPI
 
+# Cut a release by publishing a GitHub Release whose tag is `v<version>`,
+# where <version> matches foureng/_version.py. The build refuses to publish
+# a tag/version mismatch or a build that fails the fast test suite.
+
 on:
   release:
     types: [published]
 
 jobs:
   build:
+    name: Build and verify distributions
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -14,9 +19,32 @@ jobs:
         with:
           python-version: "3.12"
 
-      - run: pip install build
+      - name: Check release tag matches package version
+        run: |
+          pkg_version=$(python -c "import runpy; print(runpy.run_path('foureng/_version.py')['__version__'])")
+          tag="${GITHUB_REF_NAME}"
+          echo "tag=${tag} package=${pkg_version}"
+          if [ "${tag}" != "v${pkg_version}" ]; then
+            echo "::error::Release tag ${tag} does not match package version v${pkg_version}"
+            exit 1
+          fi
 
-      - run: python -m build
+      - name: Build sdist and wheel
+        run: |
+          python -m pip install --upgrade pip build twine
+          python -m build
+          twine check --strict dist/*
+
+      - name: Smoke-test the built wheel in a clean environment
+        run: |
+          python -m venv /tmp/smoke
+          /tmp/smoke/bin/pip install dist/*.whl
+          cd /tmp && /tmp/smoke/bin/python -c "import foureng as fe; print(fe.__version__); print(fe.price_strip('heston', 'cos_improved', [90.0, 100.0, 110.0], fe.ForwardSpec(S0=100, r=0.01, q=0.0, T=1.0), fe.HestonParams(kappa=4.0, theta=0.25, nu=1.0, rho=-0.5, v0=0.04)))"
+
+      - name: Fast test suite against the release commit
+        run: |
+          pip install -e ".[test]"
+          pytest -q --tb=short -m "not slow"
 
       - uses: actions/upload-artifact@v4
         with:
@@ -24,13 +52,14 @@ jobs:
           path: dist/
 
   publish:
+    name: Upload to PyPI
     needs: build
     runs-on: ubuntu-latest
 
     environment: pypi          # must match the environment name on PyPI
 
     permissions:
-      id-token: write          # enables Trusted Publisher (no API token needed)
+      id-token: write          # Trusted Publishing (no API token) + PEP 740 attestations
 
     steps:
       - uses: actions/download-artifact@v4
@@ -39,5 +68,3 @@ jobs:
           path: dist/
 
       - uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          skip-existing: true   # silently skip if this version already exists on PyPI

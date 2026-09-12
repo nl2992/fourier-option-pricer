@@ -7,7 +7,7 @@
 *22 models · 9 Fourier engines · 23 products · calibration · 2,000+ tests*
 
 [![CI](https://github.com/nl2992/fourier-option-pricer/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/nl2992/fourier-option-pricer/actions/workflows/ci.yml)
-[![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue.svg)](pyproject.toml)
+[![Python](https://img.shields.io/badge/python-3.10%20%E2%80%93%203.14-blue.svg)](pyproject.toml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Ruff](https://img.shields.io/badge/lint-ruff-261230.svg)](pyproject.toml)
 [![Typed](https://img.shields.io/badge/types-mypy-blue.svg)](pyproject.toml)
@@ -191,11 +191,11 @@ Click the **Open in Colab** badge in the [Demo notebook](#demo-notebook) section
 Use this if you want to `import foureng` in your own code without cloning the repo.
 
 ```bash
-pip install fourier-option-pricer          # latest
-pip install "fourier-option-pricer==0.12.0" # or pin any release
+pip install fourier-option-pricer          # core: numpy, scipy, pyfeng (+ statsmodels)
+pip install "fourier-option-pricer[viz]"   # + matplotlib/pandas for foureng.viz
 ```
 
-Requires Python 3.10+.
+Requires Python 3.10+. The package ships inline type hints (`py.typed`).
 
 ---
 
@@ -203,10 +203,11 @@ Requires Python 3.10+.
 
 | Group | Packages |
 |-------|----------|
-| Runtime | `numpy>=1.26`, `scipy>=1.10`, `matplotlib>=3.7`, `statsmodels>=0.14`, `pyfeng>=0.4.0` |
-| Notebooks | `pandas>=2.0`, `jupyter>=1.0`, `ipykernel>=6.0`, `nbformat>=5.10` |
-| Tests | `pytest>=7.4`, `pytest-cov>=4.0`, `hypothesis>=6.112`, `nbmake>=1.5` |
-| Dev tools | `ruff`, `mypy>=1.10`, `pyperf>=2.7` (install via `pip install -e ".[dev]"` |
+| Runtime | `numpy>=1.26`, `scipy>=1.10`, `pyfeng>=0.4.0`, `statsmodels>=0.14` (an undeclared import of pyfeng) |
+| `[viz]` | `matplotlib>=3.7`, `pandas>=2.0` (needed only for `foureng.viz`) |
+| `[notebook]` | `matplotlib>=3.7`, `pandas>=2.0`, `jupyter>=1.0`, `ipykernel>=6.0`, `nbformat>=5.10` |
+| `[test]` | `pytest>=7.4`, `pytest-cov>=4.0`, `hypothesis>=6.112`, `pandas>=2.0` |
+| `[dev]` | all of the above plus `nbmake`, `build`, `twine`, `ruff`, `mypy>=1.10`, `pyperf>=2.7` (`pip install -e ".[dev]"`) |
 
 `requirements.txt` covers runtime + notebook + test deps in one file. `environment.yml` is the conda equivalent.
 

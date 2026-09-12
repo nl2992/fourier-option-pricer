@@ -1,4 +1,16 @@
-"""Visualisation helpers for demo notebooks and saved figures."""
+"""Visualisation helpers for demo notebooks and saved figures.
+
+Requires the optional ``viz`` extra: ``pip install "fourier-option-pricer[viz]"``.
+"""
+
+try:
+    import matplotlib  # noqa: F401
+    import pandas  # noqa: F401
+except ImportError as exc:  # pragma: no cover - depends on the install
+    raise ImportError(
+        "foureng.viz needs matplotlib and pandas. "
+        'Install them with: pip install "fourier-option-pricer[viz]"'
+    ) from exc
 
 from .columbia import (
     CLOUD,

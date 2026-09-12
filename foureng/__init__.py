@@ -21,14 +21,7 @@ importable for finer-grained access.
 
 from __future__ import annotations
 
-try:
-    from importlib.metadata import PackageNotFoundError as _PNF
-    from importlib.metadata import version as _pkg_version
-
-    __version__: str = _pkg_version("fourier-option-pricer")
-except _PNF:  # editable install without metadata yet
-    __version__ = "0.21.0"
-
+from ._version import __version__
 from .analytics.bsm_asian import (
     bsm_discrete_geometric_asian,
     bsm_geometric_asian,

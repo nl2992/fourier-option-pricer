@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: ["main"]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   lint:
     name: Lint & format
@@ -61,6 +65,10 @@ jobs:
             deps: latest
           - python-version: "3.12"
             deps: latest
+          - python-version: "3.13"
+            deps: latest
+          - python-version: "3.14"
+            deps: latest
 
     steps:
       - uses: actions/checkout@v4
@@ -68,6 +76,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+          cache: pip
 
       - name: Install (minimum deps)
         if: matrix.deps == 'minimum'
@@ -105,6 +114,7 @@ jobs:
         run: pytest -q --tb=short -m "paper and not slow"
 
   package:
+    name: Build & verify distributions
     runs-on: ubuntu-latest
 
     steps:
@@ -118,4 +128,16 @@ jobs:
         run: |
           python -m pip install --upgrade pip build twine
           python -m build
-          twine check dist/*
+          twine check --strict dist/*
+
+      - name: Verify distribution contents
+        run: |
+          unzip -l dist/*.whl | grep -q "foureng/py.typed"
+          unzip -l dist/*.whl | grep -q "licenses/LICENSE"
+          tar tzf dist/*.tar.gz | grep -q "/LICENSE$"
+
+      - name: Smoke-test the wheel with core dependencies only
+        run: |
+          python -m venv /tmp/smoke
+          /tmp/smoke/bin/pip install dist/*.whl
+          cd /tmp && /tmp/smoke/bin/python -c "import foureng as fe; print(fe.__version__); print(fe.price_strip('heston', 'cos_improved', [90.0, 100.0, 110.0], fe.ForwardSpec(S0=100, r=0.01, q=0.0, T=1.0), fe.HestonParams(kappa=4.0, theta=0.25, nu=1.0, rho=-0.5, v0=0.04)))"

@@ -12,6 +12,7 @@
 
 # ── Notebook and interactive use ──────────────────────────────────────────────
 pandas>=2.0
+matplotlib>=3.7
 jupyter>=1.0
 ipykernel>=6.0
 nbformat>=5.10
