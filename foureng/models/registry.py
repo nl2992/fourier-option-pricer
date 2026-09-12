@@ -42,6 +42,7 @@ from .regime_switching import (
 )
 from .rough_heston import RoughHestonParams, rough_heston_cf, rough_heston_cumulants
 from .sv32 import Sv32Params, sv32_cf, sv32_cumulants
+from .sv42 import Sv42Params, sv42_cf, sv42_cumulants
 from .variance_gamma import VGParams, vg_cf, vg_cumulants
 from .vgsa import VGSAParams, vgsa_cf, vgsa_cumulants
 
@@ -103,6 +104,7 @@ MODEL_REGISTRY: dict[str, ModelEntry] = {
         "garch_wmw2012", GarchWMW2012Params, garch_wmw2012_cf, garch_wmw2012_cumulants, False
     ),
     "merton_jd": _e("merton_jd", MertonJDParams, merton_jd_cf, merton_jd_cumulants, False),
+    "sv42": _e("sv42", Sv42Params, sv42_cf, sv42_cumulants, False),
     "meixner": _e("meixner", MeixnerParams, meixner_cf, meixner_cumulants, False),
     "bilateral_gamma": _e(
         "bilateral_gamma",

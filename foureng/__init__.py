@@ -113,6 +113,7 @@ from .models.regime_switching import (
 from .models.rough_heston import RoughHestonParams, rough_heston_cf, rough_heston_cumulants
 from .models.sabr import SabrParams, sabr_hagan_implied_vol
 from .models.sv32 import Sv32Params, sv32_cf, sv32_cumulants
+from .models.sv42 import Sv42Params, sv42_cf, sv42_cumulants
 from .models.variance_gamma import VGParams, vg_cf, vg_cumulants
 from .models.vgsa import VGSAParams, vgsa_cf, vgsa_cumulants
 from .pipeline import price, price_strip
@@ -252,6 +253,9 @@ __all__ = [
     "Sv32Params",
     "sv32_cf",
     "sv32_cumulants",
+    "Sv42Params",
+    "sv42_cf",
+    "sv42_cumulants",
     "GarchWMW2012Params",
     "garch_wmw2012_cf",
     "garch_wmw2012_cumulants",

@@ -15,6 +15,7 @@ The unified dispatcher `fe.price_strip` routes through `foureng.models.registry.
 | CGMY | `CgmyParams` | PyFENG-backed adapter | Infinite-activity tempered-stable jump model. |
 | Normal Inverse Gaussian | `NigParams` | PyFENG-backed adapter | Lévy model with heavier tails than Gaussian diffusion. |
 | 3/2 Stochastic Volatility | `Sv32Params` | PyFENG-backed adapter | Mean-reverting variance process with 3/2 diffusion coefficient. |
+| 4/2 Stochastic Volatility | `Sv42Params` | Native closed form | Grasselli (2017): volatility `a sqrt(v) + b/sqrt(v)` on one CIR factor; `b = 0` is Heston, `a = 0` is 3/2. CF via two measure changes and a log-space Kummer series. |
 | Rough Heston | `RoughHestonParams` | PyFENG-backed adapter | Fractional Brownian motion variance driver (Hurst index H < 1/2). |
 | Kou | `KouParams` | In-house implementation | Double-exponential jump-diffusion CF and cumulants. |
 | Bates | `BatesParams` | In-house composite | Heston diffusion block plus Merton jump block. |

@@ -25,6 +25,7 @@ In-house native CFs:
     fmls           FMLSParams             -  Finite Moment Log Stable (Carr-Wu 2003)
     double_heston  DoubleHestonParams     -  Two-factor Heston SV (Christoffersen 2009)
     vgsa           VGSAParams             -  VG with Stochastic Arrival (CGMY 2003)
+    sv42           Sv42Params             -  4/2 stochastic volatility (Grasselli 2017)
     sabr           SabrParams             -  SABR Hagan implied-vol approximation
 """
 
@@ -48,6 +49,7 @@ from .ousv import OusvParams, ousv_cf, ousv_cumulants
 from .rough_heston import RoughHestonParams, rough_heston_cf, rough_heston_cumulants
 from .sabr import SabrParams, sabr_hagan_implied_vol
 from .sv32 import Sv32Params, sv32_cf, sv32_cumulants
+from .sv42 import Sv42Params, sv42_cf, sv42_cumulants
 from .variance_gamma import VGParams, vg_cf, vg_cumulants
 from .vgsa import VGSAParams, vgsa_cf, vgsa_cumulants
 
@@ -103,6 +105,9 @@ __all__ = [
     "Sv32Params",
     "sv32_cf",
     "sv32_cumulants",
+    "Sv42Params",
+    "sv42_cf",
+    "sv42_cumulants",
     # GARCH
     "GarchWMW2012Params",
     "garch_wmw2012_cf",

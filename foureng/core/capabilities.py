@@ -552,6 +552,7 @@ _SV_MODELS = {
     "heston",
     "ousv",
     "sv32",
+    "sv42",
     "rough_heston",
     "garch_wmw2012",
     "double_heston",

@@ -36,6 +36,7 @@ Each dataclass holds the calibrated parameters for one stochastic-volatility or 
 | `CgmyParams` | CGMY / KoBoL |
 | `NigParams` | Normal Inverse Gaussian |
 | `Sv32Params` | 3/2 stochastic-volatility model |
+| `Sv42Params` | 4/2 stochastic-volatility model (Grasselli 2017): `v0, kappa, theta, nu, rho, a, b` |
 | `RoughHestonParams` | Rough Heston (El Euch and Rosenbaum) |
 | `KouParams` | Kou double-exponential jump diffusion |
 | `BatesParams` | Bates (Heston + Merton jumps) |
@@ -68,6 +69,7 @@ All characteristic functions accept a model parameter dataclass and a complex-va
 | `cgmy_cf` | CGMY |
 | `nig_cf` | NIG |
 | `sv32_cf` | 3/2 |
+| `sv42_cf` | 4/2 (native closed form) |
 | `rough_heston_cf` | Rough Heston |
 | `kou_cf` | Kou |
 | `bates_cf` | Bates |
@@ -103,6 +105,7 @@ Each model exposes a cumulant function that returns the first four log-return cu
 | `cgmy_cumulants` | CGMY |
 | `nig_cumulants` | NIG |
 | `sv32_cumulants` | 3/2 |
+| `sv42_cumulants` | 4/2 |
 | `rough_heston_cumulants` | Rough Heston |
 | `kou_cumulants` | Kou |
 | `bates_cumulants` | Bates |
