@@ -128,7 +128,11 @@ from .pricers.cos import (
     cos_prices,
     recommended_cos_policy,
 )
-from .pricers.cos_bermudan import cos_bermudan_price, cos_bermudan_price_strip
+from .pricers.cos_bermudan import (
+    cos_american_price,
+    cos_bermudan_price,
+    cos_bermudan_price_strip,
+)
 from .pricers.cos_digital import cos_digital_price, cos_digital_price_strip
 from .pricers.ctmc import (
     CTMCGrid,
@@ -314,6 +318,7 @@ __all__ = [
     "ctmc_american_price",
     "ctmc_european_price",
     "ctmc_european_price_at_strikes",
+    "cos_american_price",
     "cos_bermudan_price",
     "cos_bermudan_price_strip",
     "frft_price_at_strikes",

@@ -409,6 +409,17 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
             "extensions remain out of scope."
         ),
     ),
+    "cos_american": MethodSpec(
+        requires_cf=True,
+        supports_products=frozenset({"american"}),
+        supports_exercise=frozenset({"american"}),
+        supports_path_dependent=False,
+        notes=(
+            "American options for 1-D Levy models by 4-point Richardson "
+            "extrapolation of FO2009 COS Bermudans (Fang & Oosterlee 2009, "
+            "section 5)."
+        ),
+    ),
     "proj": MethodSpec(
         requires_cf=True,
         supports_products=frozenset({"european", "bermudan"}),
@@ -658,7 +669,7 @@ def _product_hint(model: str, product: str, method: str) -> str:
 
 def _model_restriction(model: str, product: str, method: str) -> str:
     """Return a restriction string if a model-specific limitation applies, else ''."""
-    if method == "cos_bermudan":
+    if method in {"cos_bermudan", "cos_american"}:
         if model in _SV_MODELS:
             return (
                 f"model={model!r} is a stochastic-volatility model; the standard "

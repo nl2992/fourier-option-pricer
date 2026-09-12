@@ -819,9 +819,15 @@ def price(
                 "price(): product_type='american' must be represented by "
                 f"AmericanOption, got {type(product).__name__!r}"
             )
+        if method == "cos_american":
+            from .pricers.cos_bermudan import cos_american_price
+
+            return cos_american_price(model, fwd, params, product, grid=grid)
         if model != "bsm":
             raise NotImplementedError(
-                "American pricing is currently implemented only for model='bsm'."
+                f"American pricing for model={model!r} is available through "
+                "method='cos_american' (1-D Lévy models); the lattice, pde_fd, ctmc "
+                "and monte_carlo routes are implemented only for model='bsm'."
             )
         fwd_t = _FwdSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=product.maturity)
         if method == "ctmc":
@@ -862,8 +868,8 @@ def price(
                 grid=pde_grid,
             )
         raise NotImplementedError(
-            "American pricing currently supports method='lattice', method='pde_fd', "
-            "or method='monte_carlo'."
+            "American pricing currently supports method='cos_american', method='lattice', "
+            "method='pde_fd', method='ctmc', or method='monte_carlo'."
         )
 
     if pt == "bermudan":

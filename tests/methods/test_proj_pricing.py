@@ -118,10 +118,12 @@ def _step_cf(model, params, S0, r, q, dt):
 @pytest.mark.parametrize(
     "model,params,tol",
     [
-        ("bsm", fe.BsmParams(sigma=0.2), 1e-3),
-        ("vg", fe.VGParams(sigma=0.12, nu=0.2, theta=-0.14), 3e-3),
-        ("kou", fe.KouParams(sigma=0.15, lam=1.0, p=0.4, eta1=10.0, eta2=5.0), 2e-3),
-        ("cgmy", fe.CgmyParams(C=0.5, G=5.0, M=5.0, Y=0.8), 3e-3),
+        ("bsm", fe.BsmParams(sigma=0.2), 1e-9),
+        # VG over dt = T/M has shape dt/nu < 1: a singular transition density,
+        # where both engines converge only algebraically.
+        ("vg", fe.VGParams(sigma=0.12, nu=0.2, theta=-0.14), 1e-4),
+        ("kou", fe.KouParams(sigma=0.15, lam=1.0, p=0.4, eta1=10.0, eta2=5.0), 1e-6),
+        ("cgmy", fe.CgmyParams(C=0.5, G=5.0, M=5.0, Y=0.8), 2e-5),
     ],
 )
 @pytest.mark.parametrize("M", [10, 50])
@@ -129,7 +131,9 @@ def test_proj_bermudan_put_matches_cos_bermudan(model, params, tol, M):
     """PROJ Bermudan put agrees with the independent COS Bermudan engine.
 
     The two methods use different bases (linear B-spline projection vs cosine
-    series), so agreement at the 1e-3 level cross-validates both.
+    series). With the FO2009 COS scheme exact on its coefficients and a PROJ
+    lattice wide enough for the jump tails (``3 x`` the cumulant width; the
+    narrower ``1 x`` costs PROJ ~1e-3 on Kou), they agree to 1e-5 or better.
     """
     S0, r, q, T, W = 100.0, 0.05, 0.0, 1.0, 100.0
     fwd = ForwardSpec(S0=S0, r=r, q=q, T=T)
@@ -137,11 +141,11 @@ def test_proj_bermudan_put_matches_cos_bermudan(model, params, tol, M):
     ex_times = np.arange(1, M + 1) * dt
 
     cums = MODEL_REGISTRY[model].cumulants(fwd, params)
-    alph = 10.0 * np.sqrt(abs(cums[1]) + np.sqrt(abs(cums[2])))
+    alph = 30.0 * np.sqrt(abs(cums[1]) + np.sqrt(abs(cums[2])))
     step_cf = _step_cf(model, params, S0, r, q, dt)
 
     proj = fe.proj_bermudan_put(step_cf, S0=S0, r=r, T=T, W=W, M=M, N=2**15, alph=alph)
-    cos = cos_bermudan_price_strip(model, fwd, params, np.array([W]), T, ex_times, cp=-1)[0]
+    cos = cos_bermudan_price_strip(model, fwd, params, np.array([W]), T, ex_times, cp=-1, N=1024)[0]
 
     assert abs(proj - cos) < tol
 
