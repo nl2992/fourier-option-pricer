@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.22.1 - 2026-09-12
+
+Documentation only; no code changes.
+
+- README: a longer Quick start (puts via `cp=-1`, switching engines, a guide to choosing one, implied vols, contour wing prices, Lévy exotics, and the newer models), a PyPI badge, upgrade notes for users coming from 0.5.x, and an up-to-date description of the PROJ engine.
+- README: the dispatcher table now shows the `cp` argument and the `price` signature.
+
 ## 0.22.0 - 2026-09-12
 
 ### Added

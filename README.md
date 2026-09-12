@@ -7,7 +7,8 @@
 *27 models · 12 Fourier engines · 23 products · calibration · 2,200+ tests*
 
 [![CI](https://github.com/nl2992/fourier-option-pricer/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/nl2992/fourier-option-pricer/actions/workflows/ci.yml)
-[![Python](https://img.shields.io/badge/python-3.10%20%E2%80%93%203.14-blue.svg)](pyproject.toml)
+[![PyPI](https://img.shields.io/pypi/v/fourier-option-pricer.svg)](https://pypi.org/project/fourier-option-pricer/)
+[![Python](https://img.shields.io/badge/python-3.10--3.14-blue.svg)](pyproject.toml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Ruff](https://img.shields.io/badge/lint-ruff-261230.svg)](pyproject.toml)
 [![Typed](https://img.shields.io/badge/types-mypy-blue.svg)](pyproject.toml)
@@ -66,7 +67,7 @@ where $c_1, c_2, c_4$ are the model's cumulants and $L$ is a heuristic multiplie
 
 This project implements the **improved COS truncation** of Junike & Pankrashkin (2022) and Junike (2024), which replaces the heuristic $L$ with a rigorous tail-mass bound. On the FO2008 test suite, this truncation improvement beats the paper-grid COS in 7 of 8 cases and beats the paper's own best-N result in 6 of 8 (see [`benchmarks/cos_method_improved/`](benchmarks/cos_method_improved/outputs/cos_method_improved_paper_compare.csv)). On top of that, we add an **original adaptive filtered-COS extension**: spectral weights $\sigma_k \in [0, 1]$ (Fejér, Lanczos, raised-cosine, or exponential) applied to the high-frequency COS coefficients to suppress residual oscillation from sharp density features. A policy-search selector automatically compares grid and filter combinations, returning the fastest configuration that meets the user's tolerance, with the plain Junike path always included as a fallback.
 
-The package covers **27 characteristic-function models** across stochastic-volatility, jump-diffusion, pure-Lévy, rough-volatility (including a Markovian lifted Heston), regime-switching, stochastic-rate-hybrid, time-changed Lévy, hybrid SVJ and generic affine families, plus a SABR approximation surface. They are priced through one `price_strip` dispatcher with COS/FFT/FRFT/CONV, the **Feng-Linetsky Hilbert-transform engine**, SINC, SWIFT, a high-precision optimal-contour engine, a first-slice Mellin façade, a real **PROJ frame-projection engine** (Kirkby 2015/2017, European vanilla plus a Bermudan-put recursion), BSM finite-difference/lattice baselines, and product-level exotic routes.
+The package covers **27 characteristic-function models** across stochastic-volatility, jump-diffusion, pure-Lévy, rough-volatility (including a Markovian lifted Heston), regime-switching, stochastic-rate-hybrid, time-changed Lévy, hybrid SVJ and generic affine families, plus a SABR approximation surface. They are priced through one `price_strip` dispatcher with COS/FFT/FRFT/CONV, the **Feng-Linetsky Hilbert-transform engine**, SINC, SWIFT, a high-precision optimal-contour engine, a first-slice Mellin façade, a real **PROJ frame-projection engine** (Kirkby 2015/2017: Europeans, Bermudans, single and double barriers, step and swing options, and an Asian control variate), BSM finite-difference/lattice baselines, and product-level exotic routes. For 1-D Lévy models the exotic routes include Americans, discretely monitored barriers and lookbacks, and arithmetic Asians, all priced from the same characteristic function.
 
 Full methodology: [appendix.md](appendix.md) · Extension details: [docs/filtered_cos_extension.md](docs/filtered_cos_extension.md) · Package architecture: [docs/architecture_overview.md](docs/architecture_overview.md).
 
@@ -91,25 +92,16 @@ New models, engines and exotic routes. Each one is tested against something inde
 | BNS Gamma-OU stochastic volatility (Barndorff-Nielsen & Shephard 2001) | `BNSParams` | BSM in the no-jump case, Monte Carlo |
 | Generic affine jump-diffusions (Duffie, Pan & Singleton 2000) | `AffineParams` | Heston, Bates, double Heston, Merton |
 
-```python
-import foureng as fe
-from foureng.products.american import AmericanOption
-
-fwd = fe.ForwardSpec(S0=100.0, r=0.05, q=0.0, T=1.0)
-kou = fe.KouParams(sigma=0.15, lam=1.0, p=0.4, eta1=10.0, eta2=5.0)
-american_put = fe.price(AmericanOption(strike=100.0, maturity=1.0, cp=-1), "kou", "cos_american", fwd, kou)
-
-quote = fe.black_price(100.0, 110.0, 1.0, 0.2)
-implied = fe.implied_vol_lets_be_rational(quote, 100.0, 110.0, 1.0)  # 0.2
-```
-
-Also in 0.22: `bsm_lookback_floating` (and `price(..., "lookback_bsm")`) was about 10% off and is fixed, `cos_bermudan_price` is now exact and much faster, and `matplotlib` moved to the optional `[viz]` extra.
+Examples for most of these are in the [Quick start](#quick-start). Also in 0.22: `bsm_lookback_floating` (and `price(..., "lookback_bsm")`) was about 10% off and is fixed, `cos_bermudan_price` is now exact and much faster, and `matplotlib` moved to the optional `[viz]` extra.
 
 ---
 
-## What's new in the 0.11–0.21 line
+## Earlier releases (0.11 to 0.21)
 
-Thirteen capabilities ported into the Fourier stack from the transform-methods literature (the territory covered by Kirkby's PROJ MATLAB toolbox), each implemented natively against `foureng`'s CF interfaces and validated against closed forms and Monte Carlo:
+Thirteen capabilities ported into the Fourier stack from the transform-methods literature (the territory covered by Kirkby's PROJ MATLAB toolbox), each implemented natively against `foureng`'s CF interfaces and validated against closed forms and Monte Carlo.
+
+<details>
+<summary>Show the 0.11 to 0.21 table</summary>
 
 | Capability | Use it via | The one-line math |
 |-----------|-----------|-------------------|
@@ -126,6 +118,8 @@ Thirteen capabilities ported into the Fourier stack from the transform-methods l
 | **Structural CDS** (Black & Cox 1976) | `levy_cds_spread(model, fwd, params, ...)` | First-passage survival via the PROJ unit-payoff recursion + O'Kane legs |
 | **Swing options** (Carmona & Touzi 2008) | `price(product, model, "proj_swing", ...)` | DP over (date, rights): $V_m(x,j) = \max(C_j, g + C_{j-1})$, one convolution per level |
 | **CTMC approximation** (Mijatović & Pistorius 2013) | `price_strip("bsm", "ctmc", ...)`, American via `price` | Generator $Q$ from the finite-volume stencil; $V = e^{T(Q - rI)}g$, local vol supported |
+
+</details>
 
 Also in this line: `cp=-1` is now honored uniformly across every Fourier engine (parity applied once at dispatch), a long-standing drift omission in `merton_jd_cumulants` is fixed, and the API reference was backfilled to cover every public symbol. Details in the [CHANGELOG](CHANGELOG.md).
 
@@ -181,7 +175,7 @@ jupyter lab   # navigate to notebooks/demo.ipynb to start
 **4. Run the tests**
 
 ```bash
-python -m pytest -q -m "not slow"   # fast suite (~30 s)
+python -m pytest -q -m "not slow"   # fast suite (about a minute)
 python -m pytest -q                  # full suite including notebook guards
 ```
 
@@ -223,9 +217,12 @@ Use this if you want to `import foureng` in your own code without cloning the re
 ```bash
 pip install fourier-option-pricer          # core: numpy, scipy, pyfeng (+ statsmodels)
 pip install "fourier-option-pricer[viz]"   # + matplotlib/pandas for foureng.viz
+pip install "fourier-option-pricer==0.22.1"  # pin a release
 ```
 
-Requires Python 3.10+. The package ships inline type hints (`py.typed`).
+Requires Python 3.10 to 3.14. The package ships inline type hints (`py.typed`). Check what you have with `python -c "import foureng; print(foureng.__version__)"`.
+
+If you are upgrading from 0.5.x (the previous PyPI release), note that `matplotlib` is now optional (install the `[viz]` extra for `foureng.viz`) and that `cos_bermudan_price` now uses the exact Fang-Oosterlee scheme, so its prices move slightly. The [CHANGELOG](CHANGELOG.md) has the rest.
 
 ---
 
@@ -245,6 +242,8 @@ Requires Python 3.10+. The package ships inline type hints (`py.typed`).
 
 ## Quick start
 
+### Price a strike strip
+
 ```python
 import numpy as np
 import foureng as fe
@@ -253,20 +252,90 @@ fwd    = fe.ForwardSpec(S0=100.0, r=0.01, q=0.02, T=1.0)
 params = fe.HestonParams(kappa=4.0, theta=0.25, nu=1.0, rho=-0.5, v0=0.04)
 
 strikes = np.array([80.0, 90.0, 100.0, 110.0, 120.0])
-prices  = fe.price_strip("heston", "cos_improved", strikes, fwd, params)
-print(prices)
+calls   = fe.price_strip("heston", "cos_improved", strikes, fwd, params)
+puts    = fe.price_strip("heston", "cos_improved", strikes, fwd, params, cp=-1)
+print(calls)
 ```
 
-Swap the method string to switch pricers without touching any other code:
+### Switch engine or model
+
+Only the strings and the parameter object change:
 
 ```python
-prices = fe.price_strip("heston", "cos_improved", strikes, fwd, params)
-prices = fe.price_strip("heston", "cos_filtered", strikes, fwd, params)
+for method in ["cos_filtered", "sinc", "swift", "hilbert", "contour"]:
+    prices = fe.price_strip("heston", method, strikes, fwd, params)
 
 bates = fe.BatesParams(kappa=4.0, theta=0.25, nu=1.0, rho=-0.5, v0=0.04,
                        lam_j=0.5, mu_j=-0.1, sigma_j=0.15)
 prices = fe.price_strip("bates", "cos_improved", strikes, fwd, bates)
 ```
+
+On this Heston strip the engines agree to about 1e-9. Some rules of thumb for picking one:
+
+| Situation | Engine |
+|-----------|--------|
+| Default for European strips | `cos_improved` |
+| Heavy tails, very short maturities, or visible ripples in COS prices | `cos_filtered` |
+| A whole smile at once, or very few CF evaluations | `sinc` / `sinc_smile` |
+| One knob for accuracy (the wavelet scale `m`) | `swift` |
+| Reference prices, or deep out-of-the-money options where relative error matters | `contour` |
+| Models whose CF is solved by ODEs (`lifted_heston`, `affine`) | `cos_improved` or `sinc` (the contour engine calls the CF too often) |
+| Dense uniform strike grids | `carr_madan`, or `frft` with an explicit `FRFTGrid` |
+
+### Implied vols and far wings
+
+```python
+vols = fe.implied_vol_lets_be_rational(calls, fwd.F0, strikes, fwd.T, disc=fwd.disc)
+
+wings = fe.price_strip("heston", "contour", np.array([200.0, 300.0]), fwd, params)
+```
+
+`implied_vol_lets_be_rational` is vectorised and accurate to machine precision, including far from the money. The contour engine keeps full relative accuracy on tiny wing prices, where a fixed-grid method only guarantees absolute accuracy.
+
+### Exotics under Lévy models
+
+Products are dataclasses passed to `price`. For the discretely monitored routes, `grid` is the number of monitoring dates.
+
+```python
+from foureng.products.american import AmericanOption
+from foureng.products.asian import AsianOption
+from foureng.products.barrier import BarrierOption
+from foureng.products.lookback import LookbackOption
+
+fwd_l = fe.ForwardSpec(S0=100.0, r=0.05, q=0.0, T=1.0)
+kou   = fe.KouParams(sigma=0.15, lam=1.0, p=0.4, eta1=10.0, eta2=5.0)
+
+american = fe.price(AmericanOption(strike=100.0, maturity=1.0, cp=-1),
+                    "kou", "cos_american", fwd_l, kou)
+barrier  = fe.price(BarrierOption(strike=100.0, barrier=85.0, maturity=1.0,
+                                  barrier_type="down_out", monitoring="discrete"),
+                    "kou", "hilbert_barrier", fwd_l, kou, grid=52)
+lookback = fe.price(LookbackOption(maturity=1.0, cp=-1, strike_type="floating",
+                                   monitoring="discrete"),
+                    "kou", "hilbert_lookback", fwd_l, kou, grid=52)
+asian    = fe.price(AsianOption(strike=100.0, maturity=1.0,
+                                monitoring_times=np.linspace(1 / 12, 1.0, 12)),
+                    "kou", "asian_cos", fwd_l, kou)
+```
+
+The same calls work for the other 1-D Lévy models (`bsm`, `vg`, `nig`, `cgmy`, `merton_jd`, `meixner` and so on).
+
+### Newer models
+
+```python
+bns = fe.BNSParams(v0=0.04, lam=1.5, a=1.2, b=30.0, rho=-2.0)
+prices = fe.price_strip("bns", "cos_improved", strikes, fwd, bns)
+
+vg_on_cir = fe.TimeChangedLevyParams("vg", fe.VGParams(sigma=0.2, nu=0.3, theta=-0.1),
+                                     fe.CirClock(y0=1.0, kappa=2.0, eta=1.0, lam=1.0))
+prices = fe.price_strip("time_changed_levy", "cos_improved", strikes, fwd, vg_on_cir)
+
+lifted = fe.LiftedHestonParams(v0=0.04, kappa=0.3, theta=0.04, nu=0.3, rho=-0.7,
+                               H=0.1, n=20, r_n=2.5)
+prices = fe.price_strip("lifted_heston", "sinc", strikes, fwd, lifted)
+```
+
+Every model and its parameters are listed in [docs/model_zoo.md](docs/model_zoo.md).
 
 ---
 
@@ -319,7 +388,8 @@ Full model details: [docs/model_zoo.md](docs/model_zoo.md).
 
 | Function | Parameters | Returns |
 |----------|------------|---------|
-| `price_strip(model, method, strikes, fwd, params, grid=None)` | model label, method label, strike array, `ForwardSpec`, model params, optional grid | `np.ndarray` of call prices |
+| `price_strip(model, method, strikes, fwd, params, *, grid=None, cp=1)` | model label, method label, strike array, `ForwardSpec`, model params, optional grid, `cp=1` call / `cp=-1` put | `np.ndarray` of prices |
+| `price(product, model, method, fwd, params, *, grid=None)` | product dataclass, model label, method label, `ForwardSpec`, model params, optional grid | `float` or `np.ndarray` |
 
 Method labels: `"cos"`, `"cos_improved"`, `"cos_filtered"`, `"carr_madan"`, `"frft"`, `"conv"`, `"hilbert"`, `"sinc"`, `"swift"`, `"contour"`, `"cos_bermudan"`, `"mellin"`, `"proj"`, `"pyfeng_fft"`, plus product-aware `"asian_cf"` / `"variance_levy_analytic"` / `"forward_start_cf"` / `"cliquet_cf"` / `"fader_cf"` (exact Lévy geometric Asians, variance-swap strikes, forward-starts, and locally collared cliquets) and `"cos_digital"` / `"digital_bsm"` / `"monte_carlo"` / `"barrier_bsm"` / `"asian_bsm"` / `"asian_mc"` / `"double_barrier_mc"` / `"proj_double_barrier"` / `"forward_start_bsm"` / `"exchange_bsm"` / `"spread_bsm"` / `"multi_asset_mc"` / `"lookback_bsm"` / `"lookback_mc"` / `"variance_analytic_bsm"` / `"variance_mc"` / `"cliquet_mc"` and SABR-only `"sabr_hagan"`.
 
