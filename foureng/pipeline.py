@@ -990,13 +990,30 @@ def price(
             )
         if method == "proj_asian":
             return _proj_asian_price_dispatch(model, fwd, params, product)
+        if method == "asian_cos":
+            from .pricers.arithmetic_asian import levy_arithmetic_asian_price
+
+            if product.average_type != "arithmetic" or product.strike_type != "fixed":
+                raise NotImplementedError(
+                    "method='asian_cos' supports fixed-strike arithmetic Asians "
+                    "(use 'asian_cf' for geometric averages)."
+                )
+            return levy_arithmetic_asian_price(
+                model,
+                fwd,
+                params,
+                strike=float(product.strike),
+                monitoring_times=product.monitoring_times,
+                maturity=float(product.maturity),
+                cp=product.cp,
+            )
         if method == "asian_cf":
             from .pricers.geometric_asian import levy_geometric_asian_price
 
             if product.average_type != "geometric" or product.strike_type != "fixed":
                 raise NotImplementedError(
                     "method='asian_cf' supports fixed-strike geometric Asians only "
-                    "(the arithmetic average has no closed CF; use 'proj_asian' or "
+                    "(for arithmetic averages use 'asian_cos', 'proj_asian' or "
                     "'monte_carlo')."
                 )
             return float(

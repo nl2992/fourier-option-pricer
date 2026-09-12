@@ -122,6 +122,7 @@ from .models.sv42 import Sv42Params, sv42_cf, sv42_cumulants
 from .models.variance_gamma import VGParams, vg_cf, vg_cumulants
 from .models.vgsa import VGSAParams, vgsa_cf, vgsa_cumulants
 from .pipeline import price, price_strip
+from .pricers.arithmetic_asian import levy_arithmetic_asian_price
 from .pricers.carr_madan import carr_madan_fft_prices, carr_madan_price_at_strikes
 from .pricers.cliquet import levy_cliquet_price
 from .pricers.contour import contour_price_at_strikes
@@ -348,6 +349,7 @@ __all__ = [
     "levy_fader_price",
     "levy_forward_start_price",
     "levy_geometric_asian_price",
+    "levy_arithmetic_asian_price",
     "levy_variance_fair_strike",
     "levy_variance_swap",
     "log_contract_variance",

@@ -150,6 +150,18 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
             "relative precision; a high-precision reference engine."
         ),
     ),
+    "asian_cos": MethodSpec(
+        requires_cf=True,
+        supports_products=frozenset({"asian"}),
+        supports_exercise=frozenset({"european"}),
+        supports_path_dependent=True,
+        notes=(
+            "Deterministic fixed-strike arithmetic Asians for 1-D Levy models: "
+            "Carverhill-Clewlow recursion B_j = Y_j + log(1 + e^{B_{j+1}}) with "
+            "COS density recovery and quadrature for the CF of log(1 + e^B) "
+            "(ASCOS, Zhang & Oosterlee 2013). Arbitrary monitoring dates."
+        ),
+    ),
     "hilbert_barrier": MethodSpec(
         requires_cf=True,
         supports_products=frozenset({"barrier"}),
