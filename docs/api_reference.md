@@ -37,6 +37,7 @@ Each dataclass holds the calibrated parameters for one stochastic-volatility or 
 | `NigParams` | Normal Inverse Gaussian |
 | `Sv32Params` | 3/2 stochastic-volatility model |
 | `Sv42Params` | 4/2 stochastic-volatility model (Grasselli 2017): `v0, kappa, theta, nu, rho, a, b` |
+| `TimeChangedLevyParams` | Levy base (`bsm, vg, nig, cgmy, kou, merton_jd`) on a stochastic clock: `base_model, base_params, clock` with `CirClock(y0, kappa, eta, lam)` or `GammaOUClock(y0, lam, a, b)` (Carr-Geman-Madan-Yor 2003) |
 | `RoughHestonParams` | Rough Heston (El Euch and Rosenbaum) |
 | `KouParams` | Kou double-exponential jump diffusion |
 | `BatesParams` | Bates (Heston + Merton jumps) |
@@ -70,6 +71,7 @@ All characteristic functions accept a model parameter dataclass and a complex-va
 | `nig_cf` | NIG |
 | `sv32_cf` | 3/2 |
 | `sv42_cf` | 4/2 (native closed form) |
+| `time_changed_levy_cf` | time-changed Levy (CGMY 2003 eq. 4.9) |
 | `rough_heston_cf` | Rough Heston |
 | `kou_cf` | Kou |
 | `bates_cf` | Bates |
@@ -106,6 +108,7 @@ Each model exposes a cumulant function that returns the first four log-return cu
 | `nig_cumulants` | NIG |
 | `sv32_cumulants` | 3/2 |
 | `sv42_cumulants` | 4/2 |
+| `time_changed_levy_cumulants` | time-changed Levy |
 | `rough_heston_cumulants` | Rough Heston |
 | `kou_cumulants` | Kou |
 | `bates_cumulants` | Bates |
