@@ -1271,16 +1271,14 @@ def price(
         if method == "hilbert_lookback":
             from .pricers.hilbert_exotics import hilbert_lookback_price
 
-            if product.strike_type != "floating":
-                raise NotImplementedError(
-                    "method='hilbert_lookback' currently supports only floating-strike lookbacks."
-                )
             return hilbert_lookback_price(
                 model,
                 fwd,
                 params,
                 maturity=float(product.maturity),
                 cp=product.cp,
+                strike_type=product.strike_type,
+                strike=float(product.strike) if product.strike_type == "fixed" else None,
                 n_monitor=int(grid) if isinstance(grid, int) else 252,
             )
         if model != "bsm":

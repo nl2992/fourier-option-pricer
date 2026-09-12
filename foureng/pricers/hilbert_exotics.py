@@ -19,7 +19,7 @@ Barriers (Feng & Linetsky 2008)
     Knock-outs by projection at each of ``M`` equally spaced monitoring dates
     (maturity included); knock-ins by in-out parity against the European.
 
-Floating-strike lookbacks (Feng & Linetsky 2009)
+Lookbacks (Feng & Linetsky 2009)
     With ``Z = log(M / S)`` (running maximum, including ``S_0``), ``Z`` follows
     the Lindley recursion ``Z' = (Z - Y)^+`` and ``M_T - S_T = S_T (e^{Z_T} - 1)``,
     so under the share measure the put is ``S_0 e^{-qT} (E[e^{Z_T}] - 1)``.
@@ -28,6 +28,10 @@ Floating-strike lookbacks (Feng & Linetsky 2009)
     an atom at the origin. Two recursions run in lockstep: an untilted one that
     supplies the atom's mass, and an ``e^{z}``-tilted one whose value at
     ``xi = 0`` is ``E[e^{Z_T}]``. The call (``S_T - m_T``) is the mirror image.
+    Fixed strikes use Spitzer's duality: the discrete running maximum of the
+    log-price walk is distributed as ``Z' = (Z + Y)^+`` under Q, so
+    ``E[(S_0 e^{Z_T} - K)^+]`` follows from the ``e^{alpha z}``-tilted CF of
+    ``Z_T`` by Parseval (and the minimum mirrors it).
 
 References
 ----------
@@ -236,6 +240,32 @@ def _european(model, fwd, params, strike, maturity, cp) -> float:
     )
 
 
+def _lindley_tilted_law(
+    incr_cf: Callable, t: float, n_steps: int, h: float | None, N: int | None
+) -> tuple[_SincHilbert, np.ndarray, float]:
+    """``E[e^{t Z_n} e^{i xi Z_n}]`` on the sinc grid for ``Z' = (Z + D)^+``, ``Z_0 = 0``.
+
+    ``incr_cf`` is the CF of the i.i.d. increment ``D``. An untilted recursion
+    supplies the atom ``P(Z + D <= 0)`` that the tilted one returns to the
+    origin (where ``e^{t z} = 1``). Also returns the final atom ``P(Z_n = 0)``.
+    """
+    h = h or _H_DEFAULT
+    N = _grid_size(incr_cf, t, h, N)
+    ht = _SincHilbert(N, h)
+    origin = N // 2  # xi = 0
+    chi = np.ones(N, dtype=complex)  # E[e^{i xi Z_0}] with Z_0 = 0
+    tilted = np.ones(N, dtype=complex)
+    step_plain = incr_cf(ht.xi)
+    step_tilt = incr_cf(ht.xi - 1j * t)
+    atom = 1.0
+    for _ in range(n_steps):
+        above = ht.project_above(chi * step_plain, 0.0)
+        atom = 1.0 - float(np.real(above[origin]))
+        chi = above + atom
+        tilted = ht.project_above(tilted * step_tilt, 0.0) + atom
+    return ht, tilted, atom
+
+
 def hilbert_lookback_price(
     model: str,
     fwd: ForwardSpec,
@@ -243,15 +273,24 @@ def hilbert_lookback_price(
     *,
     maturity: float,
     cp: int = -1,
+    strike_type: str = "floating",
+    strike: float | None = None,
     n_monitor: int = 252,
     h: float | None = None,
     N: int | None = None,
 ) -> float:
-    """Discretely monitored floating-strike lookback by the fast Hilbert transform.
+    """Discretely monitored lookback option by the fast Hilbert transform.
 
-    Put (``cp=-1``) pays ``max_j S_{t_j} - S_T``; call (``cp=+1``) pays
-    ``S_T - min_j S_{t_j}``; the extremum runs over ``t_0 = 0, T/M, ..., T``.
-    See the module docstring for the Lindley-recursion formulation.
+    The extremum runs over ``t_0 = 0, T/M, ..., T`` (``M = n_monitor``).
+
+    * ``strike_type="floating"``: put (``cp=-1``) pays ``max S - S_T``, call
+      pays ``S_T - min S``. ``Z = log(max/S)`` follows the Lindley recursion
+      ``Z' = (Z - Y)^+``; under the share measure the put is
+      ``S_0 e^{-qT} (E[e^{Z_T}] - 1)`` (the call mirrors it).
+    * ``strike_type="fixed"``: call pays ``(max S - K)^+``, put ``(K - min S)^+``.
+      By Spitzer's duality the running maximum of the log-price walk has the
+      law of ``Z' = (Z + Y)^+`` under Q (the minimum mirrors it), and the
+      payoff is integrated against the ``e^{alpha Z}``-tilted CF by Parseval.
     """
     from ..pricers.cos_bermudan import _SUPPORTED_MODELS
 
@@ -263,36 +302,46 @@ def hilbert_lookback_price(
         raise ValueError(f"cp must be +1 or -1; got {cp}")
     if n_monitor < 1:
         raise ValueError(f"n_monitor must be >= 1; got {n_monitor}")
+    if strike_type not in ("floating", "fixed"):
+        raise ValueError(f"strike_type must be 'floating' or 'fixed'; got {strike_type!r}")
 
     dt = maturity / n_monitor
     q_cf = _step_cf(model, fwd, params, dt)
-    growth = np.exp((fwd.r - fwd.q) * dt)
 
-    def share_cf(u):  # CF of Y under the share measure
-        return q_cf(u - 1j) / growth
+    if strike_type == "floating":
+        growth = np.exp((fwd.r - fwd.q) * dt)
+        s, t = (-1.0, 1.0) if cp == -1 else (1.0, -1.0)
+        _, tilted, _ = _lindley_tilted_law(lambda u: q_cf(s * u - 1j) / growth, t, n_monitor, h, N)
+        moment = float(np.real(tilted[tilted.size // 2]))  # E^S[e^{t Z_T}]
+        share_value = fwd.S0 * np.exp(-fwd.q * maturity)
+        return float(share_value * (moment - 1.0) if cp == -1 else share_value * (1.0 - moment))
 
-    # Put: Z' = (Z - Y)^+, need E[e^{Z}].  Call: Z' = (Z + Y)^+, need E[e^{-Z}].
-    # Write both as Z' = (Z + sY)^+ with tilt e^{t z}: (s, t) = (-1, 1) or (1, -1).
-    s, t = (-1.0, 1.0) if cp == -1 else (1.0, -1.0)
-
-    def incr_cf(u):  # CF of s*Y (share measure)
-        return share_cf(s * u)
-
-    h = h or _H_DEFAULT
-    N = _grid_size(incr_cf, t, h, N)
-    ht = _SincHilbert(N, h)
-    xi = ht.xi
-    origin = N // 2  # xi = 0
-
-    chi = np.ones(N, dtype=complex)  # E[e^{i xi Z_0}] with Z_0 = 0
-    tilted = np.ones(N, dtype=complex)  # E[e^{t Z} e^{i xi Z}]
-    step_plain = incr_cf(xi)
-    step_tilt = incr_cf(xi - 1j * t)
-    for _ in range(n_monitor):
-        above = ht.project_above(chi * step_plain, 0.0)
-        atom = 1.0 - np.real(above[origin])  # P(Z + sY <= 0)
-        chi = above + atom
-        tilted = ht.project_above(tilted * step_tilt, 0.0) + atom
-    moment = float(np.real(tilted[origin]))  # E[e^{t Z_T}]
-    share_value = fwd.S0 * np.exp(-fwd.q * maturity)
-    return float(share_value * (moment - 1.0) if cp == -1 else share_value * (1.0 - moment))
+    if strike is None or strike <= 0.0:
+        raise ValueError("fixed-strike lookbacks need strike > 0")
+    k = strike / fwd.S0
+    disc = np.exp(-fwd.r * maturity)
+    # Call: max X ~ (Z + Y)^+, payoff S0 (e^Z - k)^+.  Put: -min X ~ (Z - Y)^+,
+    # payoff S0 (k - e^{-Z})^+.  alpha tilts the law so the damped payoff is integrable.
+    sign, alpha = (1.0, 2.0) if cp == 1 else (-1.0, 1.0)
+    if (cp == 1 and k <= 1.0) or (cp == -1 and k >= 1.0):
+        # Payoff linear in e^{+-Z} on the whole support: one exact moment.
+        _, tilted, _ = _lindley_tilted_law(lambda u: q_cf(sign * u), sign, n_monitor, h, N)
+        moment = float(np.real(tilted[tilted.size // 2]))
+        return float(disc * fwd.S0 * ((moment - k) if cp == 1 else (k - moment)))
+    incr = lambda u: q_cf(sign * u)  # noqa: E731
+    if N is None:
+        # The continuous part of Z's law jumps at 0+, so its CF decays only like
+        # 1/xi and the Parseval tail error falls like 1/xi_max^2; an 8x wider
+        # grid keeps it near 1e-7 of the price.
+        N = min(8 * _grid_size(incr, alpha, h or _H_DEFAULT, None), _N_MAX)
+    ht, tilted, atom = _lindley_tilted_law(incr, alpha, n_monitor, h, N)
+    z_star = float(np.log(k)) if cp == 1 else float(-np.log(k))
+    sv = -1j * ht.xi - alpha  # damped payoff transform evaluated at -xi
+    if cp == 1:
+        payoff = _exp_integral(sv + 1.0, z_star, np.inf) - k * _exp_integral(sv, z_star, np.inf)
+    else:
+        payoff = k * _exp_integral(sv, z_star, np.inf) - _exp_integral(sv - 1.0, z_star, np.inf)
+    # The atom of Z at 0 gives a non-decaying constant in its CF; integrate it
+    # exactly (the payoff vanishes there) and sum only the continuous part.
+    value = (ht.h / (2.0 * np.pi)) * np.sum((tilted - atom) * payoff)
+    return float(disc * fwd.S0 * max(np.real(value), 0.0))

@@ -251,14 +251,12 @@ def test_pipeline_dispatch_and_guards():
     heston = fe.HestonParams(kappa=2.0, theta=0.04, nu=0.4, rho=-0.6, v0=0.04)
     with pytest.raises(NotImplementedError, match="1-D Levy"):
         fe.price(prod, "heston", "hilbert_barrier", FWD, heston)
-    with pytest.raises(NotImplementedError, match="floating"):
-        fe.price(
-            LookbackOption(maturity=1.0, cp=1, strike_type="fixed", strike=100.0),
-            "kou",
-            "hilbert_lookback",
-            FWD,
-            KOU,
+    fixed = LookbackOption(maturity=1.0, cp=1, strike_type="fixed", strike=110.0)
+    assert fe.price(fixed, "kou", "hilbert_lookback", FWD, KOU, grid=12) == pytest.approx(
+        fe.hilbert_lookback_price(
+            "kou", FWD, KOU, maturity=1.0, cp=1, strike_type="fixed", strike=110.0, n_monitor=12
         )
+    )
     with pytest.raises(ValueError, match="far side"):
         fe.hilbert_barrier_price(
             "bsm",
@@ -269,3 +267,65 @@ def test_pipeline_dispatch_and_guards():
             maturity=1.0,
             barrier_type="down_out",
         )
+
+
+# --------------------------------------------------------------------------- #
+# Fixed-strike lookbacks (Spitzer duality + Parseval)
+# --------------------------------------------------------------------------- #
+def _fixed(model, params, cp, K, M=12, **kw):
+    return fe.hilbert_lookback_price(
+        model, FWD, params, maturity=1.0, cp=cp, strike_type="fixed", strike=K, n_monitor=M, **kw
+    )
+
+
+@pytest.mark.parametrize("model,params", [("bsm", fe.BsmParams(0.25)), ("kou", KOU)])
+def test_fixed_strike_linear_region_matches_floating_engine(model, params):
+    """Two different recursions/measures: (M - K)^+ = M - K for K <= S0 gives
+    fixed call = floating put + S0 e^{-qT} - K e^{-rT}; the put mirrors it."""
+    disc, share = np.exp(-FWD.r), FWD.S0 * np.exp(-FWD.q)
+    flt_put = fe.hilbert_lookback_price(model, FWD, params, maturity=1.0, cp=-1, n_monitor=12)
+    flt_call = fe.hilbert_lookback_price(model, FWD, params, maturity=1.0, cp=1, n_monitor=12)
+    assert _fixed(model, params, 1, 90.0) == pytest.approx(flt_put + share - 90.0 * disc, abs=1e-11)
+    assert _fixed(model, params, -1, 110.0) == pytest.approx(
+        flt_call + 110.0 * disc - share, abs=1e-11
+    )
+
+
+def test_fixed_strike_is_continuous_across_the_spot_and_converged():
+    """The running extremum includes S0, so P(max = S0) > 0 and the price has a
+    genuine kink at K = S0: slope -e^{-rT} below it (call), flatter above."""
+    disc, dk = np.exp(-FWD.r), 1e-3
+    c = [_fixed("bsm", fe.BsmParams(0.25), 1, k) for k in (100.0 - dk, 100.0, 100.0 + dk)]
+    assert (c[1] - c[0]) / dk == pytest.approx(-disc, abs=1e-6)
+    assert -disc < (c[2] - c[1]) / dk < -0.5 * disc  # continuous, less steep
+    p = [_fixed("bsm", fe.BsmParams(0.25), -1, k) for k in (100.0 - dk, 100.0, 100.0 + dk)]
+    assert (p[2] - p[1]) / dk == pytest.approx(disc, abs=1e-6)
+    assert 0.5 * disc < (p[1] - p[0]) / dk < disc
+    fine = _fixed("bsm", fe.BsmParams(0.25), 1, 115.0, h=np.pi / 64, N=1 << 18)
+    assert _fixed("bsm", fe.BsmParams(0.25), 1, 115.0) == pytest.approx(fine, abs=3e-7)
+
+
+@pytest.mark.parametrize("model,params", [("bsm", fe.BsmParams(0.25)), ("kou", KOU)])
+def test_fixed_strike_matches_simulation_with_extremum_control(model, params):
+    M = 12
+    if model == "bsm":
+        rng = np.random.default_rng(1)
+        dt = 1.0 / M
+        sig = params.sigma
+        incr = (FWD.r - FWD.q - 0.5 * sig * sig) * dt + sig * np.sqrt(dt) * rng.standard_normal(
+            (300_000, M)
+        )
+        S = FWD.S0 * np.exp(np.cumsum(incr, axis=1))
+    else:
+        S = _kou_paths(300_000, M, seed=12)
+    disc = np.exp(-FWD.r)
+    mx = np.maximum(S.max(axis=1), FWD.S0)
+    mn = np.minimum(S.min(axis=1), FWD.S0)
+    e_max = _fixed(model, params, 1, 1e-9) / disc  # linear branch: E[max]
+    e_min = FWD.S0 - _fixed(model, params, -1, FWD.S0) / disc
+    for cp, K, ext, mean in ((1, 115.0, mx, e_max), (-1, 88.0, mn, e_min)):
+        pay = disc * np.maximum(cp * (ext - K), 0.0)
+        cv = ext - mean
+        est = pay - np.cov(pay, cv)[0, 1] / cv.var() * cv
+        se = est.std() / np.sqrt(est.size)
+        assert abs(_fixed(model, params, cp, K) - est.mean()) < 4.0 * se
