@@ -206,7 +206,9 @@ def price_strip(
         ``"mellin"`` (Mellin transform, selected Lévy models), ``"hilbert"``
         (Feng-Linetsky 2008 discrete Hilbert transform), ``"sinc"`` (SINC,
         Baschetti et al. 2022: the same odd-frequency sum on a
-        density-sized window, few terms), ``"contour"``
+        density-sized window, few terms), ``"swift"`` (Shannon-wavelet
+        inverse Fourier, Ortiz-Gracia & Oosterlee 2016; ``grid=<int>`` sets
+        the scale ``m``), ``"contour"``
         (Lord-Kahl optimal contour + double-exponential quadrature: a
         high-precision reference with full relative accuracy far out of the
         money), ``"proj"`` (PROJ
@@ -290,6 +292,21 @@ def price_strip(
             )
         mellin_grid = grid if isinstance(grid, CONVGrid) else None
         return mellin_price_at_strikes(phi, fwd, K, cp=cp, grid=mellin_grid)
+
+    if method == "swift":
+        from .pricers.swift import swift_price_at_strikes
+
+        return np.asarray(
+            swift_price_at_strikes(
+                phi,
+                fwd,
+                K,
+                MODEL_REGISTRY[model].cumulants(fwd, params),
+                cp=cp,
+                m=int(grid) if isinstance(grid, int) else None,
+            ),
+            dtype=np.float64,
+        )
 
     if method == "sinc":
         from .pricers.sinc import sinc_price_at_strikes

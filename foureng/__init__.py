@@ -173,6 +173,7 @@ from .pricers.proj import (
 )
 from .pricers.sabr import sabr_hagan_price_at_strikes
 from .pricers.sinc import sinc_price_at_strikes, sinc_smile
+from .pricers.swift import swift_price_at_strikes
 from .products.chooser import ChooserOption
 from .products.compound import CompoundOption
 from .products.fader import FaderOption
@@ -375,6 +376,7 @@ __all__ = [
     "sabr_hagan_price_at_strikes",
     "sinc_price_at_strikes",
     "sinc_smile",
+    "swift_price_at_strikes",
     "bsm_lattice_price",
     "bsm_lattice_price_at_strikes",
     "bsm_pde_fd_price",

@@ -138,6 +138,18 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
             "First slice uses validated transform inversion pending model-specific contours."
         ),
     ),
+    "swift": MethodSpec(
+        requires_cf=True,
+        supports_products=frozenset({"european"}),
+        supports_exercise=frozenset({"european"}),
+        supports_path_dependent=False,
+        notes=(
+            "SWIFT (Ortiz-Gracia & Oosterlee 2016): Shannon-wavelet projection "
+            "of the density and payoff with Vieta's cosine approximation; the "
+            "scale m sets the frequency truncation, the wavelet index range the "
+            "spatial one. Exponential convergence in m."
+        ),
+    ),
     "sinc": MethodSpec(
         requires_cf=True,
         supports_products=frozenset({"european"}),
