@@ -72,8 +72,8 @@ def _simpson(y: np.ndarray, x: np.ndarray) -> float:
     correction (the rule SciPy >= 1.11 uses; SciPy 1.10 averaged two rules).
     """
     n = len(x) - 1
-    if n < 2:
-        return float(np.trapezoid(y, x)) if hasattr(np, "trapezoid") else float(np.trapz(y, x))
+    if n < 2:  # a single interval: trapezoid
+        return float(0.5 * (y[0] + y[-1]) * (x[-1] - x[0])) if n == 1 else 0.0
     m = n - (n % 2)  # intervals covered by whole pairs
     h = np.diff(x)
     h0, h1 = h[0:m:2], h[1:m:2]
