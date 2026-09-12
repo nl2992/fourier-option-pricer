@@ -138,6 +138,18 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
             "First slice uses validated transform inversion pending model-specific contours."
         ),
     ),
+    "sinc": MethodSpec(
+        requires_cf=True,
+        supports_products=frozenset({"european"}),
+        supports_exercise=frozenset({"european"}),
+        supports_path_dependent=False,
+        notes=(
+            "SINC (Baschetti, Bormetti, Romagnoli & Rossi 2022): odd-frequency "
+            "sign-function expansion on a density-sized window; equal to the "
+            "half-integer Hilbert sum with h = 2 pi / X_c. sinc_smile prices a "
+            "whole smile with one FFT."
+        ),
+    ),
     "contour": MethodSpec(
         requires_cf=True,
         supports_products=frozenset({"european"}),

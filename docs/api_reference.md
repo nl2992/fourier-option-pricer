@@ -156,6 +156,7 @@ Each model exposes a cumulant function that returns the first four log-return cu
 | `PDEGrid` | `n_steps`, `n_spot`, `theta` | Finite-difference PDE grid. |
 | `ProjGrid` | `N`, `alph`, `order` | PROJ frame-projection grid (Haar/linear/quadratic/cubic B-spline). |
 | `HilbertGrid` | `h`, `N` | Feng-Linetsky half-integer sinc grid for the discrete Hilbert transform. |
+| `SincGrid` | `X_c`, `N`, `L` | SINC truncation window half-width, number of odd frequencies, cumulant multiplier (all auto by default). |
 | `ContourGrid` | `rel_tol`, `c`, `c_bound`, `max_levels` | Optimal-contour pricer controls: target relative accuracy, optional fixed contour height, search bound, quadrature levels. |
 | `CTMCGrid` | `n_states`, `width` | Spot-centered log-price state grid for the CTMC generator approximation. |
 
@@ -199,6 +200,8 @@ Each model exposes a cumulant function that returns the first four log-return cu
 | `conv_price_at_strikes(phi, fwd, grid, strikes, cp=...)` | CF, `CONVGrid`, forward spec, strikes | CONV method (Lord et al. 2008) evaluated at specific strikes. |
 | `mellin_price_at_strikes(phi, fwd, strikes, cp=..., grid=...)` | CF, forward spec, strikes | Mellin-transform pricer evaluated at specific strikes. |
 | `hilbert_price_at_strikes(phi, fwd, strikes, cp=1, grid=None)` | CF, forward spec, strikes | Feng-Linetsky (2008) Hilbert-transform pricer; exponentially convergent Gil-Pelaez probabilities. |
+| `sinc_price_at_strikes(phi, fwd, strikes, cumulants, cp=1, grid=None)` | CF, forward spec, strikes, cumulants | SINC (Baschetti et al. 2022; `method="sinc"`): odd-frequency sign-function expansion on a density-sized window. Identical to the half-integer Hilbert sum with `h = 2 pi / X_c`, but sizes the window from the cumulants, so it needs 10-40x fewer terms than the fixed Hilbert default. |
+| `sinc_smile(phi, fwd, cumulants, cp=1, grid=None)` | CF, forward spec, cumulants | A whole smile from one FFT: prices on a uniform log-strike grid (returns `strikes, prices`). |
 | `contour_price_at_strikes(phi, fwd, strikes, cp=1, grid=None)` | CF, forward spec, strikes | High-precision reference engine (`method="contour"`): Lord-Kahl (2007) optimal contour per strike, residue-free out-of-the-money values, adaptive exp-sinh double-exponential quadrature. Full relative precision in the deep wings (1e-19 prices to ~1e-14). |
 | `hilbert_barrier_price(model, fwd, params, strike=..., barrier=..., maturity=..., barrier_type=..., cp=1, n_monitor=252, h=None, N=None)` | Levy model key, market inputs, contract | Discretely monitored single barrier by the fast Hilbert transform (Feng-Linetsky 2008); also `method="hilbert_barrier"` for a `BarrierOption` (pass `grid=<int>` for the number of dates). |
 | `hilbert_lookback_price(model, fwd, params, maturity=..., cp=-1, strike_type="floating", strike=None, n_monitor=252, h=None, N=None)` | Levy model key, market inputs | Discretely monitored floating- or fixed-strike lookback via Lindley recursions with Hilbert projections (Feng-Linetsky 2009); fixed strikes via Spitzer duality and Parseval. Also `method="hilbert_lookback"`. |

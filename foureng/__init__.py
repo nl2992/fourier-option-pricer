@@ -172,6 +172,7 @@ from .pricers.proj import (
     proj_swing_price,
 )
 from .pricers.sabr import sabr_hagan_price_at_strikes
+from .pricers.sinc import sinc_price_at_strikes, sinc_smile
 from .products.chooser import ChooserOption
 from .products.compound import CompoundOption
 from .products.fader import FaderOption
@@ -219,6 +220,7 @@ from .utils.grids import (
     FRFTGrid,
     HilbertGrid,
     ProjGrid,
+    SincGrid,
 )
 from .utils.spectral_filters import COSFilterSpec, cos_filter_weights
 
@@ -311,6 +313,7 @@ __all__ = [
     "COSGrid",
     "COSGridPolicy",
     "ContourGrid",
+    "SincGrid",
     "FFTGrid",
     "FRFTGrid",
     "HilbertGrid",
@@ -370,6 +373,8 @@ __all__ = [
     "proj_asian_price_cv",
     "ProjGrid",
     "sabr_hagan_price_at_strikes",
+    "sinc_price_at_strikes",
+    "sinc_smile",
     "bsm_lattice_price",
     "bsm_lattice_price_at_strikes",
     "bsm_pde_fd_price",

@@ -133,6 +133,28 @@ class ContourGrid:
 
 
 @dataclass(frozen=True)
+class SincGrid:
+    """Truncation window and size for the SINC pricer (Baschetti et al. 2022).
+
+    Parameters
+    ----------
+    X_c : float, optional
+        Half-width of the log-moneyness window on which the sign function is
+        expanded; ``None`` sizes it from the cumulants so that every strike's
+        window covers the density.
+    N : int, optional
+        Number of odd frequencies ``(2n + 1) pi / X_c``; ``None`` picks the
+        smallest power of two at which the CF has decayed to 1e-15.
+    L : float
+        Cumulant truncation multiplier for the density support.
+    """
+
+    X_c: float | None = None
+    N: int | None = None
+    L: float = 10.0
+
+
+@dataclass(frozen=True)
 class HilbertGrid:
     """Frequency grid for the Hilbert-transform pricer of Feng & Linetsky (2008).
 

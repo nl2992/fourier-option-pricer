@@ -204,7 +204,9 @@ def price_strip(
         and the adaptive/filtered extensions), ``"carr_madan"`` (FFT, 1999),
         ``"frft"`` (Chourdakis 2004), ``"conv"`` (Fourier inversion),
         ``"mellin"`` (Mellin transform, selected Lévy models), ``"hilbert"``
-        (Feng-Linetsky 2008 discrete Hilbert transform), ``"contour"``
+        (Feng-Linetsky 2008 discrete Hilbert transform), ``"sinc"`` (SINC,
+        Baschetti et al. 2022: the same odd-frequency sum on a
+        density-sized window, few terms), ``"contour"``
         (Lord-Kahl optimal contour + double-exponential quadrature: a
         high-precision reference with full relative accuracy far out of the
         money), ``"proj"`` (PROJ
@@ -288,6 +290,22 @@ def price_strip(
             )
         mellin_grid = grid if isinstance(grid, CONVGrid) else None
         return mellin_price_at_strikes(phi, fwd, K, cp=cp, grid=mellin_grid)
+
+    if method == "sinc":
+        from .pricers.sinc import sinc_price_at_strikes
+        from .utils.grids import SincGrid
+
+        return np.asarray(
+            sinc_price_at_strikes(
+                phi,
+                fwd,
+                K,
+                MODEL_REGISTRY[model].cumulants(fwd, params),
+                cp=cp,
+                grid=grid if isinstance(grid, SincGrid) else None,
+            ),
+            dtype=np.float64,
+        )
 
     if method == "contour":
         from .pricers.contour import contour_price_at_strikes
