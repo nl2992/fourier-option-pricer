@@ -625,6 +625,7 @@ _SV_MODELS = {
     "sv32",
     "sv42",
     "time_changed_levy",
+    "lifted_heston",
     "rough_heston",
     "garch_wmw2012",
     "double_heston",

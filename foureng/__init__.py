@@ -106,6 +106,12 @@ from .models.hull_white_hybrid import (
     hw_hybrid_cumulants,
 )
 from .models.kou import KouParams, kou_cf, kou_cumulants
+from .models.lifted_heston import (
+    LiftedHestonParams,
+    lifted_heston_cf,
+    lifted_heston_cumulants,
+    lifted_kernel,
+)
 from .models.meixner import MeixnerParams, meixner_cf, meixner_cumulants
 from .models.merton_jd import MertonJDParams, merton_jd_cf, merton_jd_cumulants
 from .models.nig import NigParams, nig_cf, nig_cumulants
@@ -260,6 +266,10 @@ __all__ = [
     "KouParams",
     "kou_cf",
     "kou_cumulants",
+    "LiftedHestonParams",
+    "lifted_heston_cf",
+    "lifted_heston_cumulants",
+    "lifted_kernel",
     "BatesParams",
     "bates_cf",
     "bates_cumulants",

@@ -42,6 +42,12 @@ from .heston import HestonParams, heston_cf, heston_cf_form2, heston_cumulants, 
 from .heston_cgmy import HestonCGMYParams, cgmy_levy_exponent, heston_cgmy_cf, heston_cgmy_cumulants
 from .heston_kou import HestonKouParams, heston_kou_cf, heston_kou_cumulants
 from .kou import KouParams, kou_cf, kou_cumulants
+from .lifted_heston import (
+    LiftedHestonParams,
+    lifted_heston_cf,
+    lifted_heston_cumulants,
+    lifted_kernel,
+)
 from .meixner import MeixnerParams, meixner_cf, meixner_cumulants
 from .merton_jd import MertonJDParams, merton_jd_cf, merton_jd_cumulants
 from .nig import NigParams, nig_cf, nig_cumulants
@@ -95,6 +101,10 @@ __all__ = [
     "KouParams",
     "kou_cf",
     "kou_cumulants",
+    "LiftedHestonParams",
+    "lifted_heston_cf",
+    "lifted_heston_cumulants",
+    "lifted_kernel",
     # Bates
     "BatesParams",
     "bates_cf",

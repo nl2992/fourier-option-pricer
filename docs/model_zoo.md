@@ -15,6 +15,7 @@ The unified dispatcher `fe.price_strip` routes through `foureng.models.registry.
 | CGMY | `CgmyParams` | PyFENG-backed adapter | Infinite-activity tempered-stable jump model. |
 | Normal Inverse Gaussian | `NigParams` | PyFENG-backed adapter | Lévy model with heavier tails than Gaussian diffusion. |
 | 3/2 Stochastic Volatility | `Sv32Params` | PyFENG-backed adapter | Mean-reverting variance process with 3/2 diffusion coefficient. |
+| Lifted Heston | `LiftedHestonParams` | Native (stiff ODE) | Abi Jaber (2019): 20-factor Markovian approximation of rough Heston; one factor with no decay is Heston. |
 | Time-changed Lévy | `TimeChangedLevyParams` | Native closed form | Carr-Geman-Madan-Yor (2003): BSM/VG/NIG/CGMY/Kou/Merton base on a CIR or Gamma-OU activity clock (NIG-CIR, CGMY-ΓOU, ...); VG-CIR is `vgsa`. |
 | 4/2 Stochastic Volatility | `Sv42Params` | Native closed form | Grasselli (2017): volatility `a sqrt(v) + b/sqrt(v)` on one CIR factor; `b = 0` is Heston, `a = 0` is 3/2. CF via two measure changes and a log-space Kummer series. |
 | Rough Heston | `RoughHestonParams` | PyFENG-backed adapter | Fractional Brownian motion variance driver (Hurst index H < 1/2). |

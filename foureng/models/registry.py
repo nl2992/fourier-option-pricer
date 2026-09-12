@@ -31,6 +31,7 @@ from .heston_cgmy import HestonCGMYParams, heston_cgmy_cf, heston_cgmy_cumulants
 from .heston_kou import HestonKouParams, heston_kou_cf, heston_kou_cumulants
 from .hull_white_hybrid import HullWhiteHybridParams, hw_hybrid_cf, hw_hybrid_cumulants
 from .kou import KouParams, kou_cf, kou_cumulants
+from .lifted_heston import LiftedHestonParams, lifted_heston_cf, lifted_heston_cumulants
 from .meixner import MeixnerParams, meixner_cf, meixner_cumulants
 from .merton_jd import MertonJDParams, merton_jd_cf, merton_jd_cumulants
 from .nig import NigParams, nig_cf, nig_cumulants
@@ -110,6 +111,9 @@ MODEL_REGISTRY: dict[str, ModelEntry] = {
     ),
     "merton_jd": _e("merton_jd", MertonJDParams, merton_jd_cf, merton_jd_cumulants, False),
     "sv42": _e("sv42", Sv42Params, sv42_cf, sv42_cumulants, False),
+    "lifted_heston": _e(
+        "lifted_heston", LiftedHestonParams, lifted_heston_cf, lifted_heston_cumulants, False
+    ),
     "time_changed_levy": _e(
         "time_changed_levy",
         TimeChangedLevyParams,
