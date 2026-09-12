@@ -625,6 +625,7 @@ _SV_MODELS = {
     "sv32",
     "sv42",
     "bns",
+    "affine",
     "time_changed_levy",
     "lifted_heston",
     "rough_heston",

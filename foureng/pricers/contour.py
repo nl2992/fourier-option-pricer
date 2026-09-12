@@ -25,6 +25,10 @@ Two choices make the integral cheap and accurate:
   (their deformed contours are not used: the horizontal contour is valid for
   every model with a finite ``M(c)``).
 
+The engine assumes a cheap CF: it evaluates it at many complex points and at
+very high frequencies. For CFs computed by solving ODEs (``affine``,
+``lifted_heston``) prefer COS or SINC.
+
 The admissible range of ``c`` is found by scanning ``M(c) = phi(-ic)``
 outward from ``[0, 1]`` and stopping at the first value that is not finite,
 real and positive, or where ``log M`` stops being convex (beyond a moment

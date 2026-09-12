@@ -77,6 +77,7 @@ from .mc.black_scholes_mc import european_call_mc
 from .mc.control_variate import CVResult, bs_call_cv, heston_call_bs_control
 from .mc.engine import MCResult, MCSpec, mc_price
 from .mc.heston_conditional_mc import HestonMCScheme, heston_conditional_mc_calls
+from .models.affine import AffineParams, affine_cf, affine_cumulants
 from .models.base import CharFunc, ForwardSpec, ModelSpec
 from .models.bates import BatesParams, bates_cf, bates_cumulants
 from .models.bilateral_gamma import (
@@ -286,6 +287,9 @@ __all__ = [
     "Sv42Params",
     "sv42_cf",
     "sv42_cumulants",
+    "AffineParams",
+    "affine_cf",
+    "affine_cumulants",
     "BNSParams",
     "bns_cf",
     "bns_cumulants",

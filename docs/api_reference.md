@@ -37,6 +37,7 @@ Each dataclass holds the calibrated parameters for one stochastic-volatility or 
 | `NigParams` | Normal Inverse Gaussian |
 | `Sv32Params` | 3/2 stochastic-volatility model |
 | `Sv42Params` | 4/2 stochastic-volatility model (Grasselli 2017): `v0, kappa, theta, nu, rho, a, b` |
+| `AffineParams` | Generic affine jump-diffusion (Duffie-Pan-Singleton 2000): `x0, K0, K1, H0, H1, l0, l1, jump_transform` (state-dependent compensators go in `K1`) |
 | `BNSParams` | Barndorff-Nielsen-Shephard Gamma-OU SV: `v0, lam, a, b, rho` (compound-Poisson variance jumps, leverage `rho`) |
 | `LiftedHestonParams` | Lifted Heston (Abi Jaber 2019): `v0, kappa, theta, nu, rho, H, n=20, r_n=2.5` (or an explicit kernel via `weights`, `speeds`); Markovian `n`-factor proxy for rough Heston |
 | `TimeChangedLevyParams` | Levy base (`bsm, vg, nig, cgmy, kou, merton_jd`) on a stochastic clock: `base_model, base_params, clock` with `CirClock(y0, kappa, eta, lam)` or `GammaOUClock(y0, lam, a, b)` (Carr-Geman-Madan-Yor 2003) |
@@ -75,6 +76,7 @@ All characteristic functions accept a model parameter dataclass and a complex-va
 | `sv42_cf` | 4/2 (native closed form) |
 | `time_changed_levy_cf` | time-changed Levy (CGMY 2003 eq. 4.9) |
 | `bns_cf` | BNS Gamma-OU (closed form) |
+| `affine_cf` | generic affine jump-diffusion (Riccati ODEs, DOP853) |
 | `lifted_heston_cf` | lifted Heston (ETDRK4 on the stiff Riccati system; `lifted_kernel` gives the weights/speeds) |
 | `rough_heston_cf` | Rough Heston |
 | `kou_cf` | Kou |
@@ -115,6 +117,7 @@ Each model exposes a cumulant function that returns the first four log-return cu
 | `time_changed_levy_cumulants` | time-changed Levy |
 | `lifted_heston_cumulants` | lifted Heston |
 | `bns_cumulants` | BNS Gamma-OU |
+| `affine_cumulants` | generic affine |
 | `rough_heston_cumulants` | Rough Heston |
 | `kou_cumulants` | Kou |
 | `bates_cumulants` | Bates |

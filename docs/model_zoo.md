@@ -15,6 +15,7 @@ The unified dispatcher `fe.price_strip` routes through `foureng.models.registry.
 | CGMY | `CgmyParams` | PyFENG-backed adapter | Infinite-activity tempered-stable jump model. |
 | Normal Inverse Gaussian | `NigParams` | PyFENG-backed adapter | Lévy model with heavier tails than Gaussian diffusion. |
 | 3/2 Stochastic Volatility | `Sv32Params` | PyFENG-backed adapter | Mean-reverting variance process with 3/2 diffusion coefficient. |
+| Generic affine | `AffineParams` | Numerical Riccati ODEs | Duffie-Pan-Singleton (2000): any affine jump-diffusion (drift, covariance and jump intensity affine in the state). Heston, Bates, double Heston, Merton and Heston-Kou are special cases; enables e.g. variance-proportional jump intensity. Price with COS or SINC. |
 | BNS Γ-OU SV | `BNSParams` | Native closed form | Barndorff-Nielsen & Shephard (2001): Gamma-OU variance driven by compound-Poisson jumps that also move the price (leverage). |
 | Lifted Heston | `LiftedHestonParams` | Native (stiff ODE) | Abi Jaber (2019): 20-factor Markovian approximation of rough Heston; one factor with no decay is Heston. |
 | Time-changed Lévy | `TimeChangedLevyParams` | Native closed form | Carr-Geman-Madan-Yor (2003): BSM/VG/NIG/CGMY/Kou/Merton base on a CIR or Gamma-OU activity clock (NIG-CIR, CGMY-ΓOU, ...); VG-CIR is `vgsa`. |

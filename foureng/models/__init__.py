@@ -29,6 +29,7 @@ In-house native CFs:
     sabr           SabrParams             -  SABR Hagan implied-vol approximation
 """
 
+from .affine import AffineParams, affine_cf, affine_cumulants
 from .base import CharFunc, ForwardSpec, ModelSpec
 from .bates import BatesParams, bates_cf, bates_cumulants
 from .bilateral_gamma import BilateralGammaParams, bilateral_gamma_cf, bilateral_gamma_cumulants
@@ -126,6 +127,9 @@ __all__ = [
     "Sv42Params",
     "sv42_cf",
     "sv42_cumulants",
+    "AffineParams",
+    "affine_cf",
+    "affine_cumulants",
     "BNSParams",
     "bns_cf",
     "bns_cumulants",
