@@ -74,7 +74,7 @@ This file tracks the capability surface used by the registry and dispatcher test
 | `proj_double_barrier` | PROJ discretely monitored double barrier (two-sided absorption) | Kirkby (2015) |
 | `proj_asian` | Arithmetic Asian MC with PROJ/analytic geometric control variate | Kirkby (2016) |
 | `bsm_analytic` | BSM closed-form vanilla baseline | Black & Scholes (1973) |
-| `mc_gbm` | GBM Monte Carlo baseline | — |
+| `mc_gbm` | GBM Monte Carlo baseline | n/a |
 | `conv` | CONV-style Fourier probability inversion | Choi/Kirkby MATLAB comparison target |
 | `lattice` | BSM Cox-Ross-Rubinstein tree | Cox, Ross & Rubinstein (1979) |
 | `pde_fd` | BSM implicit finite difference | Black-Scholes PDE |

@@ -11,7 +11,7 @@ This document describes how `fourier-option-pricer` is packaged, versioned, and 
 | PyPI name | `fourier-option-pricer` |
 | Python import name | `foureng` |
 | Version source | `foureng/_version.py` (single source of truth; `pyproject.toml` reads it) |
-| Python version support | ≥ 3.10 (CI: 3.10 – 3.14) |
+| Python version support | 3.10 or newer (CI covers 3.10 to 3.14) |
 | License | MIT (`LICENSE` ships in both the sdist and the wheel) |
 | Typing | PEP 561 `py.typed` marker included |
 
@@ -110,7 +110,7 @@ Releases are uploaded by `.github/workflows/publish.yml` using PyPI Trusted Publ
    python -m build && twine check --strict dist/*
    ```
 4. Merge to `main`, then create a GitHub Release with tag `v<version>` (for example
-   `v0.21.0`). Publishing the Release triggers the workflow, which:
+   `v0.22.0`). Publishing the Release triggers the workflow, which:
    - fails if the tag does not equal `v` + `foureng/_version.py`,
    - builds the sdist and wheel and runs `twine check --strict`,
    - installs the wheel into a clean venv and prices a Heston strip (exercising the pyfeng backend) as a smoke test,

@@ -191,7 +191,7 @@ Each model exposes a cumulant function that returns the first four log-return cu
 | `COSPolicyDecision` | dataclass | Stores the resolved `COSGrid` and the policy that produced it. |
 | `cos_adaptive_decision(cumulants, model=..., params=..., policy=..., strike_count=...)` | function | Returns a `COSPolicyDecision` for a given model, adapting to accuracy requirements. |
 | `cos_prices(phi, fwd, strikes, grid, payoff_mode=..., call_direct_width_max=..., ...)` | function | Core COS pricer. Returns an array of call/put prices. |
-| `cos_bermudan_price(model, fwd, params, product, grid=..., N=..., L=...)` | function | Exact Fang–Oosterlee (2009) COS Bermudan: Newton early-exercise point, analytic payoff coefficients, Hankel+Toeplitz FFT continuation. Exponential convergence in `N`. (`n_spatial` is deprecated and ignored.) |
+| `cos_bermudan_price(model, fwd, params, product, grid=..., N=..., L=...)` | function | Exact Fang-Oosterlee (2009) COS Bermudan: Newton early-exercise point, analytic payoff coefficients, Hankel+Toeplitz FFT continuation. Exponential convergence in `N`. (`n_spatial` is deprecated and ignored.) |
 | `cos_american_price(model, fwd, params, product, base_dates=..., grid=..., N=..., L=..., n_max=...)` | function | American option for 1-D Lévy models by 4-point Richardson extrapolation of COS Bermudans (FO2009 §5); also reachable as `method="cos_american"` for an `AmericanOption` in `price`. |
 | `cos_bermudan_price_strip(...)` | function | COS Bermudan pricer over a strike strip. |
 | `cos_digital_price(model, fwd, params, product, grid=..., N=..., L=...)` | function | COS pricing for cash-or-nothing and asset-or-nothing digitals. |
