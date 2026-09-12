@@ -108,6 +108,31 @@ class CONVGrid:
 
 
 @dataclass(frozen=True)
+class ContourGrid:
+    """Controls for the optimal-contour double-exponential pricer.
+
+    Parameters
+    ----------
+    rel_tol : float
+        Target relative accuracy of each out-of-the-money value; the
+        quadrature halves its step until successive levels agree to this.
+    c : float, optional
+        Fixed contour height ``Im z = c`` (not 0 or 1). ``None`` picks the
+        Lord-Kahl (2007) optimum per strike.
+    c_bound : float
+        Largest ``|c|`` searched when the moment generating function is
+        finite everywhere (e.g. BSM).
+    max_levels : int
+        Maximum number of step halvings of the exp-sinh rule.
+    """
+
+    rel_tol: float = 1e-13
+    c: float | None = None
+    c_bound: float = 200.0
+    max_levels: int = 12
+
+
+@dataclass(frozen=True)
 class HilbertGrid:
     """Frequency grid for the Hilbert-transform pricer of Feng & Linetsky (2008).
 

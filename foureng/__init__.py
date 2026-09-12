@@ -119,6 +119,7 @@ from .models.vgsa import VGSAParams, vgsa_cf, vgsa_cumulants
 from .pipeline import price, price_strip
 from .pricers.carr_madan import carr_madan_fft_prices, carr_madan_price_at_strikes
 from .pricers.cliquet import levy_cliquet_price
+from .pricers.contour import contour_price_at_strikes
 from .pricers.conv import conv_price_at_strikes
 from .pricers.cos import (
     COSPolicyDecision,
@@ -203,6 +204,7 @@ from .surface import (
     svi_total_variance,
 )
 from .utils.grids import (
+    ContourGrid,
     CONVGrid,
     COSGrid,
     COSGridPolicy,
@@ -301,6 +303,7 @@ __all__ = [
     # grids
     "COSGrid",
     "COSGridPolicy",
+    "ContourGrid",
     "FFTGrid",
     "FRFTGrid",
     "HilbertGrid",
@@ -317,6 +320,7 @@ __all__ = [
     "COSPolicyDecision",
     "carr_madan_price_at_strikes",
     "carr_madan_fft_prices",
+    "contour_price_at_strikes",
     "conv_price_at_strikes",
     "CTMCGrid",
     "ctmc_american_price",

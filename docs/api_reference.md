@@ -156,6 +156,7 @@ Each model exposes a cumulant function that returns the first four log-return cu
 | `PDEGrid` | `n_steps`, `n_spot`, `theta` | Finite-difference PDE grid. |
 | `ProjGrid` | `N`, `alph`, `order` | PROJ frame-projection grid (Haar/linear/quadratic/cubic B-spline). |
 | `HilbertGrid` | `h`, `N` | Feng-Linetsky half-integer sinc grid for the discrete Hilbert transform. |
+| `ContourGrid` | `rel_tol`, `c`, `c_bound`, `max_levels` | Optimal-contour pricer controls: target relative accuracy, optional fixed contour height, search bound, quadrature levels. |
 | `CTMCGrid` | `n_states`, `width` | Spot-centered log-price state grid for the CTMC generator approximation. |
 
 ### Grid builders
@@ -198,6 +199,7 @@ Each model exposes a cumulant function that returns the first four log-return cu
 | `conv_price_at_strikes(phi, fwd, grid, strikes, cp=...)` | CF, `CONVGrid`, forward spec, strikes | CONV method (Lord et al. 2008) evaluated at specific strikes. |
 | `mellin_price_at_strikes(phi, fwd, strikes, cp=..., grid=...)` | CF, forward spec, strikes | Mellin-transform pricer evaluated at specific strikes. |
 | `hilbert_price_at_strikes(phi, fwd, strikes, cp=1, grid=None)` | CF, forward spec, strikes | Feng-Linetsky (2008) Hilbert-transform pricer; exponentially convergent Gil-Pelaez probabilities. |
+| `contour_price_at_strikes(phi, fwd, strikes, cp=1, grid=None)` | CF, forward spec, strikes | High-precision reference engine (`method="contour"`): Lord-Kahl (2007) optimal contour per strike, residue-free out-of-the-money values, adaptive exp-sinh double-exponential quadrature. Full relative precision in the deep wings (1e-19 prices to ~1e-14). |
 | `hilbert_itm_probabilities(phi, fwd, strikes, grid=None)` | CF, forward spec, strikes | Share- and cash-measure ITM probabilities (Pi_1, Pi_2); N(d1)/N(d2) under BSM. |
 | `levy_geometric_asian_price(model, fwd, params, strikes=..., monitoring_times=..., cp=1)` | Levy model key, market inputs, fixings | Exact discrete geometric-Asian prices via the per-increment CF product (Fusai-Meucci 2008). |
 | `levy_forward_start_price(model, fwd, params, alpha=..., start_time=..., maturity=..., cp=1)` | Levy model key, market inputs, strike ratio, reset date | Exact Levy forward-start price via homogeneity factorization; COS European leg. |

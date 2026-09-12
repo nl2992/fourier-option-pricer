@@ -138,6 +138,18 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
             "First slice uses validated transform inversion pending model-specific contours."
         ),
     ),
+    "contour": MethodSpec(
+        requires_cf=True,
+        supports_products=frozenset({"european"}),
+        supports_exercise=frozenset({"european"}),
+        supports_path_dependent=False,
+        notes=(
+            "Optimal-contour Fourier inversion (Lord & Kahl 2007) with adaptive "
+            "exp-sinh double-exponential quadrature (Andersen & Lake 2018). "
+            "Out-of-the-money values are computed residue-free with full "
+            "relative precision; a high-precision reference engine."
+        ),
+    ),
     "hilbert": MethodSpec(
         requires_cf=True,
         supports_products=frozenset({"european"}),

@@ -204,7 +204,10 @@ def price_strip(
         and the adaptive/filtered extensions), ``"carr_madan"`` (FFT, 1999),
         ``"frft"`` (Chourdakis 2004), ``"conv"`` (Fourier inversion),
         ``"mellin"`` (Mellin transform, selected Lévy models), ``"hilbert"``
-        (Feng-Linetsky 2008 discrete Hilbert transform), ``"proj"`` (PROJ
+        (Feng-Linetsky 2008 discrete Hilbert transform), ``"contour"``
+        (Lord-Kahl optimal contour + double-exponential quadrature: a
+        high-precision reference with full relative accuracy far out of the
+        money), ``"proj"`` (PROJ
         frame projection, Kirkby 2015/2017), and ``"pyfeng_fft"`` (PyFENG native
         FFT for BSM/Heston/OUSV/VG/CGMY/NIG/3-2 SV/Rough Heston).
         Non-CF baselines: ``"lattice"`` and ``"pde_fd"`` (BSM only),
@@ -285,6 +288,15 @@ def price_strip(
             )
         mellin_grid = grid if isinstance(grid, CONVGrid) else None
         return mellin_price_at_strikes(phi, fwd, K, cp=cp, grid=mellin_grid)
+
+    if method == "contour":
+        from .pricers.contour import contour_price_at_strikes
+        from .utils.grids import ContourGrid
+
+        contour_grid = grid if isinstance(grid, ContourGrid) else None
+        return np.asarray(
+            contour_price_at_strikes(phi, fwd, K, cp=cp, grid=contour_grid), dtype=np.float64
+        )
 
     if method == "hilbert":
         hilbert_grid = grid if isinstance(grid, HilbertGrid) else None
