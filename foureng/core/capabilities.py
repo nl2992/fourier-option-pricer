@@ -150,6 +150,28 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
             "relative precision; a high-precision reference engine."
         ),
     ),
+    "hilbert_barrier": MethodSpec(
+        requires_cf=True,
+        supports_products=frozenset({"barrier"}),
+        supports_exercise=frozenset({"european"}),
+        supports_path_dependent=True,
+        notes=(
+            "Discretely monitored single barriers for 1-D Levy models by the fast "
+            "Hilbert transform (Feng & Linetsky 2008); knock-ins by in-out parity. "
+            "price() monitors daily (252 dates) unless grid=<int> is given."
+        ),
+    ),
+    "hilbert_lookback": MethodSpec(
+        requires_cf=True,
+        supports_products=frozenset({"lookback"}),
+        supports_exercise=frozenset({"european"}),
+        supports_path_dependent=True,
+        notes=(
+            "Discretely monitored floating-strike lookbacks for 1-D Levy models: "
+            "Lindley recursion for log(max/S) with Hilbert-transform projections "
+            "(Feng & Linetsky 2009). 252 dates unless grid=<int>."
+        ),
+    ),
     "hilbert": MethodSpec(
         requires_cf=True,
         supports_products=frozenset({"european"}),

@@ -153,6 +153,7 @@ from .pricers.forward_start import levy_forward_start_price
 from .pricers.frft import frft_price_at_strikes, frft_prices
 from .pricers.geometric_asian import levy_geometric_asian_price
 from .pricers.hilbert import hilbert_itm_probabilities, hilbert_price_at_strikes
+from .pricers.hilbert_exotics import hilbert_barrier_price, hilbert_lookback_price
 from .pricers.lattice import LatticeGrid, bsm_lattice_price, bsm_lattice_price_at_strikes
 from .pricers.lewis import lewis_call_prices, lewis_prices
 from .pricers.mellin import mellin_price_at_strikes
@@ -338,6 +339,8 @@ __all__ = [
     "frft_prices",
     "hilbert_itm_probabilities",
     "hilbert_price_at_strikes",
+    "hilbert_barrier_price",
+    "hilbert_lookback_price",
     "cds_par_spread_from_survival",
     "levy_cds_spread",
     "levy_survival_curve",

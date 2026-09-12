@@ -933,11 +933,29 @@ def price(
             return mc_price(fwd_t, params.sigma, product, mc_spec).price
         if method == "proj_barrier":
             return _proj_barrier_price_dispatch(model, fwd, params, product)
+        if method == "hilbert_barrier":
+            from .pricers.hilbert_exotics import hilbert_barrier_price
+
+            if product.rebate != 0.0:
+                raise NotImplementedError(
+                    "method='hilbert_barrier' currently supports only zero rebates."
+                )
+            return hilbert_barrier_price(
+                model,
+                fwd,
+                params,
+                strike=float(product.strike),
+                barrier=float(product.barrier),
+                maturity=float(product.maturity),
+                barrier_type=product.barrier_type,
+                cp=product.cp,
+                n_monitor=int(grid) if isinstance(grid, int) else 252,
+            )
         if method != "barrier_bsm":
             raise NotImplementedError(
                 "Barrier pricing currently supports method='barrier_bsm' for "
-                "closed-form BSM single-barrier contracts, method='proj_barrier' "
-                "for 1-D Lévy models, or method='monte_carlo'."
+                "closed-form BSM single-barrier contracts, method='hilbert_barrier' or "
+                "method='proj_barrier' for 1-D Lévy models, or method='monte_carlo'."
             )
         if model != "bsm":
             raise NotImplementedError(
@@ -1232,6 +1250,21 @@ def price(
             raise TypeError(
                 "price(): product_type='lookback' must be represented by "
                 f"LookbackOption, got {type(product).__name__!r}"
+            )
+        if method == "hilbert_lookback":
+            from .pricers.hilbert_exotics import hilbert_lookback_price
+
+            if product.strike_type != "floating":
+                raise NotImplementedError(
+                    "method='hilbert_lookback' currently supports only floating-strike lookbacks."
+                )
+            return hilbert_lookback_price(
+                model,
+                fwd,
+                params,
+                maturity=float(product.maturity),
+                cp=product.cp,
+                n_monitor=int(grid) if isinstance(grid, int) else 252,
             )
         if model != "bsm":
             raise NotImplementedError(
