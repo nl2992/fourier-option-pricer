@@ -193,60 +193,23 @@ def bsm_lookback_floating(
     -------
     float
 
+    Notes
+    -----
+    Delegates to :func:`foureng.pricers.analytic_bsm.bsm_lookback_floating`
+    (Haug 2007, eqs. 4.61-4.62). Before 0.22 this function carried its own
+    transcription whose correction term used ``e^{-qT}`` for ``e^{-rT}`` and
+    ``N(a1)`` for ``N(-a1)``, mispricing at-inception contracts by ~10%.
+
     Reference
     ---------
     Goldman, B., Sosin, H. & Gatto, M.A. (1979).  Path dependent options.
     *Journal of Finance*, 34(5), 1111–1127.
     """
-    b = r - q
-    sq = sigma * np.sqrt(T)
-    sig2 = sigma**2
+    from ..pricers.analytic_bsm import bsm_lookback_floating as _floating
 
-    if cp == 1:
-        m = S_min
-        a1 = (np.log(S / m) + (b + 0.5 * sig2) * T) / sq
-        a2 = a1 - sq
-        a3 = (np.log(S / m) + (-b + 0.5 * sig2) * T) / sq
-        if abs(b) < 1e-12:
-            # Special case b=0 to avoid division by zero
-            return S * np.exp(-q * T) * (
-                norm.cdf(a1)
-                + sig2
-                / (2 * b + 1e-300)
-                * (
-                    -((S / m) ** (2 * b / sig2 + 1e-300)) * norm.cdf(-a3)
-                    + np.exp(b * T) * norm.cdf(a1)
-                )
-            ) - m * np.exp(-r * T) * norm.cdf(a2)
-        ratio = (S / m) ** (-2 * b / sig2)
-        return (
-            S * np.exp(-q * T) * norm.cdf(a1)
-            - m * np.exp(-r * T) * norm.cdf(a2)
-            + S
-            * np.exp(-q * T)
-            * (sig2 / (2 * b))
-            * (-(ratio) * norm.cdf(-a3) + np.exp(b * T) * norm.cdf(a1))
-        )
-    else:
-        m = S_max
-        a1 = (np.log(S / m) + (b + 0.5 * sig2) * T) / sq
-        a2 = a1 - sq
-        a3 = (np.log(S / m) + (-b + 0.5 * sig2) * T) / sq
-        if abs(b) < 1e-12:
-            return (
-                m * np.exp(-r * T) * norm.cdf(-a2)
-                - S * np.exp(-q * T) * norm.cdf(-a1)
-                + S * np.exp(-q * T) * sig2 / (2 * 1e-300)
-            )  # degenerate
-        ratio = (S / m) ** (-2 * b / sig2)
-        return (
-            m * np.exp(-r * T) * norm.cdf(-a2)
-            - S * np.exp(-q * T) * norm.cdf(-a1)
-            + S
-            * np.exp(-q * T)
-            * (sig2 / (2 * b))
-            * (ratio * norm.cdf(a3) - np.exp(b * T) * norm.cdf(-a1))
-        )
+    if cp not in (1, -1):
+        raise ValueError(f"cp must be +1 or -1; got {cp}")
+    return float(_floating(S, S_min if cp == 1 else S_max, r, q, sigma, T, cp))
 
 
 # ── BSM gap option ─────────────────────────────────────────────────────────

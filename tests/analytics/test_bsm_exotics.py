@@ -171,3 +171,29 @@ def test_gap_call_smaller_payment_increases_price():
     assert p_lowK1 >= p_highK1, (
         f"Lower K1 should give higher price: {p_lowK1:.4f} vs {p_highK1:.4f}"
     )
+
+
+def test_lookback_floating_matches_haug_reference_values():
+    """Regression for the public function: Haug (2007) eqs. 4.61-4.62.
+
+    Independently confirmed by Richardson-extrapolating the discretely monitored
+    Hilbert-transform lookback (M = 250, 1000, 4000 dates) to continuous
+    monitoring: put 19.418771, call 19.298099.
+    """
+    S, r, q, T, sigma = 100.0, 0.05, 0.02, 1.0, 0.25
+    put = bsm_lookback_floating(S, S_min=S, S_max=S, r=r, q=q, T=T, sigma=sigma, cp=-1)
+    call = bsm_lookback_floating(S, S_min=S, S_max=S, r=r, q=q, T=T, sigma=sigma, cp=1)
+    assert put == pytest.approx(19.418793165628067, rel=1e-12)
+    assert call == pytest.approx(19.29808796226954, rel=1e-12)
+
+
+def test_lookback_floating_public_and_pricer_versions_agree_when_seasoned():
+    from foureng.pricers.analytic_bsm import bsm_lookback_floating as pricer_version
+
+    S, r, q, T, sigma = 100.0, 0.04, 0.01, 0.7, 0.3
+    assert bsm_lookback_floating(
+        S, S_min=90.0, S_max=110.0, r=r, q=q, T=T, sigma=sigma, cp=1
+    ) == pytest.approx(pricer_version(S, 90.0, r, q, sigma, T, 1), rel=1e-14)
+    assert bsm_lookback_floating(
+        S, S_min=90.0, S_max=110.0, r=r, q=q, T=T, sigma=sigma, cp=-1
+    ) == pytest.approx(pricer_version(S, 110.0, r, q, sigma, T, -1), rel=1e-14)
