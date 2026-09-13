@@ -287,11 +287,9 @@ def _backward(
         c, d = np.where(ok, c, a), np.where(ok, d, a)
         E = (phases(d) - phases(c)) / np.where(nz, 1j * w_all, 1.0)[None, :]
         E[:, ~nz] = (d - c)[:, None]
-        R = sfft.fft(U[:, ::-1], fft_len, axis=1, workers=-1)
-        EF = sfft.fft(
-            np.concatenate((E[:, N - 1 :], E[:, : 2 * N - 1]), axis=0), fft_len, axis=1, workers=-1
-        )
-        both = sfft.ifft(np.concatenate((R, R), axis=0) * EF, axis=1, workers=-1)
+        R = sfft.fft(U[:, ::-1], fft_len, axis=1)
+        EF = sfft.fft(np.concatenate((E[:, N - 1 :], E[:, : 2 * N - 1]), axis=0), fft_len, axis=1)
+        both = sfft.ifft(np.concatenate((R, R), axis=0) * EF, axis=1)
         hankel, toeplitz = both[:m], both[m:]
         val = np.real(hankel[:, N - 1 : 2 * N - 1] + toeplitz[:, N - 1 : 2 * N - 1][:, ::-1]) / bma
         return np.where(ok[:, None], val, 0.0)

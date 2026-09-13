@@ -54,6 +54,7 @@ jobs:
     name: Test Python ${{ matrix.python-version }} (${{ matrix.deps }})
     runs-on: ubuntu-latest
     needs: lint
+    timeout-minutes: 25
 
     strategy:
       fail-fast: false
