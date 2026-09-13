@@ -63,6 +63,8 @@ This file tracks the capability surface used by the registry and dispatcher test
 | `proj_step` | PROJ step option: soft killing exp(-rho dt) beyond the barrier | Linetsky (1999) |
 | `proj_swing` | PROJ swing option: DP over (date, rights remaining) | Carmona & Touzi (2008) |
 | `ctmc` | CTMC generator approximation: European (matrix exponential) and American (time-stepping), constant or local vol | Mijatovic & Pistorius (2013); Lo & Skindilias (2014) |
+| `cos_ctmc` | Bermudans, Americans and discrete barriers under Heston, Bates and regime switching: variance CTMC plus COS in the decorrelated log-price | Cui, Kirkby & Nguyen (2018); Fang & Oosterlee (2009) |
+| `fourier_2d` | Two-asset spreads, exchanges and options on the max or min from the joint CF (models `bsm`, `bsm2d`, `vg2d`, `heston2d`) | Hurd & Zhou (2010) |
 
 ## Credit analytics (not routed through `price()`)
 
@@ -118,6 +120,9 @@ This file tracks the capability surface used by the registry and dispatcher test
 - BSM cliquets (via `cliquet_mc` or `monte_carlo`)
 - BSM zero-rebate double-barrier options (via `double_barrier_mc` or `monte_carlo`)
 - SABR European call / put strips (via `price_strip("sabr", "sabr_hagan", ...)`)
+- Bermudan and American call / put and discretely monitored single barriers under Heston, Bates and regime switching (via `price(..., method="cos_ctmc")`)
+- Exchange, spread, two-asset best-of and rainbow (call or put on the max or min) options under `bsm`, `bsm2d`, `vg2d` and `heston2d` (via `price(..., method="fourier_2d")`)
+- Calibration of any registry model with float parameters to option quotes (`calibrate`, with CF gradients)
 
 ## Public API object count
 

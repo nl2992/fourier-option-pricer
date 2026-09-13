@@ -4,7 +4,7 @@
 
 **One characteristic function in → a whole strike strip of near-machine-precision prices out.**
 
-*27 models · 12 Fourier engines · 23 products · calibration · 2,200+ tests*
+*27 models (plus 3 two-asset models) · 14 engines · 24 products · CF-gradient calibration · 2,300+ tests*
 
 [![CI](https://github.com/nl2992/fourier-option-pricer/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/nl2992/fourier-option-pricer/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/fourier-option-pricer.svg)](https://pypi.org/project/fourier-option-pricer/)
@@ -24,7 +24,7 @@ params = fe.HestonParams(kappa=4.0, theta=0.25, nu=1.0, rho=-0.5, v0=0.04)
 prices = fe.price_strip("heston", "cos_improved", np.array([80, 90, 100, 110, 120]), fwd, params)
 ```
 
-Swap `"heston"` for any of 27 models, `"cos_improved"` for any of 12 engines. Same call, no rewiring.
+Swap `"heston"` for any of 27 models and `"cos_improved"` for any European engine. Same call, no rewiring.
 
 ---
 
@@ -44,8 +44,10 @@ Swap `"heston"` for any of 27 models, `"cos_improved"` for any of 12 engines. Sa
 | Mellin | `mellin` | Mellin-transform façade for selected Lévy models | n/a |
 | PROJ | `proj` | B-spline frame projection (Kirkby 2015/2017), European + Bermudan + single/double barrier + Asian CV | polynomial (order-tunable) |
 | PyFENG FFT | `pyfeng_fft` | Third-party reference engine for 8 models | n/a |
+| 2-D Fourier | `fourier_2d` | Inversion of the joint CF of two assets for spreads, exchanges and options on the max or min (Hurd & Zhou 2010) | exponential |
+| COS + variance chain | `cos_ctmc` | Bermudans, Americans and discrete barriers under Heston, Bates and regime switching: COS in the log-price, a Markov chain in the variance (Cui, Kirkby & Nguyen 2018) | exponential in N; chain error extrapolated |
 
-Plus Fourier exotics engines (exact Fang-Oosterlee COS Bermudans and Richardson-extrapolated Americans, Hilbert-transform discrete barriers and lookbacks, ASCOS arithmetic Asians, PROJ recursions), non-Fourier baselines (CRR lattice, implicit PDE, CTMC generator methods, Monte Carlo with control variates and LSMC), a vectorised machine-precision implied-vol solver, and product-level pricing for 23 payoff dataclasses (barriers, Asians, cliquets, faders, step and swing options, variance products, and more).
+Plus Fourier exotics engines (exact Fang-Oosterlee COS Bermudans and Richardson-extrapolated Americans, Hilbert-transform discrete barriers and lookbacks, ASCOS arithmetic Asians, PROJ recursions), non-Fourier baselines (CRR lattice, implicit PDE, CTMC generator methods, Monte Carlo with control variates and LSMC), a vectorised machine-precision implied-vol solver, a calibrator for any registry model, and product-level pricing for 24 payoff dataclasses (barriers, Asians, cliquets, faders, step and swing options, variance products, spreads and rainbows, and more).
 
 ---
 
@@ -67,13 +69,25 @@ where $c_1, c_2, c_4$ are the model's cumulants and $L$ is a heuristic multiplie
 
 This project implements the **improved COS truncation** of Junike & Pankrashkin (2022) and Junike (2024), which replaces the heuristic $L$ with a rigorous tail-mass bound. On the FO2008 test suite, this truncation improvement beats the paper-grid COS in 7 of 8 cases and beats the paper's own best-N result in 6 of 8 (see [`benchmarks/cos_method_improved/`](benchmarks/cos_method_improved/outputs/cos_method_improved_paper_compare.csv)). On top of that, we add an **original adaptive filtered-COS extension**: spectral weights $\sigma_k \in [0, 1]$ (Fejér, Lanczos, raised-cosine, or exponential) applied to the high-frequency COS coefficients to suppress residual oscillation from sharp density features. A policy-search selector automatically compares grid and filter combinations, returning the fastest configuration that meets the user's tolerance, with the plain Junike path always included as a fallback.
 
-The package covers **27 characteristic-function models** across stochastic-volatility, jump-diffusion, pure-Lévy, rough-volatility (including a Markovian lifted Heston), regime-switching, stochastic-rate-hybrid, time-changed Lévy, hybrid SVJ and generic affine families, plus a SABR approximation surface. They are priced through one `price_strip` dispatcher with COS/FFT/FRFT/CONV, the **Feng-Linetsky Hilbert-transform engine**, SINC, SWIFT, a high-precision optimal-contour engine, a first-slice Mellin façade, a real **PROJ frame-projection engine** (Kirkby 2015/2017: Europeans, Bermudans, single and double barriers, step and swing options, and an Asian control variate), BSM finite-difference/lattice baselines, and product-level exotic routes. For 1-D Lévy models the exotic routes include Americans, discretely monitored barriers and lookbacks, and arithmetic Asians, all priced from the same characteristic function.
+The package covers **27 characteristic-function models** across stochastic-volatility, jump-diffusion, pure-Lévy, rough-volatility (including a Markovian lifted Heston), regime-switching, stochastic-rate-hybrid, time-changed Lévy, hybrid SVJ and generic affine families, plus a SABR approximation surface. They are priced through one `price_strip` dispatcher with COS/FFT/FRFT/CONV, the **Feng-Linetsky Hilbert-transform engine**, SINC, SWIFT, a high-precision optimal-contour engine, a first-slice Mellin façade, a real **PROJ frame-projection engine** (Kirkby 2015/2017: Europeans, Bermudans, single and double barriers, step and swing options, and an Asian control variate), BSM finite-difference/lattice baselines, and product-level exotic routes. For 1-D Lévy models the exotic routes include Americans, discretely monitored barriers and lookbacks, and arithmetic Asians, all priced from the same characteristic function. Under Heston, Bates and regime switching there are Bermudans, Americans and discrete barriers, and for pairs of assets spreads, exchange options and options on the max or min. `calibrate` fits any of the models to option quotes using gradients of the characteristic function.
 
 Full methodology: [appendix.md](appendix.md) · Extension details: [docs/filtered_cos_extension.md](docs/filtered_cos_extension.md) · Package architecture: [docs/architecture_overview.md](docs/architecture_overview.md).
 
 ---
 
-## 🆕 What's new in 0.22
+## 🆕 What's new in 0.23 (unreleased)
+
+| Addition | How to use it | Checked against |
+|----------|---------------|-----------------|
+| Two-asset options by Fourier inversion (Hurd & Zhou 2010) | `price(SpreadOption(...) / ExchangeOption / BestOfOption / RainbowOption, model, "fourier_2d", ...)` with `"bsm"`, `"bsm2d"`, `"vg2d"` or `"heston2d"` | Conditional quadrature to about 1e-12 relative (BSM, VG), Monte Carlo (three-factor SV) |
+| One calibrator for every model (gradients as in Cui, del Bano Rollin & Germano 2017) | `calibrate(model, MarketQuotes(...), initial)` | Exact recovery of Heston, Bates, Kou, Merton, CGMY and Meixner parameters; 18 evaluations for Heston against 675 for Nelder-Mead |
+| Stochastic-volatility exotics (Cui, Kirkby & Nguyen 2018) | `price(BermudanOption / AmericanOption / BarrierOption, "heston" or "bates", "cos_ctmc", ...)` | Ikonen & Toivanen American puts to 1e-5, closed-form Europeans to about 1e-6, Monte Carlo barriers |
+
+These are on the `dev` branch and not yet on PyPI. Details are in the [CHANGELOG](CHANGELOG.md).
+
+---
+
+## What's new in 0.22
 
 New models, engines and exotic routes. Each one is tested against something independent of it: a closed form, a model it should reduce to, a high-precision calculation, or Monte Carlo. The full list is in the [CHANGELOG](CHANGELOG.md).
 
@@ -175,7 +189,7 @@ jupyter lab   # navigate to notebooks/demo.ipynb to start
 **4. Run the tests**
 
 ```bash
-python -m pytest -q -m "not slow"   # fast suite (about a minute)
+python -m pytest -q -m "not slow"   # fast suite (about 1.5 minutes)
 python -m pytest -q                  # full suite including notebook guards
 ```
 
@@ -281,6 +295,8 @@ On this Heston strip the engines agree to about 1e-9. Some rules of thumb for pi
 | Reference prices, or deep out-of-the-money options where relative error matters | `contour` |
 | Models whose CF is solved by ODEs (`lifted_heston`, `affine`) | `cos_improved` or `sinc` (the contour engine calls the CF too often) |
 | Dense uniform strike grids | `carr_madan`, or `frft` with an explicit `FRFTGrid` |
+| Spreads, exchange options, options on the max or min of two assets | `fourier_2d` (through `price`) |
+| Bermudans, Americans or discrete barriers under Heston, Bates or regime switching | `cos_ctmc` (through `price`) |
 
 ### Implied vols and far wings
 
@@ -337,6 +353,57 @@ prices = fe.price_strip("lifted_heston", "sinc", strikes, fwd, lifted)
 
 Every model and its parameters are listed in [docs/model_zoo.md](docs/model_zoo.md).
 
+### Two-asset options
+
+The second asset's spot and dividend yield sit on the product. With `model="bsm"` the product's `sigma2` and `rho` complete a correlated GBM pair; a two-asset model (`bsm2d`, `vg2d`, `heston2d`) carries its own dynamics.
+
+```python
+from foureng.products import RainbowOption, SpreadOption
+
+fwd2 = fe.ForwardSpec(S0=100.0, r=0.05, q=0.0, T=1.0)
+bsm = fe.BsmParams(sigma=0.2)
+spread = SpreadOption(strike=5.0, maturity=1.0, spot2=95.0, sigma2=0.3, rho=0.6)
+exact = fe.price(spread, "bsm", "fourier_2d", fwd2, bsm)
+kirk = fe.price(spread, "bsm", "spread_bsm", fwd2, bsm)  # the Kirk approximation
+
+vg2 = fe.Vg2dParams(sigma1=0.2, sigma2=0.3, theta1=-0.1, theta2=-0.05, nu=0.3, rho=0.6)
+call_on_max = fe.price(RainbowOption(strike=100.0, maturity=1.0, kind="max", spot2=95.0),
+                       "vg2d", "fourier_2d", fwd2, vg2)
+```
+
+### Exotics under stochastic volatility
+
+```python
+from foureng.products import BermudanOption
+
+fwd_sv = fe.ForwardSpec(S0=10.0, r=0.1, q=0.0, T=0.25)
+heston = fe.HestonParams(kappa=5.0, theta=0.16, nu=0.9, rho=0.1, v0=0.0625)
+bermudan = BermudanOption(strike=10.0, maturity=0.25, cp=-1,
+                          exercise_times=np.linspace(0.025, 0.25, 10))
+value = fe.price(bermudan, "heston", "cos_ctmc", fwd_sv, heston)
+```
+
+With `AmericanOption(strike=10.0, maturity=0.25, cp=-1)` the same call gives 0.52003 in about four seconds; Ikonen & Toivanen (2004) report 0.520038. Discretely monitored barriers take a `BarrierOption(..., monitoring="discrete")` and `grid=<number of dates>`. `"bates"` and `"regime_switching"` work the same way.
+
+### Calibration
+
+```python
+true = fe.HestonParams(kappa=2.5, theta=0.06, nu=0.7, rho=-0.65, v0=0.04)
+mats, ks = np.repeat([0.25, 0.5, 1.0], 7), np.tile(np.linspace(80.0, 120.0, 7), 3)
+vols = []
+for T, K in zip(mats, ks):
+    f = fe.ForwardSpec(S0=100.0, r=0.02, q=0.01, T=T)
+    c = fe.price_strip("heston", "contour", np.array([K]), f, true)
+    vols.append(fe.implied_vol_lets_be_rational(c, f.F0, K, T, disc=f.disc)[0])
+
+quotes = fe.MarketQuotes(S0=100.0, r=0.02, q=0.01, maturities=mats, strikes=ks, ivs=np.array(vols))
+start = fe.HestonParams(kappa=1.0, theta=0.03, nu=0.3, rho=-0.2, v0=0.02)
+fit = fe.calibrate("heston", quotes, start)
+print(fit.values, fit.rmse_iv)
+```
+
+`calibrate` works for any registry model with float parameters. It uses analytic CF gradients for BSM, Merton, Kou, VG, NIG, CGMY, Heston and Bates and differences of the CF for the rest; parameters can be fixed (`fixed=["rho"]`), bounded and weighted.
+
 ---
 
 ## API reference
@@ -381,6 +448,7 @@ Everything is importable from `import foureng as fe`.
 | `TimeChangedLevyParams` | `base_model, base_params, clock` (`CirClock` / `GammaOUClock`) | Lévy base on a stochastic business clock |
 | `AffineParams` | `x0, K0, K1, H0, H1, l0, l1, jump_transform` | Generic affine jump-diffusion |
 | `SabrParams` | `alpha, beta, rho, nu` | SABR implied-vol approximation |
+| `Bsm2dParams` / `Vg2dParams` / `Heston2dParams` | `sigma1, sigma2, rho` / `+ theta1, theta2, nu` / `v0, kappa, theta, nu, sigma1, sigma2, rho, rho1, rho2` | Two-asset models for `fourier_2d` (joint CF by `joint_cf`) |
 
 Full model details: [docs/model_zoo.md](docs/model_zoo.md).
 
@@ -391,9 +459,9 @@ Full model details: [docs/model_zoo.md](docs/model_zoo.md).
 | `price_strip(model, method, strikes, fwd, params, *, grid=None, cp=1)` | model label, method label, strike array, `ForwardSpec`, model params, optional grid, `cp=1` call / `cp=-1` put | `np.ndarray` of prices |
 | `price(product, model, method, fwd, params, *, grid=None)` | product dataclass, model label, method label, `ForwardSpec`, model params, optional grid | `float` or `np.ndarray` |
 
-Method labels: `"cos"`, `"cos_improved"`, `"cos_filtered"`, `"carr_madan"`, `"frft"`, `"conv"`, `"hilbert"`, `"sinc"`, `"swift"`, `"contour"`, `"cos_bermudan"`, `"mellin"`, `"proj"`, `"pyfeng_fft"`, plus product-aware `"asian_cf"` / `"variance_levy_analytic"` / `"forward_start_cf"` / `"cliquet_cf"` / `"fader_cf"` (exact Lévy geometric Asians, variance-swap strikes, forward-starts, and locally collared cliquets) and `"cos_digital"` / `"digital_bsm"` / `"monte_carlo"` / `"barrier_bsm"` / `"asian_bsm"` / `"asian_mc"` / `"double_barrier_mc"` / `"proj_double_barrier"` / `"forward_start_bsm"` / `"exchange_bsm"` / `"spread_bsm"` / `"multi_asset_mc"` / `"lookback_bsm"` / `"lookback_mc"` / `"variance_analytic_bsm"` / `"variance_mc"` / `"cliquet_mc"` and SABR-only `"sabr_hagan"`.
+Method labels: `"cos"`, `"cos_improved"`, `"cos_filtered"`, `"carr_madan"`, `"frft"`, `"conv"`, `"hilbert"`, `"sinc"`, `"swift"`, `"contour"`, `"cos_bermudan"`, `"cos_ctmc"`, `"fourier_2d"`, `"mellin"`, `"proj"`, `"pyfeng_fft"`, plus product-aware `"asian_cf"` / `"variance_levy_analytic"` / `"forward_start_cf"` / `"cliquet_cf"` / `"fader_cf"` (exact Lévy geometric Asians, variance-swap strikes, forward-starts, and locally collared cliquets) and `"cos_digital"` / `"digital_bsm"` / `"monte_carlo"` / `"barrier_bsm"` / `"asian_bsm"` / `"asian_mc"` / `"double_barrier_mc"` / `"proj_double_barrier"` / `"forward_start_bsm"` / `"exchange_bsm"` / `"spread_bsm"` / `"multi_asset_mc"` / `"lookback_bsm"` / `"lookback_mc"` / `"variance_analytic_bsm"` / `"variance_mc"` / `"cliquet_mc"` and SABR-only `"sabr_hagan"`.
 
-Product-level pricing uses `price(product, model, method, fwd, params)`. It currently routes European options, cash-or-nothing and asset-or-nothing digitals via `"cos_digital"` or BSM `"digital_bsm"`, supported 1-D Levy Bermudans via `"cos_bermudan"`, BSM generic Monte Carlo / Longstaff-Schwartz via `"monte_carlo"` for Europeans, Americans, Bermudans, and the GBM-simulated exotic book, continuously monitored zero-rebate BSM single barriers via `"barrier_bsm"`, BSM Asians via `"asian_bsm"` / `"asian_mc"`, BSM forward-start options via `"forward_start_bsm"`, BSM two-asset exchange options via `"exchange_bsm"` / `"multi_asset_mc"`, BSM basket and best-of options via `"multi_asset_mc"`, BSM spread options via `"spread_bsm"` / `"multi_asset_mc"`, BSM lookbacks via `"lookback_bsm"` / `"lookback_mc"`, BSM variance swaps via `"variance_analytic_bsm"` / `"variance_mc"`, integrated-variance BSM options via `"variance_analytic_bsm"` and realised/integrated BSM variance options via `"variance_mc"`, BSM cliquets via `"cliquet_mc"`, BSM double barriers via `"double_barrier_mc"` / `"proj_double_barrier"`, and, for 1-D Lévy models, Americans via `"cos_american"`, discretely monitored barriers and floating- or fixed-strike lookbacks via `"hilbert_barrier"` / `"hilbert_lookback"` (pass `grid=<int>` for the number of monitoring dates), and arithmetic Asians via `"asian_cos"`.
+Product-level pricing uses `price(product, model, method, fwd, params)`. It currently routes European options, cash-or-nothing and asset-or-nothing digitals via `"cos_digital"` or BSM `"digital_bsm"`, supported 1-D Levy Bermudans via `"cos_bermudan"`, BSM generic Monte Carlo / Longstaff-Schwartz via `"monte_carlo"` for Europeans, Americans, Bermudans, and the GBM-simulated exotic book, continuously monitored zero-rebate BSM single barriers via `"barrier_bsm"`, BSM Asians via `"asian_bsm"` / `"asian_mc"`, BSM forward-start options via `"forward_start_bsm"`, BSM two-asset exchange options via `"exchange_bsm"` / `"multi_asset_mc"`, BSM basket and best-of options via `"multi_asset_mc"`, BSM spread options via `"spread_bsm"` / `"multi_asset_mc"`, BSM lookbacks via `"lookback_bsm"` / `"lookback_mc"`, BSM variance swaps via `"variance_analytic_bsm"` / `"variance_mc"`, integrated-variance BSM options via `"variance_analytic_bsm"` and realised/integrated BSM variance options via `"variance_mc"`, BSM cliquets via `"cliquet_mc"`, BSM double barriers via `"double_barrier_mc"` / `"proj_double_barrier"`, and, for 1-D Lévy models, Americans via `"cos_american"`, discretely monitored barriers and floating- or fixed-strike lookbacks via `"hilbert_barrier"` / `"hilbert_lookback"` (pass `grid=<int>` for the number of monitoring dates), and arithmetic Asians via `"asian_cos"`. Under `heston`, `bates` and `regime_switching`, Bermudans, Americans and discrete barriers go through `"cos_ctmc"`; exchange, spread, two-asset best-of and `RainbowOption` products go through `"fourier_2d"` with `bsm` or a two-asset model.
 
 ### Path-dependent MC engines (`foureng.mc`)
 
@@ -441,6 +509,9 @@ All MC functions take a `GBMPathSpec(n_paths, n_steps, seed, antithetic)` config
 | `hilbert_lookback_price(model, fwd, params, maturity=..., cp=-1, strike_type="floating", strike=None, n_monitor=252)` | Lévy model key, contract terms | `float` |
 | `levy_arithmetic_asian_price(model, fwd, params, strike=..., monitoring_times=..., cp=1)` | Lévy model key, fixings | `float` |
 | `log_contract_variance_from_strip(strikes, fwd, calls=..., puts=...)` / `vix_style_index(...)` | option quotes | model-free variance / VIX-style index |
+| `fourier_spread_price(model, fwd, params, spot2=..., strike=...)` / `fourier_exchange_price(...)` / `fourier_rainbow_price(..., kind="max")` | two-asset model key, asset-1 `ForwardSpec`, asset-2 spot | `float` |
+| `cos_ctmc_bermudan_price(model, fwd, params, product)` / `cos_ctmc_american_price(...)` / `cos_ctmc_barrier_price(...)` | `heston`, `bates` or `regime_switching`, contract | `float` |
+| `calibrate(model, quotes, initial, bounds=None, fixed=())` | registry model key, `MarketQuotes`, starting parameters | `CalibrationFit` (params, IV residuals, diagnostics) |
 
 ### Grid constructors
 
@@ -456,6 +527,8 @@ All MC functions take a `GBMPathSpec(n_paths, n_steps, seed, antithetic)` config
 | `ContourGrid(rel_tol, c, c_bound, max_levels)` | tolerance, optional fixed contour height | optimal-contour pricer controls |
 | `LatticeGrid(steps)` | tree step count | BSM CRR lattice grid |
 | `PDEGrid(spot_steps, time_steps, s_max_mult)` | finite-difference grid controls | BSM implicit finite-difference grid |
+| `Fourier2DGrid(tol, n_max, width, eps)` | tail tolerance, node cap, contour offset | two-asset Fourier controls (auto by default) |
+| `CTMCVarianceGrid(n_states, richardson, tail, N, L, n_max)` | variance states, extrapolation, COS terms | `cos_ctmc` controls (auto by default) |
 
 ### Implied volatility and Greeks
 
@@ -534,6 +607,11 @@ MIT. See [LICENSE](LICENSE).
 | Hilbert discrete barriers/lookbacks (BSM) | Exact-Gaussian-kernel backward induction | atol 5e-7 / 1e-6 | done |
 | Contour engine (BSM, VG) | Closed form; Gamma-mixture quadrature | rel 5e-14 / 5e-13 | done |
 | 4/2, time-changed Lévy, BNS, lifted Heston, affine | Reductions to registry models + exact-simulation MC | 1e-10 to 1e-14 (reductions) | done |
+| Two-asset Fourier: spreads, exchanges, rainbows (BSM, VG) | Conditional quadrature; Margrabe | about 1e-12 relative | done |
+| Two-asset Fourier under three-factor SV | Monte Carlo exact given the variance path | 4 standard errors | done |
+| `calibrate` round trips (Heston, Bates, Kou, Merton, CGMY, Meixner) | Parameters used to generate the quotes | rtol 1e-6 to 1e-4 | done |
+| COS + variance chain: Heston American puts | Ikonen & Toivanen (2004) | atol 2e-5 | done |
+| COS + variance chain: Europeans (Heston incl. Feller-violating, Bates) and barriers | Closed-form CF prices; Monte Carlo | atol 2e-5; 4 standard errors | done |
 
 Full per-paper matrix: [docs/paper_validation_matrix.md](docs/paper_validation_matrix.md). Evidence-level definitions: [docs/validation_hierarchy.md](docs/validation_hierarchy.md).
 
@@ -557,7 +635,7 @@ python -m pytest -q -m "paper"
 python -m pytest -q -m "software_reference"
 ```
 
-The repository has 2,200+ pytest cases.
+The repository has 2,300+ pytest cases.
 
 For linting and type checks:
 
@@ -615,6 +693,10 @@ python -m mypy foureng
 | Lifted Heston | Abi Jaber, E. (2019), *Lifting the Heston Model* |
 | BNS model | Barndorff-Nielsen, O.E. and Shephard, N. (2001), *Non-Gaussian Ornstein-Uhlenbeck-Based Models and Some of Their Uses in Financial Economics* |
 | Affine transforms | Duffie, D., Pan, J. and Singleton, K. (2000), *Transform Analysis and Asset Pricing for Affine Jump-Diffusions* |
+| Spread options | Hurd, T.R. and Zhou, Z. (2010), *A Fourier Transform Method for Spread Option Pricing* |
+| Calibration with CF gradients | Cui, Y., del Baño Rollin, S. and Germano, G. (2017), *Full and Fast Calibration of the Heston Stochastic Volatility Model* |
+| Variance chains for SV models | Cui, Z., Kirkby, J.L. and Nguyen, D. (2018), *A General Valuation Framework for SABR and Stochastic Local Volatility Models* |
+| Heston American benchmark | Ikonen, S. and Toivanen, J. (2004), *Operator Splitting Methods for American Option Pricing* |
 
 Full bibliography with DOIs and free-access links: [docs/papers.md](docs/papers.md).
 
@@ -638,9 +720,12 @@ Transform-method territory not yet covered here, in rough priority order (the fi
 - [x] SINC, SWIFT and optimal-contour European engines (0.22.0)
 - [x] 4/2, BNS Γ-OU, lifted Heston, time-changed Lévy and generic affine models (0.22.0)
 - [x] Model-free variance and VIX-style index from option strips (0.22.0)
-- [ ] Stochastic-volatility exotics: Bermudans and barriers under Heston (2-D COS or 2-D CTMC)
-- [ ] Two-dimensional Fourier spread and rainbow options (Hurd & Zhou 2010)
-- [ ] Registry-driven calibration with analytic CF gradients
+- [x] Stochastic-volatility exotics: Bermudans, Americans and discrete barriers under Heston and Bates (COS with a variance chain) (0.23, unreleased)
+- [x] Two-dimensional Fourier spread and rainbow options (Hurd & Zhou 2010) (0.23, unreleased)
+- [x] Registry-driven calibration with analytic CF gradients (0.23, unreleased)
+- [ ] SABR and stochastic local volatility through the same variance-chain engine
+- [ ] Asian and lookback options under stochastic volatility
+- [ ] Baskets on more than two assets
 
 Contributions welcome, see [CONTRIBUTING.md](CONTRIBUTING.md).
 

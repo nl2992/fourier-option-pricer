@@ -166,7 +166,28 @@ DOI: [10.1287/mnsc.1090.1065](https://doi.org/10.1287/mnsc.1090.1065)
 
 ---
 
+## Two-Asset Options, Stochastic-Volatility Exotics and Calibration
+
+**Hurd, T. R. & Zhou, Z. (2010).** A Fourier transform method for spread option pricing.
+*SIAM Journal on Financial Mathematics*, 1, 142–157.
+*(2-D Gamma-function transform of the spread payoff; `pricers/fourier_2d.py` and the joint models in `models/joint.py`.)*
+
+**Cui, Y., del Baño Rollin, S. & Germano, G. (2017).** Full and fast calibration of the Heston stochastic volatility model.
+*European Journal of Operational Research*, 263(2), 625–638.
+*(Analytic CF gradients for Levenberg-Marquardt calibration; the approach behind `models/cf_gradients.py` and `surface/model_calibration.py`.)*
+
+**Cui, Z., Kirkby, J. L. & Nguyen, D. (2018).** A general valuation framework for SABR and stochastic local volatility models.
+*SIAM Journal on Financial Mathematics*, 9(2), 520–563.
+*(Variance CTMC combined with a Fourier method in the decorrelated log-price; `pricers/cos_ctmc.py`.)*
+
+---
+
 ## Validation References
+
+**Ikonen, S. & Toivanen, J. (2004).** Operator splitting methods for American option pricing.
+*Applied Mathematics Letters*, 17(7), 809–814.
+*(Heston American put reference values used in `tests/methods/test_cos_ctmc.py`.)*
+
 
 **Baldeaux, J. & Badran, A. (2012).** Consistent modelling of VIX and equity derivatives using a 3/2 plus jumps model.
 *Applied Mathematical Finance*, 21(4), 299–312.
