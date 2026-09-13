@@ -470,6 +470,21 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
             "(exchange, basket, spread, best-of, rainbow)."
         ),
     ),
+    "cos_ctmc": MethodSpec(
+        requires_cf=True,
+        requires_markov_state=True,
+        supports_products=frozenset({"bermudan", "american", "barrier"}),
+        supports_exercise=frozenset({"european", "bermudan", "american"}),
+        supports_path_dependent=True,
+        notes=(
+            "Stochastic-volatility exotics (Cui, Kirkby & Nguyen 2018 hybrid): the "
+            "variance becomes a CTMC on a sqrt(v) grid, the decorrelated log-price is "
+            "handled by the Fang-Oosterlee COS recursion with one coefficient vector per "
+            "variance state. Bermudans, Americans (Richardson in the exercise dates) and "
+            "discretely monitored barriers for heston, bates and regime_switching (exact "
+            "for the last). Extrapolated in the number of states."
+        ),
+    ),
     "fourier_2d": MethodSpec(
         requires_cf=True,
         supports_products=frozenset({"exchange", "spread", "best_of", "rainbow"}),
@@ -773,14 +788,22 @@ def _model_restriction(model: str, product: str, method: str) -> str:
             return (
                 f"model={model!r} is a stochastic-volatility model; the standard "
                 "COS Bermudan backward induction (Fang & Oosterlee 2009) handles "
-                "only one-dimensional Markov states. The 2-D state extension is "
-                "required for SV models."
+                "only one-dimensional Markov states. Use method='cos_ctmc' "
+                "(heston, bates, regime_switching)."
             )
         if model in _SVJD_MODELS:
             return (
                 f"model={model!r} combines stochastic volatility with jumps; "
-                "COS Bermudan is not currently supported for this model class. "
-                "Use Monte Carlo or PROJ."
+                "the 1-D COS Bermudan does not apply. Use method='cos_ctmc' for "
+                "bates, or Monte Carlo."
+            )
+    if method == "cos_ctmc":
+        from foureng.pricers.cos_ctmc import CTMC_MODELS
+
+        if model not in CTMC_MODELS:
+            return (
+                f"method='cos_ctmc' supports {list(CTMC_MODELS)}; model={model!r} "
+                "has no variance chain here."
             )
 
     if method == "pyfeng_fft":

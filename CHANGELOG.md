@@ -10,6 +10,8 @@
 - `calibrate(model, quotes, initial)`: one calibrator for every registry model with float parameters. It fits vega-weighted out-of-the-money prices across any set of strikes and maturities (`MarketQuotes`) with bounded trust-region least squares. The Jacobian comes from CF gradients on a fixed COS grid, so the objective is smooth; the grid is rebuilt at the solution until prices settle. On a 45-quote Heston surface it recovers the parameters from a poor start in 18 evaluations (0.02 s), against 675 for the Nelder-Mead `calibrate_heston`, with an IV error of 6e-11 instead of 7e-8. Parameters can be fixed, bounded and weighted.
 - `cf_and_gradient`: analytic CF gradients for BSM, Merton, Kou, VG, NIG, CGMY, Heston and Bates, and central differences of the CF for the other models.
 
+- `method="cos_ctmc"`: Bermudan, American and discretely monitored barrier options under Heston, Bates and the regime-switching model (Cui, Kirkby and Nguyen 2018). The variance becomes a Markov chain on a `sqrt(v)` grid that includes zero (so the Feller condition may fail), the decorrelated log-price is handled by the Fang-Oosterlee COS recursion with one coefficient vector per variance state, and the chain error, which is second order in the spacing, is extrapolated away. Heston American puts agree with the Ikonen and Toivanen benchmark to 1e-5, Europeans through the chain with the closed form to about 1e-6, and discrete barriers with Monte Carlo. The regime-switching model is priced without approximation.
+
 ### Fixed
 
 - The API reference described the Margrabe and Kirk payoffs with the assets swapped.

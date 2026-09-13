@@ -873,11 +873,16 @@ def price(
             from .pricers.cos_bermudan import cos_american_price
 
             return cos_american_price(model, fwd, params, product, grid=grid)
+        if method == "cos_ctmc":
+            from .pricers.cos_ctmc import cos_ctmc_american_price
+
+            return cos_ctmc_american_price(model, fwd, params, product, grid=grid)
         if model != "bsm":
             raise NotImplementedError(
                 f"American pricing for model={model!r} is available through "
-                "method='cos_american' (1-D Lévy models); the lattice, pde_fd, ctmc "
-                "and monte_carlo routes are implemented only for model='bsm'."
+                "method='cos_american' (1-D Lévy models) or method='cos_ctmc' (heston, "
+                "bates, regime_switching); the lattice, pde_fd, ctmc and monte_carlo "
+                "routes are implemented only for model='bsm'."
             )
         fwd_t = _FwdSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=product.maturity)
         if method == "ctmc":
@@ -918,8 +923,9 @@ def price(
                 grid=pde_grid,
             )
         raise NotImplementedError(
-            "American pricing currently supports method='cos_american', method='lattice', "
-            "method='pde_fd', method='ctmc', or method='monte_carlo'."
+            "American pricing currently supports method='cos_american', method='cos_ctmc' "
+            "(heston, bates, regime_switching), method='lattice', method='pde_fd', "
+            "method='ctmc', or method='monte_carlo'."
         )
 
     if pt == "bermudan":
@@ -932,6 +938,10 @@ def price(
             )
         if method == "cos_bermudan":
             return cos_bermudan_price(model, fwd, params, product, grid=grid)
+        if method == "cos_ctmc":
+            from .pricers.cos_ctmc import cos_ctmc_bermudan_price
+
+            return cos_ctmc_bermudan_price(model, fwd, params, product, grid=grid)
         if method == "proj":
             return _proj_bermudan_put_price(model, fwd, params, product)
         if method == "monte_carlo":
@@ -947,8 +957,9 @@ def price(
             fwd_t = _FwdSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=product.maturity)
             return mc_price(fwd_t, params.sigma, product, mc_spec).price
         raise NotImplementedError(
-            "Bermudan pricing currently supports method='cos_bermudan', method='proj' "
-            "(1-D Lévy puts), or method='monte_carlo'."
+            "Bermudan pricing currently supports method='cos_bermudan', method='cos_ctmc' "
+            "(heston, bates, regime_switching), method='proj' (1-D Lévy puts), or "
+            "method='monte_carlo'."
         )
 
     if pt == "barrier":
@@ -971,6 +982,23 @@ def price(
             return mc_price(fwd_t, params.sigma, product, mc_spec).price
         if method == "proj_barrier":
             return _proj_barrier_price_dispatch(model, fwd, params, product)
+        if method == "cos_ctmc":
+            from .pricers.cos_ctmc import CTMCVarianceGrid, cos_ctmc_barrier_price
+
+            if product.rebate != 0.0:
+                raise NotImplementedError("method='cos_ctmc' currently supports only zero rebates.")
+            return cos_ctmc_barrier_price(
+                model,
+                fwd,
+                params,
+                strike=float(product.strike),
+                barrier=float(product.barrier),
+                maturity=float(product.maturity),
+                barrier_type=product.barrier_type,
+                cp=product.cp,
+                n_monitor=int(grid) if isinstance(grid, int) else 252,
+                grid=grid if isinstance(grid, CTMCVarianceGrid) else None,
+            )
         if method == "hilbert_barrier":
             from .pricers.hilbert_exotics import hilbert_barrier_price
 

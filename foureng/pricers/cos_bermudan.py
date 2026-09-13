@@ -60,8 +60,8 @@ def _check_model(model: str) -> None:
     if model not in _SUPPORTED_MODELS:
         raise NotImplementedError(
             f"cos_bermudan: model {model!r} is not supported for 1-D COS Bermudan. "
-            "Stochastic-volatility and SV+jump models require the 2-D state extension "
-            "or Monte Carlo / PDE pricing."
+            "For heston, bates and regime_switching use method='cos_ctmc' "
+            "(foureng.pricers.cos_ctmc)."
         )
 
 

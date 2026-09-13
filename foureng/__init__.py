@@ -158,6 +158,12 @@ from .pricers.cos_bermudan import (
     cos_bermudan_price,
     cos_bermudan_price_strip,
 )
+from .pricers.cos_ctmc import (
+    CTMCVarianceGrid,
+    cos_ctmc_american_price,
+    cos_ctmc_barrier_price,
+    cos_ctmc_bermudan_price,
+)
 from .pricers.cos_digital import cos_digital_price, cos_digital_price_strip
 from .pricers.ctmc import (
     CTMCGrid,
@@ -396,6 +402,10 @@ __all__ = [
     "hilbert_price_at_strikes",
     "hilbert_barrier_price",
     "hilbert_lookback_price",
+    "CTMCVarianceGrid",
+    "cos_ctmc_american_price",
+    "cos_ctmc_barrier_price",
+    "cos_ctmc_bermudan_price",
     "Fourier2DGrid",
     "fourier_exchange_price",
     "fourier_rainbow_price",

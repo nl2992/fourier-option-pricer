@@ -182,6 +182,7 @@ Each model exposes a cumulant function that returns the first four log-return cu
 | `SincGrid` | `X_c`, `N`, `L` | SINC truncation window half-width, number of odd frequencies, cumulant multiplier (all auto by default). |
 | `ContourGrid` | `rel_tol`, `c`, `c_bound`, `max_levels` | Optimal-contour pricer controls: target relative accuracy, optional fixed contour height, search bound, quadrature levels. |
 | `CTMCGrid` | `n_states`, `width` | Spot-centered log-price state grid for the CTMC generator approximation. |
+| `CTMCVarianceGrid` | `n_states`, `richardson`, `tail`, `N`, `L`, `n_max` | Variance chain and COS controls for `cos_ctmc`: states on a `sqrt(v)` grid from 0 to the `1 - tail` quantile of `v_T` (default 48, extrapolated with 96), COS terms chosen from the CF decay of a low-variance state. |
 | `Fourier2DGrid` | `tol`, `n_max`, `width`, `eps` | Two-asset Fourier pricer: tail tolerance, cap on nodes per axis (default 2048), density width in standard deviations, optional contour offset. Warns if the cap is hit before the integrand decays. |
 
 ### Grid builders
@@ -233,6 +234,9 @@ Each model exposes a cumulant function that returns the first four log-return cu
 | `fourier_spread_price(model, fwd, params, spot2=..., strike=..., q2=0.0, cp=1, grid=None)` | two-asset model key, asset-1 `ForwardSpec`, asset-2 spot and yield | Spread option on `S1 - S2 - K` by the 2-D Fourier transform of Hurd and Zhou (2010); `strike=0` is the exchange option. Also `method="fourier_2d"` for a `SpreadOption`. |
 | `fourier_exchange_price(model, fwd, params, spot2=..., q2=0.0, grid=None)` | two-asset model key, market inputs | Exchange option `(S1 - S2)^+` as a 1-D Fourier integral with asset 2 as numeraire. |
 | `fourier_rainbow_price(model, fwd, params, spot2=..., strike=..., q2=0.0, cp=1, kind="max", grid=None)` | two-asset model key, market inputs | Call or put on the max or min of two assets: the call on the min from its own 2-D transform, the rest by replication and parity. |
+| `cos_ctmc_bermudan_price(model, fwd, params, product, grid=None)` | `heston`, `bates` or `regime_switching`, market inputs, `BermudanOption` | Stochastic-volatility Bermudan: the variance is a CTMC, the decorrelated log-price `x - (rho/nu)(v - v0)` is handled by the Fang-Oosterlee COS recursion with one coefficient vector per variance state (Cui, Kirkby & Nguyen 2018). Exact for `regime_switching`. Also `method="cos_ctmc"`. |
+| `cos_ctmc_american_price(model, fwd, params, product, base_dates=8, grid=None)` | same models, `AmericanOption` | Richardson extrapolation of CTMC-COS Bermudans with 8, 16, 32 and 64 dates; within 1e-5 of the Ikonen-Toivanen Heston benchmark. |
+| `cos_ctmc_barrier_price(model, fwd, params, strike=..., barrier=..., maturity=..., barrier_type="down_out", cp=1, n_monitor=252, grid=None)` | same models, contract terms | Discretely monitored single barrier (zero rebate) under stochastic volatility; knock-ins by in + out = vanilla. Also `method="cos_ctmc"` for a `BarrierOption` (`grid=<int>` for the number of dates). |
 | `hilbert_itm_probabilities(phi, fwd, strikes, grid=None)` | CF, forward spec, strikes | Share- and cash-measure ITM probabilities (Pi_1, Pi_2); N(d1)/N(d2) under BSM. |
 | `levy_geometric_asian_price(model, fwd, params, strikes=..., monitoring_times=..., cp=1)` | Levy model key, market inputs, fixings | Exact discrete geometric-Asian prices via the per-increment CF product (Fusai-Meucci 2008). |
 | `levy_arithmetic_asian_price(model, fwd, params, strike=..., monitoring_times=..., maturity=None, cp=1, n_cos=256, n_quad=1024, L=10.0)` | Levy model key, market inputs, fixings | Deterministic fixed-strike arithmetic Asian: Carverhill-Clewlow recursion with COS density recovery and quadrature (ASCOS, Zhang-Oosterlee 2013); also `method="asian_cos"`. Arbitrary monitoring dates. |
@@ -412,10 +416,10 @@ Priced through `price(product, model, method, fwd, params)`.
 | Class | Contract | Typical methods |
 |-------|----------|-----------------|
 | `EuropeanOption` | Plain-vanilla European call/put | any CF engine via `price_strip` |
-| `AmericanOption` | American-exercise put/call | `monte_carlo` (LSMC), `lattice` |
-| `BermudanOption` | Finite exercise-date put/call | `cos_bermudan`, `proj`, `monte_carlo` |
+| `AmericanOption` | American-exercise put/call | `cos_american` (Levy), `cos_ctmc` (Heston, Bates, regime switching), `monte_carlo` (LSMC), `lattice` |
+| `BermudanOption` | Finite exercise-date put/call | `cos_bermudan` (Levy), `cos_ctmc` (Heston, Bates, regime switching), `proj`, `monte_carlo` |
 | `DigitalOption` | Cash-/asset-or-nothing digital | `cos_digital`, `digital_bsm` |
-| `BarrierOption` | Single knock-in/knock-out | `barrier_bsm`, `proj_barrier`, `monte_carlo` |
+| `BarrierOption` | Single knock-in/knock-out | `barrier_bsm`, `proj_barrier`, `hilbert_barrier` (Levy), `cos_ctmc` (Heston, Bates, regime switching), `monte_carlo` |
 | `DoubleBarrierOption` | Corridor knock-out/knock-in | `double_barrier_bsm`, `proj_double_barrier`, MC |
 | `StepOption` | Occupation-time-damped vanilla (Linetsky 1999) | `proj_step` |
 | `SwingOption` | Multiple vanilla exercise rights, one per date (Carmona-Touzi 2008) | `proj_swing` |
