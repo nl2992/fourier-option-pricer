@@ -216,6 +216,16 @@ class _Chain:
 # ----------------------------------------------------------------------------- COS recursion
 
 
+def _couple(Phi: np.ndarray, V: np.ndarray) -> np.ndarray:
+    """``U[i, k] = sum_j Phi[k, i, j] V[j, k]``.
+
+    einsum keeps this out of BLAS: calling a multithreaded BLAS thousands of
+    times on small matrices, interleaved with SciPy's own BLAS, can stall on
+    machines with few cores.
+    """
+    return np.einsum("kij,jk->ik", Phi, V)
+
+
 def _next_pow2(n: int) -> int:
     return 1 << max(0, int(n - 1).bit_length())
 
@@ -371,7 +381,7 @@ def _backward(
         dt = float(times[j + 1] - times[j])
         if dt < 1e-12:
             continue
-        U = np.matmul(Phi(dt), V.T[:, :, None])[:, :, 0].T
+        U = _couple(Phi(dt), V)
         U[:, 0] *= 0.5
         disc = float(np.exp(-r * dt))
         F = fwd_t(float(times[j]))
@@ -391,7 +401,7 @@ def _backward(
 
     t1 = float(times[0])
     if t1 > 1e-12:
-        U = np.matmul(Phi(t1), V.T[:, :, None])[:, :, 0].T
+        U = _couple(Phi(t1), V)
     else:
         U = V.astype(complex)
     U[:, 0] *= 0.5
