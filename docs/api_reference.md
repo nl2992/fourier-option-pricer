@@ -58,6 +58,17 @@ Each dataclass holds the calibrated parameters for one stochastic-volatility or 
 | `HullWhiteHybridParams` | Stochastic-rate hybrid: any base registry model plus an independent one-factor Hull-White short rate |
 | `SabrParams` | SABR: `alpha`, `beta`, `rho`, `nu`, `F`, `T`. |
 
+### Two-asset models
+
+These define the joint CF of `(log(S1_T / F1), log(S2_T / F2))` and are priced with `method="fourier_2d"`. They are not in `MODEL_REGISTRY`, which holds one-asset models.
+
+| Name | Model key | Parameters |
+|------|-----------|------------|
+| `Bsm2dParams` | `bsm2d` | `sigma1, sigma2, rho`: correlated geometric Brownian motions |
+| `Vg2dParams` | `vg2d` | `sigma1, sigma2, theta1, theta2, nu, rho`: two VG assets on one gamma clock, so jumps arrive together (each marginal is the registry `variance_gamma`) |
+| `Heston2dParams` | `heston2d` | `v0, kappa, theta, nu, sigma1, sigma2, rho, rho1, rho2`: one CIR variance drives both assets (Hurd and Zhou's three-factor SV); with `sigma1 = 1` asset 1 is the registry `heston` |
+| `joint_cf(model, u1, u2, T, params)` | | joint CF for complex `u1, u2`; `JOINT_MODELS` lists the keys |
+
 ---
 
 ## Characteristic functions
@@ -171,6 +182,7 @@ Each model exposes a cumulant function that returns the first four log-return cu
 | `SincGrid` | `X_c`, `N`, `L` | SINC truncation window half-width, number of odd frequencies, cumulant multiplier (all auto by default). |
 | `ContourGrid` | `rel_tol`, `c`, `c_bound`, `max_levels` | Optimal-contour pricer controls: target relative accuracy, optional fixed contour height, search bound, quadrature levels. |
 | `CTMCGrid` | `n_states`, `width` | Spot-centered log-price state grid for the CTMC generator approximation. |
+| `Fourier2DGrid` | `tol`, `n_max`, `width`, `eps` | Two-asset Fourier pricer: tail tolerance, cap on nodes per axis (default 2048), density width in standard deviations, optional contour offset. Warns if the cap is hit before the integrand decays. |
 
 ### Grid builders
 
@@ -218,6 +230,9 @@ Each model exposes a cumulant function that returns the first four log-return cu
 | `contour_price_at_strikes(phi, fwd, strikes, cp=1, grid=None)` | CF, forward spec, strikes | High-precision reference engine (`method="contour"`): Lord-Kahl (2007) optimal contour per strike, residue-free out-of-the-money values, adaptive exp-sinh double-exponential quadrature. Full relative precision in the deep wings (1e-19 prices to ~1e-14). |
 | `hilbert_barrier_price(model, fwd, params, strike=..., barrier=..., maturity=..., barrier_type=..., cp=1, n_monitor=252, h=None, N=None)` | Levy model key, market inputs, contract | Discretely monitored single barrier by the fast Hilbert transform (Feng-Linetsky 2008); also `method="hilbert_barrier"` for a `BarrierOption` (pass `grid=<int>` for the number of dates). |
 | `hilbert_lookback_price(model, fwd, params, maturity=..., cp=-1, strike_type="floating", strike=None, n_monitor=252, h=None, N=None)` | Levy model key, market inputs | Discretely monitored floating- or fixed-strike lookback via Lindley recursions with Hilbert projections (Feng-Linetsky 2009); fixed strikes via Spitzer duality and Parseval. Also `method="hilbert_lookback"`. |
+| `fourier_spread_price(model, fwd, params, spot2=..., strike=..., q2=0.0, cp=1, grid=None)` | two-asset model key, asset-1 `ForwardSpec`, asset-2 spot and yield | Spread option on `S1 - S2 - K` by the 2-D Fourier transform of Hurd and Zhou (2010); `strike=0` is the exchange option. Also `method="fourier_2d"` for a `SpreadOption`. |
+| `fourier_exchange_price(model, fwd, params, spot2=..., q2=0.0, grid=None)` | two-asset model key, market inputs | Exchange option `(S1 - S2)^+` as a 1-D Fourier integral with asset 2 as numeraire. |
+| `fourier_rainbow_price(model, fwd, params, spot2=..., strike=..., q2=0.0, cp=1, kind="max", grid=None)` | two-asset model key, market inputs | Call or put on the max or min of two assets: the call on the min from its own 2-D transform, the rest by replication and parity. |
 | `hilbert_itm_probabilities(phi, fwd, strikes, grid=None)` | CF, forward spec, strikes | Share- and cash-measure ITM probabilities (Pi_1, Pi_2); N(d1)/N(d2) under BSM. |
 | `levy_geometric_asian_price(model, fwd, params, strikes=..., monitoring_times=..., cp=1)` | Levy model key, market inputs, fixings | Exact discrete geometric-Asian prices via the per-increment CF product (Fusai-Meucci 2008). |
 | `levy_arithmetic_asian_price(model, fwd, params, strike=..., monitoring_times=..., maturity=None, cp=1, n_cos=256, n_quad=1024, L=10.0)` | Levy model key, market inputs, fixings | Deterministic fixed-strike arithmetic Asian: Carverhill-Clewlow recursion with COS density recovery and quadrature (ASCOS, Zhang-Oosterlee 2013); also `method="asian_cos"`. Arbitrary monitoring dates. |
@@ -411,14 +426,15 @@ Priced through `price(product, model, method, fwd, params)`.
 | `CompoundOption` | Option on an option (Geske 1979) | `geske` |
 | `ChooserOption` | Choose call/put at a fixed date | `analytic` |
 | `QuantoOption` | Foreign underlying, domestic payout | BSM quanto analytics |
-| `ExchangeOption` | Margrabe `max(S1 - S2, 0)` | `exchange_bsm`, `multi_asset_mc` |
-| `SpreadOption` | Call on `S1 - S2` with strike K | `spread_bsm`, `multi_asset_mc` |
+| `ExchangeOption` | Margrabe `max(S1 - S2, 0)` | `fourier_2d`, `exchange_bsm`, `multi_asset_mc` |
+| `SpreadOption` | Call on `S1 - S2` with strike K | `fourier_2d`, `spread_bsm` (Kirk), `multi_asset_mc` |
 | `BasketOption` | Weighted-sum basket | `multi_asset_mc` |
-| `BestOfOption` | Call on `max(S1, S2, ...)` | `multi_asset_mc` |
+| `BestOfOption` | Call on `max(S1, S2, ...)` (put on the min) | `fourier_2d` (two assets), `multi_asset_mc` |
+| `RainbowOption` | Call or put on `max(S1, S2)` or `min(S1, S2)` (`kind`) | `fourier_2d`, `multi_asset_mc` |
 
 ### Multi-asset analytics
 
 | Function | Signature | Purpose |
 |----------|-----------|---------|
-| `margrabe_exchange(S1, S2, q1, q2, T, sigma1, ...)` | two forward specs, vols, correlation | Margrabe (1978) exchange option: pays `max(S2 - S1, 0)`. |
-| `kirk_spread(S1, S2, K, r, q1, q2, ...)` | two forward specs, strike, vols, correlation | Kirk (1995) spread option approximation: pays `max(S2 - S1 - K, 0)`. |
+| `margrabe_exchange(S1, S2, q1, q2, T, sigma1, ...)` | two forward specs, vols, correlation | Margrabe (1978) exchange option: pays `max(S1 - S2, 0)`. |
+| `kirk_spread(S1, S2, K, r, q1, q2, ...)` | two forward specs, strike, vols, correlation | Kirk (1995) spread option approximation: pays `max(S1 - S2 - K, 0)`. |

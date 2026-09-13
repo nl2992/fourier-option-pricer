@@ -107,6 +107,7 @@ from .models.hull_white_hybrid import (
     hw_hybrid_cf,
     hw_hybrid_cumulants,
 )
+from .models.joint import JOINT_MODELS, Bsm2dParams, Heston2dParams, Vg2dParams, joint_cf
 from .models.kou import KouParams, kou_cf, kou_cumulants
 from .models.lifted_heston import (
     LiftedHestonParams,
@@ -166,6 +167,12 @@ from .pricers.ctmc import (
 from .pricers.fader import levy_fader_price
 from .pricers.filtered_cos import FilteredCOSDecision, filtered_cos_prices
 from .pricers.forward_start import levy_forward_start_price
+from .pricers.fourier_2d import (
+    Fourier2DGrid,
+    fourier_exchange_price,
+    fourier_rainbow_price,
+    fourier_spread_price,
+)
 from .pricers.frft import frft_price_at_strikes, frft_prices
 from .pricers.geometric_asian import levy_geometric_asian_price
 from .pricers.hilbert import hilbert_itm_probabilities, hilbert_price_at_strikes
@@ -192,6 +199,7 @@ from .pricers.swift import swift_price_at_strikes
 from .products.chooser import ChooserOption
 from .products.compound import CompoundOption
 from .products.fader import FaderOption
+from .products.multi_asset import RainbowOption
 from .products.quanto import QuantoOption
 from .products.step import StepOption
 from .products.swing import SwingOption
@@ -266,6 +274,11 @@ __all__ = [
     "nig_cf",
     "nig_cumulants",
     "KouParams",
+    "JOINT_MODELS",
+    "Bsm2dParams",
+    "Vg2dParams",
+    "Heston2dParams",
+    "joint_cf",
     "kou_cf",
     "kou_cumulants",
     "LiftedHestonParams",
@@ -376,6 +389,10 @@ __all__ = [
     "hilbert_price_at_strikes",
     "hilbert_barrier_price",
     "hilbert_lookback_price",
+    "Fourier2DGrid",
+    "fourier_exchange_price",
+    "fourier_rainbow_price",
+    "fourier_spread_price",
     "cds_par_spread_from_survival",
     "levy_cds_spread",
     "levy_survival_curve",
@@ -497,6 +514,7 @@ __all__ = [
     "CompoundOption",
     "ChooserOption",
     "FaderOption",
+    "RainbowOption",
     "StepOption",
     "SwingOption",
     # quanto

@@ -195,6 +195,58 @@ class BestOfOption(ProductSpec):
         )
 
 
+@dataclass(frozen=True)
+class RainbowOption(ProductSpec):
+    """Call or put on the maximum or minimum of two assets.
+
+    Pays ``max(cp * (M_T - K), 0)`` with ``M_T = max(S1_T, S2_T)`` for
+    ``kind="max"`` or ``min(S1_T, S2_T)`` for ``kind="min"``.
+
+    Parameters
+    ----------
+    strike : float
+        Strike. Must be > 0.
+    maturity : float
+        Time to expiry in years. Must be > 0.
+    cp : int
+        +1 call, -1 put.
+    kind : {"max", "min"}
+        Which extreme of the two assets the option is written on.
+    spot2, q2 : float
+        Spot and dividend yield of asset 2 (asset 1 comes from ``fwd``).
+    sigma2, rho : float
+        Volatility of asset 2 and the correlation, used only with
+        ``model="bsm"``. A two-asset model (``bsm2d``, ``vg2d``, ``heston2d``)
+        carries its own dynamics.
+    """
+
+    product_type: str = field(default="rainbow", init=False, repr=False)
+    strike: float = 0.0
+    maturity: float = 0.0
+    cp: int = 1
+    kind: str = "max"
+    spot2: float = 100.0
+    q2: float = 0.0
+    sigma2: float = 0.2
+    rho: float = 0.0
+
+    def __post_init__(self) -> None:
+        if self.strike <= 0:
+            raise ValueError(f"RainbowOption: strike must be > 0, got {self.strike}")
+        if self.maturity <= 0:
+            raise ValueError(f"RainbowOption: maturity must be > 0, got {self.maturity}")
+        if self.cp not in (1, -1):
+            raise ValueError(f"RainbowOption: cp must be +1 or -1, got {self.cp}")
+        if self.kind not in ("max", "min"):
+            raise ValueError(f"RainbowOption: kind must be 'max' or 'min', got {self.kind!r}")
+        if self.spot2 <= 0:
+            raise ValueError(f"RainbowOption: spot2 must be > 0, got {self.spot2}")
+        if self.sigma2 < 0:
+            raise ValueError(f"RainbowOption: sigma2 must be >= 0, got {self.sigma2}")
+        if not (-1.0 <= self.rho <= 1.0):
+            raise ValueError(f"RainbowOption: rho must lie in [-1, 1], got {self.rho}")
+
+
 def _validate_other_asset_inputs(
     product_name: str,
     *,

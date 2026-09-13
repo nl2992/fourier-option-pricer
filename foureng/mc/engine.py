@@ -294,7 +294,24 @@ def mc_price(
         return _result(raw * disc, mc.n_paths)
 
     # ── Multi-asset terminal payoffs ──────────────────────────────────────
-    if pt in {"exchange", "basket", "spread", "best_of"}:
+    if pt in {"exchange", "basket", "spread", "best_of", "rainbow"}:
+        if pt == "rainbow":
+            terminal = correlated_gbm_terminal(
+                np.array([S0, product.spot2], dtype=np.float64),
+                r,
+                np.array([q, product.q2], dtype=np.float64),
+                product.maturity,
+                np.array([sigma, product.sigma2], dtype=np.float64),
+                np.array([[1.0, product.rho], [product.rho, 1.0]], dtype=np.float64),
+                mc.n_paths,
+                rng,
+                antithetic=mc.antithetic,
+            )
+            extreme = terminal.max(axis=1) if product.kind == "max" else terminal.min(axis=1)
+            raw = np.maximum(product.cp * (extreme - product.strike), 0.0)
+            disc = np.exp(-r * product.maturity)
+            return _result(raw * disc, mc.n_paths)
+
         if pt == "exchange":
             terminal = correlated_gbm_terminal(
                 np.array([S0, product.spot2], dtype=np.float64),
@@ -378,7 +395,7 @@ def mc_price(
         f"mc_price: product_type={pt!r} is not yet supported. "
         "Supported: 'european', 'american', 'bermudan', 'asian', 'barrier', 'double_barrier', "
         "'lookback', 'variance_swap', 'variance_option', 'cliquet', "
-        "'exchange', 'basket', 'spread', 'best_of'."
+        "'exchange', 'basket', 'spread', 'best_of', 'rainbow'."
     )
 
 

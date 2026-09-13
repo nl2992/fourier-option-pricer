@@ -802,6 +802,9 @@ def price(
 
     pt = product.product_type
 
+    if method == "fourier_2d" or pt == "rainbow":
+        return _price_two_asset(product, model, method, fwd, params, grid)
+
     if pt == "european":
         # Override fwd.T with the product's own maturity.
         from .models.base import ForwardSpec as _FwdSpec
@@ -1633,4 +1636,86 @@ def price(
     # here means the product_type is unknown / not yet routed.
     raise NotImplementedError(
         f"price(): product_type={pt!r} is not recognized or has no registered pricer."
+    )
+
+
+def _price_two_asset(product, model: str, method: str, fwd, params, grid) -> float:
+    """Two-asset routes: ``fourier_2d`` for any two-asset product, and rainbow MC."""
+    from .models.base import ForwardSpec as _FwdSpec
+    from .models.joint import JOINT_MODELS, Bsm2dParams
+    from .pricers.fourier_2d import (
+        Fourier2DGrid,
+        fourier_exchange_price,
+        fourier_rainbow_price,
+        fourier_spread_price,
+    )
+
+    pt = product.product_type
+    fwd_t = _FwdSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=product.maturity)
+    if method in {"multi_asset_mc", "monte_carlo"}:
+        if model != "bsm":
+            raise NotImplementedError(
+                f"method={method!r} is currently implemented only for model='bsm'."
+            )
+        mc_spec = grid if isinstance(grid, MCSpec) else MCSpec()
+        return mc_price(fwd_t, params.sigma, product, mc_spec).price
+    if method != "fourier_2d":
+        raise NotImplementedError(
+            "Rainbow pricing supports method='fourier_2d', method='multi_asset_mc' "
+            "or method='monte_carlo'."
+        )
+    if pt not in {"exchange", "spread", "best_of", "rainbow"}:
+        raise NotImplementedError(
+            "method='fourier_2d' prices two-asset products (exchange, spread, best_of, "
+            f"rainbow); got product_type={pt!r}"
+        )
+    if grid is not None and not isinstance(grid, Fourier2DGrid):
+        raise TypeError(f"method='fourier_2d' takes a Fourier2DGrid, got {type(grid).__name__}")
+    if pt == "best_of":
+        if product.n_assets != 2:
+            raise NotImplementedError("method='fourier_2d' prices best-of options on two assets")
+        spot2 = float(product.other_spots[0])
+        q2 = float(product.other_dividend_yields[0])
+        sigma2 = float(product.other_volatilities[0])
+        rho = float(np.asarray(product.corr_matrix)[0, 1])
+    else:
+        spot2, q2 = product.spot2, product.q2
+        sigma2 = getattr(product, "sigma2", 0.0)
+        rho = getattr(product, "rho", 0.0)
+    if model == "bsm":
+        joint_model, joint_params = "bsm2d", Bsm2dParams(params.sigma, sigma2, rho)
+    elif model in JOINT_MODELS:
+        joint_model, joint_params = model, params
+    else:
+        raise NotImplementedError(
+            "method='fourier_2d' needs a two-asset model: 'bsm' (with the product's "
+            f"sigma2 and rho) or one of {list(JOINT_MODELS)}; got {model!r}"
+        )
+    if pt == "exchange":
+        return fourier_exchange_price(
+            joint_model, fwd_t, joint_params, spot2=spot2, q2=q2, grid=grid
+        )
+    if pt == "spread":
+        return fourier_spread_price(
+            joint_model,
+            fwd_t,
+            joint_params,
+            spot2=spot2,
+            q2=q2,
+            strike=product.strike,
+            cp=product.cp,
+            grid=grid,
+        )
+    # BestOfOption pays (max - K)^+ as a call and (K - min)^+ as a put
+    kind = product.kind if pt == "rainbow" else ("max" if product.cp == 1 else "min")
+    return fourier_rainbow_price(
+        joint_model,
+        fwd_t,
+        joint_params,
+        spot2=spot2,
+        q2=q2,
+        strike=product.strike,
+        cp=product.cp,
+        kind=kind,
+        grid=grid,
     )

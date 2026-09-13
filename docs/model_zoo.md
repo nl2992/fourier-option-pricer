@@ -69,6 +69,18 @@ cums   = fe.bates_cumulants(fwd, params)
 
 The `MODEL_REGISTRY` in `foureng.models.registry` is the single source of truth for which models are supported and which have a native PyFENG FFT pricer; `price_strip` dispatches through it.
 
+## Two-asset models
+
+For spreads, exchange options and options on the max or min of two assets there are three joint models (Hurd and Zhou 2010), priced with `price(product, model, "fourier_2d", ...)` or the `fourier_*_price` functions:
+
+| Key | Parameters | Notes |
+|-----|------------|-------|
+| `bsm2d` | `Bsm2dParams(sigma1, sigma2, rho)` | correlated GBM; `model="bsm"` with a product's `sigma2` and `rho` maps to this |
+| `vg2d` | `Vg2dParams(sigma1, sigma2, theta1, theta2, nu, rho)` | Brownian motions with drift on one gamma clock; marginals are `variance_gamma` |
+| `heston2d` | `Heston2dParams(v0, kappa, theta, nu, sigma1, sigma2, rho, rho1, rho2)` | one CIR variance for both assets; with `sigma1 = 1` asset 1 is `heston` |
+
+They are kept out of `MODEL_REGISTRY` because `price_strip` and the one-asset engines do not apply to them.
+
 ## Validation status
 
 Each model is validated at one of five evidence levels defined in [validation_hierarchy.md](validation_hierarchy.md).

@@ -449,6 +449,7 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
                 "basket",
                 "spread",
                 "best_of",
+                "rainbow",
             }
         ),
         supports_exercise=frozenset({"european", "american", "bermudan"}),
@@ -461,12 +462,25 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
     "multi_asset_mc": MethodSpec(
         requires_cf=False,
         requires_simulation=True,
-        supports_products=frozenset({"exchange", "basket", "spread", "best_of"}),
+        supports_products=frozenset({"exchange", "basket", "spread", "best_of", "rainbow"}),
         supports_exercise=frozenset({"european"}),
         supports_path_dependent=False,
         notes=(
             "BSM Monte Carlo pricer for correlated multi-asset European payoffs "
-            "(exchange, basket, spread, best-of)."
+            "(exchange, basket, spread, best-of, rainbow)."
+        ),
+    ),
+    "fourier_2d": MethodSpec(
+        requires_cf=True,
+        supports_products=frozenset({"exchange", "spread", "best_of", "rainbow"}),
+        supports_exercise=frozenset({"european"}),
+        supports_path_dependent=False,
+        notes=(
+            "Two-asset Fourier pricer on the joint CF (Hurd & Zhou 2010): spreads by "
+            "the 2-D Gamma-function transform, calls on the minimum by their own 2-D "
+            "transform, exchange options and vanillas in 1-D, the rest by static "
+            "replication and parity. Models: bsm (with the product's sigma2 and rho), "
+            "bsm2d, vg2d and heston2d."
         ),
     ),
     "cos_bermudan": MethodSpec(
@@ -674,7 +688,15 @@ def explain_capability(
             f"Known methods: {known}."
         )
 
-    if model not in MODEL_REGISTRY:
+    from foureng.models.joint import JOINT_MODELS
+
+    if model in JOINT_MODELS:
+        if method != "fourier_2d":
+            return (
+                f"Not supported: model={model!r} is a two-asset model; price it with "
+                "method='fourier_2d'."
+            )
+    elif model not in MODEL_REGISTRY:
         return f"Not supported: model={model!r} is not in the model registry."
 
     spec = METHOD_REGISTRY[method]
@@ -731,10 +753,11 @@ def _product_hint(model: str, product: str, method: str) -> str:
         "cliquet": (
             "Cliquet payoff is path-dependent across reset periods. Use cliquet_mc or cliquet_proj."
         ),
-        "exchange": "Use multi_asset_mc or the Margrabe closed-form.",
+        "exchange": "Use fourier_2d, multi_asset_mc or the Margrabe closed-form.",
         "basket": "Use multi_asset_mc or log-normal basket approximation.",
-        "spread": "Use multi_asset_mc or Kirk approximation.",
-        "best_of": "Use multi_asset_mc.",
+        "spread": "Use fourier_2d, multi_asset_mc or the Kirk approximation.",
+        "best_of": "Use fourier_2d (two assets) or multi_asset_mc.",
+        "rainbow": "Use fourier_2d or multi_asset_mc.",
         "digital": (
             "Cash-or-nothing / asset-or-nothing digital. "
             "Use cos_digital (COS extended payoff) or analytic BSM formula."

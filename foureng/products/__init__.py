@@ -22,7 +22,7 @@ from .european import EuropeanOption
 from .fader import FaderOption
 from .forward_start import ForwardStartOption
 from .lookback import LookbackOption
-from .multi_asset import BasketOption, BestOfOption, ExchangeOption, SpreadOption
+from .multi_asset import BasketOption, BestOfOption, ExchangeOption, RainbowOption, SpreadOption
 from .parisian import ParisianOption
 from .quanto import QuantoOption
 from .step import StepOption
@@ -50,6 +50,7 @@ __all__ = [
     "BasketOption",
     "SpreadOption",
     "BestOfOption",
+    "RainbowOption",
     "ParisianOption",
     "CompoundOption",
     "ChooserOption",

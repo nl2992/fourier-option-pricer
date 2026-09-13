@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Two-asset Fourier pricing (Hurd and Zhou 2010) with `method="fourier_2d"`: spread, exchange, best-of and the new `RainbowOption` (call or put on the max or min of two assets). Spreads use the 2-D Gamma-function transform, calls on the minimum their own 2-D transform, and exchange options a 1-D integral with asset 2 as numeraire. The grid is sized from the CF, and the contour offset is scaled up when that needs fewer nodes, which keeps short-dated, highly correlated spreads fast. Prices agree with independent quadrature to about 1e-12 relative for BSM and VG.
+- Joint two-asset models `bsm2d`, `vg2d` (common gamma clock) and `heston2d` (one CIR variance for both assets), with `joint_cf`. `price(..., model="bsm", method="fourier_2d")` uses the product's `sigma2` and `rho`.
+- `RainbowOption` is also priced by `multi_asset_mc`.
+
+### Fixed
+
+- The API reference described the Margrabe and Kirk payoffs with the assets swapped.
+
 ## 0.22.1 - 2026-09-12
 
 Documentation only; no code changes.
