@@ -55,6 +55,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: lint
     timeout-minutes: 25
+    env:
+      # thousands of small BLAS calls from two OpenBLAS copies (numpy and scipy)
+      # contend badly on 4-core runners; one thread each avoids that
+      OPENBLAS_NUM_THREADS: "1"
 
     strategy:
       fail-fast: false
