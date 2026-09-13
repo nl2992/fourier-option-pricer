@@ -45,6 +45,8 @@ Mathematics* 2, 439-463.
 
 from __future__ import annotations
 
+import contextlib
+import importlib
 from dataclasses import dataclass, replace
 
 import numpy as np
@@ -55,6 +57,23 @@ from ..models.base import ForwardSpec
 from ..models.registry import MODEL_REGISTRY
 
 TERM_TOL = 1e-10
+
+
+def _single_threaded_blas():
+    """Limit BLAS to one thread while building transitions, when threadpoolctl is installed.
+
+    The transition step makes thousands of small BLAS calls; with numpy's and
+    SciPy's OpenBLAS both multithreaded this has run 30 to 50 times slower on
+    some 4-core Linux machines. Without threadpoolctl, setting
+    ``OPENBLAS_NUM_THREADS=1`` has the same effect.
+    """
+    try:
+        threadpoolctl = importlib.import_module("threadpoolctl")
+    except ImportError:
+        return contextlib.nullcontext()
+    return threadpoolctl.threadpool_limits(limits=1, user_api="blas")
+
+
 CTMC_MODELS = ("heston", "bates", "regime_switching")
 
 
@@ -198,7 +217,8 @@ class _Chain:
             return self._cache[key]
         for (dt_c, n_c), half in self._cache.items():
             if n_c >= n and abs(2.0 * dt_c - dt) <= 1e-14 * dt:
-                out = np.matmul(half[:n], half[:n])
+                with _single_threaded_blas():
+                    out = np.matmul(half[:n], half[:n])
                 self._cache[key] = out
                 return out
         ps = self.psi(w)
@@ -206,7 +226,8 @@ class _Chain:
         dead = dt * np.max(ps.real, axis=1) < -700.0  # every entry has underflowed
         A = dt * (self.Q[None, :, :] + ps[:, :, None] * np.eye(m)[None, :, :])
         A[dead] = 0.0
-        out = expm(A)
+        with _single_threaded_blas():
+            out = expm(A)
         out[dead] = 0.0
         out[~np.isfinite(out)] = 0.0
         self._cache[key] = out

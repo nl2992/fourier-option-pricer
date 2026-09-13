@@ -96,7 +96,7 @@ jobs:
           pip install -e ".[test]"
 
       - name: Fast tests with coverage
-        run: pytest -v --tb=short -m "not slow" -o faulthandler_timeout=240 --durations=25 --cov=foureng --cov-report=term-missing --cov-fail-under=70
+        run: pytest -q --tb=short -m "not slow" -o faulthandler_timeout=240 --durations=15 --cov=foureng --cov-report=term-missing --cov-fail-under=70
 
   paper-tests:
     name: Paper/reference tests
