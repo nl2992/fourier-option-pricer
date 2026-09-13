@@ -1,5 +1,10 @@
 """Model calibration to a market implied-vol surface.
 
+For new code prefer :func:`foureng.calibrate` (``surface/model_calibration.py``),
+which works for any registry model, uses CF gradients on a fixed COS grid and
+is much faster and more accurate. The functions here are kept for
+compatibility.
+
 Fits Heston / VG / Kou parameters by minimising the sum of squared residuals
 between model-implied and market-implied Black-76 vols on a (maturities, strikes)
 grid.

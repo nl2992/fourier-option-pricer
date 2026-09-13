@@ -22,6 +22,7 @@ from .local_vol import (
     dupire_local_vol_from_svi,
     dupire_local_vol_grid,
 )
+from .model_calibration import DEFAULT_BOUNDS, CalibrationFit, MarketQuotes, calibrate
 from .ssvi import (
     SSVIFitResult,
     SSVIParams,
@@ -45,6 +46,10 @@ from .svi import (
 from .vol_surface import SurfaceSpec, model_iv_surface, model_price_surface
 
 __all__ = [
+    "DEFAULT_BOUNDS",
+    "CalibrationFit",
+    "MarketQuotes",
+    "calibrate",
     "SurfaceSpec",
     "model_iv_surface",
     "model_price_surface",

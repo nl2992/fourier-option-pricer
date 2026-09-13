@@ -93,6 +93,7 @@ from .models.bsm import (
     bsm_cf,
     bsm_cumulants,
 )
+from .models.cf_gradients import ANALYTIC_GRADIENT_MODELS, cf_and_gradient
 from .models.cgmy import CgmyParams, cgmy_cf, cgmy_cumulants
 from .models.double_heston import DoubleHestonParams, double_heston_cf, double_heston_cumulants
 from .models.fmls import FMLSParams, fmls_cf, fmls_cumulants
@@ -235,6 +236,7 @@ from .surface import (
     svi_implied_vol,
     svi_total_variance,
 )
+from .surface.model_calibration import CalibrationFit, MarketQuotes, calibrate
 from .utils.grids import (
     ContourGrid,
     CONVGrid,
@@ -274,6 +276,11 @@ __all__ = [
     "nig_cf",
     "nig_cumulants",
     "KouParams",
+    "ANALYTIC_GRADIENT_MODELS",
+    "cf_and_gradient",
+    "calibrate",
+    "CalibrationFit",
+    "MarketQuotes",
     "JOINT_MODELS",
     "Bsm2dParams",
     "Vg2dParams",

@@ -307,11 +307,15 @@ Each model exposes a cumulant function that returns the first four log-return cu
 
 | Name | Type | Description |
 |------|------|-------------|
+| `calibrate(model, quotes, initial, bounds=None, fixed=(), gradient="analytic", n_max=4096, max_rounds=4, max_nfev=200, tol=1e-12)` | function | Recommended calibrator for any registry model with float parameters. Vega-weighted OTM price residuals, bounded trust-region least squares (Levenberg-Marquardt away from the bounds), Jacobian from `cf_and_gradient` on a fixed COS grid per maturity, grid rebuilt at the solution until prices settle. Returns `CalibrationFit`. |
+| `MarketQuotes(S0, r, q, maturities, strikes, ivs=None, prices=None, cp=None, weights=None)` | dataclass | Flat option quotes (vols, or prices with `cp`) across any strikes and maturities; `MarketQuotes.from_surface(spec, ivs)` converts a `SurfaceSpec` grid. |
+| `CalibrationFit` | dataclass | `params` (the model dataclass), `values`, `iv_residuals` (model minus market, by Let's Be Rational), `rmse_iv`, `success`, `message`, `nfev`, `njev`, `rounds`, `gradient`. |
+| `cf_and_gradient(model, u, fwd, params, analytic=True)` | function | `phi(u)` and `d phi / d theta` for every float parameter. Analytic for `ANALYTIC_GRADIENT_MODELS` (bsm, merton_jd, kou, vg, nig, cgmy, heston, bates), central differences of the CF otherwise. |
 | `SurfaceSpec` | dataclass | Defines the moneyness-tenor grid used in calibration targets. |
 | `CalibrationResult` | dataclass | Holds calibrated parameter dataclass, residuals, and optimizer diagnostics. |
 | `model_iv_surface(spec, cf_factory, cumulant_factory, N=..., L=...)` | function | Evaluates a model implied-vol surface on a `SurfaceSpec` grid. |
 | `model_price_surface(spec, cf_factory, cumulant_factory, N=..., L=...)` | function | Evaluates a model price surface on a `SurfaceSpec` grid. |
-| `calibrate_heston(...)` | function | Calibrates Heston parameters to market targets. Returns `CalibrationResult`. |
+| `calibrate_heston(...)` | function | Calibrates Heston parameters to market targets by Nelder-Mead on IV residuals (kept for compatibility; `calibrate("heston", ...)` is faster and more accurate). Returns `CalibrationResult`. |
 | `calibrate_vg(...)` | function | Calibrates VG parameters to market targets. Returns `CalibrationResult`. |
 | `calibrate_kou(...)` | function | Calibrates Kou parameters to market targets. Returns `CalibrationResult`. |
 | `calibrate_cgmy(...)` | function | Calibrates CGMY parameters to market targets. Returns `CalibrationResult`. |
