@@ -15,6 +15,7 @@
 ### Fixed
 
 - The API reference described the Margrabe and Kirk payoffs with the assets swapped.
+- `sv32` gave wrong prices at short maturities. PyFENG's `Sv32Fft.logp_cf` sums 1F1(a; b; -X) as a plain Taylor series, and X grows like 2 / (nu^2 v0 T), so the series cancels catastrophically: for `v0=0.04, nu=1.2` it returned |phi(1)| of about 1e118 at T = 0.1 and was already 2% off at T = 0.75, and SINC and contour priced calls below intrinsic. The parameter mapping was correct. `sv32_cf` now evaluates the same closed form in-house as a Poisson mixture (Kummer's transformation), summed outwards from its largest term, which agrees with mpmath to about 1e-13 for maturities from 0.005 to 10 years. `method="pyfeng_fft"` keeps PyFENG's FFT pricer but uses this CF. `sv32_cf` raises `FloatingPointError` if |phi(u)| ever exceeds 1 for real u.
 
 ## 0.22.1 - 2026-09-12
 

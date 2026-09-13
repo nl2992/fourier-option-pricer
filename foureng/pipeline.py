@@ -151,15 +151,11 @@ def _pyfeng_fft_price(model: str, strikes, fwd: ForwardSpec, params, cp: int):
             sigma=params.sigma, nu=params.nu, theta=params.theta, intr=fwd.r, divr=fwd.q
         )
     elif model == "sv32":
-        m = pf.Sv32Fft(
-            sigma=params.v0,
-            vov=params.nu,
-            mr=params.kappa,
-            rho=params.rho,
-            theta=params.theta,
-            intr=fwd.r,
-            divr=fwd.q,
-        )
+        # PyFENG's FFT pricer fed with our CF: Sv32Fft's own 1F1 series
+        # overflows at short maturities (see models/sv32.py).
+        from .models.sv32 import _pyfeng_sv32_model
+
+        m = _pyfeng_sv32_model(fwd, params)
     elif model == "rough_heston":
         # RoughHestonFft lives in pyfeng.sv_fft; pyfeng.ex is broken under
         # newer SciPy (scipy.misc.derivative was removed).
