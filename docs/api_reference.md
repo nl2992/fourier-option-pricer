@@ -315,7 +315,7 @@ Each model exposes a cumulant function that returns the first four log-return cu
 | `CalibrationResult` | dataclass | Holds calibrated parameter dataclass, residuals, and optimizer diagnostics. |
 | `model_iv_surface(spec, cf_factory, cumulant_factory, N=..., L=...)` | function | Evaluates a model implied-vol surface on a `SurfaceSpec` grid. |
 | `model_price_surface(spec, cf_factory, cumulant_factory, N=..., L=...)` | function | Evaluates a model price surface on a `SurfaceSpec` grid. |
-| `calibrate_heston(...)` | function | Calibrates Heston parameters to market targets by Nelder-Mead on IV residuals (kept for compatibility; `calibrate("heston", ...)` is faster and more accurate). Returns `CalibrationResult`. |
+| `calibrate_heston(...)` | function | Calibrates Heston parameters to market targets by Nelder-Mead on IV residuals (kept for compatibility; `calibrate` with `model="heston"` is faster and more accurate). Returns `CalibrationResult`. |
 | `calibrate_vg(...)` | function | Calibrates VG parameters to market targets. Returns `CalibrationResult`. |
 | `calibrate_kou(...)` | function | Calibrates Kou parameters to market targets. Returns `CalibrationResult`. |
 | `calibrate_cgmy(...)` | function | Calibrates CGMY parameters to market targets. Returns `CalibrationResult`. |
