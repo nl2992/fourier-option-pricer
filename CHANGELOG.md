@@ -1,21 +1,35 @@
 # Changelog
 
-## Unreleased
+## 0.23.0 - 2026-09-14
 
 ### Added
 
-- Two-asset Fourier pricing (Hurd and Zhou 2010) with `method="fourier_2d"`: spread, exchange, best-of and the new `RainbowOption` (call or put on the max or min of two assets). Spreads use the 2-D Gamma-function transform, calls on the minimum their own 2-D transform, and exchange options a 1-D integral with asset 2 as numeraire. The grid is sized from the CF, and the contour offset is scaled up when that needs fewer nodes, which keeps short-dated, highly correlated spreads fast. Prices agree with independent quadrature to about 1e-12 relative for BSM and VG.
-- Joint two-asset models `bsm2d`, `vg2d` (common gamma clock) and `heston2d` (one CIR variance for both assets), with `joint_cf`. `price(..., model="bsm", method="fourier_2d")` uses the product's `sigma2` and `rho`.
-- `RainbowOption` is also priced by `multi_asset_mc`.
-- `calibrate(model, quotes, initial)`: one calibrator for every registry model with float parameters. It fits vega-weighted out-of-the-money prices across any set of strikes and maturities (`MarketQuotes`) with bounded trust-region least squares. The Jacobian comes from CF gradients on a fixed COS grid, so the objective is smooth; the grid is rebuilt at the solution until prices settle. On a 45-quote Heston surface it recovers the parameters from a poor start in 18 evaluations (0.02 s), against 675 for the Nelder-Mead `calibrate_heston`, with an IV error of 6e-11 instead of 7e-8. Parameters can be fixed, bounded and weighted.
-- `cf_and_gradient`: analytic CF gradients for BSM, Merton, Kou, VG, NIG, CGMY, Heston and Bates, and central differences of the CF for the other models.
+Two-asset options (Hurd and Zhou 2010), with `method="fourier_2d"`:
 
-- `method="cos_ctmc"`: Bermudan, American and discretely monitored barrier options under Heston, Bates and the regime-switching model (Cui, Kirkby and Nguyen 2018). The variance becomes a Markov chain on a `sqrt(v)` grid that includes zero (so the Feller condition may fail), the decorrelated log-price is handled by the Fang-Oosterlee COS recursion with one coefficient vector per variance state, and the chain error, which is second order in the spacing, is extrapolated away. Heston American puts agree with the Ikonen and Toivanen benchmark to 1e-5, Europeans through the chain with the closed form to about 1e-6, and discrete barriers with Monte Carlo. The regime-switching model is priced without approximation. Building the chain's transition matrices makes many small BLAS calls; if `threadpoolctl` is installed they run single-threaded, and otherwise `OPENBLAS_NUM_THREADS=1` avoids a large slowdown seen on some 4-core Linux machines.
+- Spread, exchange and two-asset best-of options, and a new `RainbowOption` (call or put on the max or min of two assets).
+- Two-asset models `bsm2d`, `vg2d` (both assets on one gamma clock) and `heston2d` (one variance for both assets), with their joint CF in `joint_cf`. With `model="bsm"` the product's `sigma2` and `rho` are used.
+- Prices agree with an independent quadrature to about 1e-12 relative for BSM and VG. The grid adapts to the CF, so short-dated, highly correlated spreads stay fast, and a warning is raised if it hits its size limit.
+- `RainbowOption` can also be priced by `multi_asset_mc`.
+
+Calibration:
+
+- `calibrate(model, quotes, initial)` fits any registry model with float parameters to option quotes (`MarketQuotes`, vols or prices, any strikes and maturities). It uses vega-weighted out-of-the-money prices, bounded least squares and a Jacobian built from CF gradients. On a 45-quote Heston surface it recovers the parameters from a poor start in 18 evaluations (0.02 s) with an IV error of 6e-11; `calibrate_heston` needs 675 evaluations for 7e-8. Parameters can be fixed, bounded and weighted.
+- `cf_and_gradient`: analytic CF gradients for BSM, Merton, Kou, VG, NIG, CGMY, Heston and Bates, and differences of the CF for the other models.
+
+Exotics under stochastic volatility, with `method="cos_ctmc"` (Cui, Kirkby and Nguyen 2018):
+
+- Bermudan, American and discretely monitored barrier options under Heston, Bates and the regime-switching model. The variance becomes a Markov chain and the log-price is handled by the COS method.
+- Heston American puts agree with the Ikonen and Toivanen benchmark to 1e-5, Europeans with the closed form to about 1e-6 (also when the Feller condition fails), and barriers with Monte Carlo. The regime-switching model is priced exactly.
+- If `threadpoolctl` is installed, the engine keeps BLAS single-threaded while it builds its transition matrices. Without it, `OPENBLAS_NUM_THREADS=1` avoids a large slowdown seen on some 4-core Linux machines.
 
 ### Fixed
 
+- `sv32` gave wrong prices at short maturities: PyFENG's CF series for the 3/2 model cancels catastrophically (|phi| reached 1e118 at T = 0.1), so SINC and contour priced calls below intrinsic. `sv32_cf` now evaluates the same closed form in-house and agrees with mpmath to about 1e-13 for maturities from 0.005 to 10 years. It raises an error if |phi(u)| ever exceeds 1 for real u.
 - The API reference described the Margrabe and Kirk payoffs with the assets swapped.
-- `sv32` gave wrong prices at short maturities. PyFENG's `Sv32Fft.logp_cf` sums 1F1(a; b; -X) as a plain Taylor series, and X grows like 2 / (nu^2 v0 T), so the series cancels catastrophically: for `v0=0.04, nu=1.2` it returned |phi(1)| of about 1e118 at T = 0.1 and was already 2% off at T = 0.75, and SINC and contour priced calls below intrinsic. The parameter mapping was correct. `sv32_cf` now evaluates the same closed form in-house as a Poisson mixture (Kummer's transformation), summed outwards from its largest term, which agrees with mpmath to about 1e-13 for maturities from 0.005 to 10 years. `method="pyfeng_fft"` keeps PyFENG's FFT pricer but uses this CF. `sv32_cf` raises `FloatingPointError` if |phi(u)| ever exceeds 1 for real u.
+
+### Changed
+
+- CI test jobs run with single-threaded OpenBLAS, time out after 25 minutes and print stack traces for tests that run over 4 minutes.
 
 ## 0.22.1 - 2026-09-12
 

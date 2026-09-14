@@ -75,7 +75,7 @@ Full methodology: [appendix.md](appendix.md) · Extension details: [docs/filtere
 
 ---
 
-## 🆕 What's new in 0.23 (unreleased)
+## 🆕 What's new in 0.23
 
 | Addition | How to use it | Checked against |
 |----------|---------------|-----------------|
@@ -83,7 +83,7 @@ Full methodology: [appendix.md](appendix.md) · Extension details: [docs/filtere
 | One calibrator for every model (gradients as in Cui, del Bano Rollin & Germano 2017) | `calibrate(model, MarketQuotes(...), initial)` | Exact recovery of Heston, Bates, Kou, Merton, CGMY and Meixner parameters; 18 evaluations for Heston against 675 for Nelder-Mead |
 | Stochastic-volatility exotics (Cui, Kirkby & Nguyen 2018) | `price(BermudanOption / AmericanOption / BarrierOption, "heston" or "bates", "cos_ctmc", ...)` | Ikonen & Toivanen American puts to 1e-5, closed-form Europeans to about 1e-6, Monte Carlo barriers |
 
-These are on the `dev` branch and not yet on PyPI. Details are in the [CHANGELOG](CHANGELOG.md).
+Also in 0.23: `sv32` prices at short maturities are fixed (PyFENG's CF series overflowed). Details are in the [CHANGELOG](CHANGELOG.md).
 
 ---
 
@@ -231,7 +231,7 @@ Use this if you want to `import foureng` in your own code without cloning the re
 ```bash
 pip install fourier-option-pricer          # core: numpy, scipy, pyfeng (+ statsmodels)
 pip install "fourier-option-pricer[viz]"   # + matplotlib/pandas for foureng.viz
-pip install "fourier-option-pricer==0.22.1"  # pin a release
+pip install "fourier-option-pricer==0.23.0"  # pin a release
 ```
 
 Requires Python 3.10 to 3.14. The package ships inline type hints (`py.typed`). Check what you have with `python -c "import foureng; print(foureng.__version__)"`.
@@ -720,9 +720,9 @@ Transform-method territory not yet covered here, in rough priority order (the fi
 - [x] SINC, SWIFT and optimal-contour European engines (0.22.0)
 - [x] 4/2, BNS Γ-OU, lifted Heston, time-changed Lévy and generic affine models (0.22.0)
 - [x] Model-free variance and VIX-style index from option strips (0.22.0)
-- [x] Stochastic-volatility exotics: Bermudans, Americans and discrete barriers under Heston and Bates (COS with a variance chain) (0.23, unreleased)
-- [x] Two-dimensional Fourier spread and rainbow options (Hurd & Zhou 2010) (0.23, unreleased)
-- [x] Registry-driven calibration with analytic CF gradients (0.23, unreleased)
+- [x] Stochastic-volatility exotics: Bermudans, Americans and discrete barriers under Heston and Bates (COS with a variance chain) (0.23.0)
+- [x] Two-dimensional Fourier spread and rainbow options (Hurd & Zhou 2010) (0.23.0)
+- [x] Registry-driven calibration with analytic CF gradients (0.23.0)
 - [ ] SABR and stochastic local volatility through the same variance-chain engine
 - [ ] Asian and lookback options under stochastic volatility
 - [ ] Baskets on more than two assets

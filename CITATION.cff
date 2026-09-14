@@ -8,8 +8,8 @@ authors:
 repository-code: "https://github.com/nl2992/fourier-option-pricer"
 url: "https://github.com/nl2992/fourier-option-pricer"
 license: MIT
-version: 0.22.1
-date-released: 2026-09-12
+version: 0.23.0
+date-released: 2026-09-14
 keywords:
   - quant finance
   - option pricing
