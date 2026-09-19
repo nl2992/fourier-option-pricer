@@ -66,7 +66,7 @@ _DIRECT_CALL_FRIENDLY_MODELS = {"heston", "ousv", "nig"}
 
 # Engines whose numerical core produces call prices only; puts are recovered
 # by put-call parity at the top of ``price_strip``.
-_CALL_ONLY_METHODS = {"cos", "cos_improved", "cos_filtered", "frft", "carr_madan"}
+_CALL_ONLY_METHODS = {"cos", "cos_improved", "cos_filtered", "frft", "carr_madan", "lewis"}
 
 
 def _cf_for(model: str, fwd: ForwardSpec, params):
@@ -208,7 +208,8 @@ def price_strip(
         the scale ``m``), ``"contour"``
         (Lord-Kahl optimal contour + double-exponential quadrature: a
         high-precision reference with full relative accuracy far out of the
-        money), ``"proj"`` (PROJ
+        money), ``"lewis"`` (Lewis 2001 single-integral Parseval formula,
+        fixed contour height 1/2, adaptive exp-sinh quadrature), ``"proj"`` (PROJ
         frame projection, Kirkby 2015/2017), and ``"pyfeng_fft"`` (PyFENG native
         FFT for BSM/Heston/OUSV/VG/CGMY/NIG/3-2 SV/Rough Heston).
         Non-CF baselines: ``"lattice"`` and ``"pde_fd"`` (BSM only),
@@ -328,6 +329,12 @@ def price_strip(
         contour_grid = grid if isinstance(grid, ContourGrid) else None
         return np.asarray(
             contour_price_at_strikes(phi, fwd, K, cp=cp, grid=contour_grid), dtype=np.float64
+        )
+
+    if method == "lewis":
+        return np.asarray(
+            lewis_call_prices(phi, K, spot=fwd.S0, texp=fwd.T, intr=fwd.r, divr=fwd.q),
+            dtype=np.float64,
         )
 
     if method == "hilbert":

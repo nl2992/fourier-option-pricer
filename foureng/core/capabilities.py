@@ -175,6 +175,18 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
             "relative precision; a high-precision reference engine."
         ),
     ),
+    "lewis": MethodSpec(
+        requires_cf=True,
+        supports_products=frozenset({"european"}),
+        supports_exercise=frozenset({"european"}),
+        supports_path_dependent=False,
+        notes=(
+            "Lewis (2001) single-integral Parseval formula at the fixed "
+            "contour height c=1/2, with adaptive exp-sinh double-exponential "
+            "quadrature scaled to the model's variance. Calls only; puts by "
+            "put-call parity."
+        ),
+    ),
     "asian_cos": MethodSpec(
         requires_cf=True,
         supports_products=frozenset({"asian"}),

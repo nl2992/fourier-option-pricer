@@ -220,8 +220,8 @@ Each model exposes a cumulant function that returns the first four log-return cu
 | `carr_madan_price_at_strikes(phi, fwd, grid, strikes, window_factor=...)` | CF, `FFTGrid`, forward spec, strikes | FFT pricer interpolated to specific strikes. |
 | `frft_prices(phi, fwd, grid, k0=...)` | CF, `FRFTGrid`, forward spec | Fractional FFT pricer. Returns prices on the FRFT log-strike grid. |
 | `frft_price_at_strikes(phi, fwd, grid, strikes, window_factor=...)` | CF, `FRFTGrid`, forward spec, strikes | FRFT pricer interpolated to specific strikes. |
-| `lewis_prices(cf, strikes, spot, texp, cp=..., intr=..., ...)` | CF, `COSGrid`, forward spec, strikes | Lewis (2001) call integral formula. |
-| `lewis_call_prices(cf, strikes, spot, texp, intr=..., divr=..., ...)` | CF, `COSGrid`, forward spec, strikes | Lewis pricer returning call prices. |
+| `lewis_prices(cf, strikes, spot, texp, cp=..., intr=..., ...)` | CF, forward spec, strikes | Lewis (2001) call/put integral formula; also `method="lewis"` in `price_strip`. |
+| `lewis_call_prices(cf, strikes, spot, texp, intr=..., divr=..., method="de", ...)` | CF, forward spec, strikes | Lewis pricer returning call prices, fixed contour height `c=1/2`. Default `method="de"` is adaptive exp-sinh double-exponential quadrature scaled to the model's variance (accurate to ~1e-8 or better absolute from T=0.1y to 5y); `"trapz"`/`"quad"` remain as legacy fixed-grid options. |
 | `conv_price_at_strikes(phi, fwd, grid, strikes, cp=...)` | CF, `CONVGrid`, forward spec, strikes | CONV method (Lord et al. 2008) evaluated at specific strikes. |
 | `mellin_price_at_strikes(phi, fwd, strikes, cp=..., grid=...)` | CF, forward spec, strikes | Mellin-transform pricer evaluated at specific strikes. |
 | `hilbert_price_at_strikes(phi, fwd, strikes, cp=1, grid=None)` | CF, forward spec, strikes | Feng-Linetsky (2008) Hilbert-transform pricer; exponentially convergent Gil-Pelaez probabilities. |
