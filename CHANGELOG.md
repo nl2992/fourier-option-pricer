@@ -1,5 +1,20 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- `method="lewis"` is now a public `price_strip` method. Its default integration is an adaptive double-exponential quadrature scaled from the CF, which fixes errors of up to 3.5e-3 at short maturities; it now agrees with the contour engine to better than 1e-9 for BSM, Heston, Bates, VG, NIG, Kou, CGMY and Merton.
+
+### Fixed
+
+- `cos_improved` defaults: the direct-call payoff path was used on intervals too wide for it (loss of precision in `e^b`), the tail check stopped widening the interval too early, and wide intervals fell back to engines that were less accurate than COS. Errors against the contour engine drop from 1e-9 to 6e-12 on Heston, from 4.6e-6 to 1e-12 on a jump-heavy affine model, and from 369 price units to 3e-13 on one sv42 case.
+- PROJ recursions (`proj_barrier`, `proj_double_barrier`, `proj_bermudan_put`, `proj_step`, `proj_swing`, the CDS survival probability): the value grid covered half its intended domain, barriers snapped to the nearest node, and the one-step operator could grow without bound for pure-jump models. Barriers at 12 monitoring dates now agree with the Hilbert-transform engine to about 1e-5, and Kou Bermudan puts with the exact COS Bermudan to 1e-11 (from 3e-5).
+- `proj_barrier` and `proj_double_barrier` respect `product.monitoring`: discrete monitoring takes the number of dates from `grid=<int>` (default 252), and continuous monitoring raises with a pointer to the closed forms.
+- `method="proj_asian"` ran Monte Carlo on Gaussian paths and silently returned 0.0 on errors. It now routes to the exact ASCOS engine (`asian_cos`) and is deprecated.
+- The capability registry claimed routes the dispatchers do not have (COS digitals, `cos_bermudan` Europeans, lattice and PDE barriers), named methods that do not exist in its hints, and did not mark the Levy-only methods. `explain_capability` now matches what `price()` accepts, and tests check that it stays that way.
+- The Carr-Madan damping check is now called and warns when the damping exponent makes the pricing integral diverge.
+
 ## 0.23.0 - 2026-09-14
 
 ### Added

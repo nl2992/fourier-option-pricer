@@ -12,7 +12,7 @@ Status key: `todo`, `in progress`, `done`. Each item lands on `dev` as its own c
 | A2 | `proj_asian` is Monte Carlo on Gaussian paths with a bare `except`. Route arithmetic Asians to the exact `asian_cos` engine, keep the key as a deprecated alias, and remove the silent zero. | done |
 | A3 | `proj_barrier` is about 1e-3 off at 252 monitoring dates. Find the cause and fix it; respect `product.monitoring`. | done |
 | A4 | `cos_improved` default accuracy is about 1e-9 on Heston and 4.6e-6 on a jump-heavy affine case. Tighten the default grid so it matches the contour reference to 1e-10. | done |
-| A5 | The PROJ Bermudan, step and swing recursions share the grid-domain bug fixed in A3 (the value grid spans half the intended domain, and boundaries snap to nodes). Apply the same fix and tighten the tolerance that `test_proj_step.py` had to loosen. | in progress |
+| A5 | The PROJ Bermudan, step and swing recursions share the grid-domain bug fixed in A3 (the value grid spans half the intended domain, and boundaries snap to nodes). Apply the same fix and tighten the tolerance that `test_proj_step.py` had to loosen. | done |
 
 ## Part B: missing Fourier methods
 
