@@ -386,7 +386,9 @@ def proj_bermudan_put(
     M
         Number of monitoring subintervals (``M`` exercise dates).
     N
-        Projection / FFT grid size (power of two). ``K = N/2`` working points.
+        Projection / FFT grid size (power of two). ``K = N/2`` working
+        points span ``[-alph, alph]``. The price is Richardson-extrapolated
+        from grids ``N`` and ``2*N`` to cancel the leading grid error.
     alph
         Grid half-width; the log-grid spans roughly ``[-alph, alph]``. Size it
         to cover the full-horizon (T) spread of the log-return.
@@ -403,12 +405,33 @@ def proj_bermudan_put(
     if N & (N - 1) != 0:
         raise ValueError("proj_bermudan_put: N must be a power of two")
 
+    p1 = _proj_bermudan_put_core(step_cf, S0=S0, r=r, T=T, W=W, M=M, N=N, alph=alph)
+    p2 = _proj_bermudan_put_core(step_cf, S0=S0, r=r, T=T, W=W, M=M, N=2 * N, alph=alph)
+    return float(max(2.0 * p2 - p1, 0.0))
+
+
+def _proj_bermudan_put_core(
+    step_cf,
+    *,
+    S0: float,
+    r: float,
+    T: float,
+    W: float,
+    M: int,
+    N: int,
+    alph: float,
+) -> float:
+    """Single-grid PROJ Bermudan put evaluation (see :func:`proj_bermudan_put`)."""
     dt = T / M
     K = N // 2
     Cons3 = 1.0 / 48.0
     Cons4 = 1.0 / 12.0
 
-    dx = 2.0 * alph / (N - 1)
+    # K live nodes span [-alph, alph]; the other K slots of the length-N FFT
+    # are zero-padding for the linear-convolution trick, not part of the
+    # represented domain (see proj_barrier_price / _proj_barrier_core, which
+    # had the same bug sized from N instead of K).
+    dx = 2.0 * alph / (K - 1)
     a = 1.0 / dx
 
     lws = np.log(W / S0)
@@ -429,7 +452,8 @@ def proj_bermudan_put(
     xmin = (1 - K / 2) * dx
 
     a2 = a * a
-    Cons2 = 24.0 * a2 * np.exp(-r * dt) / N
+    disc = np.exp(-r * dt)
+    Cons2 = 24.0 * a2 * disc / N
     zmin = (1 - K) * dx
 
     dw = 2.0 * np.pi * a / N
@@ -445,6 +469,18 @@ def proj_bermudan_put(
     # Toeplitz operator (already carries exp(-r*dt) through beta).
     toepM = np.concatenate((np.flip(beta[0:K]), [0.0], np.flip(beta[K : 2 * K - 1])))  # length 2K
     toepM = np.fft.fft(toepM)
+
+    # A discounted one-step transition operator is a contraction (see
+    # _proj_barrier_core): clip its Fourier transfer function back to the
+    # analytic bound exp(-r*dt) so a slowly decaying short-step CF (e.g. VG
+    # at small dt) cannot alias past it and blow up under repeated
+    # convolution at large M.
+    mag = np.abs(toepM)
+    over = mag > disc
+    if np.any(over):
+        scale = np.ones_like(mag)
+        scale[over] = disc / mag[over]
+        toepM = toepM * scale
 
     # ---- terminal payoff coefficients ----
     Gs = np.zeros(K)
@@ -841,21 +877,31 @@ def _proj_barrier_core(
 
 
 def _apply_barrier_kill(
-    Vt: np.ndarray, i_lo: int, frac: float, barrier_type: str, K_half: int
+    Vt: np.ndarray,
+    i_lo: int,
+    frac: float,
+    barrier_type: str,
+    K_half: int,
+    dead_mult: float = 0.0,
 ) -> np.ndarray:
-    """Zero out value array beyond the barrier level, with a partial-cell
+    """Damp the value array beyond the barrier level, with a partial-cell
     correction at the single node straddling the true (generally off-node)
     barrier position.
 
     The barrier sits a fraction ``frac`` of the way from node ``i_lo`` to
     node ``i_lo + 1``. For a **down-out** barrier (dead below/at ``H``),
-    nodes ``< i_lo`` are zeroed and node ``i_lo`` is scaled by ``1 - frac``
-    (the alive share of its cell). For an **up-out** barrier (dead at/above
-    ``H``), nodes ``> i_lo + 1`` are zeroed and node ``i_lo + 1`` is scaled by
-    ``frac``. Without this weighting the discrete-monitoring price picks up
-    an O(dx) bias every monitoring date from snapping the barrier to the
-    nearest node; with it, refining the grid converges cleanly at O(dx),
-    which :func:`proj_barrier_price` then Richardson-extrapolates.
+    nodes ``< i_lo`` are multiplied by ``dead_mult`` and node ``i_lo`` is
+    scaled by ``(1 - frac) + frac * dead_mult`` (a blend of the alive and
+    dead multipliers weighted by the cell's alive share). For an **up-out**
+    barrier (dead at/above ``H``), nodes ``> i_lo + 1`` are multiplied by
+    ``dead_mult`` and node ``i_lo + 1`` is scaled by
+    ``frac + (1 - frac) * dead_mult``. ``dead_mult = 0.0`` (the default) is a
+    hard knock-out kill; a value in ``(0, 1)`` is a soft occupation-time
+    damping factor (see :func:`proj_step_price`). Without this weighting the
+    discrete-monitoring price picks up an O(dx) bias every monitoring date
+    from snapping the barrier to the nearest node; with it, refining the grid
+    converges cleanly at O(dx), which the caller can then Richardson-
+    extrapolate.
 
     Parameters
     ----------
@@ -870,20 +916,24 @@ def _apply_barrier_kill(
         ``"down_out"`` or ``"up_out"``.
     K_half : int
         Grid size.
+    dead_mult : float
+        Multiplier applied to nodes on the dead (knocked-out / damped) side
+        of the barrier. ``0.0`` for a hard knock-out, ``exp(-rho*dt)`` for
+        occupation-time soft killing.
     """
     Vt = Vt.copy()
     if barrier_type == "down_out":
         if i_lo >= 0:
-            Vt[: min(i_lo, K_half)] = 0.0
+            Vt[: min(i_lo, K_half)] *= dead_mult
             if 0 <= i_lo < K_half:
-                Vt[i_lo] *= 1.0 - frac
+                Vt[i_lo] *= (1.0 - frac) + frac * dead_mult
     else:  # "up_out"
         j = i_lo + 1
         if j < 0:
-            Vt[:] = 0.0
+            Vt[:] *= dead_mult
         elif j < K_half:
-            Vt[j + 1 :] = 0.0
-            Vt[j] *= frac
+            Vt[j + 1 :] *= dead_mult
+            Vt[j] *= frac + (1.0 - frac) * dead_mult
     return Vt
 
 
@@ -1333,7 +1383,7 @@ def proj_step_price(
     step_type: str = "down",
     cp: int = 1,
     q: float = 0.0,
-    N: int = 1 << 14,
+    N: int = 1 << 15,
     alph: float = 7.0,
 ) -> float:
     """Proportional step option by the PROJ method.
@@ -1344,6 +1394,12 @@ def proj_step_price(
     multiplied by ``exp(-rho * dt)`` instead of being zeroed (Linetsky 1999
     occupation-time discounting, discretely monitored). ``rho = 0`` recovers
     the vanilla and ``rho -> infinity`` recovers the knock-out barrier.
+
+    Accuracy: like :func:`proj_barrier_price`, the barrier straddling node
+    gets a partial-cell weight (a blend of the damped and undamped
+    multipliers) rather than a hard node snap, and the price is Richardson-
+    extrapolated from grids ``N`` and ``2*N`` to cancel the leading O(dx)
+    error that weighting leaves.
 
     Parameters
     ----------
@@ -1362,8 +1418,12 @@ def proj_step_price(
         ``"down"`` damps below the barrier, ``"up"`` damps above it.
     cp
         ``+1`` call, ``-1`` put.
-    N, alph
-        Projection grid size (power of two) and half-width.
+    N
+        FFT / projection grid size (power of two). ``K_half = N // 2`` nodes
+        span ``[-alph, alph]``; the price is Richardson-extrapolated from
+        grids ``N`` and ``2*N``.
+    alph
+        Grid half-width.
     """
     if step_type not in ("down", "up"):
         raise ValueError(f"proj_step_price: step_type must be 'down' or 'up', got {step_type!r}")
@@ -1380,11 +1440,49 @@ def proj_step_price(
     if N & (N - 1) != 0:
         raise ValueError("proj_step_price: N must be a power of two")
 
+    p1 = _proj_step_core(
+        step_cf, S0=S0, r=r, T=T, K=K, B=B, rho=rho, M=M, step_type=step_type, cp=cp, N=N, alph=alph
+    )
+    p2 = _proj_step_core(
+        step_cf,
+        S0=S0,
+        r=r,
+        T=T,
+        K=K,
+        B=B,
+        rho=rho,
+        M=M,
+        step_type=step_type,
+        cp=cp,
+        N=2 * N,
+        alph=alph,
+    )
+    return float(max(2.0 * p2 - p1, 0.0))
+
+
+def _proj_step_core(
+    step_cf,
+    *,
+    S0: float,
+    r: float,
+    T: float,
+    K: float,
+    B: float,
+    rho: float,
+    M: int,
+    step_type: str,
+    cp: int,
+    N: int,
+    alph: float,
+) -> float:
+    """Single-grid PROJ step-option evaluation (see :func:`proj_step_price`)."""
     dt = T / M
     damp = float(np.exp(-rho * dt))
     K_half = N // 2
 
-    dx = 2.0 * alph / (N - 1)
+    # K_half live nodes must span the full [-alph, alph] (see
+    # _proj_barrier_core for the root cause of sizing dx from N instead).
+    dx = 2.0 * alph / (K_half - 1)
     a = 1.0 / dx
     nnot = K_half // 2
 
@@ -1402,11 +1500,18 @@ def proj_step_price(
     a = 1.0 / dx
     xmin = (1 - K_half / 2) * dx
 
-    nbar_B = int(np.clip(int(np.floor(a * (np.log(B / S0) - xmin) + 1.0)), 0, K_half))
+    # Sub-cell barrier position (see _apply_barrier_kill for the partial-cell
+    # weighting this feeds, generalized here to a soft damping multiplier
+    # instead of a hard kill).
+    pos_B = a * (np.log(B / S0) - xmin)
+    i_lo_B = int(np.floor(pos_B))
+    frac_B = float(pos_B - i_lo_B)
+    kill_dir = "down_out" if step_type == "down" else "up_out"
 
     # ----  density projection coefficients  ----
     a2 = a * a
-    Cons2 = 24.0 * a2 * np.exp(-r * dt) / N
+    disc = np.exp(-r * dt)
+    Cons2 = 24.0 * a2 * disc / N
     zmin = (1 - K_half) * dx
     dw = 2.0 * np.pi * a / N
     grand_freq = np.arange(1, N) * dw
@@ -1419,6 +1524,15 @@ def proj_step_price(
     beta = Cons2 * np.real(np.fft.fft(np.concatenate(([1.0 / (24.0 * a2)], grand))))
     toepM = np.concatenate((np.flip(beta[0:K_half]), [0.0], np.flip(beta[K_half : 2 * K_half - 1])))
     toepM_fft = np.fft.fft(toepM)
+
+    # Contraction bound (see _proj_barrier_core): clip the transfer function
+    # so a slowly decaying short-step CF cannot alias past exp(-r*dt).
+    mag = np.abs(toepM_fft)
+    over = mag > disc
+    if np.any(over):
+        scale = np.ones_like(mag)
+        scale[over] = disc / mag[over]
+        toepM_fft = toepM_fft * scale
 
     # ----  terminal payoff stencil (3-pt Gauss-Legendre)  ----
     b3 = np.sqrt(15.0)
@@ -1446,14 +1560,7 @@ def proj_step_price(
     def _soft_kill(v: np.ndarray) -> np.ndarray:
         if damp == 1.0:
             return v
-        v = v.copy()
-        if step_type == "down":
-            if nbar_B > 0:
-                v[:nbar_B] *= damp
-        else:
-            if nbar_B < K_half:
-                v[nbar_B:] *= damp
-        return v
+        return _apply_barrier_kill(v, i_lo_B, frac_B, kill_dir, K_half, dead_mult=damp)
 
     # Monitoring at t_M (terminal), then t_{M-1}..t_1 after each convolution;
     # the final convolution to t_0 is NOT damped (occupation over (0, T]).
@@ -1478,17 +1585,24 @@ def proj_survival_probability(
     S0: float,
     B: float,
     M: int,
-    N: int = 1 << 13,
+    N: int = 1 << 14,
     alph: float = 7.0,
 ) -> float:
     """P(min over monitoring dates of S_{t_k} > B) by the PROJ recursion.
 
     A down-and-out *unit* payoff run through the undiscounted backward
     induction: the terminal value is 1 on every node, mass at or below the
-    barrier is zeroed at each of the ``M`` monitoring dates, and the node at
+    barrier is damped by a partial-cell weight at each of the ``M``
+    monitoring dates (see :func:`_apply_barrier_kill`), and the node at
     ``x = 0`` returns the survival probability of the discretely monitored
     first-passage time. This is the structural-credit building block behind
     barrier-based CDS pricing (Black & Cox 1976, discretized).
+
+    Accuracy: like :func:`proj_barrier_price`, the grid domain is sized from
+    the ``K_half = N // 2`` live nodes, the barrier gets a partial-cell
+    weight instead of a hard node snap, and the result is Richardson-
+    extrapolated from grids ``N`` and ``2*N`` to cancel the leading O(dx)
+    error that weighting leaves.
 
     Parameters
     ----------
@@ -1499,8 +1613,12 @@ def proj_survival_probability(
         Spot and default barrier, ``0 < B < S0``.
     M
         Number of equally spaced monitoring dates over the horizon.
-    N, alph
-        Projection grid size (power of two) and half-width.
+    N
+        FFT / projection grid size (power of two). ``K_half = N // 2`` nodes
+        span ``[-alph, alph]``; the result is Richardson-extrapolated from
+        grids ``N`` and ``2*N``.
+    alph
+        Grid half-width.
     """
     if not (0.0 < B < S0):
         raise ValueError(f"proj_survival_probability: need 0 < B < S0; got B={B}, S0={S0}")
@@ -1511,13 +1629,27 @@ def proj_survival_probability(
     if N & (N - 1) != 0:
         raise ValueError("proj_survival_probability: N must be a power of two")
 
+    p1 = _proj_survival_core(step_cf, S0=S0, B=B, M=M, N=N, alph=alph)
+    p2 = _proj_survival_core(step_cf, S0=S0, B=B, M=M, N=2 * N, alph=alph)
+    return float(np.clip(2.0 * p2 - p1, 0.0, 1.0))
+
+
+def _proj_survival_core(step_cf, *, S0: float, B: float, M: int, N: int, alph: float) -> float:
+    """Single-grid PROJ survival-probability evaluation (see
+    :func:`proj_survival_probability`)."""
     K_half = N // 2
-    dx = 2.0 * alph / (N - 1)
+    # K_half live nodes must span the full [-alph, alph] (see
+    # _proj_barrier_core for the root cause of sizing dx from N instead).
+    dx = 2.0 * alph / (K_half - 1)
     a = 1.0 / dx
     nnot = K_half // 2
     xmin = (1 - K_half / 2) * dx
 
-    nbar_B = int(np.clip(int(np.floor(a * (np.log(B / S0) - xmin) + 1.0)), 0, K_half))
+    # Sub-cell barrier position, fed to the same partial-cell weighting as
+    # proj_barrier_price (see _apply_barrier_kill).
+    pos_B = a * (np.log(B / S0) - xmin)
+    i_lo_B = int(np.floor(pos_B))
+    frac_B = float(pos_B - i_lo_B)
 
     # Undiscounted density projection coefficients (probability, not value).
     a2 = a * a
@@ -1535,11 +1667,18 @@ def proj_survival_probability(
     toepM = np.concatenate((np.flip(beta[0:K_half]), [0.0], np.flip(beta[K_half : 2 * K_half - 1])))
     toepM_fft = np.fft.fft(toepM)
 
+    # Contraction bound: an undiscounted one-step transition operator is a
+    # probability kernel, so its transfer function cannot exceed unity in
+    # magnitude (see _proj_barrier_core for the discounted analogue).
+    mag = np.abs(toepM_fft)
+    over = mag > 1.0
+    if np.any(over):
+        scale = np.ones_like(mag)
+        scale[over] = 1.0 / mag[over]
+        toepM_fft = toepM_fft * scale
+
     def _kill(v: np.ndarray) -> np.ndarray:
-        v = v.copy()
-        if nbar_B > 0:
-            v[:nbar_B] = 0.0
-        return v
+        return _apply_barrier_kill(v, i_lo_B, frac_B, "down_out", K_half)
 
     # Survival indicator at t_M, then t_{M-1}..t_1; final step to t_0 unkilled
     # (S0 > B is asserted above).
@@ -1569,7 +1708,7 @@ def proj_swing_price(
     n_rights: int,
     cp: int = 1,
     q: float = 0.0,
-    N: int = 1 << 13,
+    N: int = 1 << 15,
     alph: float = 2.0,
 ) -> float:
     """Swing option price by PROJ dynamic programming over (date, rights).
@@ -1587,6 +1726,14 @@ def proj_swing_price(
     ``n_rights = 1`` is the Bermudan option, and ``n_rights >= M`` makes
     every ITM date exercisable, so the value is the sum of the ``M``
     European options.
+
+    Accuracy: ``K_half = N // 2`` live nodes span the full ``[-alph, alph]``
+    (see :func:`_proj_barrier_core` for why sizing ``dx`` from ``N`` instead
+    halves the represented domain), the transfer function is clipped to the
+    contraction bound ``exp(-r*dt)``, and the price is Richardson-
+    extrapolated from grids ``N`` and ``2*N``: correcting the domain halves
+    the node density for a given ``N``, and extrapolating recovers the
+    resolution the halved domain used to give away for free.
 
     References
     ----------
@@ -1606,10 +1753,35 @@ def proj_swing_price(
     if N & (N - 1) != 0:
         raise ValueError("proj_swing_price: N must be a power of two")
 
+    p1 = _proj_swing_core(
+        step_cf, S0=S0, r=r, T=T, K=K, M=M, n_rights=n_rights, cp=cp, N=N, alph=alph
+    )
+    p2 = _proj_swing_core(
+        step_cf, S0=S0, r=r, T=T, K=K, M=M, n_rights=n_rights, cp=cp, N=2 * N, alph=alph
+    )
+    return float(max(2.0 * p2 - p1, 0.0))
+
+
+def _proj_swing_core(
+    step_cf,
+    *,
+    S0: float,
+    r: float,
+    T: float,
+    K: float,
+    M: int,
+    n_rights: int,
+    cp: int,
+    N: int,
+    alph: float,
+) -> float:
+    """Single-grid PROJ swing-option evaluation (see :func:`proj_swing_price`)."""
     dt = T / M
     K_half = N // 2
 
-    dx = 2.0 * alph / (N - 1)
+    # K_half live nodes must span the full [-alph, alph] (see
+    # _proj_barrier_core for the root cause of sizing dx from N instead).
+    dx = 2.0 * alph / (K_half - 1)
     a = 1.0 / dx
     nnot = K_half // 2
 
@@ -1629,7 +1801,8 @@ def proj_swing_price(
 
     # ----  density projection coefficients (with discount)  ----
     a2 = a * a
-    Cons2 = 24.0 * a2 * np.exp(-r * dt) / N
+    disc = np.exp(-r * dt)
+    Cons2 = 24.0 * a2 * disc / N
     zmin = (1 - K_half) * dx
     dw = 2.0 * np.pi * a / N
     grand_freq = np.arange(1, N) * dw
@@ -1642,6 +1815,15 @@ def proj_swing_price(
     beta = Cons2 * np.real(np.fft.fft(np.concatenate(([1.0 / (24.0 * a2)], grand))))
     toepM = np.concatenate((np.flip(beta[0:K_half]), [0.0], np.flip(beta[K_half : 2 * K_half - 1])))
     toepM_fft = np.fft.fft(toepM)
+
+    # Contraction bound (see _proj_barrier_core): clip the transfer function
+    # so a slowly decaying short-step CF cannot alias past exp(-r*dt).
+    mag = np.abs(toepM_fft)
+    over = mag > disc
+    if np.any(over):
+        scale = np.ones_like(mag)
+        scale[over] = disc / mag[over]
+        toepM_fft = toepM_fft * scale
 
     def _conv(v: np.ndarray) -> np.ndarray:
         p = np.fft.ifft(toepM_fft * np.fft.fft(np.concatenate((v, np.zeros(K_half)))))

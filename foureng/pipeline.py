@@ -1532,7 +1532,7 @@ def price(
             )
 
         fwd_T_sw = ForwardSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=T_sw)
-        grid_sw = proj_auto_grid(MODEL_REGISTRY[model].cumulants(fwd_T_sw, params), N=1 << 13)
+        grid_sw = proj_auto_grid(MODEL_REGISTRY[model].cumulants(fwd_T_sw, params), N=1 << 15)
         return proj_swing_price(
             step_cf_sw,
             S0=fwd.S0,
@@ -1578,7 +1578,7 @@ def price(
             )
 
         fwd_T_step = ForwardSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=T_step)
-        grid_step = proj_auto_grid(MODEL_REGISTRY[model].cumulants(fwd_T_step, params), N=1 << 14)
+        grid_step = proj_auto_grid(MODEL_REGISTRY[model].cumulants(fwd_T_step, params), N=1 << 15)
         return proj_step_price(
             step_cf_step,
             S0=fwd.S0,

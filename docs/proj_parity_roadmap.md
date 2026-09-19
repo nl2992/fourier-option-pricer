@@ -20,7 +20,19 @@ near-Fourier speed, plus a **CTMC** engine for SV/SLV exotics. We are pursuing
 > past unit magnitude for slowly decaying short-step CFs (VG at small dt).
 > Against the fast Hilbert-transform reference, `proj_barrier` now agrees to
 > about 1e-5 at 12 monitoring dates and 1e-4 (BSM/Kou) to 1e-3 (VG, the
-> hardest case) at 252, versus ~1e-3 at any frequency before the fix.
+> hardest case) at 252, versus ~1e-3 at any frequency before the fix. The same
+> grid-domain bug was shared by `proj_bermudan_put`, `proj_step`,
+> `proj_swing` and `proj_survival_probability` (A5); the fix (domain sized
+> from the live nodes, partial-cell boundary weighting where there is a
+> barrier/damping level to snap, transfer-function clipping, Richardson
+> extrapolation in the grid size) brings `proj_bermudan_put` to ~1e-12 (BSM),
+> ~1e-6 (VG) and ~1e-11 (Kou) against the exact FO2009 COS-Bermudan engine;
+> `proj_step` to ~1e-4 against the European vanilla at rho=0 and ~1e-3
+> against the fixed `proj_barrier_price` knock-out at rho→∞; `proj_swing` to
+> ~1e-4 (one right vs. COS-Bermudan) and ~1e-3 (full rights vs. the sum of
+> per-date Europeans); and `proj_survival_probability` to ~1e-3-4e-3 against
+> the Broadie-Glasserman-Kou (1997) continuity-corrected BSM first-passage
+> probability. See `tests/methods/test_proj_recursions_accuracy.py`.
 
 ## Gap summary (at kickoff)
 
@@ -44,9 +56,11 @@ near-Fourier speed, plus a **CTMC** engine for SV/SLV exotics. We are pursuing
 - **Phase 2: PROJ exotics (1-D Lévy).** *In progress.*
   - **Bermudan put** ✅ **DONE.** `proj_bermudan_put` in `foureng/pricers/proj.py`
     ports `PROJ_Bermudan_Put.m` (Toeplitz-FFT backward recursion, linear-spline
-    projection, Gaussian-quadrature early-exercise stencils). Cross-validated vs
-    `cos_bermudan` to 1e-5 (BSM/Kou) and ~1e-3 (VG/CGMY), M∈{10,50}. Tests in
-    `tests/methods/test_proj_pricing.py`.
+    projection, Gaussian-quadrature early-exercise stencils), with the A5
+    grid-domain fix and Richardson extrapolation in the grid size.
+    Cross-validated vs `cos_bermudan` to ~1e-12 (BSM), ~1e-6 (VG) and ~1e-11
+    (Kou), M∈{12,52}. Tests in `tests/methods/test_proj_pricing.py` and
+    `tests/methods/test_proj_recursions_accuracy.py`.
   - **TODO:** Bermudan/American call (or general cp), single/double barrier,
     arithmetic Asian, lookback, step, cliquet. Port from `PROJ/LEVY/*_Options`.
     Then wire Bermudan into the product-level `price()` dispatcher.
