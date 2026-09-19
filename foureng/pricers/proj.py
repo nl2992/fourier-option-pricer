@@ -30,6 +30,8 @@ everywhere else in ``foureng``.
 
 from __future__ import annotations
 
+import warnings
+
 import numpy as np
 
 from ..models.base import CharFunc, ForwardSpec
@@ -810,19 +812,21 @@ def proj_asian_price_cv(
     N: int = 1 << 13,
     L: float = 10.0,
 ) -> float:
-    """Arithmetic Asian price via Monte Carlo with PROJ-based geometric control variate.
+    """Monte Carlo estimator for the arithmetic Asian, with a geometric control variate.
 
-    Uses ``n_paths`` Monte Carlo paths of a 1-D Lévy process to estimate the
-    arithmetic-average Asian price. The variance reduction is obtained by
-    subtracting the MC estimator of the geometric-average Asian and adding the
-    analytically computed PROJ price of the geometric Asian.
+    This is a Monte Carlo estimator, not a PROJ recursion: it simulates
+    ``n_paths`` antithetic Gaussian paths matched to the model's first two
+    cumulants and prices the arithmetic-average payoff on them, using a
+    geometric-average control variate for variance reduction. The Gaussian
+    path approximation is exact only for **BSM**; for other Lévy models it is
+    an approximation, since the paths are not simulated from the model's true
+    increment distribution.
 
-    The geometric Asian payoff discounts to the same maturity as the arithmetic
-    Asian. For BSM (and any model with a known geometric-average CF), PROJ gives
-    a very accurate geometric price, making this a strong control variate.
-
-    For **BSM** the analytic ``bsm_geometric_asian`` formula is used instead of
-    PROJ for the geometric control (faster and more accurate).
+    Deprecated: for exact pricing of fixed-strike arithmetic Asians under 1-D
+    Lévy models, use
+    :func:`foureng.pricers.arithmetic_asian.levy_arithmetic_asian_price`
+    (the ASCOS method of Zhang and Oosterlee 2013) instead. This function is
+    kept for backward compatibility and emits a ``DeprecationWarning``.
 
     Parameters
     ----------
@@ -857,6 +861,14 @@ def proj_asian_price_cv(
         Arithmetic Asian option price.
     """
     from ..models.registry import MODEL_REGISTRY
+
+    warnings.warn(
+        "proj_asian_price_cv is a Monte Carlo estimator on Gaussian paths "
+        "(exact only for model='bsm'); for exact pricing under 1-D Lévy "
+        "models use foureng.pricers.arithmetic_asian.levy_arithmetic_asian_price.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
 
     rng = np.random.default_rng(seed)
     S0 = float(fwd.S0)
@@ -989,13 +1001,10 @@ def _proj_geometric_asian_levy(
 
     fwd_eff = _FS(S0=F_geo, r=r, q=r, T=T)  # q=r so S0*exp((r-q)*T)=F_geo stays unchanged
 
-    try:
-        prices = proj_price_at_strikes(
-            phi_geo, fwd_eff, grid_geo, np.array([K], dtype=float), cp=cp, c1=0.0
-        )
-        return float(max(prices[0], 0.0))
-    except Exception:
-        return 0.0
+    prices = proj_price_at_strikes(
+        phi_geo, fwd_eff, grid_geo, np.array([K], dtype=float), cp=cp, c1=0.0
+    )
+    return float(max(prices[0], 0.0))
 
 
 # ---------------------------------------------------------------------------

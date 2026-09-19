@@ -74,7 +74,7 @@ This file tracks the capability surface used by the registry and dispatcher test
 | `levy_cds_spread` / `cds_par_spread_from_survival` | Structural CDS par spread, O'Kane legs | O'Kane (2008) |
 | `proj_barrier` | PROJ discretely monitored single barrier | Kirkby (2014, 2015) |
 | `proj_double_barrier` | PROJ discretely monitored double barrier (two-sided absorption) | Kirkby (2015) |
-| `proj_asian` | Arithmetic Asian MC with PROJ/analytic geometric control variate | Kirkby (2016) |
+| `proj_asian` | Routes to the exact ASCOS arithmetic Asian engine (same as `asian_cos`) | Zhang & Oosterlee (2013) |
 | `bsm_analytic` | BSM closed-form vanilla baseline | Black & Scholes (1973) |
 | `mc_gbm` | GBM Monte Carlo baseline | n/a |
 | `conv` | CONV-style Fourier probability inversion | Choi/Kirkby MATLAB comparison target |

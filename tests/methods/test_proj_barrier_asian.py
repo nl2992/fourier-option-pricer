@@ -143,8 +143,15 @@ class TestProjBarrierKnockIn:
 # ── PROJ Asian tests ─────────────────────────────────────────────────────────
 
 
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 class TestProjAsianCV:
-    """proj_asian_price_cv: arithmetic Asian with geometric control variate."""
+    """proj_asian_price_cv: arithmetic Asian with geometric control variate.
+
+    ``proj_asian_price_cv`` is deprecated (it is a Monte Carlo estimator, exact
+    only for BSM); these tests exercise its numerical behavior and silence the
+    ``DeprecationWarning`` it now emits. See ``test_proj_asian_route.py`` for a
+    test that the warning fires.
+    """
 
     @pytest.fixture
     def bsm_fwd(self):

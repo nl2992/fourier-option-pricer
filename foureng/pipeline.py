@@ -12,6 +12,7 @@ cases to Lewis or Carr-Madan rather than forcing COS into an unfavorable geometr
 
 from __future__ import annotations
 
+import warnings
 from typing import Any
 
 import numpy as np
@@ -44,7 +45,6 @@ from .pricers.lewis import lewis_call_prices
 from .pricers.mellin import MELLIN_SUPPORTED_MODELS, mellin_price_at_strikes
 from .pricers.pde_fd import PDEGrid, bsm_pde_fd_price, bsm_pde_fd_price_at_strikes
 from .pricers.proj import (
-    proj_asian_price_cv,
     proj_auto_grid,
     proj_barrier_price,
     proj_bermudan_put,
@@ -710,12 +710,15 @@ def _proj_double_barrier_price_dispatch(model: str, fwd: ForwardSpec, params, pr
 
 
 def _proj_asian_price_dispatch(model: str, fwd: ForwardSpec, params, product) -> float:
-    """PROJ arithmetic Asian pricer (geometric control variate) for 1-D Lévy models.
+    """Delegate ``method='proj_asian'`` to the exact ASCOS arithmetic Asian engine.
 
-    Estimates the arithmetic Asian price using Monte Carlo paths with a
-    PROJ-computed geometric Asian as control variate. Only fixed-strike
-    arithmetic Asians on uniform monitoring grids are supported.
+    ``proj_asian`` used to run a Monte Carlo estimator with a geometric control
+    variate; it now routes to the same exact engine as ``method='asian_cos'``
+    (:func:`foureng.pricers.arithmetic_asian.levy_arithmetic_asian_price`, the
+    ASCOS method of Zhang and Oosterlee 2013). Only fixed-strike arithmetic
+    Asians are supported.
     """
+    from .pricers.arithmetic_asian import levy_arithmetic_asian_price
     from .pricers.cos_bermudan import _SUPPORTED_MODELS
 
     if model not in _SUPPORTED_MODELS:
@@ -732,23 +735,20 @@ def _proj_asian_price_dispatch(model: str, fwd: ForwardSpec, params, product) ->
             "method='proj_asian' currently supports fixed-strike Asians only."
         )
 
-    T = float(product.maturity)
-    mon_times = np.asarray(product.monitoring_times, dtype=float)
-    M = len(mon_times)
+    warnings.warn(
+        "method='proj_asian' now uses the exact ASCOS engine; use method='asian_cos'",
+        DeprecationWarning,
+        stacklevel=2,
+    )
 
-    phi = _cf_for(model, ForwardSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=T), params)
-
-    return proj_asian_price_cv(
-        phi,
-        ForwardSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=T),
-        params,
+    return levy_arithmetic_asian_price(
         model,
-        K=float(product.strike),
-        T=T,
-        M=M,
+        fwd,
+        params,
+        strike=float(product.strike),
+        monitoring_times=product.monitoring_times,
+        maturity=float(product.maturity),
         cp=product.cp,
-        n_paths=20_000,
-        seed=42,
     )
 
 

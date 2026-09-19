@@ -255,7 +255,7 @@ Each model exposes a cumulant function that returns the first four log-return cu
 | `proj_price_at_strikes(phi, fwd, grid, strikes, cp=..., c1=...)` | CF, `ProjGrid`, forward spec, strikes | General PROJ European dispatch (entry point used by `price_strip`). |
 | `proj_bermudan_put(step_cf, S0, r, T, W, M, ...)` | CF, `ProjGrid`, forward spec, strikes, exercise count | PROJ Bermudan put via Toeplitz-FFT backward recursion (Kirkby 2017). |
 | `proj_barrier_price(...)` | CF, forward spec, barrier contract terms | PROJ discretely monitored single-barrier pricer (down-out / up-out, knock-in via parity). |
-| `proj_asian_price_cv(...)` | CF, forward spec, Asian contract terms | Arithmetic Asian via Monte Carlo with a PROJ/analytic geometric control variate. |
+| `proj_asian_price_cv(...)` | CF, forward spec, Asian contract terms | Deprecated Monte Carlo estimator on Gaussian paths (exact only for `bsm`); use `levy_arithmetic_asian_price` instead. |
 | `proj_double_barrier_price(step_cf, S0=..., K=..., L=..., U=..., M=..., knockout=True, ...)` | one-step CF, corridor, monitoring count | PROJ double-barrier knock-out/knock-in via two-sided absorption in the backward induction. |
 | `proj_step_price(step_cf, S0=..., K=..., B=..., rho=..., M=..., step_type="down", ...)` | one-step CF, barrier, damping rate, monitoring count | PROJ step option: occupation-time soft killing exp(-rho dt) beyond the barrier (Linetsky 1999). |
 | `proj_survival_probability(step_cf, S0=..., B=..., M=...)` | one-step CF, barrier, monitoring count | First-passage survival probability via the undiscounted down-and-out unit-payoff recursion. |
