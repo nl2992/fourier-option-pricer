@@ -619,12 +619,21 @@ def _proj_bermudan_put_price(model: str, fwd: ForwardSpec, params, product) -> f
     )
 
 
-def _proj_barrier_price_dispatch(model: str, fwd: ForwardSpec, params, product) -> float:
+def _proj_barrier_price_dispatch(
+    model: str, fwd: ForwardSpec, params, product, grid: Any = None
+) -> float:
     """PROJ single-barrier pricer for 1-D Lévy models.
 
     Builds the one-step risk-neutral CF and drives ``proj_barrier_price``.
     Supports all 4 barrier types (knock-in via in-out parity) for the same
     1-D Lévy model family as the PROJ Bermudan pricer.
+
+    ``product.monitoring == "discrete"`` uses ``grid`` as the number of
+    monitoring dates (default 252), mirroring how ``method='hilbert_barrier'``
+    reads ``n_monitor`` from ``grid``. ``"continuous"`` isn't implemented here
+    (PROJ needs a finite number of monitoring dates); use ``method='barrier_bsm'``
+    for a closed-form continuous BSM barrier, or set ``monitoring="discrete"``
+    with a large ``grid`` to approximate continuous monitoring.
     """
     from .pricers.cos_bermudan import _SUPPORTED_MODELS
 
@@ -635,9 +644,15 @@ def _proj_barrier_price_dispatch(model: str, fwd: ForwardSpec, params, product) 
         )
     if product.rebate != 0.0:
         raise NotImplementedError("method='proj_barrier' currently supports only zero rebates.")
+    if product.monitoring == "continuous":
+        raise NotImplementedError(
+            "method='proj_barrier' prices discretely monitored barriers; for continuous "
+            "monitoring use method='barrier_bsm' (model='bsm'), or set "
+            "monitoring='discrete' with a large grid=<n_monitor> to approximate it."
+        )
 
     T = float(product.maturity)
-    M = 252  # default: approximately continuous (daily monitoring)
+    M = int(grid) if isinstance(grid, int) else 252  # default: daily monitoring
     dt = T / M
     cf = MODEL_REGISTRY[model].cf
     fwd_dt = ForwardSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=dt)
@@ -647,7 +662,7 @@ def _proj_barrier_price_dispatch(model: str, fwd: ForwardSpec, params, product) 
         return np.exp(1j * u * drift) * np.asarray(cf(u, fwd_dt, params), dtype=np.complex128)
 
     fwd_T = ForwardSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=T)
-    grid = proj_auto_grid(MODEL_REGISTRY[model].cumulants(fwd_T, params), N=1 << 14)
+    proj_grid = proj_auto_grid(MODEL_REGISTRY[model].cumulants(fwd_T, params), N=1 << 15)
 
     return proj_barrier_price(
         step_cf,
@@ -659,16 +674,21 @@ def _proj_barrier_price_dispatch(model: str, fwd: ForwardSpec, params, product) 
         M=M,
         barrier_type=product.barrier_type,
         cp=product.cp,
-        N=grid.N,
-        alph=grid.alph,
+        N=proj_grid.N,
+        alph=proj_grid.alph,
     )
 
 
-def _proj_double_barrier_price_dispatch(model: str, fwd: ForwardSpec, params, product) -> float:
+def _proj_double_barrier_price_dispatch(
+    model: str, fwd: ForwardSpec, params, product, grid: Any = None
+) -> float:
     """PROJ double-barrier pricer for 1-D Lévy models.
 
     Same one-step-CF construction as the single-barrier dispatch; knock-in
-    handled inside the pricer via same-engine in-out parity.
+    handled inside the pricer via same-engine in-out parity. Respects
+    ``product.monitoring`` the same way :func:`_proj_barrier_price_dispatch`
+    does: ``"discrete"`` reads the monitoring-date count from ``grid``
+    (default 252), ``"continuous"`` is not implemented here.
     """
     from .pricers.cos_bermudan import _SUPPORTED_MODELS
     from .pricers.proj import proj_double_barrier_price
@@ -683,9 +703,15 @@ def _proj_double_barrier_price_dispatch(model: str, fwd: ForwardSpec, params, pr
         raise NotImplementedError(
             "method='proj_double_barrier' currently supports only zero rebates."
         )
+    if product.monitoring == "continuous":
+        raise NotImplementedError(
+            "method='proj_double_barrier' prices discretely monitored barriers; for "
+            "continuous monitoring use method='double_barrier_bsm' (model='bsm'), or set "
+            "monitoring='discrete' with a large grid=<n_monitor> to approximate it."
+        )
 
     T = float(product.maturity)
-    M = 252
+    M = int(grid) if isinstance(grid, int) else 252
     dt = T / M
     cf = MODEL_REGISTRY[model].cf
     fwd_dt = ForwardSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=dt)
@@ -695,7 +721,7 @@ def _proj_double_barrier_price_dispatch(model: str, fwd: ForwardSpec, params, pr
         return np.exp(1j * u * drift) * np.asarray(cf(u, fwd_dt, params), dtype=np.complex128)
 
     fwd_T = ForwardSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=T)
-    grid = proj_auto_grid(MODEL_REGISTRY[model].cumulants(fwd_T, params), N=1 << 14)
+    proj_grid = proj_auto_grid(MODEL_REGISTRY[model].cumulants(fwd_T, params), N=1 << 15)
 
     return proj_double_barrier_price(
         step_cf,
@@ -709,8 +735,8 @@ def _proj_double_barrier_price_dispatch(model: str, fwd: ForwardSpec, params, pr
         knockout=product.knockout,
         cp=product.cp,
         q=fwd.q,
-        N=grid.N,
-        alph=grid.alph,
+        N=proj_grid.N,
+        alph=proj_grid.alph,
     )
 
 
@@ -982,7 +1008,7 @@ def price(
             fwd_t = _FwdSpec(S0=fwd.S0, r=fwd.r, q=fwd.q, T=product.maturity)
             return mc_price(fwd_t, params.sigma, product, mc_spec).price
         if method == "proj_barrier":
-            return _proj_barrier_price_dispatch(model, fwd, params, product)
+            return _proj_barrier_price_dispatch(model, fwd, params, product, grid=grid)
         if method == "cos_ctmc":
             from .pricers.cos_ctmc import CTMCVarianceGrid, cos_ctmc_barrier_price
 
@@ -1136,7 +1162,7 @@ def price(
                 f"DoubleBarrierOption, got {type(product).__name__!r}"
             )
         if method == "proj_double_barrier":
-            return _proj_double_barrier_price_dispatch(model, fwd, params, product)
+            return _proj_double_barrier_price_dispatch(model, fwd, params, product, grid=grid)
         if model != "bsm":
             raise NotImplementedError(
                 f"method={method!r} for double-barrier options is currently implemented only "

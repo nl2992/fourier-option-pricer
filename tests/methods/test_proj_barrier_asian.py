@@ -75,15 +75,18 @@ class TestProjBarrierDownOut:
         vanilla = bsm_european(S0, K, r, q, sigma, T, cp=1)
         assert proj_price <= vanilla + 1e-6
 
-    def test_down_out_call_zero_when_spot_at_barrier(self):
-        """Down-out call should be (near) zero when spot is at or below barrier."""
+    def test_down_out_call_spot_at_barrier_matches_discrete_monitoring(self):
+        """Spot exactly at the barrier is not "nearly knocked out" under discrete
+        monitoring: t=0 isn't itself a monitoring date, so the asset only needs
+        to survive the first check at t=T/M, which it does about half the time.
+        This matches the fast Hilbert-transform reference in the S0 -> H limit
+        (0.8707 at S0=85.001; see test_proj_barrier_accuracy.py for that engine)."""
         M = 50
         cf = _bsm_step_cf(sigma, r, q, T, M=M)
-        # Spot exactly at barrier — option is worthless
         price_at = proj_barrier_price(
             cf, S0=H_down, r=r, T=T, K=K, H=H_down, M=M, barrier_type="down_out", cp=1
         )
-        assert price_at < 0.5  # should be very small (nearly knocked out)
+        assert price_at == pytest.approx(0.8707, abs=0.05)
 
 
 class TestProjBarrierUpOut:
@@ -245,7 +248,13 @@ class TestProjBarrierPipelineDispatch:
         fwd = ForwardSpec(S0=S0, r=r, q=q, T=T)
         params = fe.BsmParams(sigma=sigma)
         product = BarrierOption(
-            strike=K, maturity=T, barrier=H_down, barrier_type="down_out", rebate=0.0, cp=1
+            strike=K,
+            maturity=T,
+            barrier=H_down,
+            barrier_type="down_out",
+            rebate=0.0,
+            cp=1,
+            monitoring="discrete",
         )
         p = price(product, "bsm", "proj_barrier", fwd, params)
         assert p >= 0.0

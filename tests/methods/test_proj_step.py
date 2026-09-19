@@ -62,7 +62,15 @@ def test_zero_rho_is_vanilla(model, params):
 @pytest.mark.parametrize("cp", [1, -1])
 def test_infinite_rho_is_knock_out_barrier(cp):
     """Soft killing with exp(-rho dt) ~ 0 must reproduce the hard knock-out
-    from the same engine on the same grid."""
+    from the same engine on the same grid.
+
+    ``proj_barrier_price`` was fixed for the A3 discrete-monitoring bias (see
+    ``tests/methods/test_proj_barrier_accuracy.py``): a corrected grid width,
+    partial-cell barrier weighting and Richardson extrapolation in the grid
+    size. ``proj_step_price`` hasn't received that fix yet, so the two engines
+    now agree only to a few 1e-3 rather than node-for-node; the wider
+    tolerance here reflects that gap, not a regression.
+    """
     M = 52
     step = _price("kou", _KOU, rho=1e9, M=M, cp=cp)
     ko = proj_barrier_price(
@@ -77,7 +85,7 @@ def test_infinite_rho_is_knock_out_barrier(cp):
         cp=cp,
         q=_FWD.q,
     )
-    assert step == pytest.approx(ko, abs=2e-3)
+    assert step == pytest.approx(ko, abs=4e-3)
 
 
 def test_monotone_decreasing_in_rho():

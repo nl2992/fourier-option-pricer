@@ -173,6 +173,7 @@ def test_pipeline_dispatch():
         maturity=_FWD.T,
         cp=1,
         knockout=True,
+        monitoring="discrete",
     )
     via_price = fe.price(product, "kou", "proj_double_barrier", _FWD, _KOU)
     assert via_price > 0.0

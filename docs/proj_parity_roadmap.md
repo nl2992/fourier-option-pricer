@@ -13,9 +13,14 @@ near-Fourier speed, plus a **CTMC** engine for SV/SLV exotics. We are pursuing
 > transform (`hilbert_barrier`, `hilbert_lookback`), arithmetic Asians by the
 > ASCOS recursion (`asian_cos`), and Americans by Richardson-extrapolated COS
 > Bermudans (`cos_american`). Still open: Parisian options via Fourier, and the
-> 2-D CTMC for stochastic-volatility exotics. At daily monitoring the
-> `proj_barrier` route disagrees with exact references by ~1e-3 (under
-> investigation).
+> 2-D CTMC for stochastic-volatility exotics. `proj_barrier` and
+> `proj_double_barrier` were fixed (A3): the grid half-width was silently
+> halved, the barrier was snapped to the nearest node instead of weighted by
+> its sub-cell position, and the discretized transition operator could alias
+> past unit magnitude for slowly decaying short-step CFs (VG at small dt).
+> Against the fast Hilbert-transform reference, `proj_barrier` now agrees to
+> about 1e-5 at 12 monitoring dates and 1e-4 (BSM/Kou) to 1e-3 (VG, the
+> hardest case) at 252, versus ~1e-3 at any frequency before the fix.
 
 ## Gap summary (at kickoff)
 
