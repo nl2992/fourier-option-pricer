@@ -171,9 +171,9 @@ def bates_cumulants(fwd: ForwardSpec, p: BatesParams) -> tuple[float, float, flo
         c2_j = lam_j * T * E[Y^2]
         c4_j = lam_j * T * E[Y^4].
 
-    The Heston block is handed off to :func:`heston_cumulants` (which
-    reads ``c2`` numerically from the CF and returns ``c4 = 0`` by the
-    conservative convention used by :func:`cos_auto_grid`).
+    The Heston block is handed off to :func:`heston_cumulants`, which
+    estimates c1, c2 and c4 numerically from the CF by Cauchy contour
+    integration (see :func:`foureng.utils.cumulants.cumulants_from_cf`).
     """
     T = fwd.T
     lam_j, mu_j, sig_j = p.lam_j, p.mu_j, p.sigma_j

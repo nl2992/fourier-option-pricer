@@ -48,8 +48,9 @@ near-Fourier speed, plus a **CTMC** engine for SV/SLV exotics. We are pursuing
 - **Phase 3: CTMC.** `foureng/pricers/ctmc.py`: generator + matrix-exponential
   pricer for 1-D diffusion European/barrier/Bermudan; then 2-D SV/SLV (Heston,
   SABR) for barrier + Bermudan.
-- **Phase 4: New models.** 4/2 SV, SABR, regime-switching; finish wiring the
-  already-present `models/nts.py` and `models/stein_stein.py`.
+- **Phase 4: New models.** 4/2 SV, SABR, regime-switching (done); NTS and
+  Stein-Stein are not implemented yet (`models/nts.py` and
+  `models/stein_stein.py` do not exist).
 - **Phase 5: Remaining Fourier pricers.** Hilbert-transform (barrier-friendly),
   Mellin-transform.
 - **Phase 6: Long-tail exotics.** Parisian, swing, fader/range-accrual,

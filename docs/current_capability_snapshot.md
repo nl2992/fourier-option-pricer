@@ -65,25 +65,18 @@ This file tracks the capability surface used by the registry and dispatcher test
 | `ctmc` | CTMC generator approximation: European (matrix exponential) and American (time-stepping), constant or local vol | Mijatovic & Pistorius (2013); Lo & Skindilias (2014) |
 | `cos_ctmc` | Bermudans, Americans and discrete barriers under Heston, Bates and regime switching: variance CTMC plus COS in the decorrelated log-price | Cui, Kirkby & Nguyen (2018); Fang & Oosterlee (2009) |
 | `fourier_2d` | Two-asset spreads, exchanges and options on the max or min from the joint CF (models `bsm`, `bsm2d`, `vg2d`, `heston2d`) | Hurd & Zhou (2010) |
-
-## Credit analytics (not routed through `price()`)
-
-| Function | Engine | Reference |
-|----------|--------|-----------|
-| `levy_survival_curve` / `proj_survival_probability` | PROJ first-passage survival (down-and-out unit payoff) | Black & Cox (1976) |
-| `levy_cds_spread` / `cds_par_spread_from_survival` | Structural CDS par spread, O'Kane legs | O'Kane (2008) |
 | `proj_barrier` | PROJ discretely monitored single barrier | Kirkby (2014, 2015) |
 | `proj_double_barrier` | PROJ discretely monitored double barrier (two-sided absorption) | Kirkby (2015) |
-| `proj_asian` | Routes to the exact ASCOS arithmetic Asian engine (same as `asian_cos`) | Zhang & Oosterlee (2013) |
-| `bsm_analytic` | BSM closed-form vanilla baseline | Black & Scholes (1973) |
-| `mc_gbm` | GBM Monte Carlo baseline | n/a |
-| `conv` | CONV-style Fourier probability inversion | Choi/Kirkby MATLAB comparison target |
+| `proj_asian` | Deprecated alias for `asian_cos` (exact ASCOS arithmetic Asian) | Zhang & Oosterlee (2013) |
+| `conv` | CONV-style Fourier probability inversion (Gil-Pelaez) | Gil-Pelaez (1951) |
 | `lattice` | BSM Cox-Ross-Rubinstein tree | Cox, Ross & Rubinstein (1979) |
 | `pde_fd` | BSM implicit finite difference | Black-Scholes PDE |
+| `ctmc` | BSM continuous-time Markov chain approximation (European, American) | Mijatovic & Pistorius (2013) |
 | `digital_bsm` | BSM closed-form digital option | Black-Scholes closed form |
 | `cos_digital` | COS digital option pricing | Fang-Oosterlee payoff extension |
 | `monte_carlo` | BSM Monte Carlo / Longstaff-Schwartz | GBM simulation plus early-exercise regression |
 | `barrier_bsm` | BSM closed-form single-barrier option | Reiner-Rubinstein / Haug |
+| `double_barrier_bsm` | BSM closed-form double-barrier eigenfunction expansion | Kunitomo & Ikeda (1992) |
 | `asian_bsm` | BSM discrete geometric Asian closed form | Kemna-Vorst style lognormal average |
 | `asian_mc` | BSM Asian Monte Carlo | GBM path simulation |
 | `double_barrier_mc` | BSM double-barrier Monte Carlo | GBM path simulation |
@@ -96,9 +89,18 @@ This file tracks the capability surface used by the registry and dispatcher test
 | `variance_analytic_bsm` | BSM analytic variance products | Exact realised-variance expectation / deterministic integrated variance |
 | `variance_mc` | BSM Monte Carlo variance products | GBM path simulation |
 | `cliquet_mc` | BSM Monte Carlo cliquet | GBM path simulation |
-| `proj` | Real PROJ frame projection (European) | B-spline (Haar/linear/quad/cubic) frame duality, Kirkby 2015/2017 |
-| `mellin` | First-slice European Mellin façade | Mellin-transform expansion target |
+| `parisian_mc` | BSM Monte Carlo Parisian barrier option | Path-dependent excursion simulation |
+| `geske` / `analytic` | BSM closed-form compound option | Geske (1979) |
+| `proj` | Real PROJ frame projection (European; Bermudan puts for 1-D Levy models) | B-spline (Haar/linear/quad/cubic) frame duality, Kirkby 2015/2017 |
+| `mellin` | First-slice European Mellin façade (currently calls `conv`) | Mellin-transform expansion target |
 | `sabr_hagan` | SABR Hagan approximation | Hagan et al. |
+
+## Credit analytics (not routed through `price()`)
+
+| Function | Engine | Reference |
+|----------|--------|-----------|
+| `levy_survival_curve` / `proj_survival_probability` | PROJ first-passage survival (down-and-out unit payoff) | Black & Cox (1976) |
+| `levy_cds_spread` / `cds_par_spread_from_survival` | Structural CDS par spread, O'Kane legs | O'Kane (2008) |
 
 ## Products supported
 
@@ -118,7 +120,7 @@ This file tracks the capability surface used by the registry and dispatcher test
 - BSM lookback call / put (continuous floating closed form via `lookback_bsm`; Monte Carlo via `lookback_mc` or `monte_carlo`)
 - BSM variance swaps (via `variance_analytic_bsm` or `variance_mc` / `monte_carlo`) and integrated-variance options (via `variance_analytic_bsm`; Monte Carlo via `variance_mc` / `monte_carlo`)
 - BSM cliquets (via `cliquet_mc` or `monte_carlo`)
-- BSM zero-rebate double-barrier options (via `double_barrier_mc` or `monte_carlo`)
+- BSM zero-rebate double-barrier options (via `double_barrier_bsm`, `double_barrier_mc`, or `monte_carlo`)
 - SABR European call / put strips (via `price_strip("sabr", "sabr_hagan", ...)`)
 - Bermudan and American call / put and discretely monitored single barriers under Heston, Bates and regime switching (via `price(..., method="cos_ctmc")`)
 - Exchange, spread, two-asset best-of and rainbow (call or put on the max or min) options under `bsm`, `bsm2d`, `vg2d` and `heston2d` (via `price(..., method="fourier_2d")`)
@@ -135,7 +137,8 @@ Public exports include the multi-asset analytic helper `kirk_spread` alongside t
 
 ## Notes
 
-- `proj` is now a real B-spline frame-projection engine for European vanillas (validated against COS to ~1e-7), with a standalone Bermudan-put recursion (`proj_bermudan_put`) cross-validated against `cos_bermudan`. The broader exotic PROJ recursion family (barrier, Asian, lookback, step, cliquet) is still planned; see [proj_parity_roadmap.md](proj_parity_roadmap.md).
+- `proj` is now a real B-spline frame-projection engine for European vanillas (validated against COS to ~1e-7), with a standalone Bermudan-put recursion (`proj_bermudan_put`) cross-validated against `cos_bermudan`. The exotic PROJ recursion family now covers barrier (`proj_barrier`), double barrier (`proj_double_barrier`), step (`proj_step`) and swing (`proj_swing`); see [proj_parity_roadmap.md](proj_parity_roadmap.md) for what remains (Parisian, 2-D CTMC).
+- `conv` is a Gil-Pelaez probability inversion for European calls/puts; `mellin` currently routes to `conv` rather than a model-specific Mellin contour, so both engines share the same numerics for now.
 - `mellin` remains a validated European façade rather than the full model-specific contour implementation set.
 - The contour engine assumes a cheap closed-form CF; for the ODE-based models (`lifted_heston`, `affine`) price with COS or SINC.
 - Implied volatilities throughout (`model_iv_surface`, calibration, `implied_vol_from_prices`) use the vectorised Let's Be Rational solver.

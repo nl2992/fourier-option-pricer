@@ -29,7 +29,7 @@ from foureng.core.capabilities import explain_capability
         ("bsm", "bermudan", "monte_carlo"),
         ("bsm", "asian", "monte_carlo"),
         ("bsm", "barrier", "monte_carlo"),
-        ("bsm", "barrier", "pde_fd"),
+        ("bsm", "american", "pde_fd"),
         ("bsm", "american", "lattice"),
         ("bsm", "forward_start", "forward_start_bsm"),
         ("bsm", "exchange", "exchange_bsm"),

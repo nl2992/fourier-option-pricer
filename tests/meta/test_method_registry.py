@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import re
+
 import pytest
 
-from foureng.core.capabilities import METHOD_REGISTRY, MethodSpec
+from foureng.core.capabilities import METHOD_REGISTRY, MethodSpec, _product_hint
 
 _BASELINE_METHODS = {
     "cos",
@@ -116,3 +118,33 @@ def test_import_from_pricers_registry():
     from foureng.pricers.registry import METHOD_REGISTRY as MR2
 
     assert MR2 is METHOD_REGISTRY
+
+
+# Products whose hint text is a plain "Consult the capability matrix" fallback
+# (no method keys to check) are skipped automatically since they produce no matches.
+_PRODUCTS_WITH_HINTS = [
+    "asian",
+    "barrier",
+    "lookback",
+    "bermudan",
+    "american",
+    "variance_swap",
+    "variance_option",
+    "cliquet",
+    "exchange",
+    "basket",
+    "spread",
+    "best_of",
+    "rainbow",
+    "digital",
+]
+
+
+@pytest.mark.parametrize("product", _PRODUCTS_WITH_HINTS)
+def test_product_hint_method_names_exist_in_registry(product):
+    """Every method key named in backticks in a _product_hint() string must be real."""
+    hint = _product_hint(model="bsm", product=product, method="unused")
+    mentioned = re.findall(r"`([a-z0-9_]+)`", hint)
+    assert mentioned, f"hint for product={product!r} names no backtick-quoted methods: {hint!r}"
+    unknown = [m for m in mentioned if m not in METHOD_REGISTRY]
+    assert not unknown, f"hint for product={product!r} names unknown methods {unknown}: {hint!r}"

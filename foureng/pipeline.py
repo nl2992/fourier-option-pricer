@@ -53,6 +53,7 @@ from .pricers.proj import (
 from .pricers.sabr import sabr_hagan_price_at_strikes
 from .utils.grids import CONVGrid, COSGrid, COSGridPolicy, FFTGrid, HilbertGrid
 from .utils.spectral_filters import COSFilterSpec
+from .utils.validity import assert_alpha_valid
 
 # ---------------------------------------------------------------------------
 # Unified strip pricing  -  one call that the notebook / scoreboard goes
@@ -544,12 +545,16 @@ def price_strip(
     if method == "carr_madan":
         if grid is None:
             raise ValueError("method='carr_madan' requires an explicit FFTGrid")
+        try:
+            assert_alpha_valid(phi, grid.alpha, model_params=params)
+        except ValueError as exc:
+            warnings.warn(f"carr_madan: {exc}", stacklevel=2)
         return np.asarray(carr_madan_price_at_strikes(phi, fwd, grid, K), dtype=np.float64)
 
     raise ValueError(
         f"unknown method {method!r}; choose 'cos' | 'cos_improved' | 'cos_filtered' | "
-        "'frft' | 'carr_madan' | 'conv' | 'mellin' | 'proj' | 'lattice' | "
-        "'pde_fd' | 'sabr_hagan' | 'pyfeng_fft'"
+        "'carr_madan' | 'frft' | 'conv' | 'mellin' | 'swift' | 'sinc' | 'contour' | "
+        "'hilbert' | 'proj' | 'lattice' | 'pde_fd' | 'ctmc' | 'sabr_hagan' | 'pyfeng_fft'"
     )
 
 

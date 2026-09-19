@@ -424,14 +424,14 @@ Priced through `price(product, model, method, fwd, params)`.
 | `StepOption` | Occupation-time-damped vanilla (Linetsky 1999) | `proj_step` |
 | `SwingOption` | Multiple vanilla exercise rights, one per date (Carmona-Touzi 2008) | `proj_swing` |
 | `FaderOption` | Range-monitored faded notional | `fader_cf` |
-| `AsianOption` | Discretely monitored average-rate | `asian_cf`, `asian_bsm`, `proj_asian`, MC |
+| `AsianOption` | Discretely monitored average-rate | `asian_cos` (Levy, arithmetic), `asian_cf` (Levy, geometric), `asian_bsm`, `proj_asian` (deprecated alias for `asian_cos`), MC |
 | `LookbackOption` | Fixed-/floating-strike lookback | `lookback_bsm`, `lookback_mc` |
 | `ParisianOption` | Excursion-triggered barrier | `parisian_mc` |
 | `ForwardStartOption` | Strike set as `alpha * S_{t_start}` | `forward_start_cf`, `forward_start_bsm` |
 | `CliquetOption` | Capped/floored period-return sum/product | `cliquet_cf`, `cliquet_mc` |
 | `VarianceSwap` | Realised variance vs fair strike | `variance_levy_analytic`, `variance_analytic_bsm`, MC |
 | `VarianceOption` | Option on realised variance | `variance_analytic_bsm`, `variance_mc` |
-| `CompoundOption` | Option on an option (Geske 1979) | `geske` |
+| `CompoundOption` | Option on an option (Geske 1979) | `geske`, `analytic` (alias) |
 | `ChooserOption` | Choose call/put at a fixed date | `analytic` |
 | `QuantoOption` | Foreign underlying, domestic payout | BSM quanto analytics |
 | `ExchangeOption` | Margrabe `max(S1 - S2, 0)` | `fourier_2d`, `exchange_bsm`, `multi_asset_mc` |

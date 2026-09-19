@@ -66,17 +66,18 @@ class MethodSpec:
 METHOD_REGISTRY: dict[str, MethodSpec] = {
     "cos": MethodSpec(
         requires_cf=True,
-        supports_products=frozenset({"european", "digital"}),
+        supports_products=frozenset({"european"}),
         supports_exercise=frozenset({"european"}),
         supports_path_dependent=False,
         notes=(
             "COS / Fang-Oosterlee (2008). Terminal-payoff transforms only. "
-            "Requires a CF-equipped model with known cumulants for truncation."
+            "Requires a CF-equipped model with known cumulants for truncation. "
+            "Digitals are priced by method='cos_digital', not this method."
         ),
     ),
     "cos_improved": MethodSpec(
         requires_cf=True,
-        supports_products=frozenset({"european", "digital"}),
+        supports_products=frozenset({"european"}),
         supports_exercise=frozenset({"european"}),
         supports_path_dependent=False,
         notes=(
@@ -86,7 +87,7 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
     ),
     "cos_filtered": MethodSpec(
         requires_cf=True,
-        supports_products=frozenset({"european", "digital"}),
+        supports_products=frozenset({"european"}),
         supports_exercise=frozenset({"european"}),
         supports_path_dependent=False,
         notes=(
@@ -500,7 +501,7 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
     ),
     "cos_bermudan": MethodSpec(
         requires_cf=True,
-        supports_products=frozenset({"bermudan", "european"}),
+        supports_products=frozenset({"bermudan"}),
         supports_exercise=frozenset({"european", "bermudan"}),
         supports_path_dependent=False,
         notes=(
@@ -543,27 +544,27 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
             "PROJ single-barrier pricer (Kirkby 2015) for 1-D Lévy models. "
             "All four barrier types (down-out, up-out, down-in, up-in) for "
             "calls and puts via backward induction with barrier absorption. "
-            "Supports BSM, VG, CGMY, NIG, Kou, Merton JD models."
+            "Supports the 1-D Levy model family (bsm, vg, cgmy, nig, kou, "
+            "merton_jd, bilateral_gamma, generalized_hyperbolic, fmls, meixner)."
         ),
     ),
     "proj_asian": MethodSpec(
         requires_cf=True,
-        requires_simulation=True,
+        requires_simulation=False,
         supports_products=frozenset({"asian"}),
         supports_exercise=frozenset({"european"}),
         supports_path_dependent=True,
         notes=(
-            "PROJ arithmetic Asian pricer with geometric control variate. "
-            "MC-based arithmetic Asian price with PROJ-computed geometric "
-            "Asian as control variate for variance reduction. Supports all "
-            "1-D Lévy models in the registry (BSM, VG, CGMY, NIG, Kou, Merton JD)."
+            "Deprecated alias: routes to the exact ASCOS arithmetic Asian "
+            "engine (same as method='asian_cos'), not the older MC-with-"
+            "control-variate implementation. Kept for backward compatibility."
         ),
     ),
-    # ── Planned methods (not yet implemented) ────────────────────────────
+    # ── Non-CF baseline / Markov-state methods (implemented) ──────────────
     "pde_fd": MethodSpec(
         requires_cf=False,
         requires_markov_state=True,
-        supports_products=frozenset({"european", "american", "barrier"}),
+        supports_products=frozenset({"european", "american"}),
         supports_exercise=frozenset({"european", "american"}),
         supports_path_dependent=False,
         notes=(
@@ -574,8 +575,8 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
     ),
     "lattice": MethodSpec(
         requires_cf=False,
-        supports_products=frozenset({"european", "american", "barrier"}),
-        supports_exercise=frozenset({"european", "american", "bermudan"}),
+        supports_products=frozenset({"european", "american"}),
+        supports_exercise=frozenset({"european", "american"}),
         supports_path_dependent=False,
         notes=(
             "Binomial / trinomial tree (CRR, Jarrow-Rudd). "
@@ -586,44 +587,52 @@ METHOD_REGISTRY: dict[str, MethodSpec] = {
     "ctmc": MethodSpec(
         requires_cf=False,
         requires_markov_state=True,
-        supports_products=frozenset({"european", "american", "barrier", "bermudan"}),
-        supports_exercise=frozenset({"european", "american", "bermudan"}),
+        supports_products=frozenset({"european", "american"}),
+        supports_exercise=frozenset({"european", "american"}),
         supports_path_dependent=False,
         notes=(
             "Continuous-time Markov chain approximation (Mijatovic-Pistorius / "
             "Lo-Skindilias generator): European vanillas via one matrix "
             "exponential, Americans via Bermudan time-stepping. Constant or "
-            "local (state-dependent) volatility."
+            "local (state-dependent) volatility. Not a route for barrier or "
+            "Bermudan products (use method='cos_ctmc' for those)."
         ),
     ),
-    "bsm_analytic": MethodSpec(
+    "double_barrier_bsm": MethodSpec(
         requires_cf=False,
-        supports_products=frozenset(
-            {"european", "digital", "barrier", "asian", "lookback", "forward_start"}
-        ),
-        supports_exercise=frozenset({"european"}),
-        supports_path_dependent=False,
-        notes=(
-            "BSM closed-form reference pricers. "
-            "European, cash/asset digitals, geometric Asian, forward-start, "
-            "single-barrier (Reiner-Rubinstein 1991), and lookback "
-            "(Goldman-Sosin-Gatto 1979). BSM model only."
-        ),
-    ),
-    "mc_gbm": MethodSpec(
-        requires_cf=False,
-        requires_simulation=True,
-        supports_products=frozenset(
-            {"european", "asian", "barrier", "lookback", "variance_swap", "variance_option"}
-        ),
+        supports_products=frozenset({"double_barrier"}),
         supports_exercise=frozenset({"european"}),
         supports_path_dependent=True,
         notes=(
-            "GBM log-Euler path Monte Carlo with antithetic variates. "
-            "Arithmetic Asian (geometric-average CV), single-barrier with "
-            "BGK (1999) continuity correction, floating/fixed lookback, "
-            "and variance swap/option pricing. BSM model only."
+            "Closed-form BSM double-barrier eigenfunction expansion "
+            "(Kunitomo-Ikeda 1992) for zero-rebate double knock-out or "
+            "knock-in corridors. BSM model only."
         ),
+    ),
+    "parisian_mc": MethodSpec(
+        requires_cf=False,
+        requires_simulation=True,
+        supports_products=frozenset({"parisian"}),
+        supports_exercise=frozenset({"european"}),
+        supports_path_dependent=True,
+        notes="Monte Carlo pricer for discretely monitored Parisian barrier options. BSM model only.",
+    ),
+    "geske": MethodSpec(
+        requires_cf=False,
+        supports_products=frozenset({"compound"}),
+        supports_exercise=frozenset({"european"}),
+        supports_path_dependent=False,
+        notes=(
+            "Closed-form BSM compound-option pricer (Geske 1979 / Haug 2007) "
+            "via the bivariate normal CDF. BSM model only."
+        ),
+    ),
+    "analytic": MethodSpec(
+        requires_cf=False,
+        supports_products=frozenset({"compound"}),
+        supports_exercise=frozenset({"european"}),
+        supports_path_dependent=False,
+        notes="Alias for method='geske'; same closed-form compound-option pricer. BSM model only.",
     ),
 }
 
@@ -741,41 +750,45 @@ def _product_hint(model: str, product: str, method: str) -> str:
         "asian": (
             "Asian arithmetic payoff is path-dependent; COS implementation "
             "currently handles terminal-payoff transforms only. "
-            "Use Monte Carlo or PROJ Asian when implemented."
+            "Use `asian_cos` (1-D Levy), `asian_cf` (geometric, Levy), `asian_bsm` "
+            "(BSM geometric closed-form), or `asian_mc`."
         ),
         "barrier": (
             "Barrier monitoring requires path knowledge between payoff dates. "
-            "Use barrier_analytic_bsm (BSM), barrier_mc, barrier_proj, "
-            "pde_fd, lattice, or ctmc."
+            "Use `barrier_bsm` (BSM closed-form), `hilbert_barrier` or `proj_barrier` "
+            "(1-D Levy), `cos_ctmc` (heston, bates, regime_switching), or `monte_carlo`."
         ),
         "lookback": (
             "Lookback payoff is path-dependent. "
-            "Use lookback_bsm (BSM closed-form), lookback_mc, or PROJ."
+            "Use `lookback_bsm` (BSM closed-form), `hilbert_lookback` (1-D Levy), or `lookback_mc`."
         ),
         "bermudan": (
             "Bermudan early-exercise requires backward induction. "
-            "Use cos_bermudan (Lévy models only), pde_fd (BSM), "
-            "lattice, or ctmc."
+            "Use `cos_bermudan` (1-D Levy models), `cos_ctmc` (heston, bates, "
+            "regime_switching), `proj` (1-D Levy puts), or `monte_carlo`."
         ),
         "american": (
-            "American exercise requires backward induction. Use pde_fd, lattice, lsmc, or ctmc."
+            "American exercise requires backward induction. Use `cos_american` "
+            "(1-D Levy), `cos_ctmc` (heston, bates, regime_switching), `lattice`, "
+            "`pde_fd`, `ctmc`, or `monte_carlo` (all BSM only except cos_american/cos_ctmc)."
         ),
         "variance_swap": (
             "Variance swap payoff is path-dependent. "
-            "Use variance_analytic_bsm (BSM) or variance_heston (Heston)."
+            "Use `variance_levy_analytic` (Levy), `variance_analytic_bsm` (BSM), or `variance_mc`."
         ),
-        "variance_option": ("Variance option payoff is path-dependent. Use variance_mc."),
+        "variance_option": ("Variance option payoff is path-dependent. Use `variance_mc`."),
         "cliquet": (
-            "Cliquet payoff is path-dependent across reset periods. Use cliquet_mc or cliquet_proj."
+            "Cliquet payoff is path-dependent across reset periods. "
+            "Use `cliquet_cf` (Levy, locally collared) or `cliquet_mc`."
         ),
-        "exchange": "Use fourier_2d, multi_asset_mc or the Margrabe closed-form.",
-        "basket": "Use multi_asset_mc or log-normal basket approximation.",
-        "spread": "Use fourier_2d, multi_asset_mc or the Kirk approximation.",
-        "best_of": "Use fourier_2d (two assets) or multi_asset_mc.",
-        "rainbow": "Use fourier_2d or multi_asset_mc.",
+        "exchange": "Use `fourier_2d`, `multi_asset_mc` or the Margrabe closed-form.",
+        "basket": "Use `multi_asset_mc` or log-normal basket approximation.",
+        "spread": "Use `fourier_2d`, `multi_asset_mc` or the Kirk approximation.",
+        "best_of": "Use `fourier_2d` (two assets) or `multi_asset_mc`.",
+        "rainbow": "Use `fourier_2d` or `multi_asset_mc`.",
         "digital": (
             "Cash-or-nothing / asset-or-nothing digital. "
-            "Use cos_digital (COS extended payoff) or analytic BSM formula."
+            "Use `cos_digital` (COS extended payoff) or `digital_bsm` (BSM closed-form)."
         ),
     }
     return hints.get(product, f"Consult the capability matrix for product={product!r}.")
@@ -815,12 +828,91 @@ def _model_restriction(model: str, product: str, method: str) -> str:
                 f"Use 'cos', 'cos_improved', 'frft', or 'carr_madan'."
             )
 
+    # Methods restricted to the 1-D Levy family in cos_bermudan._SUPPORTED_MODELS
+    # (bsm, vg, cgmy, nig, kou, merton_jd, bilateral_gamma, generalized_hyperbolic,
+    # fmls, meixner). 'proj' Europeans work for every CF-equipped model; only its
+    # Bermudan-put route is Levy-only, so it is gated here on product=='bermudan'.
+    _levy_l10_methods = {
+        "hilbert_barrier",
+        "hilbert_lookback",
+        "proj_barrier",
+        "proj_double_barrier",
+        "proj_asian",
+        "proj_step",
+        "proj_swing",
+        "asian_cos",
+        "cos_bermudan",
+        "cos_american",
+    }
+    if method in _levy_l10_methods or (method == "proj" and product == "bermudan"):
+        from foureng.pricers.cos_bermudan import _SUPPORTED_MODELS as _levy_l10_models
+
+        if model not in _levy_l10_models:
+            return (
+                f"method={method!r} supports the 1-D Levy model family "
+                f"{sorted(_levy_l10_models)}; model={model!r} is not one of them."
+            )
+
+    # Methods restricted to the smaller 8-model Levy family (LEVY_*_MODELS in
+    # their own pricer modules): bsm, kou, merton_jd, vg, nig, cgmy, meixner,
+    # bilateral_gamma.
+    if method == "asian_cf":
+        from foureng.pricers.geometric_asian import LEVY_GEOMETRIC_ASIAN_MODELS
+
+        if model not in LEVY_GEOMETRIC_ASIAN_MODELS:
+            return (
+                f"method='asian_cf' supports {sorted(LEVY_GEOMETRIC_ASIAN_MODELS)}; "
+                f"model={model!r} is not one of them."
+            )
+    if method == "forward_start_cf":
+        from foureng.pricers.forward_start import LEVY_FORWARD_START_MODELS
+
+        if model not in LEVY_FORWARD_START_MODELS:
+            return (
+                f"method='forward_start_cf' supports {sorted(LEVY_FORWARD_START_MODELS)}; "
+                f"model={model!r} is not one of them."
+            )
+    if method == "cliquet_cf":
+        from foureng.pricers.cliquet import LEVY_CLIQUET_MODELS
+
+        if model not in LEVY_CLIQUET_MODELS:
+            return (
+                f"method='cliquet_cf' supports {sorted(LEVY_CLIQUET_MODELS)}; "
+                f"model={model!r} is not one of them."
+            )
+    if method == "fader_cf":
+        from foureng.pricers.fader import LEVY_FADER_MODELS
+
+        if model not in LEVY_FADER_MODELS:
+            return (
+                f"method='fader_cf' supports {sorted(LEVY_FADER_MODELS)}; "
+                f"model={model!r} is not one of them."
+            )
+    if method == "variance_levy_analytic":
+        from foureng.analytics.levy_variance import LEVY_VARIANCE_MODELS
+
+        if model not in LEVY_VARIANCE_MODELS:
+            return (
+                f"method='variance_levy_analytic' supports {sorted(LEVY_VARIANCE_MODELS)}; "
+                f"model={model!r} is not one of them."
+            )
+
+    if method == "mellin":
+        from foureng.pricers.mellin import MELLIN_SUPPORTED_MODELS
+
+        if model not in MELLIN_SUPPORTED_MODELS:
+            return (
+                f"method='mellin' supports {sorted(MELLIN_SUPPORTED_MODELS)}; "
+                f"model={model!r} is not one of them."
+            )
+
     if method in {
         "barrier_bsm",
         "digital_bsm",
         "asian_bsm",
         "asian_mc",
         "double_barrier_mc",
+        "double_barrier_bsm",
         "forward_start_bsm",
         "monte_carlo",
         "exchange_bsm",
@@ -831,6 +923,9 @@ def _model_restriction(model: str, product: str, method: str) -> str:
         "variance_mc",
         "cliquet_mc",
         "multi_asset_mc",
+        "parisian_mc",
+        "geske",
+        "analytic",
     }:
         if model != "bsm":
             return f"method={method!r} is currently implemented only for model='bsm'."
