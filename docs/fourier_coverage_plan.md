@@ -8,16 +8,17 @@ Status key: `todo`, `in progress`, `done`. Each item lands on `dev` as its own c
 
 | ID | Item | Status |
 |----|------|--------|
-| A1 | Capability registry and docs agree with the code: drop claims no route serves (COS digitals, `cos_bermudan` Europeans, `pde_fd`/`lattice`/`ctmc` barriers and Bermudans), mark the Levy-only methods in `_model_restriction`, fix hints that name missing methods, register dispatched methods that have no entry, correct model lists in notes, remove the stale "planned" header, fix the stale error message in `price_strip`, refile the snapshot tables, remove references to `nts.py` and `stein_stein.py`, retire the `pricers/base.py` placeholder, and call the Carr-Madan damping check. | todo |
-| A2 | `proj_asian` is Monte Carlo on Gaussian paths with a bare `except`. Route arithmetic Asians to the exact `asian_cos` engine, keep the key as a deprecated alias, and remove the silent zero. | todo |
-| A3 | `proj_barrier` is about 1e-3 off at 252 monitoring dates. Find the cause and fix it; respect `product.monitoring`. | todo |
-| A4 | `cos_improved` default accuracy is about 1e-9 on Heston and 4.6e-6 on a jump-heavy affine case. Tighten the default grid so it matches the contour reference to 1e-10. | todo |
+| A1 | Capability registry and docs agree with the code: drop claims no route serves (COS digitals, `cos_bermudan` Europeans, `pde_fd`/`lattice`/`ctmc` barriers and Bermudans), mark the Levy-only methods in `_model_restriction`, fix hints that name missing methods, register dispatched methods that have no entry, correct model lists in notes, remove the stale "planned" header, fix the stale error message in `price_strip`, refile the snapshot tables, remove references to `nts.py` and `stein_stein.py`, retire the `pricers/base.py` placeholder, and call the Carr-Madan damping check. | done |
+| A2 | `proj_asian` is Monte Carlo on Gaussian paths with a bare `except`. Route arithmetic Asians to the exact `asian_cos` engine, keep the key as a deprecated alias, and remove the silent zero. | done |
+| A3 | `proj_barrier` is about 1e-3 off at 252 monitoring dates. Find the cause and fix it; respect `product.monitoring`. | done |
+| A4 | `cos_improved` default accuracy is about 1e-9 on Heston and 4.6e-6 on a jump-heavy affine case. Tighten the default grid so it matches the contour reference to 1e-10. | in progress |
+| A5 | The PROJ Bermudan, step and swing recursions share the grid-domain bug fixed in A3 (the value grid spans half the intended domain, and boundaries snap to nodes). Apply the same fix and tighten the tolerance that `test_proj_step.py` had to loosen. | todo |
 
 ## Part B: missing Fourier methods
 
 | ID | Item | Reference | Status |
 |----|------|-----------|--------|
-| B1 | Public `method="lewis"` (already implemented, only reachable as a fallback). | Lewis (2001) | todo |
+| B1 | Public `method="lewis"` (already implemented, only reachable as a fallback). | Lewis (2001) | in progress |
 | B2 | True CONV engine (FFT convolution) for Europeans and Bermudans. The current `conv` (a Gil-Pelaez probability inversion) moves to `method="gil_pelaez"`. | Lord, Fang, Bervoets & Oosterlee (2008) | todo |
 | B3 | Real Mellin-transform pricer behind `method="mellin"` (today it calls `conv`). | Panini & Srivastav (2004) | todo |
 | B4 | Fourier space time stepping for European, Bermudan, American and barrier options under Levy and regime-switching models. | Jackson, Jaimungal & Surkov (2008) | todo |
@@ -43,7 +44,7 @@ Neural pricers, models without a characteristic function (for example rough Berg
 
 ## Waves
 
-1. A1, A2, A3, A4, B1
+1. A1, A2, A3, A4, A5, B1
 2. B2, B6, B7, C1, C2
 3. B3, B5, C4
 4. B4, C3, C5
