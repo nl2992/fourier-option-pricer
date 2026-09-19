@@ -91,28 +91,45 @@ def _cos_tail_family(model: str | None, params=None) -> str:
 
 
 def _default_dx_target(model: str | None, params=None, *, mode: str = "benchmark") -> float:
-    """Model-dependent spatial resolution target for adaptive COS."""
+    """Model-dependent spatial resolution target for adaptive COS.
+
+    Benchmark-mode values were tightened (A4) after measuring that the old,
+    looser targets under-resolved the cosine series at short maturities: the
+    number of terms this function implies is a *spatial* resolution rule, but
+    a peaked short-T density needs a much larger term count than its spatial
+    width alone suggests. Halving (roughly) the targets below buys back that
+    resolution at a modest, one-power-of-two increase in N.
+    """
     model = _canonical_cos_model_name(model)
     if model == "bsm":
-        base = 0.020
+        base = 0.010
     elif model == "heston":
-        base = 0.020
+        base = 0.010
     elif model in {"ousv", "nig"}:
-        base = 0.020
+        base = 0.010
     elif model == "vg":
-        return 0.003 if mode == "benchmark" else 0.010
+        return 0.0015 if mode == "benchmark" else 0.010
     elif model == "cgmy":
         Y = float(getattr(params, "Y", 0.0))
-        base = 0.030 if Y < 1.0 else 0.055
+        base = 0.015 if Y < 1.0 else 0.025
     else:
-        base = 0.035
+        base = 0.012
     if mode == "surface":
         return 3.0 * base
     return base
 
 
 def _default_L_seed(model: str | None, params=None, *, mode: str = "benchmark") -> float:
-    """Initial L used by the adaptive interval policy."""
+    """Initial L used by the adaptive interval policy.
+
+    Benchmark-mode gaussian-like/default bases were raised from 8.0 to 10.0
+    (A4): ``cos_tail_proxy``'s gaussian tail estimate is so much smaller than
+    the true put+parity COS error at L=8 that the tolerance loop in
+    :func:`cos_adaptive_decision` exits on its first check without ever
+    growing L, silently leaving accuracy at ~1e-9. Seeding closer to the
+    empirically-needed value sidesteps that false-early-exit while landing on
+    the same power-of-two term count, i.e. at no extra runtime cost.
+    """
     model = _canonical_cos_model_name(model)
     if model == "vg":
         base = 10.0
@@ -120,6 +137,8 @@ def _default_L_seed(model: str | None, params=None, *, mode: str = "benchmark") 
         Y = float(getattr(params, "Y", 0.0))
         base = 10.0 if Y < 1.0 else 14.0
     elif model in {"kou", "bates", "heston_kou", "heston_cgmy"}:
+        base = 10.0
+    elif model in {None, "bsm", "heston", "ousv", "nig"}:
         base = 10.0
     else:
         base = 8.0
@@ -138,7 +157,21 @@ def recommended_cos_policy(
     *,
     mode: str = "benchmark",
 ) -> COSGridPolicy:
-    """Recommended adaptive COS policy for the given model/regime."""
+    """Recommended adaptive COS policy for the given model/regime.
+
+    ``eps_trunc`` and ``width_fallback`` in benchmark mode were tightened /
+    loosened respectively as part of A4 (see ``docs/fourier_coverage_plan.md``):
+    the old ``eps_trunc=1e-10`` let the tolerance loop stop at an L that
+    still left ~1e-7-1e-9 of real price error for semi-heavy tail families
+    (kou, bates, jump-heavy affine specs), and the old ``width_fallback=40.0``
+    routed those same wide-interval cases to the Lewis/Carr-Madan fallback
+    engines, which turned out to be *less* accurate than COS itself (COS via
+    put+parity remains numerically stable at these widths once the direct-call
+    payoff formula is correctly gated away from them; see
+    ``_LEFLOCH_B_THRESHOLD`` and its use in ``cos_prices``). Raising
+    ``width_fallback`` keeps COS in play for those cases instead of diverting
+    to a less accurate fallback.
+    """
     model = _canonical_cos_model_name(model or getattr(params, "name", None))
     tail_family = _cos_tail_family(model, params)
     truncation = "tolerance" if tail_family != "heavy" else "heuristic"
@@ -148,10 +181,10 @@ def recommended_cos_policy(
         centered=True,
         dx_target=_default_dx_target(model, params, mode=mode),
         L=_default_L_seed(model, params, mode=mode),
-        eps_trunc=1e-10 if mode == "benchmark" else 1e-7,
+        eps_trunc=1e-13 if mode == "benchmark" else 1e-7,
         min_N=32,
         max_N=16384 if mode == "benchmark" else 4096,
-        width_fallback=40.0 if mode == "benchmark" else 28.0,
+        width_fallback=200.0 if mode == "benchmark" else 28.0,
         fallback_method=_default_fallback_method(model),
     )
 
@@ -415,8 +448,13 @@ def cos_prices(
     - ``"put_parity"``  : always use put coefficients + parity,
     - ``"call_direct"`` : use the direct call coefficients,
     - ``"auto"``        : use put+parity generally, but allow direct-call pricing
-      for OTM calls when the interval is narrow enough that the ``e^b`` term
-      is still numerically tame.
+      for ITM calls when the interval is narrow enough (``b - a <=
+      call_direct_width_max`` **and** ``b <= _LEFLOCH_B_THRESHOLD``) that the
+      ``e^b`` term is still numerically tame. The second condition matters on
+      its own: a centered grid can have ``b - a`` comfortably below
+      ``call_direct_width_max`` while ``b`` alone already exceeds the
+      Le Floc'h threshold (e.g. wide jump-heavy specs), in which case direct
+      call still loses several digits and put+parity is used instead.
 
     When both ``pricing_formula`` and ``payoff_mode`` are supplied, ``pricing_formula``
     takes precedence (unless ``pricing_formula="auto"`` and the caller also set an
@@ -479,7 +517,7 @@ def cos_prices(
         puts = fwd.disc * (A[:, None] * V_put).sum(axis=0)
         calls = puts + fwd.disc * (fwd.F0 - strikes)
 
-        if payoff_mode == "auto" and (b - a) <= call_direct_width_max:
+        if payoff_mode == "auto" and (b - a) <= call_direct_width_max and b <= _LEFLOCH_B_THRESHOLD:
             direct_mask = strikes >= fwd.F0
             if np.any(direct_mask):
                 V_call = _call_payoff_coeffs(a, b, N, strikes, shifted_F0)
