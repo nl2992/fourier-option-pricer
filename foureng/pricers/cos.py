@@ -301,7 +301,23 @@ def cos_improved_grid(
     params=None,
     policy: COSGridPolicy | None = None,
 ) -> COSGrid:
-    """Convenience wrapper returning only the adaptive COS grid."""
+    """Convenience wrapper returning only the adaptive COS grid.
+
+    In benchmark mode this (and ``cos_improved`` in ``price_strip``) targets
+    about 1e-10 absolute price error against the high-precision contour
+    engine, which it reaches for the models exercised in
+    ``tests/methods/test_cos_improved_accuracy.py`` (heston, bates, vg, kou,
+    cgmy, and jump-heavy affine specs).
+
+    **Known exception**: Variance Gamma with maturity ``T`` smaller than the
+    ``nu`` parameter has a genuinely singular log-return density (VG is a
+    subordinated Brownian motion whose subordinator has no density at very
+    short times), so its Fourier-cosine coefficients decay only
+    algebraically rather than exponentially in ``N``. No choice of interval
+    or term count reaches 1e-10 there; ``cos_improved`` still returns its
+    best achievable accuracy (empirically on the order of 1e-7 to 1e-8, not
+    a hard floor), rather than raising or silently truncating further.
+    """
     return cos_adaptive_decision(
         cumulants,
         model=model,
